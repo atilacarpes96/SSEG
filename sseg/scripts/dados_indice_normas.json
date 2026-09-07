@@ -1,0 +1,153 @@
+{
+  "_leia_isto": "Forma legivel por maquina do normas/00-indice-normativo.md. Serve para a conferencia automatica das normas citadas no campo '4. Medidas de seguranca' do print do SOL. NAO e fundamento: o fundamento sai do PDF oficial. Manter em sincronia com o 00-indice-normativo.md.",
+  "_atualizado_em": "2026-09-02",
+  "_regra_de_vigencia": "A versao aplicavel e a que estava vigente na DATA DE PROTOCOLO do PPCI PARA A PRIMEIRA ANALISE, nao a mais recente hoje. Fundamento: RT 01/2024, itens 3.4 e 4.3.3 (conferidos no PDF oficial em 01/09/2026, reconferidos em 02/09/2026). Nunca 'atualizar' a citacao de um PPCI antigo para a versao nova. Em edificacao EXISTENTE REGULARIZADA a legislacao da epoca pode ser usada, desde que especificado no laudo de inviabilidade e no campo de medidas.",
+  "_onde_achar_a_data_de_protocolo": "Aba 'Consultar licenciamento' > aba 'Marcos', marco 'Numero do licenciamento gerado'. Nao esta na tela da analise tecnica.",
+  "normas": {
+    "RT 01/2024": {
+      "titulo": "Diretrizes Basicas de Seguranca Contra Incendio",
+      "vigente_desde": "2025-01-01",
+      "versao_anterior": "RT 01/2022",
+      "publicada_em": "2024-10-07",
+      "conferido_em": "2026-09-02",
+      "obs": "Art. 2o: entra em vigor em 01/01/2025, revogando a RT CBMRS n.o 01 de 12/04/2022. Versoes corrigidas em out/2024, jan/2025 e 08/06/2026 - a vigencia nao muda, mas a numeracao dos itens entre versoes corrigidas NAO foi verificada."
+    },
+    "RT 01/2022": {
+      "titulo": "Diretrizes Basicas de Seguranca Contra Incendio (versao anterior, de 12/04/2022)",
+      "vigente_desde": "2022-04-12",
+      "vigente_ate": "2024-12-31",
+      "substituida_por": "RT 01/2024",
+      "obs": "Continua aplicavel a PPCI protocolado para 1a analise ate 31/12/2024."
+    },
+    "RT 02/2014": {
+      "titulo": "Terminologia Aplicada a Seguranca Contra Incendio",
+      "vigente_desde": "2014-01-01",
+      "conferido_em": "2026-09-02",
+      "obs": "Itens 4.20 (Altura da edificacao - ascendente e descendente) e 4.30 (Area do maior pavimento, excluindo o da descarga) transcritos literalmente."
+    },
+    "RT 04/2022": {
+      "titulo": "Isolamento de Riscos",
+      "vigente_desde": "2022-01-01"
+    },
+    "RT 05 Parte 1.1/2016": {
+      "titulo": "PPCI na forma completa",
+      "vigente_desde": "2016-01-01",
+      "conferido_em": "2026-09-02",
+      "obs": "Anexo 'L' (Tabelas L.1, L.2 e L.3) lido integralmente: e a base do que se analisa em planta (L.1) e do que so se confere em memorial (L.2)."
+    },
+    "RT 05 Parte 06/2025": {
+      "titulo": "Fiscalizacao das Edificacoes e Aplicacao de Penalidades",
+      "vigente_desde": "2025-01-01"
+    },
+    "RT 05 Parte 07/2025": {
+      "titulo": "Edificacoes e Areas de Risco Existentes",
+      "vigente_desde": "2025-02-01",
+      "conferido_em": "2026-09-02",
+      "obs": "CORRIGIDO em 02/09/2026: o Art. 2o diz 1o de FEVEREIRO de 2025, nao 01/01/2025. Item 6.2.1 e a lista de documentos comprobatorios emitidos ate 26/12/2013; os requisitos de mesma area / atividade equivalente / mesmo endereco estao no item 6.2.1.2.1."
+    },
+    "RT 05 Parte 08/2016": {
+      "titulo": "Simbolos empregados em PPCI",
+      "vigente_desde": "2016-01-01"
+    },
+    "RT 09/2025": {
+      "titulo": "Controle de Materiais de Acabamento e Revestimento (CMAR)",
+      "vigente_desde": "2025-11-01"
+    },
+    "RT 10/2024": {
+      "titulo": "Acesso de Viaturas na Edificacao",
+      "vigente_desde": "2025-04-07",
+      "conferido_em": "2026-09-02",
+      "obs": "Art. 2o confirmado: 07 de abril de 2025. Item 5.1.2 = caracteristicas da via (6 m largura livre, 4,5 m altura livre, cargas, 5 m da fachada, desnivel <= 5%, sem obstaculos). Item 5.1.3 = PORTICO (vao livre minimo 4 m de largura e 4,5 m de altura) - nao confundir com o 5.1.2."
+    },
+    "RT 11 Parte 01/2016": {
+      "titulo": "Saidas de Emergencia",
+      "vigente_desde": "2016-09-19",
+      "conferido_em": "2026-09-02",
+      "obs": "Itens 5.5.4.9 (portas de seguranca patrimonial tipo enrolar/correr/gradis junto a saida final + Termo do Anexo D), 5.5.4.10 (porta de correr horizontal so com populacao <= 50) e Anexo D transcritos literalmente. 'Contrapeso' nao aparece na norma."
+    },
+    "RT 12/2021": {
+      "titulo": "Sinalizacao de Emergencia",
+      "vigente_desde": "2022-01-01",
+      "conferido_em": "2026-09-02",
+      "obs": "Itens 5.4.2.3.1 e 5.4.2.3.1.1 (sinalizacao de lotacao maxima, codigo C1) transcritos literalmente. Alcanca F-2, F-3, F-5, F-6, F-7, F-8, F-11 e F-12, e tambem os casos de lotacao reduzida como medida compensatoria."
+    },
+    "RT 13/2025": {
+      "titulo": "Iluminacao de Emergencia",
+      "vigente_desde": "2025-04-07"
+    },
+    "RT 14/2016": {
+      "titulo": "Extintores de Incendio",
+      "vigente_desde": "2016-05-26"
+    },
+    "RT 15 Parte 01/2023": {
+      "titulo": "Brigada de Incendio",
+      "vigente_desde": "2023-10-15",
+      "data_aproximada": true
+    },
+    "RT 16/2017": {
+      "titulo": "Hidrante Urbano",
+      "vigente_desde": "2017-07-16",
+      "data_aproximada": true,
+      "obs": "Objeto distinto da RT 17 (sistema interno). Nao presumir revogacao de uma pela outra."
+    },
+    "RT 17 Parte 01/2025": {
+      "titulo": "Hidrantes e Mangotinhos (sistema interno)",
+      "vigente_desde": "2027-01-01",
+      "facultativa_antes": true,
+      "conferido_em": "2026-09-02",
+      "obs": "Art. 2o: entra em vigor em 1o de janeiro de 2027. Item 2.2: para PPCI JA PROTOCOLADO para analise, a adocao e FACULTATIVA, desde que nao ocorram alteracoes que exijam novo PPCI. A faculdade tem esse escopo - nao e um 'facultativa ate 2027' generico. Citar ou nao citar a RT 17 no campo 4 de um PPCI protocolado antes de 2027 nao e pendencia."
+    },
+    "RT 18/2025": {
+      "titulo": "Deteccao e Alarme de Incendio",
+      "vigente_desde": "2025-11-01"
+    },
+    "RT Implantacao SOL-CBMRS 4a Ed./2022": {
+      "titulo": "Sistema Online de Licenciamento",
+      "vigente_desde": "2022-01-01",
+      "conferido_em": "2026-09-02",
+      "obs": "Nao ha 5a edicao (pagina oficial conferida em 02/09/2026). Item 6.3.6.1.2 (aliineas a-d), 6.3.6.1.2.1, 6.3.6.1.2.2 e 6.3.3.1 transcritos literalmente. ATENCAO: 6.3.6.1.2.2 e a lista de escalas permitidas (1:1000 e 1:500 so para implantacao; 1:100; 1:50), nao um item sobre 'escala que nao confere'."
+    }
+  },
+  "_chaves": "As chaves abaixo sao as chaves canonicas de medida do sseg.py (canon_medida). Casar por nome livre gera falso positivo entre Compartimentacao Horizontal e Vertical.",
+  "medida_para_norma": {
+    "acesso_viaturas": [
+      "RT 10/2024"
+    ],
+    "cmar": [
+      "RT 09/2025"
+    ],
+    "saidas_emergencia": [
+      "RT 11 Parte 01/2016"
+    ],
+    "sinalizacao": [
+      "RT 12/2021"
+    ],
+    "iluminacao_emergencia": [
+      "RT 13/2025"
+    ],
+    "extintores": [
+      "RT 14/2016"
+    ],
+    "brigada": [
+      "RT 15 Parte 01/2023"
+    ],
+    "hidrantes": [
+      "RT 17 Parte 01/2025",
+      "NBR 13714"
+    ],
+    "deteccao": [
+      "RT 18/2025"
+    ],
+    "alarme": [
+      "RT 18/2025"
+    ]
+  },
+  "medidas_sem_rt_propria_mapeada": [
+    "seguranca_estrutural",
+    "compart_horizontal",
+    "compart_vertical",
+    "plano_emergencia",
+    "chuveiros",
+    "controle_fumaca"
+  ]
+}
