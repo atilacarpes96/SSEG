@@ -1,13 +1,25 @@
 ---
 name: pasta-normas-local
-description: A pasta local "Normas" no PC do usuário — caminho, inventário conferido arquivo a arquivo, procedimento de leitura (stage + pdftotext), armadilhas e o que ainda falta lá. É a PRIMEIRA fonte de PDF de norma; os links oficiais não são baixáveis pelo sandbox. Traz também a regra de pedir o acesso à pasta no início da sessão
+description: Onde estão os PDFs das normas — desde 15/09/2026 em sseg/normas/pdf/ no próprio repositório, e também na pasta local Normas do PC. Inventário conferido arquivo a arquivo, procedimento de leitura (pdftotext), armadilhas e o que ainda falta
 sources: [cowork]
 ---
 
-# Pasta local "Normas" — fonte primária dos PDFs
+# Onde estão os PDFs das normas
 
 > Fato do setup, registrado em **09/09/2026**, depois de o usuário apontar que o pipeline
-> insistia em link/download em vez de usar esta pasta. Atualizado em **11/09/2026** (IN 45).
+> insistia em link/download em vez de usar esta pasta. Atualizado em **11/09/2026** (IN 45) e
+> em **15/09/2026** (PDFs versionados no repositório).
+
+## ⭐ Primeira parada: `sseg/normas/pdf/`
+
+Os 14 PDFs oficiais estão **dentro do repositório** desde 15/09/2026, junto com as conversões
+do anydoc em `sseg/normas/md/`. Em qualquer máquina com o clone, a norma está em mãos — sem
+device bridge, sem stage, sem pedir arquivo ao usuário. Ler direto com `pdftotext`, seguindo as
+regras de extração abaixo, que continuam valendo integralmente.
+
+O restante deste doc trata da **pasta local no PC**, que segue existindo com o mesmo conteúdo.
+Ela importa para: norma que ainda não foi para o repo, arquivo novo que o usuário acrescentar,
+e conferência de versão. **Mudando uma, mudar a outra.**
 
 ## Caminho
 
@@ -130,5 +142,13 @@ Na mesma leitura foi conferido o **item 5.12.1.2 da RT 11**, que é o regime do 
 
 ## Sincronizar
 
-Ao mudar esta lista, mudar também a coluna de PDF local em [[00-indice-normativo]] e o campo
-`pdf_local` de `scripts/dados/indice_normas.json`.
+Acrescentando uma norma, são **quatro** lugares, sempre juntos:
+
+1. o PDF em `sseg/normas/pdf/` (e na pasta local do PC);
+2. a conversão em `sseg/normas/md/`, com `anydoc <arquivo> -o <saida>.md`;
+3. a linha correspondente no inventário acima e em [[00-indice-normativo]];
+4. a entrada em `scripts/dados/indice_normas.json`.
+
+⚠️ Correção registrada em 15/09/2026: a versão anterior deste doc mandava atualizar um campo
+`pdf_local` no `indice_normas.json`. **Esse campo não existe** — nunca existiu. O que o JSON
+tem é o bloco `normas` com título, vigência e observações de cada norma.

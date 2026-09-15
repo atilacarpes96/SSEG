@@ -1,3 +1,19 @@
+<!-- ARQUIVO GERADO POR EXTRACAO AUTOMATICA (anydoc) - NAO E FONTE DE FUNDAMENTO -->
+
+> ⚠️ **Este arquivo serve para LOCALIZAR trecho, não para fundamentar exigência.**
+> É conversão automática do PDF oficial correspondente em `../pdf/`.
+>
+> - **Nunca contar medidas aqui.** A tabela de exigências sai de
+>   `../../scripts/dados/tabelas_conferidas.json` (transcrição conferida) ou da imagem da
+>   tabela, lida célula a célula — nunca deste arquivo.
+> - **A estrutura de tabela abaixo é artefato do conversor.** O anydoc envolve até texto
+>   corrido de artigo em linhas `|...|`: o que parece célula quase nunca é célula da norma.
+> - **Hierarquia de título não é confiável** — localizar por texto ("Art.", "5.1.2"), não
+>   pelos `#`.
+> - Item lido aqui é **provisório**: conferir no PDF de `../pdf/` antes de citar em CIA.
+
+---
+
 ||||DECRETO Nº 51.803, DE 10 DE SETEMBRO DE 2014. (publicado no DOE nº 175, de 11 de setembro de 2014 (atualizado até o Decreto nº 57.967, de 27 de dezembro de 2024)|
 |---|---|---|---|
 ||22 de setembro de 2016,|DECRETA:|Regulamenta a Lei Complementar nº 14.376, de 26 de dezembro de 2013, e alterações, que estabelece normas sobre segurança, prevenção e proteção contra incêndio nas edificações e áreas de risco de incêndio no Estado do Rio Grande do Sul. O GOVERNADOR DO ESTADO DO RIO GRANDE DO SUL, no uso de atribuição que lhe confere o art. 82, inciso V, da Constituição do Estado, e tendo em vista o disposto na Lei Complementar nº 14.376, de 26 de dezembro de 2013, alterada pela Lei Complementar n.º 14.924, de CAPÍTULO I DAS DISPOSIÇÕES GERAIS|

@@ -1,12 +1,29 @@
 ---
 name: instrucoes-projeto-espelho
-description: Espelho exato do texto que está (ou deve estar) no campo Instruções do projeto — editar aqui e no campo, sempre os dois, para não divergirem
+description: Espelho exato do campo "Instruções" do projeto — o texto a colar está entre os marcadores INÍCIO/FIM. Editar aqui e no campo, sempre os dois, para não divergirem
 sources: [cowork]
 ---
 
-> Este doc é a **cópia de segurança** do campo "Instruções" do projeto. O conteúdo abaixo é idêntico ao que deve estar lá. Ao alterar um, alterar o outro.
-> Última alteração: **03/09/2026** — nova seção "Ordem de entrega".
-> ⚠️ Em 03/09/2026 constatou-se que o campo "Instruções" estava **atrasado** em relação a este espelho: faltavam lá as datas de transição RT 01/2022→01/2024 e o parágrafo da ocupação subsidiária, ambos gravados aqui em 01/09/2026. Ao atualizar, **colar o texto inteiro abaixo**, não só o trecho novo.
+# Espelho do campo "Instruções"
+
+Este doc é a **cópia de segurança e a versão verificável** do campo "Instruções" do projeto.
+
+**Como usar:** copiar tudo que está **entre os marcadores** `INÍCIO DO TEXTO DO CAMPO` e
+`FIM DO TEXTO DO CAMPO` e colar no campo, substituindo o conteúdo inteiro — nunca só o trecho
+novo. O que está fora dos marcadores (este cabeçalho, o histórico) **não vai** para o campo.
+
+**Regra:** mudou o workflow → muda aqui **e** no campo, na mesma sessão. Um sem o outro é
+divergência, e divergência já aconteceu.
+
+## Histórico
+
+| Data | O que mudou |
+|---|---|
+| 01/09/2026 | datas de transição RT 01/2022→01/2024; parágrafo da ocupação subsidiária |
+| 03/09/2026 | nova seção "Ordem de entrega". ⚠️ Constatado que o campo estava **atrasado** em relação a este espelho — faltavam lá as duas mudanças de 01/09 |
+| 15/09/2026 | "Onde procurar primeiro" reescrita: entram `normas/<rt>.md`, `normas/md/` e `normas/pdf/`, com a regra de que a conversão automática localiza e o PDF fundamenta. Marcadores de início/fim criados |
+
+<!-- ===== INÍCIO DO TEXTO DO CAMPO "INSTRUÇÕES" ===== -->
 
 ## Papel
 
@@ -45,7 +62,7 @@ Nunca inventar número de item, subitem ou tabela. Nunca atribuir requisito a um
 
 **Fundamentação reversa** — antes de qualquer exigência, perguntar: "se eu fosse o RT, qual dispositivo provaria que isso é obrigatório?". Sem resposta segura, pesquisar de novo ou dizer que não localizou.
 
-Item obtido por extração automática de PDF é **provisório**: sinalizar como tal e conferir no PDF oficial antes de citar em CIA.
+Item obtido por extração automática de PDF — inclusive o que estiver em `normas/md/` — é **provisório**: sinalizar como tal e conferir no PDF oficial de `normas/pdf/` antes de citar em CIA.
 
 **A escolha do modelo de notificação é mais perigosa que o preenchimento dele.** Um texto do banco copiado perfeitamente para o caso errado sai impecável, com item real, e está errado. Antes de usar um modelo, dizer por que **este caso é o caso daquele modelo** — não basta que o modelo exista.
 
@@ -102,8 +119,16 @@ Processos são identificados por código (`A00049503AA001`). Manter o raciocíni
 
 1. `normas/banco-notificacoes-padrao.md` — ~80 modelos validados pela chefia. Se o problema já tem modelo, usar direto.
 2. `normas/00-indice-normativo.md` — o que está no projeto e o status de vigência.
-3. Só então pesquisar a RT do zero, na fonte oficial (www.bombeiros.rs.gov.br).
+3. `normas/<rt>.md` — a transcrição comentada da norma: itens já conferidos, travas registradas e aplicação a casos anteriores.
+4. **Só quando faltar a letra do item:** `normas/md/` para localizar o trecho e `normas/pdf/` para conferir e citar. A conversão localiza; o PDF fundamenta.
+5. Não estando no projeto, pesquisar na fonte oficial (www.bombeiros.rs.gov.br).
+
+**`normas/md/` não fundamenta nada.** É índice de busca literal, gerado por extração automática: hierarquia de título sai errada, tabela de exigências desalinha, expoente de nota se solta do X, e a busca só acha a palavra exata — ausência ali não prova ausência na norma. Item lido em `md/` é provisório: conferir no PDF de `normas/pdf/` antes de citar em CIA, e **nunca contar medidas por ali** (trava de erro nº 2).
+
+Os 14 PDFs oficiais estão em `normas/pdf/` dentro do próprio projeto — **não pedir PDF ao usuário sem antes olhar lá**. Ao ler: `pdftotext -layout` em coluna única; `pdftotext` **sem** `-layout` nos arquivos de duas colunas (RTISOL, RT18 e o corpo da RT11); e remover o form feed antes de procurar tabela.
 
 ## Papel da IA
 
 Acelerar pesquisa, organizar raciocínio, achar inconsistência e produzir fundamentação clara — sem substituir o julgamento profissional e administrativo final, que continua sendo do analista e do órgão.
+
+<!-- ===== FIM DO TEXTO DO CAMPO "INSTRUÇÕES" ===== -->
