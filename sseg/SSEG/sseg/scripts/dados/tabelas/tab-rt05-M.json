@@ -1,0 +1,230 @@
+{
+ "fonte": "rt05_p07_anexo_a",
+ "fonte_nome": "Anexo A da RT CBMRS n 05, Parte 07/2025 - tabelas de exigencias para edificacao EXISTENTE REGULARIZADA. Transcricao completa das Tabelas 6X que usam colunas de altura.",
+ "colunas": [
+  "Terrea",
+  "H<=6",
+  "6<H<=12",
+  "12<H<=23",
+  "23<H<=30",
+  "H>30"
+ ],
+ "como_ler": "Em cada tabela, 'divisoes' lista os blocos de colunas na ordem em que aparecem. 'medidas' traz, por medida, a fila inteira de celulas: sao 6 celulas por bloco, na ordem das colunas ['Terrea','H<=6','6<H<=12','12<H<=23','23<H<=30','H>30']. Para achar a celula: indice = (indice_do_bloco * 6) + indice_da_coluna. Celula 'X' = exigida; 'X1','X2'... = exigida com a nota especifica daquele numero; '-' = nao exigida.",
+ "tabelas": {
+  "6M.3": {
+   "titulo": "EDIFICAÇÕES DE DIVISÃO M-3 COM ÁREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "M-3 – Centrais de Comunicação"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X1",
+     "X1",
+     "X1",
+     "X1",
+     "X1",
+     "X1"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X3"
+    ],
+    "Plano de Emergencia": [
+     "-",
+     "-",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Deteccao de Incendio": [
+     "-",
+     "-",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Chuveiros Automaticos": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "X2",
+     "X2"
+    ]
+   },
+   "notas": [
+    "NOTAS GERAIS:",
+    "a – Devido às peculiaridades desta Divisão, as exigências e as possibilidades de substituição das medidas de",
+    "segurança contra incêndio serão estabelecidas em RTCBMRS específica;",
+    "b – Para subsolos ocupados ver Tabela 7;",
+    "c – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS."
+   ]
+  },
+  "6M.6": {
+   "titulo": "EDIFICAÇÕES E ÁREAS DE RISCO DE INCÊNDIO DE DIVISÃO M-6 GRUPO M – ESPECIAIS",
+   "divisoes": [
+    "M-6 – Centrais de Energia"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Compartimentacao Horizontal (areas)": [
+     "X1",
+     "X1",
+     "X1",
+     "X",
+     "X",
+     "X"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Plano de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Deteccao de Incendio": [
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Chuveiros Automaticos": [
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "X2"
+    ]
+   },
+   "notas": [
+    "NOTAS GERAIS:",
+    "a – Considerando as peculiaridades desta Divisão, o dimensionamento, execução, substituições, isenções ou",
+    "acréscimo de medidas de segurança contra incêndio serão tratadas em RTCBMRS específica;",
+    "b – Para centrais de energia a céu aberto deverão ser observadas exigências constantes em RTCBMRS específica;",
+    "c – Medidas de segurança contra incêndio poderão ser substituídas mediante análise a aprovação do CBMRS;",
+    "d – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS."
+   ]
+  }
+ }
+}

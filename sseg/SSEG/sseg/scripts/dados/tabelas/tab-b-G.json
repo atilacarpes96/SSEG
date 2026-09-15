@@ -1,0 +1,637 @@
+{
+ "fonte": "anexo_b_decreto",
+ "fonte_nome": "Anexo B do Decreto 51.803/2014 - tabelas de exigencias para edificacao A CONSTRUIR e EXISTENTE NAO REGULARIZADA. Transcricao completa das Tabelas 6X que usam colunas de altura.",
+ "colunas": [
+  "Terrea",
+  "H<=6",
+  "6<H<=12",
+  "12<H<=23",
+  "23<H<=30",
+  "H>30"
+ ],
+ "como_ler": "Igual ao rt05_p07_anexo_a: 'divisoes' lista os blocos de colunas na ordem; 'medidas' traz a fila inteira de celulas, 6 por bloco, na ordem ['Terrea','H<=6','6<H<=12','12<H<=23','23<H<=30','H>30']; indice = (bloco*6)+coluna. 'X' exigida; 'X8', 'X4;5' exigida com aquelas notas especificas; '-' nao exigida.",
+ "tabelas": {
+  "6G.1": {
+   "titulo": "EDIFICAÇÕES DE DIVISÃO G-1 E G-2 COM ÁREA SUPERIOR A 750m² OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "G-1 e G-2"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Seguranca Estrutural em Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Compartimentacao Vertical": [
+     "-",
+     "-",
+     "-",
+     "X1",
+     "X1",
+     "X1"
+    ],
+    "Controle de Materiais de Acabamento e Revestimento": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X2"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Deteccao de Incendio": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "X3",
+     "X3",
+     "X3",
+     "X3",
+     "X3",
+     "X3"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Chuveiros Automaticos": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "X"
+    ],
+    "Controle de Fumaca": [
+     "-",
+     "-",
+     "-",
+     "X4",
+     "X4",
+     "X4"
+    ]
+   },
+   "notas": [
+    "NOTAS ESPECÍFICAS:",
+    "1 – Exigido para as compartimentações das fachadas e selagens dos shafts e dutos de instalações.",
+    "2 – Deve haver Elevador de Emergência para altura maior que 60 metros.",
+    "3 – Deve haver pelo menos um dos acionadores manuais, por pavimento, a no máximo 5 metros da saída de",
+    "emergência.",
+    "4 – Dispensado caso a edificação seja aberta lateralmente.",
+    "NOTAS GERAIS:",
+    "a – Para subsolos ocupados ver Tabela 7;",
+    "b – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS.",
+    "(Redação dada pelo Decreto nº 53.280, de 01 de novembro de 2016)"
+   ]
+  },
+  "6G.2": {
+   "titulo": "EDIFICAÇÕES DE DIVISÃO G-3 E G-4 COM ÁREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "G-3",
+    "G-4"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Seguranca Estrutural em Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Compartimentacao Horizontal (areas)": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X1",
+     "X1",
+     "X1",
+     "X1",
+     "X1",
+     "X"
+    ],
+    "Compartimentacao Vertical": [
+     "-",
+     "-",
+     "-",
+     "X2",
+     "X2",
+     "X2",
+     "-",
+     "-",
+     "-",
+     "X2",
+     "X2",
+     "X2"
+    ],
+    "Controle de Materiais de Acabamento e Revestimento": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X3",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X3"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Deteccao de Incendio": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "X4",
+     "X4",
+     "X4",
+     "X4",
+     "X4",
+     "X4",
+     "X4",
+     "X4",
+     "X4",
+     "X4",
+     "X4",
+     "X4"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Chuveiros Automaticos": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "X"
+    ],
+    "Controle de Fumaca": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X5",
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X5"
+    ]
+   },
+   "notas": [
+    "NOTAS ESPECÍFICAS:",
+    "1 – Pode ser substituída por sistema de chuveiros automáticos.",
+    "2 – Exigido para as compartimentações das fachadas e selagens dos shafts e dutos de instalações.",
+    "3 – Deve haver Elevador de Emergência para altura maior que 60 metros.",
+    "4 – Deve haver pelo menos um dos acionadores manuais, por pavimento, a no máximo 5 metros da saída de",
+    "emergência.",
+    "5 – Acima de 60 metros de altura.",
+    "NOTAS GERAIS:",
+    "a – Para subsolos ocupados ver Tabela 7;",
+    "b – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS.",
+    "(Redação dada pelo Decreto nº 53.280, de 01 de novembro de 2016)"
+   ]
+  },
+  "6G.3": {
+   "titulo": "EDIFICAÇÕES DE DIVISÃO G-5 COM ÁREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "G-5"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Seguranca Estrutural em Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Compartimentacao Vertical": [
+     "-",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Controle de Materiais de Acabamento e Revestimento": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Plano de Emergencia": [
+     "X1",
+     "X1",
+     "X1",
+     "X1",
+     "X1",
+     "X1"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Deteccao de Incendio": [
+     "X1",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ]
+   },
+   "notas": [
+    "NOTAS ESPECÍFICAS:",
+    "1 – Somente para áreas superiores a 5.000m².",
+    "2 – Não exigido entre 750m² e 2.000m². Para áreas entre 2.000m² e 5.000m², o sistema de espuma pode ser",
+    "manual. Para áreas superiores a 5.000m², o sistema de espuma deve ser fixo por meio de chuveiros, tipo dilúvio,",
+    "podendo ser setorizado e interligado ao sistema de detecção automática de incêndio. Para o dimensionamento ver",
+    "as RTCBMRS específicas.",
+    "NOTAS GERAIS:",
+    "a – Para subsolos ocupados ver Tabela 7;",
+    "b – Deve haver sistema de drenagem de líquidos nos pisos dos hangares para bacias de contenção à distância;",
+    "c – Não é permitido o armazenamento de líquidos combustíveis ou inflamáveis dentro dos hangares;",
+    "d – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS.",
+    "(Redação dada pelo Decreto nº 53.280, de 01 de novembro de 2016)"
+   ]
+  },
+  "6G.6": {
+   "titulo": "EDIFICAÇÕES DE DIVISÃO G-6 COM ÁREA SUPERIOR A 750m² OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "G-6"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Seguranca Estrutural em Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Compartimentacao Vertical": [
+     "-",
+     "-",
+     "-",
+     "X1",
+     "X1",
+     "X1"
+    ],
+    "Controle de Materiais de Acabamento e Revestimento": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X2"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Deteccao de Incendio": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "-",
+     "X3",
+     "X3",
+     "X3",
+     "X3",
+     "X3"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Chuveiros Automaticos": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "X"
+    ],
+    "Controle de Fumaca": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "X4",
+     "X4"
+    ]
+   },
+   "notas": [
+    "NOTAS ESPECÍFICAS:",
+    "1 – Exigido para as compartimentações das fachadas e selagens dos shafts e dutos de instalações.",
+    "2 – Deve haver Elevador de Emergência para altura maior que 60 metros.",
+    "3 – Deve haver pelo menos um dos acionadores manuais, por pavimento, a no máximo 5 metros da saída de",
+    "emergência.",
+    "4 – Dispensado caso a edificação seja aberta lateralmente.",
+    "NOTAS GERAIS:",
+    "a – Para subsolos ocupados ver Tabela 7;",
+    "b – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS.",
+    "(Redação dada pelo Decreto nº 53.280, de 01 de novembro de 2016)"
+   ]
+  }
+ }
+}

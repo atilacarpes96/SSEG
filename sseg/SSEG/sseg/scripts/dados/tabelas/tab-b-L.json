@@ -1,0 +1,121 @@
+{
+ "fonte": "anexo_b_decreto",
+ "fonte_nome": "Anexo B do Decreto 51.803/2014 - tabelas de exigencias para edificacao A CONSTRUIR e EXISTENTE NAO REGULARIZADA. Transcricao completa das Tabelas 6X que usam colunas de altura.",
+ "colunas": [
+  "Terrea",
+  "H<=6",
+  "6<H<=12",
+  "12<H<=23",
+  "23<H<=30",
+  "H>30"
+ ],
+ "como_ler": "Igual ao rt05_p07_anexo_a: 'divisoes' lista os blocos de colunas na ordem; 'medidas' traz a fila inteira de celulas, 6 por bloco, na ordem ['Terrea','H<=6','6<H<=12','12<H<=23','23<H<=30','H>30']; indice = (bloco*6)+coluna. 'X' exigida; 'X8', 'X4;5' exigida com aquelas notas especificas; '-' nao exigida.",
+ "tabelas": {
+  "6L.1": {
+   "titulo": "EDIFICAÇÕES E ÁREAS DE RISCO DE INCÊNDIO GRUPO L COM ÁREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "L1, L2 e L3"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X1",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Controle de Materiais de Acabamento e Revestimento": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Plano de Emergencia": [
+     "X2,3",
+     "X2,3",
+     "X2",
+     "X2",
+     "X2",
+     "X2"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X2,4",
+     "X2,4",
+     "X2,4",
+     "X2,4",
+     "X2,4",
+     "X2,4"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "-",
+     "-",
+     "X2,4",
+     "X2,4",
+     "X2,4",
+     "X2,4"
+    ],
+    "Deteccao de Incendio": [
+     "-",
+     "-",
+     "X2,4",
+     "X2,4",
+     "X2,4",
+     "X2,4"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X2",
+     "X2",
+     "X2",
+     "X2",
+     "X2",
+     "X2"
+    ]
+   },
+   "notas": [
+    "NOTAS GERAIS:",
+    "a – Atender adicionalmente as medidas de segurança contra incêndio e exigências constantes em RTCBMRS",
+    "específica;",
+    "b - Devido às peculiaridades deste Grupo, as exigências e as possibilidades de substituição das medidas de",
+    "segurança contra incêndio serão estabelecidas em RTCBMRS específica;",
+    "c – Para subsolos ocupados ver Tabela 7;",
+    "d – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS.",
+    "(Redação dada pelo Decreto nº 53.280, de 01 de novembro de 2016)"
+   ]
+  }
+ }
+}

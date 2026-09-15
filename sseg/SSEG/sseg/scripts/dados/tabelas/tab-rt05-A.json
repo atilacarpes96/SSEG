@@ -1,0 +1,102 @@
+{
+ "fonte": "rt05_p07_anexo_a",
+ "fonte_nome": "Anexo A da RT CBMRS n 05, Parte 07/2025 - tabelas de exigencias para edificacao EXISTENTE REGULARIZADA. Transcricao completa das Tabelas 6X que usam colunas de altura.",
+ "colunas": [
+  "Terrea",
+  "H<=6",
+  "6<H<=12",
+  "12<H<=23",
+  "23<H<=30",
+  "H>30"
+ ],
+ "como_ler": "Em cada tabela, 'divisoes' lista os blocos de colunas na ordem em que aparecem. 'medidas' traz, por medida, a fila inteira de celulas: sao 6 celulas por bloco, na ordem das colunas ['Terrea','H<=6','6<H<=12','12<H<=23','23<H<=30','H>30']. Para achar a celula: indice = (indice_do_bloco * 6) + indice_da_coluna. Celula 'X' = exigida; 'X1','X2'... = exigida com a nota especifica daquele numero; '-' = nao exigida.",
+ "tabelas": {
+  "6A": {
+   "titulo": "EDIFICAÇÕES DO GRUPO A COM ÁREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "A-2, A-3 e Condomínios Residenciais"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X1",
+     "X1",
+     "X1",
+     "-",
+     "-",
+     "-"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X2"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "-",
+     "-",
+     "-",
+     "X3",
+     "X",
+     "X"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "X"
+    ]
+   },
+   "notas": [
+    "NOTAS ESPECÍFICAS:",
+    "1 – Obrigatório para edificações afastadas a mais do que 20 metros da via pública. Pode ser substituído por rede",
+    "seca ou hidrantes e mangotinho, conforme RTCBMRS específica.",
+    "2 - Deve haver Elevador de Emergência para altura maior que 80 metros, podendo ser adaptado o elevador de uso",
+    "normal.",
+    "3 – Pode ser substituído pelo sistema de interfone, desde que cada apartamento possua um ramal ligado à central,",
+    "que deve ficar numa portaria com vigilância humana 24 horas e tenha uma fonte autônoma, com duração mínima",
+    "de 60 minutos.",
+    "NOTAS GERAIS:",
+    "a – Para subsolos ocupados ver Tabela 7;",
+    "b – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS;",
+    "c – A exigência de hidrantes ou mangotinhos será somente para as edificações com altura superior a 12 metros;",
+    "d - Para condomínios e loteamentos deverá ser exigido hidrante urbano conforme RTCBMRS específica."
+   ]
+  }
+ }
+}
