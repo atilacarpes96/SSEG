@@ -1,0 +1,629 @@
+{
+ "regra_de_contagem": "REGRA DE CONTAGEM. Contagem de medidas NUNCA sai de resumo automatico (WebFetch e afins) - ja devolveu 11 onde o certo era 10, e trunca antes dos anexos. Fontes, em ordem: (1) 'rt05_p07_anexo_a' e 'anexo_b_decreto' deste arquivo - transcricao deterministica dos PDFs oficiais VIGENTES, cobrindo Tabela 5, Tabelas 6X e Tabela 7 das duas fontes; (2) as linhas conferidas em 'linhas' e 'linhas_rt05_p07', que guardam a leitura de imagem com a nota JA APLICADA ao caso; (3) imagem enviada pelo usuario - hoje so e necessaria para a Tabela 4 e para as Tabelas 6M.1, 6M.2, 6M.4 e 6M.5, cujo eixo nao e altura. A transcricao da a CELULA com o numero da nota colado; QUEM APLICA A NOTA AO CASO CONCRETO E O ANALISTA - ao chegar no criterio (b) do item 5.1.2 da RT 01/2024, PARAR e perguntar ao usuario.",
+ "duas_fontes": "Existente REGULARIZADA -> 'rt05_p07_anexo_a' (Anexo A da RT 05 Parte 07/2025). A construir ou existente NAO regularizada -> 'anexo_b_decreto' (Anexo B do Decreto 51.803/2014). As duas tem Tabela 5, Tabelas 6X e Tabela 7 com colunas parecidas, mas NAO sao a mesma tabela e nao tem as mesmas linhas de medida: as Tabelas 6 da RT 05 P07 nao tem Seguranca Estrutural, CMAR, Compartimentacao Vertical nem Controle de Fumaca. As chaves antigas 'linhas' (Anexo B) e 'linhas_rt05_p07' guardam leituras de imagem anteriores e continuam validas como registro de caso.",
+ "aplicar_as_notas": "O parser transcreve a celula com o numero da nota colado (X1, X8, X9, X4;5). QUEM APLICA A NOTA E O ANALISTA. Nota que restringe a celula a outra divisao do mesmo bloco EXCLUI a medida da contagem daquela divisao; nota que condiciona a um fato do caso concreto MANTEM a medida, mas a condicao precisa ser verificada. Ler sempre o texto da nota em 'notas' antes de fechar contagem.",
+ "colunas": [
+  "Terrea",
+  "H<=6",
+  "6<H<=12",
+  "12<H<=23",
+  "23<H<=30",
+  "H>30"
+ ],
+ "linhas_de_medida_por_fonte": {
+  "anexo_b_decreto": [
+   "Acesso de Viatura na Edificacao",
+   "Seguranca Estrutural em Incendio",
+   "Compartimentacao Horizontal (areas)",
+   "Compartimentacao Vertical",
+   "Controle de Materiais de Acabamento e Revestimento",
+   "Saidas de Emergencia",
+   "Plano de Emergencia",
+   "Brigada de Incendio",
+   "Iluminacao de Emergencia",
+   "Deteccao de Incendio",
+   "Alarme de Incendio",
+   "Sinalizacao de Emergencia",
+   "Extintores",
+   "Hidrantes e Mangotinhos",
+   "Chuveiros Automaticos",
+   "Controle de Fumaca"
+  ],
+  "rt05_p07": [
+   "Acesso de Viatura na Edificacao",
+   "Compartimentacao Horizontal (areas)",
+   "Saidas de Emergencia",
+   "Plano de Emergencia",
+   "Brigada de Incendio",
+   "Iluminacao de Emergencia",
+   "Deteccao de Incendio",
+   "Alarme de Incendio",
+   "Sinalizacao de Emergencia",
+   "Extintores",
+   "Hidrantes e Mangotinhos",
+   "Chuveiros Automaticos"
+  ],
+  "_nota": "As Tabelas 6 da RT 05 P07 NAO tem linha de Seguranca Estrutural em Incendio, CMAR, Compartimentacao Vertical nem Controle de Fumaca. A ausencia dessas medidas no campo 4 de uma edificacao existente regularizada NAO e pendencia."
+ },
+ "nao_cobertas": {
+  "anexo_b_decreto": {
+   "Tabela 4": "roteamento; nao transcrita",
+   "Tabelas 6M.1, 6M.2, 6M.4, 6M.5": "eixo diferente de altura (ex.: extensao em metros, para tunel) - ainda exigem imagem"
+  },
+  "rt05_p07_anexo_a": {
+   "Tabela 4": "roteamento; nao transcrita",
+   "Tabelas 6M.1, 6M.2, 6M.4, 6M.5": "eixo diferente de altura (ex.: extensao em metros, para tunel) - ainda exigem imagem"
+  }
+ },
+ "mapa": {
+  "b": {
+   "A-2": {
+    "arquivo": "tab-b-A.json",
+    "tabela": "6A",
+    "bloco": 0
+   },
+   "A-3": {
+    "arquivo": "tab-b-A.json",
+    "tabela": "6A",
+    "bloco": 0
+   },
+   "B-1": {
+    "arquivo": "tab-b-B.json",
+    "tabela": "6B",
+    "bloco": 0
+   },
+   "B-2": {
+    "arquivo": "tab-b-B.json",
+    "tabela": "6B",
+    "bloco": 0
+   },
+   "C-1": {
+    "arquivo": "tab-b-C.json",
+    "tabela": "6C",
+    "bloco": 0
+   },
+   "C-2": {
+    "arquivo": "tab-b-C.json",
+    "tabela": "6C",
+    "bloco": 0
+   },
+   "C-3": {
+    "arquivo": "tab-b-C.json",
+    "tabela": "6C",
+    "bloco": 0
+   },
+   "D-1": {
+    "arquivo": "tab-b-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "D-2": {
+    "arquivo": "tab-b-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "D-3": {
+    "arquivo": "tab-b-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "D-4": {
+    "arquivo": "tab-b-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "D-5": {
+    "arquivo": "tab-b-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "E-1": {
+    "arquivo": "tab-b-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-2": {
+    "arquivo": "tab-b-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-3": {
+    "arquivo": "tab-b-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-4": {
+    "arquivo": "tab-b-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-5": {
+    "arquivo": "tab-b-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-6": {
+    "arquivo": "tab-b-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "F-1": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.1",
+    "bloco": 0
+   },
+   "F-2": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.1",
+    "bloco": 1
+   },
+   "F-3": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.2",
+    "bloco": 0
+   },
+   "F-9": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.2",
+    "bloco": 0
+   },
+   "F-4": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.2",
+    "bloco": 1
+   },
+   "F-5": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.3",
+    "bloco": 0
+   },
+   "F-6": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.3",
+    "bloco": 0
+   },
+   "F-8": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.3",
+    "bloco": 1
+   },
+   "F-7": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.4",
+    "bloco": 0
+   },
+   "F-10": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.4",
+    "bloco": 1
+   },
+   "F-11": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.5",
+    "bloco": 0
+   },
+   "F-12": {
+    "arquivo": "tab-b-F.json",
+    "tabela": "6F.5",
+    "bloco": 1
+   },
+   "G-1": {
+    "arquivo": "tab-b-G.json",
+    "tabela": "6G.1",
+    "bloco": 0
+   },
+   "G-2": {
+    "arquivo": "tab-b-G.json",
+    "tabela": "6G.1",
+    "bloco": 0
+   },
+   "G-3": {
+    "arquivo": "tab-b-G.json",
+    "tabela": "6G.2",
+    "bloco": 0
+   },
+   "G-4": {
+    "arquivo": "tab-b-G.json",
+    "tabela": "6G.2",
+    "bloco": 1
+   },
+   "G-5": {
+    "arquivo": "tab-b-G.json",
+    "tabela": "6G.3",
+    "bloco": 0
+   },
+   "G-6": {
+    "arquivo": "tab-b-G.json",
+    "tabela": "6G.6",
+    "bloco": 0
+   },
+   "H-1": {
+    "arquivo": "tab-b-H.json",
+    "tabela": "6H.1",
+    "bloco": 0
+   },
+   "H-2": {
+    "arquivo": "tab-b-H.json",
+    "tabela": "6H.1",
+    "bloco": 1
+   },
+   "H-3": {
+    "arquivo": "tab-b-H.json",
+    "tabela": "6H.2",
+    "bloco": 0
+   },
+   "H-4": {
+    "arquivo": "tab-b-H.json",
+    "tabela": "6H.2",
+    "bloco": 1
+   },
+   "H-5": {
+    "arquivo": "tab-b-H.json",
+    "tabela": "6H.3",
+    "bloco": 0
+   },
+   "H-6": {
+    "arquivo": "tab-b-H.json",
+    "tabela": "6H.3",
+    "bloco": 1
+   },
+   "I-1": {
+    "arquivo": "tab-b-I.json",
+    "tabela": "6I.1",
+    "bloco": 0
+   },
+   "I-2": {
+    "arquivo": "tab-b-I.json",
+    "tabela": "6I.1",
+    "bloco": 1
+   },
+   "I-3": {
+    "arquivo": "tab-b-I.json",
+    "tabela": "6I.2",
+    "bloco": 0
+   },
+   "J-1": {
+    "arquivo": "tab-b-J.json",
+    "tabela": "6J.1",
+    "bloco": 0
+   },
+   "J-2": {
+    "arquivo": "tab-b-J.json",
+    "tabela": "6J.1",
+    "bloco": 1
+   },
+   "J-3": {
+    "arquivo": "tab-b-J.json",
+    "tabela": "6J.2",
+    "bloco": 0
+   },
+   "J-4": {
+    "arquivo": "tab-b-J.json",
+    "tabela": "6J.2",
+    "bloco": 1
+   },
+   "L1": {
+    "arquivo": "tab-b-L.json",
+    "tabela": "6L.1",
+    "bloco": 0
+   },
+   "L2": {
+    "arquivo": "tab-b-L.json",
+    "tabela": "6L.1",
+    "bloco": 0
+   },
+   "L3": {
+    "arquivo": "tab-b-L.json",
+    "tabela": "6L.1",
+    "bloco": 0
+   },
+   "M-3": {
+    "arquivo": "tab-b-M.json",
+    "tabela": "6M.3",
+    "bloco": 0
+   },
+   "M-6": {
+    "arquivo": "tab-b-M.json",
+    "tabela": "6M.6",
+    "bloco": 0
+   }
+  },
+  "rt05": {
+   "A-2": {
+    "arquivo": "tab-rt05-A.json",
+    "tabela": "6A",
+    "bloco": 0
+   },
+   "A-3": {
+    "arquivo": "tab-rt05-A.json",
+    "tabela": "6A",
+    "bloco": 0
+   },
+   "B-1": {
+    "arquivo": "tab-rt05-B.json",
+    "tabela": "6B",
+    "bloco": 0
+   },
+   "B-2": {
+    "arquivo": "tab-rt05-B.json",
+    "tabela": "6B",
+    "bloco": 0
+   },
+   "C-1": {
+    "arquivo": "tab-rt05-C.json",
+    "tabela": "6C",
+    "bloco": 0
+   },
+   "C-2": {
+    "arquivo": "tab-rt05-C.json",
+    "tabela": "6C",
+    "bloco": 0
+   },
+   "C-3": {
+    "arquivo": "tab-rt05-C.json",
+    "tabela": "6C",
+    "bloco": 0
+   },
+   "D-1": {
+    "arquivo": "tab-rt05-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "D-2": {
+    "arquivo": "tab-rt05-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "D-3": {
+    "arquivo": "tab-rt05-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "D-4": {
+    "arquivo": "tab-rt05-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "D-5": {
+    "arquivo": "tab-rt05-D.json",
+    "tabela": "6D",
+    "bloco": 0
+   },
+   "E-1": {
+    "arquivo": "tab-rt05-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-2": {
+    "arquivo": "tab-rt05-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-3": {
+    "arquivo": "tab-rt05-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-4": {
+    "arquivo": "tab-rt05-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-5": {
+    "arquivo": "tab-rt05-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "E-6": {
+    "arquivo": "tab-rt05-E.json",
+    "tabela": "6E",
+    "bloco": 0
+   },
+   "F-1": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.1",
+    "bloco": 0
+   },
+   "F-2": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.1",
+    "bloco": 1
+   },
+   "F-3": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.2",
+    "bloco": 0
+   },
+   "F-9": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.2",
+    "bloco": 0
+   },
+   "F-4": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.2",
+    "bloco": 1
+   },
+   "F-5": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.3",
+    "bloco": 0
+   },
+   "F-6": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.3",
+    "bloco": 0
+   },
+   "F-8": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.3",
+    "bloco": 1
+   },
+   "F-10": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.4",
+    "bloco": 0
+   },
+   "F-11": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.5",
+    "bloco": 0
+   },
+   "F-12": {
+    "arquivo": "tab-rt05-F.json",
+    "tabela": "6F.5",
+    "bloco": 1
+   },
+   "G-1": {
+    "arquivo": "tab-rt05-G.json",
+    "tabela": "6G.1",
+    "bloco": 0
+   },
+   "G-2": {
+    "arquivo": "tab-rt05-G.json",
+    "tabela": "6G.1",
+    "bloco": 0
+   },
+   "G-3": {
+    "arquivo": "tab-rt05-G.json",
+    "tabela": "6G.2",
+    "bloco": 0
+   },
+   "G-4": {
+    "arquivo": "tab-rt05-G.json",
+    "tabela": "6G.2",
+    "bloco": 1
+   },
+   "G-5": {
+    "arquivo": "tab-rt05-G.json",
+    "tabela": "6G.3",
+    "bloco": 0
+   },
+   "G-6": {
+    "arquivo": "tab-rt05-G.json",
+    "tabela": "6G.6",
+    "bloco": 0
+   },
+   "H-1": {
+    "arquivo": "tab-rt05-H.json",
+    "tabela": "6H.1",
+    "bloco": 0
+   },
+   "H-2": {
+    "arquivo": "tab-rt05-H.json",
+    "tabela": "6H.1",
+    "bloco": 1
+   },
+   "H-3": {
+    "arquivo": "tab-rt05-H.json",
+    "tabela": "6H.2",
+    "bloco": 0
+   },
+   "H-4": {
+    "arquivo": "tab-rt05-H.json",
+    "tabela": "6H.2",
+    "bloco": 1
+   },
+   "H-5": {
+    "arquivo": "tab-rt05-H.json",
+    "tabela": "6H.3",
+    "bloco": 0
+   },
+   "H-6": {
+    "arquivo": "tab-rt05-H.json",
+    "tabela": "6H.3",
+    "bloco": 1
+   },
+   "I-1": {
+    "arquivo": "tab-rt05-I.json",
+    "tabela": "6I.1",
+    "bloco": 0
+   },
+   "I-2": {
+    "arquivo": "tab-rt05-I.json",
+    "tabela": "6I.1",
+    "bloco": 1
+   },
+   "I-3": {
+    "arquivo": "tab-rt05-I.json",
+    "tabela": "6I.2",
+    "bloco": 0
+   },
+   "J-1": {
+    "arquivo": "tab-rt05-J.json",
+    "tabela": "6J.1",
+    "bloco": 0
+   },
+   "J-2": {
+    "arquivo": "tab-rt05-J.json",
+    "tabela": "6J.1",
+    "bloco": 1
+   },
+   "J-3": {
+    "arquivo": "tab-rt05-J.json",
+    "tabela": "6J.2",
+    "bloco": 0
+   },
+   "J-4": {
+    "arquivo": "tab-rt05-J.json",
+    "tabela": "6J.2",
+    "bloco": 1
+   },
+   "L1": {
+    "arquivo": "tab-rt05-L.json",
+    "tabela": "6L.1",
+    "bloco": 0
+   },
+   "L2": {
+    "arquivo": "tab-rt05-L.json",
+    "tabela": "6L.1",
+    "bloco": 0
+   },
+   "L3": {
+    "arquivo": "tab-rt05-L.json",
+    "tabela": "6L.1",
+    "bloco": 0
+   },
+   "M-3": {
+    "arquivo": "tab-rt05-M.json",
+    "tabela": "6M.3",
+    "bloco": 0
+   },
+   "M-6": {
+    "arquivo": "tab-rt05-M.json",
+    "tabela": "6M.6",
+    "bloco": 0
+   }
+  }
+ },
+ "arquivos": [
+  "tab-b-A.json",
+  "tab-b-B.json",
+  "tab-b-C.json",
+  "tab-b-D.json",
+  "tab-b-E.json",
+  "tab-b-F.json",
+  "tab-b-G.json",
+  "tab-b-H.json",
+  "tab-b-I.json",
+  "tab-b-J.json",
+  "tab-b-L.json",
+  "tab-b-M.json",
+  "tab-b-tabela5.json",
+  "tab-b-tabela7.json",
+  "tab-rt05-A.json",
+  "tab-rt05-B.json",
+  "tab-rt05-C.json",
+  "tab-rt05-D.json",
+  "tab-rt05-E.json",
+  "tab-rt05-F.json",
+  "tab-rt05-G.json",
+  "tab-rt05-H.json",
+  "tab-rt05-I.json",
+  "tab-rt05-J.json",
+  "tab-rt05-L.json",
+  "tab-rt05-M.json",
+  "tab-rt05-tabela5.json",
+  "tab-rt05-tabela7.json"
+ ]
+}

@@ -1,0 +1,391 @@
+{
+ "fonte": "anexo_b_decreto",
+ "fonte_nome": "Anexo B do Decreto 51.803/2014 - tabelas de exigencias para edificacao A CONSTRUIR e EXISTENTE NAO REGULARIZADA. Transcricao completa das Tabelas 6X que usam colunas de altura.",
+ "colunas": [
+  "Terrea",
+  "H<=6",
+  "6<H<=12",
+  "12<H<=23",
+  "23<H<=30",
+  "H>30"
+ ],
+ "como_ler": "Igual ao rt05_p07_anexo_a: 'divisoes' lista os blocos de colunas na ordem; 'medidas' traz a fila inteira de celulas, 6 por bloco, na ordem ['Terrea','H<=6','6<H<=12','12<H<=23','23<H<=30','H>30']; indice = (bloco*6)+coluna. 'X' exigida; 'X8', 'X4;5' exigida com aquelas notas especificas; '-' nao exigida.",
+ "tabelas": {
+  "6I.1": {
+   "titulo": "EDIFICAÇÕES DE DIVISÃO I-1 E I-2 COM ÁREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "I-1 (risco baixo)",
+    "I-2 (risco médio)"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Seguranca Estrutural em Incendio": [
+     "-",
+     "-",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Compartimentacao Vertical": [
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "X",
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "X"
+    ],
+    "Controle de Materiais de Acabamento e Revestimento": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X2",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X2"
+    ],
+    "Plano de Emergencia": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "X"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Deteccao de Incendio": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Chuveiros Automaticos": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "X"
+    ],
+    "Controle de Fumaca": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X3",
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X3"
+    ]
+   },
+   "notas": [
+    "NOTAS ESPECÍFICAS:",
+    "1 – Pode ser substituída por sistema de chuveiros automáticos.",
+    "2 – Deve haver Elevador de Emergência para altura maior que 60 metros.",
+    "3 – Acima de 60 metros de altura.",
+    "NOTAS GERAIS:",
+    "a – Para subsolos ocupados ver Tabela 7;",
+    "b – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS.",
+    "(Redação dada pelo Decreto nº 53.280, de 01 de novembro de 2016)"
+   ]
+  },
+  "6I.2": {
+   "titulo": "EDIFICAÇÕES DE DIVISÃO I-3 COM ÁREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "I-3 (risco alto)"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Seguranca Estrutural em Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Compartimentacao Horizontal (areas)": [
+     "X1",
+     "X1",
+     "X1",
+     "X1",
+     "X",
+     "X"
+    ],
+    "Compartimentacao Vertical": [
+     "-",
+     "-",
+     "-",
+     "X2",
+     "X2",
+     "X"
+    ],
+    "Controle de Materiais de Acabamento e Revestimento": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X3"
+    ],
+    "Plano de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Deteccao de Incendio": [
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Chuveiros Automaticos": [
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "X"
+    ],
+    "Controle de Fumaca": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X"
+    ]
+   },
+   "notas": [
+    "NOTAS ESPECÍFICAS:",
+    "1 – Pode ser substituída por sistema de chuveiros automáticos.",
+    "2 – Pode ser substituída por sistema de controle de fumaça, exceto para as compartimentações das fachadas e",
+    "selagens dos shafts e dutos de instalações.",
+    "3 – Deve haver Elevador de Emergência para altura maior que 60 metros.",
+    "NOTAS GERAIS:",
+    "a – Para subsolos ocupados ver Tabela 7;",
+    "b – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS.",
+    "(Redação dada pelo Decreto nº 53.280, de 01 de novembro de 2016)"
+   ]
+  }
+ }
+}

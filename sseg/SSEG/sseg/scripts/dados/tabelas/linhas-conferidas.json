@@ -1,0 +1,265 @@
+{
+ "linhas": [
+  {
+   "fonte": "Anexo B do Decreto 51.803/2014",
+   "tabela": "6B",
+   "divisao": "B-1",
+   "coluna": "6<H<=12",
+   "total_medidas": 12,
+   "exigidas": [
+    "Acesso de Viaturas na Edificacao",
+    "Seguranca Estrutural em Incendio",
+    "Compartimentacao Horizontal (X1)",
+    "Controle de Materiais de Acabamento e Revestimento",
+    "Saidas de Emergencia",
+    "Brigada de Incendio",
+    "Iluminacao de Emergencia",
+    "Deteccao de Incendio (X8)",
+    "Alarme de Incendio (X9)",
+    "Sinalizacao de Emergencia",
+    "Extintores",
+    "Hidrantes e mangotinhos"
+   ],
+   "nao_exigidas": [
+    "Compartimentacao Vertical",
+    "Plano de Emergencia",
+    "Chuveiros Automaticos",
+    "Controle de Fumaca"
+   ],
+   "notas": "Plano de Emergencia so passa a ser exigido para B-1 a partir de 12<H<=23. Chuveiros Automaticos a partir de 23<H<=30.",
+   "conferido_em": "2026-09-01",
+   "conferido_por": "leitura da imagem da tabela oficial, celula a celula",
+   "caso": "A00016097AA002 (Hotel Valler)"
+  },
+  {
+   "fonte": "Anexo B do Decreto 51.803/2014",
+   "tabela": "6F.3",
+   "divisao": "F-8",
+   "coluna": "6<H<=12",
+   "total_medidas": 10,
+   "exigidas": [
+    "Acesso de Viatura na Edificacao",
+    "Seguranca Estrutural em Incendio",
+    "Controle de Materiais de Acabamento",
+    "Saidas de Emergencia",
+    "Brigada de Incendio",
+    "Iluminacao de Emergencia",
+    "Alarme de Incendio",
+    "Sinalizacao de Emergencia",
+    "Extintores",
+    "Hidrantes e Mangotinhos"
+   ],
+   "nao_exigidas": [
+    "Compartimentacao Horizontal",
+    "Compartimentacao Vertical",
+    "Plano de Emergencia",
+    "Deteccao de Incendio",
+    "Chuveiros Automaticos",
+    "Controle de Fumaca"
+   ],
+   "notas": "Extracao automatica do PDF ja devolveu 11 medidas para esta linha - ERRADO. O correto e 10, lido na imagem.",
+   "conferido_em": "2026-09-01",
+   "conferido_por": "leitura da imagem da tabela oficial, celula a celula",
+   "caso": "A00016097AA002 (Hotel Valler)"
+  },
+  {
+   "fonte": "Anexo B do Decreto 51.803/2014",
+   "tabela": "6C",
+   "divisao": "C-2",
+   "coluna": "Terrea",
+   "total_medidas": 12,
+   "exigidas": [
+    "Acesso de Viatura na Edificacao",
+    "Seguranca Estrutural em Incendio",
+    "Compartimentacao Horizontal (areas) (X1)",
+    "Controle de Materiais de Acabamento e Revestimento",
+    "Saidas de Emergencia",
+    "Brigada de Incendio",
+    "Iluminacao de Emergencia",
+    "Deteccao de Incendio (X9)",
+    "Alarme de Incendio",
+    "Sinalizacao de Emergencia",
+    "Extintores",
+    "Hidrantes e mangotinhos"
+   ],
+   "nao_exigidas": [
+    "Compartimentacao Vertical",
+    "Plano de Emergencia",
+    "Chuveiros Automaticos",
+    "Controle de Fumaca"
+   ],
+   "condicionais": [
+    "Deteccao de Incendio - nota 9: somente para as areas de depositos superiores a 750 m2. Nao verificada a condicao, a contagem aplicavel a C-2 cai para 11."
+   ],
+   "excluidas_por_nota": [
+    "Plano de Emergencia - celula X8, nota 8: 'Para edificacoes de Divisao C-3'. Nao se aplica a C-1 nem a C-2."
+   ],
+   "notas": "Cabecalho: 'EDIFICACOES DO GRUPO C COM AREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m'. Divisoes C-1, C-2 e C-3 compartilham o mesmo bloco de colunas. Nota 1: Compartimentacao Horizontal pode ser substituida por sistema de chuveiros automaticos. Notas gerais: (a) subsolos ocupados ver Tabela 7; (b) observar as exigencias para riscos especificos das respectivas RTCBMRS; (c) edificacoes sem ventilacao natural (janelas) exigem controle de fumaca.",
+   "conferido_em": "2026-09-01",
+   "conferido_por": "leitura da imagem da tabela oficial, celula a celula",
+   "caso": "A00049570AA001 (Pavilhao comercial Spessato, Encantado)"
+  },
+  {
+   "fonte": "Anexo B do Decreto 51.803/2014",
+   "tabela": "6J.2",
+   "divisao": "J-3",
+   "coluna": "Terrea",
+   "total_medidas": 12,
+   "exigidas": [
+    "Acesso de Viatura na Edificacao",
+    "Seguranca Estrutural em Incendio",
+    "Compartimentacao Horizontal (areas) (X1)",
+    "Controle de Materiais de Acabamento e Revestimento",
+    "Saidas de Emergencia",
+    "Plano de Emergencia",
+    "Brigada de Incendio",
+    "Iluminacao de Emergencia",
+    "Alarme de Incendio",
+    "Sinalizacao de Emergencia",
+    "Extintores",
+    "Hidrantes e Mangotinhos"
+   ],
+   "nao_exigidas": [
+    "Compartimentacao Vertical",
+    "Deteccao de Incendio",
+    "Chuveiros Automaticos",
+    "Controle de Fumaca"
+   ],
+   "condicionais": [],
+   "excluidas_por_nota": [],
+   "notas": "Cabecalho: 'EDIFICACOES DE DIVISAO J-3 E J-4 COM AREA [superior a 750 m2] OU ALTURA SUPERIOR A 12m'. O proprio cabecalho da coluna declara J-3 como risco MEDIO. Todas as 12 sao incondicionais na coluna Terrea; a unica com nota e a Compartimentacao Horizontal (X1, substituivel por chuveiros automaticos).",
+   "conferido_em": "2026-09-01",
+   "conferido_por": "leitura da imagem da tabela oficial, celula a celula",
+   "caso": "A00049570AA001 (Pavilhao comercial Spessato, Encantado)"
+  }
+ ],
+ "linhas_rt05_p07": [
+  {
+   "fonte": "RT CBMRS n 05, Parte 07/2025 - Anexo A",
+   "tabela": "6I.1",
+   "divisao": "I-1",
+   "grau_risco_declarado_no_cabecalho": "baixo",
+   "coluna": "H<=6",
+   "total_medidas": 8,
+   "exigidas": [
+    "Acesso de Viatura na Edificacao (X1)",
+    "Saidas de Emergencia",
+    "Brigada de Incendio",
+    "Iluminacao de Emergencia",
+    "Alarme de Incendio",
+    "Sinalizacao de Emergencia",
+    "Extintores",
+    "Hidrantes e Mangotinhos"
+   ],
+   "nao_exigidas": [
+    "Compartimentacao Horizontal (areas)",
+    "Plano de Emergencia",
+    "Deteccao de Incendio",
+    "Chuveiros Automaticos"
+   ],
+   "condicionais": [
+    "Acesso de Viatura na Edificacao - nota 1: obrigatorio se a edificacao encontrar-se afastada mais do que 20 metros da via publica. Conferir na implantacao antes de exigir."
+   ],
+   "excluidas_por_nota": [],
+   "notas": "Titulo: 'TABELA 6I.1 - EDIFICACOES DE DIVISAO I-1 E I-2 COM AREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m'. GRUPO I - INDUSTRIAL. Cabecalho declara I-1 (risco baixo) e I-2 (risco medio), cada uma em bloco de colunas proprio. NOTAS ESPECIFICAS: 1 - Obrigatorio se a edificacao encontrar-se afastada mais do que 20 metros da via publica; 2 - Pode ser substituida por sistema de chuveiros automaticos; 3 - Deve haver Elevador de Emergencia para altura maior que 60 metros, podendo ser adaptado o elevador de uso normal; 4 - Somente nos locais de deposito com area superior a 750m2. NOTAS GERAIS: a - Para subsolos ocupados ver Tabela 7; b - Observar ainda as exigencias para os riscos especificos das respectivas RTCBMRS. Conferido tambem contra o texto extraido do PDF oficial em 02/09/2026: as 8 medidas confirmadas.",
+   "conferido_em": "2026-09-02",
+   "conferido_por": "leitura da imagem + conferencia contra o texto do PDF oficial (pdftotext -layout)",
+   "caso": "A00024749AA002 (Encruzilhada do Sul)"
+  },
+  {
+   "fonte": "RT CBMRS n 05, Parte 07/2025 - Anexo A",
+   "tabela": "6J.1",
+   "divisao": "J-2",
+   "grau_risco_declarado_no_cabecalho": "baixo",
+   "coluna": "H<=6",
+   "total_medidas": 8,
+   "exigidas": [
+    "Acesso de Viatura na Edificacao (X1)",
+    "Saidas de Emergencia",
+    "Brigada de Incendio",
+    "Iluminacao de Emergencia",
+    "Alarme de Incendio",
+    "Sinalizacao de Emergencia",
+    "Extintores",
+    "Hidrantes e Mangotinhos"
+   ],
+   "nao_exigidas": [
+    "Compartimentacao Horizontal (areas)",
+    "Plano de Emergencia",
+    "Deteccao de Incendio",
+    "Chuveiros Automaticos"
+   ],
+   "condicionais": [
+    "Acesso de Viatura na Edificacao - nota 1: obrigatorio se a edificacao encontrar-se afastada mais do que 20 metros da via publica."
+   ],
+   "excluidas_por_nota": [],
+   "notas": "Titulo: 'TABELA 6J.1 - EDIFICACOES DE DIVISAO J-1 E J-2 COM AREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m'. GRUPO J - DEPOSITO. Cabecalho declara J-1 (material incombustivel) e J-2 (risco baixo). CORRECAO 02/09/2026: a primeira leitura da imagem devolveu 7 medidas por ter lido o Alarme de Incendio como '-' na coluna H<=6 do J-2. O texto do PDF mostra 'Alarme de Incendio: J-1 = - - - X X X ; J-2 = X X X X X X'. O correto e 8. Consequencia: I-1 (H<=6) e J-2 (H<=6) exigem AS MESMAS 8 MEDIDAS - ha EMPATE tambem no criterio (b) do item 5.1.2 da RT 01/2024, e o empate e inocuo porque as duas listas sao identicas. NOTA GERAL c: em qualquer tipo de ocupacao, sempre que houver deposito de materiais combustiveis (J-2, J-3 e J-4) dispostos EM AREAS DESCOBERTAS, serao exigidos: c.1 hidrantes e brigada para areas delimitadas de deposito superiores a 2.500 m2; c.2 extintores, podendo ficar agrupados em abrigos nas extremidades do terreno, percurso maximo 60 m; c.3 recuos - passeio publico 3 m, divisas laterais e fundos 2 m, bombas de combustiveis/equipamentos que produzam calor 3 m; c.4 lotes maximos de 20 m de comprimento e largura, corredores de no minimo 1,5 m. O campo do SOL 'Possui depositos descobertos de materiais combustiveis dispostos em areas delimitadas?' aciona ou afasta essa nota.",
+   "conferido_em": "2026-09-02",
+   "conferido_por": "leitura da imagem + conferencia contra o texto do PDF oficial (pdftotext -layout)",
+   "caso": "A00024749AA002 (Encruzilhada do Sul)"
+  }
+ ],
+ "grupos_por_tabela": {
+  "6B": {
+   "grupo": "B",
+   "divisoes": [
+    "B-1",
+    "B-2"
+   ],
+   "descricao": "Servicos de hospedagem",
+   "status": "confirmado"
+  },
+  "6C": {
+   "grupo": "C",
+   "divisoes": [
+    "C-1",
+    "C-2",
+    "C-3"
+   ],
+   "descricao": "Comercial - as tres divisoes dividem o mesmo bloco de colunas; as notas discriminam por divisao",
+   "status": "confirmado"
+  },
+  "6F.3": {
+   "grupo": "F",
+   "divisoes": [
+    "F-5",
+    "F-6",
+    "F-8"
+   ],
+   "descricao": "Locais de reuniao de publico - F-5/F-6 num bloco de colunas, F-8 em bloco proprio",
+   "status": "confirmado"
+  },
+  "6J.2": {
+   "grupo": "J",
+   "divisoes": [
+    "J-3",
+    "J-4"
+   ],
+   "descricao": "Depositos - J-3 (risco medio) e J-4 em blocos de colunas proprios",
+   "status": "confirmado"
+  }
+ },
+ "grupos_por_tabela_rt05_p07": {
+  "6I.1": {
+   "grupo": "I",
+   "divisoes": [
+    "I-1",
+    "I-2"
+   ],
+   "descricao": "Industrial - I-1 (risco baixo) e I-2 (risco medio), cada uma em bloco de colunas proprio; o grau de risco vem declarado no cabecalho",
+   "status": "confirmado"
+  },
+  "6J.1": {
+   "grupo": "J",
+   "divisoes": [
+    "J-1",
+    "J-2"
+   ],
+   "descricao": "Deposito - J-1 (material incombustivel) e J-2 (risco baixo), cada uma em bloco de colunas proprio; o grau de risco vem declarado no cabecalho",
+   "status": "confirmado"
+  }
+ },
+ "_erro_registrado_leitura_imagem": "02/09/2026: a leitura da imagem da Tabela 6J.1 devolveu 7 medidas para J-2/H<=6; a conferencia contra o texto do PDF mostrou 8 (o Alarme de Incendio foi lido como '-' sendo 'X'). Licao: ler a imagem continua sendo a regra, mas quando o PDF oficial estiver em maos, CONFERIR a contagem contra o texto extraido com 'pdftotext -layout' - as duas leituras juntas sao mais seguras que qualquer uma sozinha. Linhas com blocos de colunas lado a lado (duas divisoes na mesma tabela) sao onde o olho erra: e facil pegar a celula do bloco vizinho.",
+ "_erro_registrado_fonte": "02/09/2026: o projeto afirmava que 'o PDF consolidado do CBMRS nao traz o Anexo B'. ERRADO - traz as Tabelas 4 a 7 completas. A afirmacao foi herdada sem verificacao e repetida em tres documentos. O que enganou: os cabecalhos das tabelas vem precedidos de form feed (\\f), entao um grep '^ *TABELA' nao casa. Ao procurar tabela em PDF, remover \\f antes de grepar. Consequencia evitada por pouco: quase transcrevi a versao ORIGINAL de 2014 (do estado.rs.gov.br, sem nenhuma mencao ao Decreto 53.280/2016) como se fosse a vigente.",
+ "_convencao_de_contagem": "total_medidas conta as medidas exigidas PARA AQUELA DIVISAO. Nota que restringe a celula a outra divisao do mesmo bloco (ex.: nota 8 da Tabela 6C, 'para edificacoes de Divisao C-3') EXCLUI a medida da contagem daquela divisao. Nota que condiciona a medida a um fato do caso concreto (ex.: nota 9, 'somente para areas de depositos superiores a 750 m2'; ou a nota 1 das Tabelas 6I.1/6J.1, 'obrigatorio se a edificacao encontrar-se afastada mais do que 20 metros da via publica') mantem a medida na contagem, mas fica registrada em 'condicionais' - ao aplicar o criterio (b) do item 5.1.2 da RT 01/2024, conferir se a condicao se verifica no caso."
+}

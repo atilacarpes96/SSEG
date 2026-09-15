@@ -1,0 +1,169 @@
+{
+ "fonte": "anexo_b_decreto",
+ "fonte_nome": "Anexo B do Decreto 51.803/2014 - tabelas de exigencias para edificacao A CONSTRUIR e EXISTENTE NAO REGULARIZADA. Transcricao completa das Tabelas 6X que usam colunas de altura.",
+ "colunas": [
+  "Terrea",
+  "H<=6",
+  "6<H<=12",
+  "12<H<=23",
+  "23<H<=30",
+  "H>30"
+ ],
+ "como_ler": "Igual ao rt05_p07_anexo_a: 'divisoes' lista os blocos de colunas na ordem; 'medidas' traz a fila inteira de celulas, 6 por bloco, na ordem ['Terrea','H<=6','6<H<=12','12<H<=23','23<H<=30','H>30']; indice = (bloco*6)+coluna. 'X' exigida; 'X8', 'X4;5' exigida com aquelas notas especificas; '-' nao exigida.",
+ "tabelas": {
+  "6D": {
+   "titulo": "EDIFICAÇÕES DO GRUPO D COM ÁREA SUPERIOR A 750m2 OU ALTURA SUPERIOR A 12m",
+   "divisoes": [
+    "D-1, D-2, D-3, D-4 e D-5"
+   ],
+   "medidas": {
+    "Acesso de Viatura na Edificacao": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Seguranca Estrutural em Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Compartimentacao Horizontal (areas)": [
+     "X1",
+     "X1",
+     "X1",
+     "X1",
+     "X2",
+     "X"
+    ],
+    "Compartimentacao Vertical": [
+     "-",
+     "-",
+     "-",
+     "X3",
+     "X4",
+     "X5"
+    ],
+    "Controle de Materiais de Acabamento e Revestimento": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Saidas de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X6"
+    ],
+    "Plano de Emergencia": [
+     "X7",
+     "X7",
+     "X7",
+     "X7",
+     "X7",
+     "X7,8"
+    ],
+    "Brigada de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Iluminacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Deteccao de Incendio": [
+     "-",
+     "-",
+     "-",
+     "X",
+     "X",
+     "X"
+    ],
+    "Alarme de Incendio": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Sinalizacao de Emergencia": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Extintores": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Hidrantes e Mangotinhos": [
+     "X",
+     "X",
+     "X",
+     "X",
+     "X",
+     "X"
+    ],
+    "Chuveiros Automaticos": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "X",
+     "X"
+    ],
+    "Controle de Fumaca": [
+     "-",
+     "-",
+     "-",
+     "-",
+     "-",
+     "X9"
+    ]
+   },
+   "notas": [
+    "NOTAS ESPECÍFICAS:",
+    "1 – Pode ser substituída por sistema de chuveiros automáticos.",
+    "2 – Pode ser substituído por controle de fumaça.",
+    "3 – Pode ser substituída por sistema de chuveiros automáticos, exceto para as compartimentações das fachadas e",
+    "selagens dos shafts e dutos de instalações.",
+    "4 – Pode ser substituída por sistema de controle de fumaça, exceto para as compartimentações das fachadas e",
+    "selagens dos shafts e dutos de instalações.",
+    "5 – Pode ser substituída por sistema de controle de fumaça, até 60 metros de altura, exceto para as",
+    "compartimentações das fachadas e selagens dos shafts e dutos de instalações.",
+    "6 – Deve haver Elevador de Emergência para altura maior que 60 metros.",
+    "7 – Exigido somente para a Divisão D-5.",
+    "8 – Exigido para todas as edificações acima de 60 metros de altura.",
+    "NOTAS GERAIS:",
+    "a – Para subsolos ocupados ver Tabela 7;",
+    "b – Observar ainda as exigências para os riscos específicos das respectivas RTCBMRS.",
+    "(Redação dada pelo Decreto nº 53.280, de 01 de novembro de 2016)"
+   ]
+  }
+ }
+}
