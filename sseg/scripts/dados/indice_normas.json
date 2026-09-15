@@ -1,6 +1,7 @@
 {
   "_leia_isto": "Forma legivel por maquina do normas/00-indice-normativo.md. Serve para a conferencia automatica das normas citadas no campo '4. Medidas de seguranca' do print do SOL. NAO e fundamento: o fundamento sai do PDF oficial. Manter em sincronia com o 00-indice-normativo.md.",
-  "_atualizado_em": "2026-09-02",
+  "_atualizado_em": "2026-09-15",
+  "_onde_estao_as_normas": "Os PDFs oficiais estao em normas/pdf/ (14 arquivos) DENTRO do repositorio desde 15/09/2026 - nao pedir PDF ao usuario sem olhar la. O texto integral convertido pelo anydoc esta em normas/md/, e serve so para LOCALIZAR trecho: nao fundamenta, porque a extracao automatica erra hierarquia de titulo e desalinha tabela. A copia local em C:\\Users\\55519\\Desktop\\Carpes\\Normas continua existindo e e a mesma coisa.",
   "_regra_de_vigencia": "A versao aplicavel e a que estava vigente na DATA DE PROTOCOLO do PPCI PARA A PRIMEIRA ANALISE, nao a mais recente hoje. Fundamento: RT 01/2024, itens 3.4 e 4.3.3 (conferidos no PDF oficial em 01/09/2026, reconferidos em 02/09/2026). Nunca 'atualizar' a citacao de um PPCI antigo para a versao nova. Em edificacao EXISTENTE REGULARIZADA a legislacao da epoca pode ser usada, desde que especificado no laudo de inviabilidade e no campo de medidas.",
   "_onde_achar_a_data_de_protocolo": "Aba 'Consultar licenciamento' > aba 'Marcos', marco 'Numero do licenciamento gerado'. Nao esta na tela da analise tecnica.",
   "normas": {

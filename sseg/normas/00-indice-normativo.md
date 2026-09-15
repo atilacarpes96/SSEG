@@ -1,12 +1,26 @@
 # Índice de Bases Normativas — SCI/CBMRS/RS
 
-Última verificação/atualização: **02/09/2026** — grande rodada de conferência contra os PDFs oficiais.
+Última verificação/atualização: **15/09/2026** — PDFs oficiais e conversões passaram a viver no repositório (`normas/pdf/` e `normas/md/`). Conferência das normas contra os PDFs: 02/09/2026.
 
 Ponto de partida para qualquer análise de PPCI, fiscalização ou notificação. Lista as bases normativas incorporadas, seu status de vigência, e para onde ir primeiro ao montar uma notificação.
 
 **Primeira parada ao montar uma notificação:** [[banco-notificacoes-padrao]] — ~80 modelos validados pela chefia. Se o problema já tem modelo lá, use direto.
 
 Fonte oficial para pesquisa própria: **www.bombeiros.rs.gov.br**.
+
+## ⭐ As normas estão no projeto — três camadas, papéis distintos
+
+Desde **15/09/2026** as normas viajam com o repositório. Não pedir PDF ao usuário sem antes olhar aqui:
+
+| Camada | Onde | Serve para | **Não** serve para |
+|---|---|---|---|
+| **PDF oficial** | `normas/pdf/` — 14 arquivos | **citar em CIA** | — |
+| **Conversão automática** (anydoc) | `normas/md/` | **localizar** item, artigo, palavra | fundamentar exigência |
+| **Transcrição comentada** | os `.md` desta pasta | itens já conferidos, travas, aplicação a casos | substituir o PDF na conferência |
+
+Ordem de consulta: a transcrição comentada primeiro; **faltando a letra do item**, `md/` para achar o trecho e `pdf/` para conferir e citar. Detalhe e armadilhas de cada arquivo em `normas/README.md` e [[pasta-normas-local]].
+
+🔴 **`md/` nunca fundamenta.** É extração automática: hierarquia de título sai errada, tabela de exigências desalinha, expoente de nota se solta do X. Item lido ali é **provisório** — conferir no PDF antes de citar.
 
 ## ⭐ As tabelas de exigências estão no projeto — não pedir print
 
