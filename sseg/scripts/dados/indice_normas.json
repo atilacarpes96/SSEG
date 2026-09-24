@@ -1,17 +1,19 @@
 {
   "_leia_isto": "Forma legivel por maquina do normas/00-indice-normativo.md. Serve para a conferencia automatica das normas citadas no campo '4. Medidas de seguranca' do print do SOL. NAO e fundamento: o fundamento sai do PDF oficial. Manter em sincronia com o 00-indice-normativo.md.",
-  "_atualizado_em": "2026-09-15",
-  "_onde_estao_as_normas": "Os PDFs oficiais estao em normas/pdf/ (14 arquivos) DENTRO do repositorio desde 15/09/2026 - nao pedir PDF ao usuario sem olhar la. O texto integral convertido pelo anydoc esta em normas/md/, e serve so para LOCALIZAR trecho: nao fundamenta, porque a extracao automatica erra hierarquia de titulo e desalinha tabela. A copia local em C:\\Users\\55519\\Desktop\\Carpes\\Normas continua existindo e e a mesma coisa.",
-  "_regra_de_vigencia": "A versao aplicavel e a que estava vigente na DATA DE PROTOCOLO do PPCI PARA A PRIMEIRA ANALISE, nao a mais recente hoje. Fundamento: RT 01/2024, itens 3.4 e 4.3.3 (conferidos no PDF oficial em 01/09/2026, reconferidos em 02/09/2026). Nunca 'atualizar' a citacao de um PPCI antigo para a versao nova. Em edificacao EXISTENTE REGULARIZADA a legislacao da epoca pode ser usada, desde que especificado no laudo de inviabilidade e no campo de medidas.",
+  "_atualizado_em": "2026-09-24",
+  "_onde_estao_as_normas": "Os PDFs oficiais estao em normas/pdf/ (17 arquivos desde 24/09/2026, com IN66.pdf, IN67.pdf e IT37.pdf) DENTRO do repositorio desde 15/09/2026 - nao pedir PDF ao usuario sem olhar la. O texto integral convertido pelo anydoc esta em normas/md/, e serve so para LOCALIZAR trecho: nao fundamenta, porque a extracao automatica erra hierarquia de titulo e desalinha tabela. A copia local em C:\\\\Users\\\\55519\\\\Desktop\\\\Carpes\\\\Normas continua existindo e e a mesma coisa.",
+  "_regra_de_vigencia": "A versao aplicavel e a que estava vigente na DATA DE PROTOCOLO do PPCI PARA A PRIMEIRA ANALISE, nao a mais recente hoje. Fundamento: RT 01/2024, itens 3.4 e 4.3.3 (conferidos no PDF oficial em 01/09/2026, reconferidos em 02/09/2026 e 21/09/2026). Nunca 'atualizar' a citacao de um PPCI antigo para a versao nova. Em edificacao EXISTENTE REGULARIZADA a legislacao da epoca pode ser usada, desde que especificado no laudo de inviabilidade e no campo de medidas.",
   "_onde_achar_a_data_de_protocolo": "Aba 'Consultar licenciamento' > aba 'Marcos', marco 'Numero do licenciamento gerado'. Nao esta na tela da analise tecnica.",
+  "_normas_por_remissao": "IT do CBPMESP e NBR listadas na Tabela 2 da RT 01/2024 (item 4.3.1: 'ate a entrada em vigor de Resolucao Tecnica especifica, deverao ser observadas as Normas Brasileiras e Instrucoes Tecnicas dispostas na Tabela 2, em sua edicao mais recente') e a IT 37 do CBPMESP para a M-6 (itens 4.8.1 e 4.8.7) SAO a norma aplicavel da medida, nao citacao irregular. Conferido no PDF da pasta local em 22/09/2026. O site do CBMRS (bombeiros.rs.gov.br/instrucoes-tecnicas) lista como 'em vigor no CBMRS', desde 01/07/2025: IT 08/2025 (P1 e P2), IT 09/2025, IT 15/2025 (P1 a P9), IT 25/2025 (P1 a P5) e IT 37/2025.",
+  "_instrucoes_normativas": "IN do CBMRS sao norma do RS, nivel 4 (abaixo das RTs), sujeitas a regra de vigencia por data de protocolo (RT 01/2024, item 3.4 cita expressamente as Instrucoes Normativas). Nao sao fonte subsidiaria. Complementam uma RT e nao sao medida propria de tabela de exigencias: IN citada no campo 4 junto da RT que complementa e regular. O _canon_norma do sseg.py (versao de 22/09/2026) NAO normaliza 'Instrucao Normativa' para 'IN': 'IN 066/2025' casa, mas 'Instrucao Normativa n.o 066/CBMRS/DSPCI/2025' por extenso, sozinha na celula, sai como atencao - falso positivo. Citada junto com a RT 11, casa pela RT.",
   "normas": {
     "RT 01/2024": {
       "titulo": "Diretrizes Basicas de Seguranca Contra Incendio",
       "vigente_desde": "2025-01-01",
       "versao_anterior": "RT 01/2022",
       "publicada_em": "2024-10-07",
-      "conferido_em": "2026-09-02",
-      "obs": "Art. 2o: entra em vigor em 01/01/2025, revogando a RT CBMRS n.o 01 de 12/04/2022. Versoes corrigidas em out/2024, jan/2025 e 08/06/2026 - a vigencia nao muda, mas a numeracao dos itens entre versoes corrigidas NAO foi verificada."
+      "conferido_em": "2026-09-22",
+      "obs": "Art. 2o: entra em vigor em 01/01/2025, revogando a RT CBMRS n.o 01 de 12/04/2022. Versoes corrigidas em out/2024, jan/2025 e 08/06/2026 - a vigencia nao muda, mas a numeracao dos itens entre versoes corrigidas NAO foi verificada. O PDF da pasta local traz a Nota de Atualizacao n.o 001/2026 nas Tabelas 2 e 3; a Tabela 2 manda usar a ABNT NBR 13714 para hidrantes 'ate a entrada em vigor da RT CBMRS n.o 17, Parte 01'. Em 22/09/2026 conferidos: item 4.3.1 + Tabela 2 (normas por medida) e item 4.8 inteiro (M-6 / subestacoes: 4.8.1 a 4.8.7, incluindo 4.8.6.1 - planta deve informar tipo de subestacao pela IT 37, tipo de oleo mineral ou classe K e volume de oleo de todos os transformadores e reatores)."
     },
     "RT 01/2022": {
       "titulo": "Diretrizes Basicas de Seguranca Contra Incendio (versao anterior, de 12/04/2022)",
@@ -34,7 +36,7 @@
       "titulo": "PPCI na forma completa",
       "vigente_desde": "2016-01-01",
       "conferido_em": "2026-09-02",
-      "obs": "Anexo 'L' (Tabelas L.1, L.2 e L.3) lido integralmente: e a base do que se analisa em planta (L.1) e do que so se confere em memorial (L.2)."
+      "obs": "Anexo 'L' (Tabelas L.1, L.2 e L.3) lido integralmente: e a base do que se analisa em planta (L.1) e do que so se confere em memorial (L.2). Complementada pela IN 067/2025 (Solucao Tecnica Equivalente - STE)."
     },
     "RT 05 Parte 06/2025": {
       "titulo": "Fiscalizacao das Edificacoes e Aplicacao de Penalidades",
@@ -63,8 +65,8 @@
     "RT 11 Parte 01/2016": {
       "titulo": "Saidas de Emergencia",
       "vigente_desde": "2016-09-19",
-      "conferido_em": "2026-09-02",
-      "obs": "Itens 5.5.4.9 (portas de seguranca patrimonial tipo enrolar/correr/gradis junto a saida final + Termo do Anexo D), 5.5.4.10 (porta de correr horizontal so com populacao <= 50) e Anexo D transcritos literalmente. 'Contrapeso' nao aparece na norma."
+      "conferido_em": "2026-09-24",
+      "obs": "Itens 5.5.4.9 (portas de seguranca patrimonial tipo enrolar/correr/gradis junto a saida final + Termo do Anexo D), 5.5.4.10 (porta de correr horizontal so com populacao <= 50) e Anexo D transcritos literalmente. 'Contrapeso' nao aparece na norma. Item 5.3.6 conferido em 21/09/2026: 'A populacao total do pavimento sera o somatorio da populacao de cada compartimento existente na edificacao.' Item 5.4.1.2.2 conferido em 24/09/2026: F-5, F-6, F-11 e F-12 - mais de uma saida, em paredes diversas, afastamento minimo de 10 m (nota 1: medido no paramento externo; nota 2: acesso principal com 60% a 70% das UP). Complementado pela IN 066/2025 (regra do recinto e mesma parede em casos especificos) e pela IN 045/2023 (corredor enclausurado)."
     },
     "RT 12/2021": {
       "titulo": "Sinalizacao de Emergencia",
@@ -83,20 +85,35 @@
     "RT 15 Parte 01/2023": {
       "titulo": "Brigada de Incendio",
       "vigente_desde": "2023-10-15",
-      "data_aproximada": true
+      "data_aproximada": false,
+      "versao_anterior": "RT 15 Parte 01/2022",
+      "publicada_em": "2023-09-15",
+      "conferido_em": "2026-09-19",
+      "obs": "Publicada no DOE n.o 180, de 15/09/2023. Art. 2o: entra em vigor 30 dias apos a publicacao, revogando a RT 15 Parte 01 de 01/08/2022 e a IN n.o 041/CBMRS/DSPCI/2022. ATENCAO: o texto do Art. 2o foi lido em espelho NAO oficial - conferir no PDF de normas/pdf/ antes de citar a data em CIA."
+    },
+    "RT 15 Parte 01/2022": {
+      "titulo": "Brigada de Incendio (versao anterior, de 01/08/2022)",
+      "vigente_desde": "2023-01-29",
+      "vigente_ate": "2023-10-14",
+      "substituida_por": "RT 15 Parte 01/2023",
+      "conferido_em": "2026-09-19",
+      "obs": "Publicada no DOE em 02/08/2022 com prazo de 180 dias. Aplicavel a PPCI protocolado para 1a analise entre 29/01/2023 e 14/10/2023."
     },
     "RT 16/2017": {
       "titulo": "Hidrante Urbano",
-      "vigente_desde": "2017-07-16",
+      "vigente_desde": null,
       "data_aproximada": true,
-      "obs": "Objeto distinto da RT 17 (sistema interno). Nao presumir revogacao de uma pela outra."
+      "publicada_em": "2017-05-17",
+      "conferido_em": "2026-09-19",
+      "obs": "PENDENCIA: vigencia NAO conferida - o Art. 2o nao foi lido. So a publicacao esta confirmada (DOE n.o 092, de 17/05/2017). O valor anterior '2017-07-16' era suposicao de prazo de 60 dias e foi removido. NAO citar data ate ler o Art. 2o no PDF oficial. Objeto distinto da RT 17 (sistema interno). Nao presumir revogacao de uma pela outra."
     },
     "RT 17 Parte 01/2025": {
       "titulo": "Hidrantes e Mangotinhos (sistema interno)",
       "vigente_desde": "2027-01-01",
       "facultativa_antes": true,
-      "conferido_em": "2026-09-02",
-      "obs": "Art. 2o: entra em vigor em 1o de janeiro de 2027. Item 2.2: para PPCI JA PROTOCOLADO para analise, a adocao e FACULTATIVA, desde que nao ocorram alteracoes que exijam novo PPCI. A faculdade tem esse escopo - nao e um 'facultativa ate 2027' generico. Citar ou nao citar a RT 17 no campo 4 de um PPCI protocolado antes de 2027 nao e pendencia."
+      "publicada_em": "2025-09-25",
+      "conferido_em": "2026-09-21",
+      "obs": "CORRIGIDO em 21/09/2026 (desfaz a 'correcao' de 19/09/2026, que estava errada): o Art. 2o diz 1o de JANEIRO de 2027. Conferido em 21/09/2026 no PDF da pasta local Carpes/Normas (RT17.pdf) e na versao corrigida de 08/06/2026 do site do CBMRS (upload/arquivos/202606/10150451-...-versao-corrigida-08-06-2026.pdf). Assinada em 22/09/2025, publicada no DOE n.o 188 de 25/09/2025. O Art. 2o faculta o emprego antecipado a contar da publicacao. Corroboracao: a Tabela 2 da RT 01/2024 (com a Nota de Atualizacao n.o 001/2026) manda usar a ABNT NBR 13714 'ate a entrada em vigor da RT CBMRS n.o 17, Parte 01'. Item 2.2: para PPCI JA PROTOCOLADO, a adocao e FACULTATIVA, desde que nao ocorram alteracoes que exijam novo PPCI. EFEITO: PPCI protocolado para 1a analise ate 31/12/2026 pode citar a NBR 13714 OU a RT 17 - nenhuma das duas e pendencia. A partir de 01/01/2027, a RT 17 e obrigatoria. O erro de 19/09/2026 pode ter gerado notificacao indevida de 'norma de hidrantes desatualizada' em PPCI protocolado entre 01/07/2026 e 31/12/2026 - rever."
     },
     "RT 18/2025": {
       "titulo": "Deteccao e Alarme de Incendio",
@@ -106,10 +123,72 @@
       "titulo": "Sistema Online de Licenciamento",
       "vigente_desde": "2022-01-01",
       "conferido_em": "2026-09-02",
-      "obs": "Nao ha 5a edicao (pagina oficial conferida em 02/09/2026). Item 6.3.6.1.2 (aliineas a-d), 6.3.6.1.2.1, 6.3.6.1.2.2 e 6.3.3.1 transcritos literalmente. ATENCAO: 6.3.6.1.2.2 e a lista de escalas permitidas (1:1000 e 1:500 so para implantacao; 1:100; 1:50), nao um item sobre 'escala que nao confere'."
+      "obs": "Nao ha 5a edicao (pagina oficial conferida em 02/09/2026). Item 6.3.6.1.2 (aliineas a-d), 6.3.6.1.2.1, 6.3.6.1.2.2 e 6.3.3.1 transcritos literalmente. ATENCAO: 6.3.6.1.2.2 e a lista de escalas permitidas (1:1000 e 1:500 so para implantacao; 1:100; 1:50), nao um item sobre 'escala que nao confere'. Complementada pela IN 067/2025 (STE protocolada no upload de ART/RRT do passo 1)."
+    },
+    "IN 045/2023": {
+      "titulo": "Corredor enclausurado como saida de emergencia (IN n.o 045/CBMRS/DSPCI/2023)",
+      "vigente_desde": "2023-04-27",
+      "publicada_em": "2023-04-27",
+      "complementa": "RT 11 Parte 01/2016",
+      "conferido_em": "2026-09-11",
+      "obs": "DOE n.o 81, de 27/04/2023. Art. 7o: vigor na publicacao, revoga a IN 025/2020 (aplicavel a PPCI protocolado antes de 27/04/2023, texto nao esta no projeto). Nao se aplica a corredor de DESCARGA (Art. 6o -> RT 11, 5.12.1.2). Integra em normas/in-045-2023-corredor-enclausurado.md."
+    },
+    "IN 066/2025": {
+      "titulo": "Saidas de emergencia em F-5, F-6, F-11 e F-12 (IN n.o 066/CBMRS/DSPCI/2025)",
+      "vigente_desde": "2025-09-30",
+      "publicada_em": "2025-09-30",
+      "complementa": "RT 11 Parte 01/2016",
+      "conferido_em": "2026-09-24",
+      "obs": "DOE n.o 191, de 30/09/2025; assinada 29/09/2025 pelo Diretor do DSPCI. Art. 5o: vigor na publicacao; sem clausula revogatoria. Art. 2o: duas saidas por COMODO com populacao > 50 (demais F-5, F-6, F-11, F-12) ou > 100 (casa de festas infantis/familiar F-12 com supervisao de brigadistas); mesma parede com 5 m no recinto (par. 2o); escritorio, cozinha, sanitario, deposito, palco, garagem, area tecnica podem ter uma so (par. 3o). Art. 3o: edificacao sempre com mais de uma saida para o espaco livre exterior terreo; F-12 casa de festas ate 750 m2 de area total construida pode ter as duas saidas finais na mesma parede com 10 m (par. unico). Aparente conflito com a 'parede diversa' do 5.4.1.2.2 da RT 11 - ver normas/in-066-2025-saidas-reuniao-publico.md. PPCI protocolado antes de 30/09/2025 segue a RT 11 pura."
+    },
+    "IN 067/2025": {
+      "titulo": "Solucao Tecnica Equivalente - STE (IN n.o 067/CBMRS/DSPCI/2025)",
+      "vigente_desde": "2025-11-05",
+      "publicada_em": "2025-11-05",
+      "complementa": "RT 05 Parte 1.1/2016 e RT de Implantacao do SOL-CBMRS",
+      "conferido_em": "2026-09-24",
+      "obs": "DOE n.o 217, de 05/11/2025; assinada 24/10/2025 pelo Diretor do DSPCI. Art. 15: vigor na publicacao. STE modifica (quantitativa, qualitativa ou modo de implementacao) medida exigida em edificacao a construir ou em novo licenciamento, vedada a supressao total (Art. 1o). Nao se confunde com medida compensatoria da RT 05 P07 (Art. 1o, par. 2o). Vedada em F-6, baixo risco, PSPCI e evento temporario (Art. 2o). Exige LCLT (Anexo B) + ART/RRT especifica, em PDF unico, no upload de ART/RRT da janela 'Adicionar Responsavel Tecnico', passo 1 do SOL (Art. 7o). Avaliada pelo Corpo Tecnico do CBMRS conforme Portaria (Art. 8o, Portaria nao esta no projeto), so verificacao formal (Art. 14). Reconsideracao em 15 dias (Art. 9o). Oito parametros de equivalencia no Anexo A. Integra em normas/in-067-2025-solucao-tecnica-equivalente.md."
+    },
+    "IT 08 CBPMESP": {
+      "titulo": "Seguranca Estrutural em Incendio (IT 08/2025 Partes 1 e 2 do CBPMESP)",
+      "por_remissao": "RT 01/2024, item 4.3.1 + Tabela 2, item 1",
+      "conferido_em": "2026-09-22",
+      "obs": "Aplicavel por remissao da RT 01/2024, 'em sua edicao mais recente', ate RT CBMRS especifica. Edicao 2025 listada pelo CBMRS como em vigor desde 01/07/2025."
+    },
+    "IT 09 CBPMESP": {
+      "titulo": "Compartimentacao Horizontal e Vertical (IT 09/2025 do CBPMESP)",
+      "por_remissao": "RT 01/2024, item 4.3.1 + Tabela 2, item 2",
+      "conferido_em": "2026-09-22",
+      "obs": "Nota da Tabela 2: a compartimentacao como medida obrigatoria nao se destina a isencao de outros dispositivos e medidas. Edicao 2025 listada pelo CBMRS como em vigor desde 01/07/2025."
+    },
+    "IT 15 CBPMESP": {
+      "titulo": "Controle de Fumaca (IT 15/2025 Partes 1 a 9 do CBPMESP)",
+      "por_remissao": "RT 01/2024, item 4.3.1 + Tabela 2, item 4",
+      "conferido_em": "2026-09-22"
+    },
+    "IT 37 CBPMESP": {
+      "titulo": "Subestacao Eletrica (IT 37/2025 do CBPMESP)",
+      "por_remissao": "RT 01/2024, itens 4.8.1 e 4.8.7",
+      "conferido_em": "2026-09-22",
+      "obs": "PDF na pasta local Carpes/Normas/IT37.pdf (Portaria CCB 003/800/25, DOE-SP 20/03/2025). Para a M-6 as medidas sao as da Tabela 6M.6 do Decreto, as da IT 37 para subestacoes e as da propria RT 01/2024, ate RT CBMRS especifica (4.8.1). A IT 37 define os requisitos por tipo de subestacao; algumas medidas da 6M.6 nao sao exigidas ou sao substituidas (4.8.7, nota geral 'a' da 6M.6). Cobre isolamento de risco entre transformadores, sistema de espuma e sistema de resfriamento. Substituicoes: 4.8.3 a 4.8.3.7 (laudo, compensatorias minimas, aprovacao do Cmt BESCI/Chefe SSeg). Edicao 2025 listada pelo CBMRS como em vigor desde 01/07/2025. PDF local conferido em 22/09/2026: 4.4.2.1 (80-B:C sobre rodas), 4.4.2.4 (risco alto), 4.4.4.1 (TRRF 120 min; 0,3/0,6 m; 0,5 m), Tabelas 1 e 2, 4.4.7.2 e 4.4.9.4 (brigada com populacao fixa), 4.6.1, Tabelas B.1/B.2 (IMAGEM no PDF - ler renderizando a pagina 11) e B.3. Hidrantes da M-6: tambem nota 'f' da Tabela 1 do Anexo A da RT 17 P01/2025."
+    },
+    "NBR 15219": {
+      "titulo": "Plano de Emergencia (ABNT NBR 15219)",
+      "por_remissao": "RT 01/2024, item 4.3.1 + Tabela 2, item 9",
+      "conferido_em": "2026-09-22"
+    },
+    "NBR 10897": {
+      "titulo": "Chuveiros Automaticos (ABNT NBR 10897 e NBR 16981)",
+      "por_remissao": "RT 01/2024, item 4.3.1 + Tabela 2, item 6",
+      "conferido_em": "2026-09-22"
+    },
+    "NBR 5419": {
+      "titulo": "SPDA (ABNT NBR 5419)",
+      "por_remissao": "RT 01/2024, item 4.3.1 + Tabela 2, item 10",
+      "conferido_em": "2026-09-22"
     }
   },
-  "_chaves": "As chaves abaixo sao as chaves canonicas de medida do sseg.py (canon_medida). Casar por nome livre gera falso positivo entre Compartimentacao Horizontal e Vertical.",
+  "_chaves": "As chaves abaixo sao as chaves canonicas de medida do sseg.py (canon_medida). Casar por nome livre gera falso positivo entre Compartimentacao Horizontal e Vertical. Cada lista pode ter apelidos: o sseg.py normaliza 'Resolucao Tecnica n.o' -> 'RT' e 'Instrucao Tecnica n.o ... - CBPMESP' -> 'IT' antes de comparar.",
   "medida_para_norma": {
     "acesso_viaturas": [
       "RT 10/2024"
@@ -118,7 +197,10 @@
       "RT 09/2025"
     ],
     "saidas_emergencia": [
-      "RT 11 Parte 01/2016"
+      "RT 11 Parte 01/2016",
+      "RT 11/2016",
+      "IN 066/2025",
+      "IN 045/2023"
     ],
     "sinalizacao": [
       "RT 12/2021"
@@ -130,25 +212,61 @@
       "RT 14/2016"
     ],
     "brigada": [
-      "RT 15 Parte 01/2023"
+      "RT 15 Parte 01/2023",
+      "RT 15 Parte 01/2022"
     ],
     "hidrantes": [
       "RT 17 Parte 01/2025",
-      "NBR 13714"
+      "NBR 13714",
+      "IT 37"
     ],
     "deteccao": [
       "RT 18/2025"
     ],
     "alarme": [
       "RT 18/2025"
+    ],
+    "isolamento_riscos": [
+      "RT 04/2022"
+    ],
+    "seguranca_estrutural": [
+      "IT 08 CBPMESP",
+      "IT 08"
+    ],
+    "compart_horizontal": [
+      "IT 09 CBPMESP",
+      "IT 09"
+    ],
+    "compart_vertical": [
+      "IT 09 CBPMESP",
+      "IT 09"
+    ],
+    "controle_fumaca": [
+      "IT 15 CBPMESP",
+      "IT 15"
+    ],
+    "plano_emergencia": [
+      "NBR 15219"
+    ],
+    "chuveiros": [
+      "NBR 10897",
+      "NBR 16981"
+    ],
+    "spda": [
+      "NBR 5419"
+    ],
+    "isolamento_transformadores": [
+      "IT 37 CBPMESP",
+      "IT 37"
+    ],
+    "espuma": [
+      "IT 37 CBPMESP",
+      "IT 37"
+    ],
+    "resfriamento": [
+      "IT 37 CBPMESP",
+      "IT 37"
     ]
   },
-  "medidas_sem_rt_propria_mapeada": [
-    "seguranca_estrutural",
-    "compart_horizontal",
-    "compart_vertical",
-    "plano_emergencia",
-    "chuveiros",
-    "controle_fumaca"
-  ]
+  "medidas_sem_rt_propria_mapeada": []
 }

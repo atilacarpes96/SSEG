@@ -1,13 +1,19 @@
 # RT CBMRS nº 11, Parte 01/2016 — Saídas de Emergência
 
-Última verificação: **03/09/2026** (guardas 5.8.1.2/5.8.1.3 e a íntegra do 5.5.4.3 conferidos
-pelo analista no PDF oficial). Ver [[00-indice-normativo]].
+Última verificação: **24/09/2026** — **item 5.4.1.2.2** (F-5, F-6, F-11, F-12) conferido no PDF
+e ligado à **IN 066/2025**, que o complementa. Em 09/09/2026: **Tabela 1 do Anexo "A" (cálculo
+populacional) e seção 5.3 transcritas integralmente** do PDF oficial enviado pelo usuário. Ver
+[[00-indice-normativo]].
 
 ## Identificação
 - **Norma:** Resolução Técnica CBMRS nº 11, Parte 01/2016 (versão corrigida)
 - **Aprovação:** 28/07/2016 · **Vigência:** 19/09/2016 · Publicação: DOE nº 146, de 02/08/2016
 - **Hierarquia:** nível 3 (RT do CBMRS) — categoria "Medidas de Segurança Contra Incêndio"
 - **Link oficial:** https://admin.bombeiros.rs.gov.br/upload/arquivos/201706/01155612-rtcbmrs-n-11-parte-01-2016-saidas-de-emergencia-versao-corrigida.pdf
+- **PDF local do usuário:** `C:\Users\55519\Desktop\Carpes\normas\RT11.pdf`
+- **Instruções Normativas que a complementam:** [[in-045-2023-corredor-enclausurado]] (corredor
+  enclausurado como saída) e [[in-066-2025-saidas-reuniao-publico]] (saídas em F-5, F-6, F-11 e
+  F-12, vigente desde 30/09/2025)
 
 ## Sumário
 1. Objetivo · 2. Aplicação · 3. Referências Normativas · 4. Definições · 5. Procedimentos (classificação de edificações, cálculo populacional, dimensionamento de saídas, acessos, rampas, escadas, guardas, corrimãos, áreas de refúgio, descarga, construções subterrâneas) · **Anexos: A** (dados para dimensionamento), **B** (características construtivas e distâncias máximas — Tabelas 3 e 4), **C** (tipos de escada por ocupação), **D** (Termo de Responsabilidade das Saídas de Emergência)
@@ -15,12 +21,207 @@ pelo analista no PDF oficial). Ver [[00-indice-normativo]].
 ## Escopo geral
 Requisitos mínimos para dimensionamento das saídas de emergência. Aplica-se a todas as edificações protocoladas no CBMRS, **com exceção específica indicada para a ocupação F-3 com 2.500 ou mais pessoas**.
 
-⚠️ **Extração por WebFetch vem truncada antes dos anexos** — Tabelas 3 e 4 e o Anexo "D" não saem por esse caminho. **Usar `pdftotext -layout` sobre o PDF oficial**, que lê o documento inteiro (validado em 02/09/2026), ou a imagem enviada pelo usuário.
+⚠️ **Extração por WebFetch vem truncada antes dos anexos** — Tabelas 1, 3 e 4 e o Anexo "D" não saem por esse caminho. **Usar `pdftotext -layout` sobre o PDF oficial**, que lê o documento inteiro (validado em 02/09/2026), ou a imagem enviada pelo usuário.
+
+---
+
+# ⭐ Cálculo da população — seção 5.3 e Tabela 1 do Anexo "A"
+
+Transcrição literal (`pdftotext` do PDF oficial, 09/09/2026). **Este é o bloco que responde
+"qual o cálculo populacional da divisão X".**
+
+## Seção 5.3 — regras gerais
+
+> **5.3.1** As saídas de emergência são dimensionadas em função da população da edificação.
+>
+> **5.3.2** A população de cada pavimento da edificação é calculada pelos coeficientes da
+> Tabela 1, do Anexo "A", desta Resolução Técnica.
+>
+> **5.3.3** Exclusivamente para o cálculo da população, deverão ser **incluídas** nas áreas de
+> pavimento: a) as áreas de terraços e sacadas, excetuadas àquelas pertencentes às edificações
+> dos grupos de ocupação A, B e H; **b) as áreas totais cobertas das edificações F-6, F-11 e
+> F-12, inclusive canchas e assemelhados.**
+>
+> **5.3.4** Exclusivamente para o cálculo da população, são **excluídas** das áreas de pavimento
+> as áreas de **sanitários, corredores e elevadores nas ocupações D e E**, bem como áreas de
+> **sanitários e elevadores nas ocupações C e F**.
+>
+> **5.3.5** As áreas de beirais e marquises não são computadas no cálculo da população.
+>
+> **5.3.6** A população total do pavimento será o somatório da população de cada compartimento
+> existente na edificação.
+>
+> **Nota:** Exclusivamente para fins de cálculo populacional, cada compartimento será
+> considerado como uma ocupação. A população deverá ser obtida conforme Tabela 1 do Anexo "A",
+> observando suas notas e critérios dos itens 5.3 e 5.4.1.1.
+
+⚠️ **No grupo F excluem-se sanitários e elevadores — corredores NÃO.** A exclusão de corredores
+só existe nas ocupações D e E. Erro fácil de cometer ao conferir memorial de F.
+
+## Tabela 1 do Anexo "A" — "Dados para o dimensionamento das saídas de emergência"
+
+Notas gerais da coluna População: **(A) (B) (L) (P)**.
+
+| Grupo | Divisão | População | Acessos/Descargas | Escadas/Rampas | Portas |
+|---|---|---|---|---|---|
+| A | A-1 e A-2 | Duas pessoas por dormitório (C) (R) | 60 | 45 | 100 |
+| A | A-3 | Duas pessoas por dormitório e uma pessoa por 4 m2 de área de alojamento (D) | 60 | 45 | 100 |
+| B | — | Uma pessoa por 15 m2 de área (F) (H) | 100 | 75 | 100 |
+| C | — | Uma pessoa por 5 m2 de área (E) (K) | 100 | 75 | 100 |
+| D | — | Uma pessoa por 7 m2 de área (M) | 100 | 75 | 100 |
+| E | E-1 a E-4 | Uma pessoa por 1,5 m2 de área de sala de aula (F) (G) | 100 | 75 | 100 |
+| E | E-5 e E-6 | Uma pessoa por 1,5 m2 de área de sala de aula (F) | 30 | 22 | 30 |
+| F | F-1 | Uma pessoa por 3 m2 de área | 100 | 75 | 100 |
+| F | **F-2, F-5 e F-8** | **Uma pessoa por m2 de área (E) (H) (N)** | 100 | 75 | 100 |
+| F | **F-3, F-6, F-7, F-9, F-10, F-11 e F-12** | **Duas pessoas por m2 de área (H) (O) (Q)** | 100 | 75 | 100 |
+| F | F-4 | Uma pessoa por 3 m2 de área (E) (K) | 100 | 75 | 100 |
+| G | G-1, G-2, G-3 e G-6 | Uma pessoa por 40 vagas de veículo | 100 | 60 | 100 |
+| G | G-4 e G-5 | Uma pessoa por 20 m2 de área (E) | 100 | 60 | 100 |
+| H | H-1 e H-6 | Uma pessoa por 7 m2 de área (E) | 60 | 45 | 100 |
+| H | H-2 | Duas pessoas por dormitório (C), acrescido de uma pessoa por 4 m2 de área de alojamento (D) (E) | 30 | 22 | 30 |
+| H | H-3 | Uma pessoa e meia por leito, acrescido de uma pessoa por 7 m2 de área de ambulatório (I) | 30 | 22 | 30 |
+| H | H-4 e H-5 | Uma pessoa por 7 m2 de área (F) | 60 | 45 | 100 |
+| **I** | — | **Uma pessoa por 10 m2 de área (K)** | 100 | 60 | 100 |
+| **J** | — | **Uma pessoa por 30 m2 de área (K)** | 100 | 60 | 100 |
+| L | L-1 | Uma pessoa por 3 m2 de área | 100 | 60 | 100 |
+| L | L-2 e L-3 | Uma pessoa por 10 m2 de área | 100 | 60 | 100 |
+| M | M-1 | + (J) | 100 | 75 | 100 |
+| M | M-2, M-3 e M-5 | Uma pessoa por 10 m2 de área | 100 | 60 | 100 |
+| M | M-4 | Uma pessoa por 4 m2 de área | 60 | 45 | 100 |
+
+### Notas específicas (íntegra)
+
+> **(A)** Para a classificação das ocupações (grupos e divisões), deverá ser consultada a
+> Tabela 1 do Anexo "A" do Decreto Estadual n.º 51.803/2014;
+>
+> **(B)** Os parâmetros dados nesta tabela são os **mínimos aceitáveis** para o cálculo da
+> população (ver 5.3);
+>
+> **(C)** Outras dependências usadas como dormitórios (inclusive para empregadas) serão
+> considerados como tais. Em apartamentos mínimos, sem divisões em planta, considerar 3 pessoas
+> por apartamento;
+>
+> **(D)** Alojamento = dormitório coletivo, com mais de 10 m²;
+>
+> **(E)** Por "Área", entende-se a "Área do pavimento" que abriga a população em foco; quando
+> discriminado o tipo de área (por ex. área do alojamento), é a **área útil interna** da
+> dependência em questão;
+>
+> **(F)** Auditórios e assemelhados em escolas, bem como salões de festas e centros de
+> convenções em hotéis, serão considerados como grupos de ocupação F-5, F-6 e outros, conforme
+> o caso;
+>
+> **(G)** Espaços destinados a práticas desportivas serão considerados na ordem de 1 pessoa por
+> 1,5 m² de área;
+>
+> **(H)** As **cozinhas e suas áreas de apoio**, nas ocupações **B, F-6, F-8 e F-10, F-11 e
+> F-12** terão sua ocupação admitida como no **grupo D**, isto é, **uma pessoa por 7 m² de
+> área**;
+>
+> **(I)** Em hospitais e clínicas com internamento (H-3), que tenham pacientes ambulatoriais,
+> acresce-se à área calculada por leito, a área de pavimento correspondente ao ambulatório, na
+> base de uma pessoa por 7 m²;
+>
+> **(J)** O símbolo "+" indica necessidade de consultar normas e regulamentos específicos (não
+> cobertos por esta RT);
+>
+> **(K)** A parte de **atendimento ao público** deverá ser considerada como do **grupo C**;
+>
+> **(L)** Esta tabela **não se aplica** às ocupações destinadas à divisão **F-3 com população
+> total igual ou superior a 2.500 pessoas**, para a qual deverá ser consultada Resolução Técnica
+> específica do CBMRS;
+>
+> **(M)** Para ocupações do tipo **Call-center**, o cálculo da população será de uma pessoa por
+> 1,5 m² de área;
+>
+> **(N)** Para o cálculo da população, será admitido o **layout dos assentos fixos
+> (permanente)** apresentado em planta baixa. Para os PSPCI a apresentação da planta baixa não é
+> obrigatória;
+>
+> **(O)** As **áreas de palco** em edificações **F-6, F-11 e F-12** serão consideradas na ordem
+> de **1 pessoa por m² de área**;
+>
+> **(P)** Os estabelecimentos que possuírem **depósitos com acesso restrito apenas aos seus
+> funcionários, sendo este acesso esporádico**, poderão ter sua população calculada na ordem de
+> **1 pessoa por 10 m² de área para as ocupações em geral** e de **1 pessoa por 7 m² de área
+> para as edificações F-6, F-11 e F-12**;
+>
+> **(Q)** Os **centros de eventos**, para fins desta tabela, deverão ser classificados em
+> **F-10**;
+>
+> **(R)** Para fins de dimensionamento de saídas de emergência, os **salões de festas de uso
+> exclusivo de condomínios residenciais multifamiliares** serão considerados como ocupação
+> **F-8**.
+
+📌 **IN 066/2025, Art. 2º, § 1º** (desde 30/09/2025): nos cômodos de **casa de festas infantis /
+de caráter familiar F-12** com supervisão de brigadistas, admite-se o **layout dos brinquedos
+infantis e do mobiliário** em planta para a população do recinto — paralelo à nota (N), que é só
+de assentos fixos e só para F-2, F-5 e F-8. Ver [[in-066-2025-saidas-reuniao-publico]].
+
+### ⭐ Roteiro para F-11 e F-12
+
+1. Base: **2 pessoas por m2 de área** (Tabela 1).
+2. **Incluir** as áreas totais **cobertas**, inclusive canchas e assemelhados (5.3.3 "b").
+3. **Excluir** sanitários e elevadores (5.3.4). Corredores **não** se excluem no grupo F.
+4. Excluir beirais e marquises (5.3.5).
+5. **Cozinha e suas áreas de apoio** → 1 pessoa por 7 m2, nota (H).
+6. **Palco** → 1 pessoa por m2, nota (O).
+7. **Depósito de acesso restrito e esporádico a funcionários** → 1 pessoa por 7 m2 em F-11/F-12
+   (1 por 10 m2 nas ocupações em geral), nota (P).
+8. Somar compartimento a compartimento (5.3.6 e sua Nota — cada compartimento é uma ocupação).
+9. Sendo **centro de eventos**, não é F-12: classifica-se em **F-10**, nota (Q).
+10. UP: acessos/descargas **100**, escadas/rampas **75**, portas **100**.
+11. **Número de saídas por cômodo e da edificação:** ver a seção 5.4.1.2.2 abaixo e a IN 066/2025
+    (PPCI protocolado a partir de 30/09/2025).
+
+⚠️ A nota (B) diz que são os **mínimos aceitáveis** — população declarada maior que a da tabela
+não é erro; população **menor** é.
+
+---
+
+## ⭐ 5.4.1.2.2 — número e posição das saídas em F-5, F-6, F-11 e F-12 (conferido em 24/09/2026)
+
+Corpo em duas colunas — lido com `pdftotext` **sem** `-layout`.
+
+> **5.4.1.2.2** "Em edificações classificadas como locais de reunião de público, das divisões
+> F-5, F-6, F-11 e F-12, conforme Anexo "A", do Decreto Estadual n.º 51.803, de 10 de setembro
+> de 2014, deverá haver mais de uma saída de emergência, sendo que estas deverão situar-se em
+> paredes diversas, com o afastamento mínimo de 10 metros."
+>
+> *Notas:* "1. O afastamento deverá ser medido no paramento externo das paredes onde estão
+> localizadas as saídas de emergência, desconsiderando qualquer elemento construtivo que se
+> projete além destes paramentos. (Ver Figura 1). 2. O acesso principal deverá ter de 60% a 70%
+> das unidades de passagens exigidas para a edificação."
+
+Contexto: **5.4.1.2** é a fórmula N = P/C (UP de 0,55 m); **5.4.1.2.1** manda distribuir a
+largura total entre as saídas, respeitando as mínimas do 5.4.2.
+
+⭐ **Complementado pela IN 066/2025** (vigente desde 30/09/2025 — [[in-066-2025-saidas-reuniao-publico]]):
+
+| | RT 11, 5.4.1.2.2 | IN 066/2025 |
+|---|---|---|
+| Edificação | mais de uma saída, **paredes diversas**, **≥ 10 m** | mantém (Arts. 1º e 3º); **exceção:** F-12 casa de festas até **750 m²** de área total construída → **mesma parede admitida**, ≥ 10 m entre as saídas finais (Art. 3º, § ún.) |
+| Recinto (cômodo) | — (a RT não fixa número de saídas por cômodo aqui) | duas saídas acima de **50** pessoas; **100** em casa de festas F-12 com brigadistas; mesma parede com **≥ 5 m** (Art. 2º) |
+| Cômodos de apoio | — | escritório, cozinha, sanitário, depósito, palco, garagem, área técnica: uma saída basta (Art. 2º, § 3º) |
+
+⚠️ **Vigência:** PPCI protocolado para 1ª análise **antes de 30/09/2025** segue o 5.4.1.2.2 puro —
+sem a flexibilização da mesma parede e sem a regra do recinto da IN.
+
+⚠️ **Aparente conflito** RT (paredes diversas) × IN (mesma parede em casos recortados): leitura
+adotada e ressalvas no doc da IN 066.
+
+---
 
 ## ⚠️ Existem DUAS "notas H" nesta RT — não confundir
 
-- **Tabela 3 (distâncias máximas a percorrer), nota geral (H):** "A distância a percorrer não será medida nas escadas enclausuradas, nem nas escadas externas que atendam os requisitos do item 5.7.12. Esta nota não se aplica ao item 5.7.12.1.1."
-- **Tabela 4 (tipos de escada), nota geral H:** escada abaixo do pavimento de descarga deve ser do tipo **EP**, dotada de **porta corta-fogo P-90** (mínimo 90 minutos), **sem necessidade de ventilação**.
+- **Tabela 1 (população), nota (H):** cozinhas e áreas de apoio em B, F-6, F-8, F-10, F-11 e
+  F-12 → grupo D, 1 pessoa por 7 m².
+- **Tabela 3 (distâncias máximas a percorrer), nota geral (H):** "A distância a percorrer não
+  será medida nas escadas enclausuradas, nem nas escadas externas que atendam os requisitos do
+  item 5.7.12. Esta nota não se aplica ao item 5.7.12.1.1."
+- **Tabela 4 (tipos de escada), nota geral H:** escada abaixo do pavimento de descarga deve ser
+  do tipo **EP**, dotada de **porta corta-fogo P-90** (mínimo 90 minutos), **sem necessidade de
+  ventilação**.
 
 Ao usuário dizer "nota H", confirmar de qual tabela se trata.
 
@@ -85,6 +286,9 @@ nenhum da RT 11** (busca no PDF completo em 02/09/2026, zero ocorrências). Port
 não está expressamente alcançada por este item — enquadrá-la é **interpretação**, e deve ser
 declarada como tal.
 
+⚠️ **F-11 e F-12 estão FORA do 5.5.4.9** — a exceção do caput as exclui. Em edificação com
+F-11/F-12 não cabe o Termo do Anexo "D" para esse fim.
+
 ### 5.5.4.10 — porta de correr horizontal como saída de emergência
 
 > "É permitido o uso de porta de correr horizontal quando: **a)** a população total da
@@ -95,7 +299,7 @@ declarada como tal.
 
 | Situação | Dispositivo | Consequência |
 |---|---|---|
-| Porta de correr/enrolar/gradis **de segurança patrimonial**, junto à saída final | **5.5.4.9** | Permitida, com a porta mantida aberta no horário de funcionamento + Termo do Anexo "D" |
+| Porta de correr/enrolar/gradis **de segurança patrimonial**, junto à saída final | **5.5.4.9** | Permitida, com a porta mantida aberta no horário de funcionamento + Termo do Anexo "D". **Não vale para F-5, F-6, F-11, F-12, L e M-2** |
 | Porta de correr horizontal **como porta de saída de emergência** | **5.5.4.10** | Só com população total ≤ 50 ou sala ≤ 50. Acima disso, **não é permitida** |
 
 Antes de notificar pelo Anexo "D", identificar em qual dos dois regimes a porta está. Numa
@@ -173,8 +377,6 @@ O Anexo "D" confirma o rol do 5.5.4.9: **correr, enrolar ou gradil** — e só p
 
 **Item 5.12.1.3** — descarga por saguão/hall térreo não enclausurado só se o percurso entre o fim da descarga e a porta de saída para o espaço livre exterior térreo não exceder 4,00 m.
 
-**Cálculo populacional** (item não confirmado) — para fins de cálculo populacional, cada compartimento é considerado uma ocupação.
-
 ## ✅ Seção 5.13 — Construções subterrâneas, subsolos e edificações sem janelas (conferida em imagem, 01/09/2026)
 
 **5.13.1** — considera-se construção subterrânea ou subsolo a edificação, ou parte dela, na qual o piso se ache abaixo do pavimento da descarga, ressalvado o especificado em 5.13.1.2.
@@ -199,7 +401,7 @@ O Anexo "D" confirma o rol do 5.5.4.9: **correr, enrolar ou gradil** — e só p
 - **(F)** Áreas técnicas (locais destinados a equipamentos, sem permanência humana e de acesso restrito): distância máxima 140 m.
 - **(G)** Mezanino é considerado um compartimento da edificação, para distância e número de saídas.
 - **(H)** A distância a percorrer **não é medida nas escadas enclausuradas**, nem nas escadas externas que atendam o item 5.7.12 (não se aplica ao 5.7.12.1.1).
-- **(I)** Para a edificação ser considerada com **mais de uma saída**, as saídas devem ter **afastamento mínimo de 10 m entre si** e, em locais de reunião de público (F-5, F-6, F-11, F-12), situar-se em paredes diversas com afastamento mínimo de 10 m.
+- **(I)** Para a edificação ser considerada com **mais de uma saída**, as saídas devem ter **afastamento mínimo de 10 m entre si** e, em locais de reunião de público (F-5, F-6, F-11, F-12), situar-se em paredes diversas com afastamento mínimo de 10 m. ⚠️ Para PPCI protocolado a partir de 30/09/2025, ver a exceção da **IN 066/2025, Art. 3º, parágrafo único** (F-12 casa de festas até 750 m²: mesma parede admitida, mantidos os 10 m).
 - **(K)** Em escadas **não enclausuradas**, a distância é medida pelo **caminhamento real**, com referência no centro dos degraus e patamares.
 - **(N)** Nos **estacionamentos e garagens (grupo G) vinculados a outras atividades**, independentemente de serem ocupações subsidiárias ou predominantes, as distâncias máximas a percorrer **serão as das divisões G-1 e G-2** da Tabela 3.
 - **(O)** A distância prevista na coluna "mais de uma saída" é computada até atingir a saída de emergência mais favorável.
@@ -215,4 +417,8 @@ da RT 01/2024**.
 
 ## Notas de uso
 
-Itens conferidos literalmente via PDF oficial (`pdftotext -layout`), banco de notificações do usuário, ou imagem oficial enviada pelo usuário. Tabela 4 e suas notas ainda **não** foram lidas em imagem — a nota H da Tabela 4 vem do banco de notificações. Demais tabelas de dimensionamento por ocupação ainda não conferidas.
+Tabela 1 do Anexo "A" e seção 5.3 transcritas em 09/09/2026 do PDF oficial local
+(`C:\Users\55519\Desktop\Carpes\normas\RT11.pdf`) com `pdftotext`; item 5.4.1.2.2 em 24/09/2026,
+com `pdftotext` sem `-layout` (corpo em duas colunas). Demais itens conferidos via PDF oficial,
+banco de notificações do usuário, ou imagem oficial enviada pelo usuário. Tabela 4 e suas notas
+ainda **não** foram lidas em imagem — a nota H da Tabela 4 vem do banco de notificações.

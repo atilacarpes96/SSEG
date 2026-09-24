@@ -1,5 +1,5 @@
 ---
-name: ppci-abertura-sessao
+name: "ppci-abertura-sessao"
 description: "Rotina de abertura quando o usuário diz que vai começar a analisar um PPCI: liberar a pasta Carpes, abrir o SOL-CBMRS no Chrome externo e parar na tela de login."
 ---
 
@@ -14,8 +14,8 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
 1. ⭐ **Pedir acesso à pasta de trabalho — primeiro passo, sempre.**
 
    ```
-   device_request_folder_access  ["C:\\Users\\55519\\Desktop\\Carpes"]
-   reason: ler os PDFs oficiais em Carpes\Normas e a pasta "print ppci" das análises
+   device_request_folder_access  ["C:/Users/55519/Desktop/Carpes"]
+   reason: ler os PDFs oficiais em Carpes/Normas e a pasta "print ppci" das análises
    ```
 
    **O consentimento de pasta vale por SESSÃO, não por projeto** — toda conversa nova começa
@@ -26,10 +26,24 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
    `RECURSOS`), nunca subpasta por subpasta. Recusa ou silêncio: seguir sem, pedir os arquivos
    por anexo, e **não repetir o pedido**.
 
-2. Abrir `https://solcbm.rs.gov.br/solcbm/adm/` no **Chrome externo (Claude in Chrome)** — é o
-   navegador padrão do usuário para o SOL, e a sessão dele costuma já estar logada. Começar
-   com `tabs_context_mcp` e abrir em **aba nova**. Se o site ainda não estiver liberado na
-   extensão, pedir a liberação e repetir a chamada.
+2. Abrir o SOL no **Chrome externo (Claude in Chrome)** — é o navegador padrão do usuário para
+   o SOL, e a sessão dele costuma já estar logada. Começar com `tabs_context_mcp` e abrir em
+   **aba nova**. Se o site ainda não estiver liberado na extensão, pedir a liberação e repetir
+   a chamada.
+
+   ⭐ **Navegar DIRETO pela URL para a caixa de análise do usuário:**
+   `https://solcbm.rs.gov.br/solcbm/adm/#/analise-tecnica`
+
+   A caixa de análise dele é **Licenciamento → Análise técnica**. **Nunca chegar lá clicando no
+   menu lateral por coordenada de screenshot**: "Distribuição para análise" fica logo acima de
+   "Análise técnica", o clique cai nela e o SOL abre o aviso "Ação não autorizada" — já
+   aconteceu em várias aberturas. Se precisar do menu, clicar pelo `ref` devolvido por `find`
+   ("menu link Análise técnica").
+
+   Na lista, localizar a linha do processo (Razão Social / área / data) e clicar em
+   **Analisar**, de preferência pelo `ref` via `find`. A página abre em
+   `#/analise-tecnica/<id>` com o código do licenciamento no título — conferir que é o código
+   pedido.
 
    **No Chrome não mexer no zoom** — a página renderiza utilizável como está.
 
@@ -38,10 +52,10 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
    ≈0,70 num painel de 1022×910; painel diferente: `largura_emulada = largura_do_painel ÷ 0,7`).
    Sem isso a página de análise técnica renderiza grande demais e fica inutilizável.
 
-3. Parar na tela de login e avisar que a senha é digitada pelo próprio usuário.
+3. Se cair na tela de login, parar e avisar que a senha é digitada pelo próprio usuário.
    **Nunca preencher senha.**
 
-4. Pedir/aguardar o código do processo (formato `A00049503AA001`).
+4. Se o código do processo não veio na mensagem, pedir/aguardar (formato `A00049503AA001`).
 
 ## Depois do login
 
@@ -50,7 +64,7 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
 - Pipeline da análise, começando pela ocupação definidora e pela tabela do Anexo B:
   `ppci-analise-processo`.
 - Redação das inconformidades: `ppci-notificacao-cia`.
-- PDFs das normas: pasta local `Carpes\Normas` — inventário, armadilhas e o que falta estão
+- PDFs das normas: pasta local `Carpes/Normas` — inventário, armadilhas e o que falta estão
   no doc `workflow/pasta-normas-local.md` do projeto. **Não pedir ao usuário PDF que já está
   lá, nem tentar baixar pelo link oficial** — o link não baixa.
 
@@ -61,3 +75,4 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
   sessão de automação.
 - Não abrir nem alterar medidas antes de o usuário informar o processo.
 - Não gastar um segundo pedido de pasta no meio da sessão — o do passo 1 já cobre tudo.
+- Menu lateral do SOL: nunca clicar por coordenada; usar URL direta ou `ref` de `find`.
