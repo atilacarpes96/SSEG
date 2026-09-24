@@ -4010,6 +4010,14 @@
       "X",
       "X"
      ],
+     "Alarme de Incendio": [
+      "-",
+      "-",
+      "-",
+      "X3",
+      "X",
+      "X"
+     ],
      "Sinalizacao de Emergencia": [
       "X",
       "X",
@@ -4322,6 +4330,14 @@
       "X",
       "X",
       "X",
+      "X",
+      "X"
+     ],
+     "Chuveiros Automaticos": [
+      "-",
+      "-",
+      "-",
+      "X10",
       "X",
       "X"
      ],
@@ -8712,5 +8728,10 @@
   }
  },
  "_erro_registrado_fonte": "02/09/2026: o projeto afirmava que 'o PDF consolidado do CBMRS nao traz o Anexo B'. ERRADO - traz as Tabelas 4 a 7 completas. A afirmacao foi herdada sem verificacao e repetida em tres documentos. O que enganou: os cabecalhos das tabelas vem precedidos de form feed (\\f), entao um grep '^ *TABELA' nao casa. Ao procurar tabela em PDF, remover \\f antes de grepar. Consequencia evitada por pouco: quase transcrevi a versao ORIGINAL de 2014 (do estado.rs.gov.br, sem nenhuma mencao ao Decreto 53.280/2016) como se fosse a vigente.",
- "_cobertura": "Transcritas e utilizaveis sem pedir print: Tabela 5, Tabelas 6X com colunas de altura e Tabela 7, nas DUAS fontes (RT 05 P07 Anexo A e Decreto Anexo B consolidado). Continuam exigindo imagem apenas: Tabela 4 (roteamento) e as Tabelas 6M.1, 6M.2, 6M.4 e 6M.5, cujo eixo nao e altura."
+ "_cobertura": "Transcritas e utilizaveis sem pedir print: Tabela 5, Tabelas 6X com colunas de altura e Tabela 7, nas DUAS fontes (RT 05 P07 Anexo A e Decreto Anexo B consolidado). Continuam exigindo imagem apenas: Tabela 4 (roteamento) e as Tabelas 6M.1, 6M.2, 6M.4 e 6M.5, cujo eixo nao e altura.",
+ "_correcoes_na_fonte": [
+  "16/09/2026 - anexo_b_decreto, Tabela 6C: acrescentada a linha 'Chuveiros Automaticos' (- - - X10 X X), que o parser tinha perdido: no PDF o X10 sai deslocado para a linha de baixo. Conferido no DECRETO51803.pdf da pasta local (pdftotext -layout). Sinal: a nota 10 nao aparecia em nenhuma celula.",
+  "21/09/2026 - anexo_b_decreto, Tabela 6A: acrescentada a linha 'Alarme de Incendio' (- - - X3 X X), que faltava na transcricao (a nota 3 ficava orfa). Conferida no DECRETO51803.pdf com pdftotext -layout. Tabela 6A tem 11 linhas de medida.",
+  "24/09/2026 - as duas correcoes acima tinham sido feitas so nos recortes tab-b-C.json e tab-b-A.json, e nao aqui na fonte; uma nova execucao do gerar_recortes.py as teria apagado. Passadas para a fonte nesta data."
+ ]
 }

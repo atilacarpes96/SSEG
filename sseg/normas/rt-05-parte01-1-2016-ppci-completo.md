@@ -1,6 +1,6 @@
 # RT CBMRS nº 05, Parte 1.1/2016 — PPCI na Forma Completa
 
-Última verificação: **02/09/2026** — Anexo "L" (Tabelas L.1 e L.2) lido integralmente. Ver [[00-indice-normativo]].
+Última verificação: **21/09/2026** — Tabela L.3 (riscos específicos) lida no PDF da pasta local. Anexo "L" (Tabelas L.1 e L.2) lido integralmente em 02/09/2026. Ver [[00-indice-normativo]].
 
 ## Identificação
 - **Norma:** Resolução Técnica CBMRS nº 05, Parte 1.1/2016 (versão corrigida)
@@ -96,10 +96,39 @@ memorial de capacidade de lotação de uma ocupação "F" **subsidiária** é ir
 própria RT define como objeto de análise. Registrado em 02/09/2026 no A00024749AA002, onde a
 F-8 é subsidiária.
 
-### Tabela L.3 — Riscos Específicos
+### ⭐ Tabela L.3 — Riscos Específicos (lida em 21/09/2026)
 
-Linhas identificadas: Central de GLP, Instalações Prediais de GN, Caldeiras (e demais). ⏳ O
-conteúdo das colunas de análise e vistoria da L.3 **ainda não foi lido**.
+**Linhas (riscos específicos):** Central de GLP · Instalações Prediais de GN · Caldeiras ·
+**Vasos de Pressão** · Depósito e/ou manipulação de líquidos e/ou gases inflamáveis · Depósitos
+e/ou manipulação de gases especiais · Depósito e/ou manipulação de explosivos, munições e/ou
+fogos de artifício · Depósito e/ou manipulação de produtos perigosos · **Gerador de Energia
+Elétrica**.
+
+**Coluna "Análise" (CBMRS), comum a todas as linhas — texto do PDF:**
+
+> 1. Análise dos dados do Memorial Descritivo de Análise para Segurança Contra Incêndio.
+> 2. Análise em Planta Baixa:
+> a. Identificação e localização em planta;
+> b. Representação das medidas de segurança contra incêndio requeridas para a proteção dos
+> riscos específicos, conforme coluna "A" da Tabela "L-1".
+
+**Coluna "Vistoria":** 1. verificação do preenchimento do Memorial Descritivo de Vistoria;
+2. verificação in loco, conforme o PPCI aprovado: a. localização; b. medidas de segurança
+requeridas, conforme coluna "B" da Tabela L-1.
+
+⭐ **Uso:** é o fundamento para exigir que o risco específico declarado no campo 5 seja
+**identificado e localizado em planta baixa**, com as medidas que o protegem representadas.
+Resolve a pendência aberta no [[A00046618AA001]] ("fundamento da declaração de risco
+específico") **para a parte da planta**. A obrigação de **declarar** o risco no campo 5 continua
+sem dispositivo específico localizado — a L.3 manda analisar o memorial, mas não diz, por si,
+que o risco não declarado é pendência.
+
+**Modelo usado (A00049907AA001, 21/09/2026, lançado e emitido na CIA):**
+
+> - Deverá identificar e localizar em planta baixa o vaso de pressão declarado no campo 5 do processo, bem como representar as medidas de segurança contra incêndio requeridas para a sua proteção, tendo em vista que o vaso de pressão não foi representado na planta baixa apresentada. Observar a Tabela L.3 do Anexo "L" da RTCBMRS nº 05, Parte 1.1 de 2016, coluna de análise, linha "Vasos de Pressão", item 2, alíneas "a" e "b".
+
+⚠️ Extração com `pdftotext -layout` de tabela em várias colunas: o texto da coluna "Análise" sai
+inteiro e legível, mas **ao citar em CIA uma célula nova, conferir na imagem**.
 
 ## Confiabilidade desta transcrição
 

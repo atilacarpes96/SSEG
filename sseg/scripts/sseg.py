@@ -82,6 +82,13 @@ def _data(s):
 # Nomes canonicos das medidas de seguranca. Casar por prefixo produz falso positivo
 # (Compartimentacao Horizontal x Vertical), entao toda comparacao passa por aqui.
 _MEDIDAS_CANON = [
+    # M-6 / subestacoes (IT 37 CBPMESP, pela RT 01/2024 itens 4.8.1 e 4.8.7).
+    # "transformadores" vem antes de "isolamento de risco" para nao cair na RT 04.
+    ("isolamento_transformadores", ["isolamento de risco entre transformadores"]),
+    ("isolamento_riscos", ["isolamento de risco"]),
+    ("espuma", ["sistema de espuma", "espuma"]),
+    ("resfriamento", ["sistema de resfriamento", "resfriamento"]),
+    ("spda", ["descargas atmosfericas", "spda"]),
     ("compart_horizontal", ["compartimentacao horizontal"]),
     ("compart_vertical", ["compartimentacao vertical"]),
     ("acesso_viaturas", ["acesso de viatura", "acesso de viaturas"]),
@@ -426,9 +433,19 @@ def confere_normas(p, s=None):
     mapa = idx["medida_para_norma"]
     sem_rt = set(idx["medidas_sem_rt_propria_mapeada"])
 
+    def _canon_norma(x):
+        # "Resolucao Tecnica CBMRS n.o 14/2016" e "RT 14/2016" viram "rt14/2016";
+        # "Instrucao Tecnica n.o 08 - CBPMESP" e "IT 08" viram "it08...".
+        n = _norm(x)
+        n = n.replace("resolucao tecnica", "rt").replace("instrucao tecnica", "it")
+        n = re.sub(r"\b(cbmrs|cbpmesp|abnt)\b", " ", n)
+        # "n.o", "no", "n.", "n°" antes do numero
+        n = re.sub(r"\bn\s*[.\s]*[o°]?\.?\s*(?=\d)", " ", n)
+        n = n.replace("parte", "p")
+        return re.sub(r"[\s\-]+", "", n)
+
     def _bate(citada, alvo):
-        return _norm(alvo).replace(" ", "").replace("parte", "p") in \
-               _norm(citada).replace(" ", "").replace("parte", "p")
+        return _canon_norma(alvo) in _canon_norma(citada)
 
     for m in medidas:
         nome = m.get("medida", "?")

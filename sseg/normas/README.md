@@ -9,7 +9,7 @@ regra está aqui em cima.
 | **Conversão automática** | `md/` | **localizar** item, artigo, palavra | fundamentar exigência |
 | **Transcrição comentada** | os `.md` desta pasta | raciocínio, travas, itens já conferidos | substituir o PDF na conferência |
 
-## `pdf/` — os 14 PDFs oficiais
+## `pdf/` — os PDFs oficiais (17 em 24/09/2026)
 
 Cópia da pasta local `C:\Users\55519\Desktop\Carpes\Normas`, para que as normas viajem junto
 com o repositório em vez de ficarem só numa máquina. **A versão sai da capa e do Art. 2º**,
@@ -48,6 +48,7 @@ citar em CIA.
 
 ## Sincronizar
 
-Acrescentando uma norma: o PDF entra em `pdf/`, a conversão em `md/` (`anydoc`), e a linha
-correspondente muda em `00-indice-normativo.md`, em `../workflow/pasta-normas-local.md` e no
-campo `pdf_local` de `../scripts/dados/indice_normas.json`.
+Acrescentando uma norma: o PDF entra em `pdf/`, a conversão em `md/` (`anydoc`, com o cabeçalho
+de aviso no topo), a transcrição comentada vira um `.md` desta pasta, e a linha correspondente
+muda em `00-indice-normativo.md`, em `../workflow/pasta-normas-local.md` e no bloco `normas`
+de `../scripts/dados/indice_normas.json` (o campo `pdf_local` nunca existiu).
