@@ -1,1 +1,6 @@
-{}
+{
+  "userIgnoreFilters": [
+    "normas/md/",
+    "scripts/dados/"
+  ]
+}
