@@ -11,6 +11,26 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
 
 ## Passos
 
+0. ⭐ **Carregar TODAS as ferramentas numa única `ToolSearch`**, antes de qualquer outra
+   chamada — cada ToolSearch a mais é uma rodada inteira paga (já foram 3 numa abertura):
+
+   ```
+   select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,
+   mcp__claude-in-chrome__get_page_text,mcp__claude-in-chrome__javascript_tool,
+   mcp__claude-in-chrome__find,mcp__claude-in-chrome__computer,
+   mcp__claude-in-chrome__tabs_create_mcp,mcp__remote-devices__device_request_folder_access,
+   mcp__remote-devices__device_list_dir,mcp__remote-devices__device_stage_files,
+   mcp__remote-devices__device_commit_files,mcp__Google_Drive__read_file_content,SendUserMessage
+   ```
+
+   **"Bora pro próximo" / "o próximo da lista":** ler direto a planilha "Distribuição Análise"
+   com `mcp__Google_Drive__read_file_content`, fileId
+   `1Ps3SbCXKtc6HxBq7HRRGpc8LdaxOYU2RM5pOQgNyIl0`. O próximo é a primeira linha com o nome
+   dele e "DATA CONCLUSÃO" em branco. **Não** buscar em conversas antigas, **não** procurar
+   o arquivo no Drive e **não** abrir a planilha no Chrome — o ID já está aqui. Só se a
+   leitura falhar (arquivo movido), procurar por `title contains 'Distribui'` e avisar para
+   atualizar o ID nesta skill.
+
 1. ⭐ **Pedir acesso à pasta de trabalho — primeiro passo, sempre.**
 
    ```
@@ -52,7 +72,14 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
    ≈0,70 num painel de 1022×910; painel diferente: `largura_emulada = largura_do_painel ÷ 0,7`).
    Sem isso a página de análise técnica renderiza grande demais e fica inutilizável.
 
-3. Se cair na tela de login, parar e avisar que a senha é digitada pelo próprio usuário.
+   **Chrome não respondeu** (`tabs_context_mcp` com erro ou extensão desconectada): tentar
+   **uma** vez mais, no máximo. Na segunda falha, avisar e parar — não repetir a chamada em
+   sequência (já foram 3 seguidas numa abertura).
+
+3. **Conferir o login por texto, nunca por screenshot:** `javascript_tool` com
+   `JSON.stringify({url: location.href, token: !!localStorage.getItem('access_token')})`, ou
+   `get_page_text`. Imagem custa muito mais que texto e não traz informação a mais aqui.
+   Se cair na tela de login, parar e avisar que a senha é digitada pelo próprio usuário.
    **Nunca preencher senha.**
 
 4. Se o código do processo não veio na mensagem, pedir/aguardar (formato `A00049503AA001`).
@@ -76,3 +103,7 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
 - Não abrir nem alterar medidas antes de o usuário informar o processo.
 - Não gastar um segundo pedido de pasta no meio da sessão — o do passo 1 já cobre tudo.
 - Menu lateral do SOL: nunca clicar por coordenada; usar URL direta ou `ref` de `find`.
+- **Uma conversa por processo.** Retomada ou ajuste de processo já analisado começa lendo
+  `processos/<código>.md` no projeto e a pasta `print ppci\<código>\` — não
+  `conversation_search`/`read_conversation` em conversas antigas, que custa várias rodadas
+  para reconstruir o que o registro já tem.

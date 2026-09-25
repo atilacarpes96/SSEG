@@ -59,16 +59,38 @@ quase sempre `"Outros"`) e `justificativa` (o texto).
    `.resultado.justificativas`. Um teste `o.justificativas || o.resultado.justificativas`
    falha silenciosamente, porque `[]` é truthy. Concatenar as duas listas.
 
-### Trazer o texto para a conversa
+### Trazer o texto para a conversa — resumir DENTRO da página primeiro
 
-A saída do `javascript_tool` é truncada em ~1.000 caracteres. Montar o markdown **dentro da
-página** (`window.__md`) e puxar em fatias de ~900 caracteres, várias por `browser_batch`:
+Cada chamada ao `javascript_tool` reenvia a conversa inteira; é isso que pesa, não o tamanho
+do JSON. Então **o filtro roda na página e só o resumo vem para a conversa**. Nunca trazer o
+objeto bruto `window.__d` em fatias (já foi feito, dezenas de chamadas de 950 caracteres).
+
+Primeira leitura — uma chamada, resumo compacto:
+
+```js
+const L = JSON.parse(window.__d).licenciamento, st = o => o?.resultado?.statusResultadoAtec || 'ANALISAR';
+const js = o => [...(o?.justificativas||[]), ...(o?.resultado?.justificativas||[])].map(j => j.justificativa.length);
+JSON.stringify({
+  ocup: L.caracteristica.ocupacoes.map(o => [o.ocupacao?.codigo ?? o.codigo, o.area, o.predominante]),
+  med: L.especSeguranca.medidas.map(m => [m.tipo.nome, m.norma?.nome, m.inviabilidade, st(m), js(m)]),
+  riscos: L.especsRiscos.map(r => [r.risco.descricao, st(r), js(r)]),
+  eg: L.elemGraficos.filter(e => e.situacao === 'ATIVO').map(e => [e.descricao, st(e), js(e)])
+})
+```
+
+(Conferir os nomes de chave no primeiro processo em que rodar e corrigir aqui se algum vier
+`undefined` — ver as armadilhas acima.)
+
+Só depois, **e só o que for usado**, trazer texto integral: o laudo, os campos do campo 3 que
+a análise precisa, ou o texto de uma justificativa específica. Aí sim, `window.__md` em fatias
+de ~900 caracteres, **várias fatias por `browser_batch`**:
 
 ```js
 JSON.stringify(window.__md.slice(0, 900))
 ```
 
-Um processo com 15 inconformidades sai em ~10 chamadas, sem nenhum screenshot.
+**Conferir gravação** depois de salvar: só status, comprimento e os últimos 40 caracteres de
+cada justificativa — nunca o texto inteiro de volta.
 
 ## 🔴 Limite de 2.000 caracteres da caixa "Especificar"
 
@@ -132,8 +154,10 @@ tas.filter(t => t !== ta).map(t => t.value.length);
 textarea do modal — já devolveu zero textareas com o modal aberto e preenchido na tela. Étima
 para confirmar o título do modal, mas não confiar nela como único caminho.
 
-4. **Screenshot antes de salvar**: conferir que o texto está na caixa "Especificar" do modal
-   certo e que nada foi para os campos vizinhos.
+4. **Conferir antes de salvar, por texto:** no mesmo script do preenchimento, devolver o
+   título do modal aberto, o comprimento da textarea preenchida e o comprimento das demais
+   (têm de estar como estavam). Screenshot **só** se essa checagem vier ambígua (título não
+   encontrado, mais de uma textarea com o texto).
 5. Botão **Reprovar** do modal, clicado **por `ref`** obtido com `find` — **nunca por
    coordenada**: o layout reescala entre chamadas e o clique erra em silêncio (já falhou, com o
    modal seguindo aberto e nada salvo).
@@ -162,7 +186,9 @@ Em ordem: **screenshots ≫ leitura de página ≫ texto**. Regras de trabalho:
 
 - Ler pela API, nunca modal a modal.
 - Localizar elementos com `find` / `read_page` e clicar por `ref`, não por coordenada obtida de
-  screenshot. Screenshot só para conferir a textarea antes de salvar e para confirmar o toast.
+  screenshot. Screenshot só quando a checagem por texto vier ambígua ou quando a imagem É o
+  dado (planta, tabela em imagem). Login, modal aberto e gravação se conferem por JS/API.
+- Resumo filtrado na página, texto integral só do que for usado (seção "Trazer o texto").
 - Agrupar cliques, esperas e digitação num `browser_batch` único.
 - Lançar as inconformidades **em lote**: as referências da página se reaproveitam e se pula o
   ciclo rolar/procurar/fotografar a cada item.

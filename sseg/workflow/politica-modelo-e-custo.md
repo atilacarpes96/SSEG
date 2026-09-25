@@ -1,6 +1,6 @@
 ---
 name: politica-modelo-e-custo
-description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram
+description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram (revisada em 25/09/2026)
 sources: [cowork]
 ---
 
@@ -39,32 +39,52 @@ barata do fluxo, contra a chance de uma exigência indefensável indo para um Re
 Técnico com o timbre do CBMRS. O erro não custa token — custa ato administrativo. As travas de
 erro das Instruções existem porque isso **já aconteceu**.
 
-## Onde modelo leve ainda serve (e por que não compensa)
+## Onde modelo leve ainda serve
 
 Só onde **nenhuma escolha normativa acontece** e o erro aparece na hora:
 
-- abrir o SOL, aplicar o zoom, aguardar o código do processo;
+- abrir o SOL, aguardar o código do processo;
 - arquivar e nomear print, gerar o PDF da página;
-- rodar `sseg.py` e reportar a saída.
+- rodar `sseg.py` e reportar a saída;
+- conversa só de sincronização (copiar arquivos do clone para o projeto, `git pull`/push).
 
-Essas rodadas são minúsculas. A economia é irrelevante — não vale gerenciar troca de modelo
-por causa delas.
+Dentro de uma conversa de análise essas rodadas são minúsculas e não vale trocar de modelo.
+Mas **conversa aberta só para isso** (ex.: "Atualizar projeto com arquivos") pode abrir em
+Sonnet ou Haiku.
 
 ## As alavancas que sobraram (e valem mais)
 
-1. **Esforço, não modelo.** Baixar o esforço de raciocínio num modelo forte é mais seguro que
-   trocar por um modelo fraco: mantém-se a calibragem e o conhecimento, gasta-se menos
-   deliberação. Para tarefa de consulta e redação, modelo forte em esforço baixo tende a
-   bater modelo leve em esforço alto, com custo parecido.
-2. **Contrato de ordem de entrega.** Resposta que começa pelo entregável e não narra progresso
+1. **Conversa curta: uma por processo, uma por tarefa.** Cada mensagem reenvia o histórico
+   inteiro, então o fim de uma conversa longa custa muito mais que o começo. Arquivou a CIA,
+   a conversa acabou; ajuste posterior abre conversa nova lendo `processos/<N>.md`, não
+   buscando em conversa antiga (medição de 25/09/2026, abaixo).
+2. **Esforço, não modelo.** Baixar o esforço num modelo forte é mais seguro que trocar por um
+   modelo fraco: mantém-se a calibragem e o conhecimento, gasta-se menos deliberação. Desde o
+   Opus 5.5 (24/09/2026), **toda conversa de análise abre em Opus médio**, o padrão do modelo,
+   que a Anthropic mede como igual ou melhor que o Opus 5 em alto. O esforço fica o mesmo até
+   o fim da conversa, porque trocar no meio pode reiniciar o cache. **A revisão final da CIA
+   também roda em Opus médio** (25/09/2026) — ela acontece em todo processo, não é tarefa
+   rara; alto só quando a CIA tiver fundamento lido só em `normas/md/`, tese nova sem modelo
+   no banco ou mais de ~10 exigências (`ppci-revisao-cia`). Alto em conversa própria de tarefa
+   rara e de erro caro, como incorporar norma. Esforço menor reduz o pensamento; texto mais
+   curto se pede no prompt. Haiku não tem ajuste de esforço.
+3. **Menos rodadas no navegador.** Da API do SOL, só o resumo filtrado dentro da página vem
+   para a conversa, nunca o JSON bruto em fatias; login, modal e gravação se conferem por
+   JS/API, não por screenshot (`sol-cbmrs-navegador`). Todas as ferramentas numa única
+   `ToolSearch` na abertura; planilha de distribuição lida direto pelo ID
+   (`ppci-abertura-sessao`).
+4. **Contrato de ordem de entrega.** Resposta que começa pelo entregável e não narra progresso
    é mais curta — e output é o que se paga.
-3. **Modo avulso.** Conversa aberta só para uma notificação não roda o pipeline de análise
+5. **Modo avulso.** Conversa aberta só para uma notificação não roda o pipeline de análise
    inteiro. Ver `ppci-notificacao-cia`.
-4. **Ler o registro salvo antes de perguntar.** Dado que já está no `<N>.json` do processo não
+6. **Ler o registro salvo antes de perguntar.** Dado que já está no `<N>.json` do processo não
    se pergunta de novo — custa rodada e faz o usuário repetir o que já informou.
-5. **Gravar no projeto uma vez, no fim.** Já registrado em `ppci-analise-processo`: numa
+7. **Gravar no projeto uma vez, no fim.** Já registrado em `ppci-analise-processo`: numa
    sessão medida, as chamadas `Projects` foram **37% do tempo de geração**, porque
-   `project_write` reescreve o documento inteiro. É o maior desperdício isolado já medido.
+   `project_write` reescreve o documento inteiro. Idem para a sincronização clone → projeto:
+   uma vez, com a lista completa (em 24–25/09 os mesmos 6 arquivos foram copiados duas vezes).
+   O projeto já tem o repositório como fonte sincronizada do GitHub — conferir se a cópia
+   manual ainda é necessária depois do push.
 
 ## O ganho que compõe
 
@@ -85,3 +105,18 @@ Reabrir só com evidência nova de uma destas duas ordens:
 - medição real mostrando que as tarefas classe leve consomem parcela relevante da cota — hoje
   a suspeita é que consomem pouco, e a medição de 02/09/2026 aponta o custo para outro lado
   (geração de documento longo, não escolha de modelo).
+
+**Registro — teste de 24/09/2026** (doc "Novas regras do Claude — adaptação SSEG"): com a base
+em mãos, Haiku, Sonnet baixo e Sonnet médio copiaram uma nota errada (item 5.2.2.1); Opus em
+qualquer esforço e Sonnet alto apontaram o erro, e o Opus baixo custou pouco menos que o
+Sonnet alto. Isso reforça esta decisão. Nenhum modelo pegou o erro do CMAR na RT 05 P07, que só
+aparece no PDF: a trava continua sendo conferir no PDF, não trocar de modelo.
+
+**Registro — revisão de 25/09/2026** (semana com 74% da cota usada até sexta, 69% dela no
+Cowork). Revisão das 15 conversas de 22 a 25/09 apontou o gasto em rodadas, não em modelo:
+conversa de análise aberta o dia inteiro (07:28–17:58); JSON da API trazido em dezenas de
+fatias de 950 caracteres; screenshot para confirmar login; 3 `ToolSearch` separados e 2 buscas
+em conversa antiga só para achar a planilha de distribuição; 3 `tabs_context` seguidos com o
+Chrome fora; `device_commit_files` um arquivo por chamada; revisão final sempre em Opus alto;
+sincronização clone → projeto repetida. Correções aplicadas nas skills `ppci-abertura-sessao`,
+`sol-cbmrs-navegador`, `ppci-analise-processo` e `ppci-revisao-cia`.
