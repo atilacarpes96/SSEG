@@ -156,14 +156,14 @@ RT 05 P07, não pelo Anexo B.
 > **5.2.2.1** A atividade subsidiária destinada a depósito (grupo "J") será classificada como
 > ocupação predominante caso exceda a 10% da área total da edificação ou a 1.500 m².
 
-⭐ **Padrão de redação (definido em 03/09/2026):** ao notificar por este item, citar só o
-critério dos **10% da área total**. O critério alternativo de 1.500 m² só passa a ser o que
-efetivamente decide o caso num cenário bem específico — edificação grande o bastante para que
-10% da área total já ultrapasse 1.500 m² (ou seja, área total acima de 15.000 m²) — e mesmo
-nesse cenário o critério dos 10% já teria disparado antes. Fora esse caso, ele é redundante e
-só deixa a notificação mais longa sem acrescentar fundamento. Não citar "ou 1.500 m²" por
-padrão; avaliar caso a caso só se a área total do processo for muito grande. Aplicado no
-processo A00002419AB001 (ver [[divisao-trabalho-notificacao]]).
+⭐ **Padrão de redação (definido em 03/09/2026, corrigido em 24/09/2026):** ao notificar por
+este item, citar só o critério que decide o caso. **Área total até 15.000 m²:** citar os
+**10% da área total**, que ficam abaixo de 1.500 m² e disparam primeiro.
+**Área total acima de 15.000 m²:** citar o **1.500 m²**, que passa a disparar primeiro (ex.:
+depósito de 2.000 m² em 30.000 m² tem 6,7% da área e vira predominante só por ele). Informar
+sempre a área do depósito e a área total. A versão de 03/09 dizia que, acima de 15.000 m², "o
+critério dos 10% já teria disparado antes" — é o contrário. Aplicado no processo
+A00002419AB001 (ver [[divisao-trabalho-notificacao]]).
 
 > **5.2.2.2** A atividade subsidiária destinada a local de reunião de público (grupo "F")
 > será classificada como ocupação predominante caso a lotação máxima exceda a 500 pessoas,
@@ -186,7 +186,8 @@ portas de saída**, e nenhuma delas é automática:
 
 1. **5.2.2.1 — depósito grupo J:** vira predominante só **se exceder** 10% da área total da
    edificação **ou** 1.500 m². Abaixo disso continua subsidiária. Ao notificar, citar só o
-   critério dos 10% (ver padrão de redação acima).
+   critério que decide: 10% até 15.000 m² de área total, 1.500 m² acima (ver padrão de
+   redação acima).
 2. **5.2.2.2 — reunião de público grupo F:** vira predominante se a lotação máxima exceder
    **500 pessoas**. Exceção: F-6, que segue o 5.1.2.1 (sempre definidora, sem limiar).
 3. **5.2.2.3 — grupo M:** continua subsidiária, mas com medidas dimensionadas

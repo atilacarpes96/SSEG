@@ -30,7 +30,8 @@ releitura do conjunto.
 As respostas costumam ser **assertivas, mas extensas demais**. O corte vem antes do envio, não
 depois do pedido:
 
-- entregável no topo, em bloco citável;
+- entregável no topo, em bloco citável; resposta de rotina com até 12 linhas fora o bloco
+  citável, e **não repetir o que já foi dito em turno anterior**;
 - fundamento e "como cheguei ali" depois, separados, para poder pular;
 - observação lateral rotulada, no fim;
 - **sem narração de progresso** ("localizei o modelo...", "vou consultar...").

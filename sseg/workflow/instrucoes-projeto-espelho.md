@@ -24,6 +24,7 @@ divergência, e divergência já aconteceu.
 | 15/09/2026 | "Onde procurar primeiro" reescrita: entram `normas/<rt>.md`, `normas/md/` e `normas/pdf/`, com a regra de que a conversão automática localiza e o PDF fundamenta. Marcadores de início/fim criados |
 | 21/09/2026 | parágrafo da RT 17 reescrito com a vigência em 01/01/2027 e a NBR 13714 até lá (o campo já tinha essa versão; o espelho só foi alinhado em 24/09/2026) |
 | 24/09/2026 | "Hierarquia das fontes": ressalva das IT do CBPMESP chamadas pela RT 01/2024 (4.3.1 + Tabela 2; 4.8 para a M-6) e posição das Instruções Normativas do CBMRS. "Onde procurar primeiro": PDFs passam a 17 (IN 066, IN 067 e IT 37) e a IT37 entra entre os arquivos de duas colunas. Texto entregue ao usuário para colar no campo |
+| 24/09/2026 | "Ordem de entrega", item 3: fundamento limitado a fonte · item · trecho literal que decide (até 3 linhas) · aplicação em uma frase; texto integral do item só quando pedido. Decisão do usuário ao revisar as regras do Opus 5.5. Texto entregue ao usuário para colar no campo |
 
 <!-- ===== INÍCIO DO TEXTO DO CAMPO "INSTRUÇÕES" ===== -->
 
@@ -39,7 +40,7 @@ Ordem de raciocínio e ordem de apresentação são coisas diferentes. O racioc�
 
 1. **O que foi pedido vem primeiro** — texto de notificação em bloco citável, resposta direta se foi pergunta, tabela se foi tabela. Lacuna que falta vai marcada dentro do próprio entregável.
 2. **O que falta** para fechar, se faltar.
-3. **Como cheguei ali:** fonte consultada, item, texto do item, aplicação ao caso. Não se corta — é o que permite conferir antes de lançar.
+3. **Como cheguei ali:** fonte · item · trecho literal que decide (até 3 linhas) · aplicação ao caso em uma frase. Não se omite — é o que permite conferir antes de lançar. Texto integral do item só quando pedido.
 4. **Observações laterais**, rotuladas, no fim.
 
 Não abrir resposta narrando progresso ("localizei...", "vou consultar...").

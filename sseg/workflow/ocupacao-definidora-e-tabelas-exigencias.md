@@ -86,6 +86,15 @@ de cada nota e a contagem em cada hipótese — e **perguntar**. Nunca aplicar n
    16/09/2026, nota 10 órfã) e "Alarme de Incêndio" da 6A (21/09/2026, nota 3 órfã). Sinal
    comum: **nota específica que não aparece em nenhuma célula**. As duas foram conferidas no PDF
    e estão na fonte (`tabelas_conferidas.json`, chave `_correcoes_na_fonte`) desde 24/09/2026.
+5. **24/09/2026 — generalização falsa sobre a RT 05 P07.** A base dizia que as tabelas dessa
+   RT não têm Segurança Estrutural, CMAR, Compartimentação Vertical nem Controle de Fumaça, e
+   que a falta delas no campo 4 não é pendência. Vale para as 6I e 6J, as únicas conferidas no
+   texto; a Tabela 5, a 6F.3, a 6L.1, a 6M.1 e a 6C desmentem, e o CMAR é exigido para F-5/F-6
+   e L. Achado ao conferir o gabarito de um teste de modelos contra os `tab-rt05-*.json` e o
+   PDF. Corrigido em [[rt-05-parte07-2025-edificacoes-existentes]] e na skill
+   `ppci-analise-processo`. Sinal comum com o item 3: afirmação geral que ninguém conferiu na
+   norma inteira. Nos JSON os nomes estão sem acento (`Seguranca`, `Fumaca`, CMAR por
+   extenso): buscar sem acento.
 
 **Método:** `pdftotext -layout` sobre o PDF oficial **vigente** — conferir "atualizado até" na
 capa antes de confiar. Tendo imagem e PDF, cruzar os dois.
