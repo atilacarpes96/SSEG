@@ -31,6 +31,7 @@ USO
   python3 sseg.py render    --json processo.json --out 1.html
   python3 sseg.py pdf       --json processo.json --out 1.pdf
   python3 sseg.py diff      --a 1.json --b 2.json
+  python3 sseg.py revisar-cia --cia "CIA 2.pdf" --textos "CIA 2 textos.json" --json 2.json --anterior "CIA 1.pdf"
 """
 
 import argparse
@@ -890,10 +891,17 @@ def main():
 
     sub.add_parser("schema")
 
+    import revisar_cia
+    revisar_cia.args_parser(sub.add_parser("revisar-cia", help="conferencias da CIA antes de fechar a analise"))
+
     args = ap.parse_args()
 
     if args.cmd == "schema":
         print(json.dumps(SCHEMA, indent=2, ensure_ascii=False))
+        return
+
+    if args.cmd == "revisar-cia":
+        print(revisar_cia.revisar(args).texto())
         return
 
     if args.cmd == "diff":
