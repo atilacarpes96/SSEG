@@ -52,10 +52,13 @@ por causa delas.
 
 ## As alavancas que sobraram (e valem mais)
 
-1. **Esforço, não modelo.** Baixar o esforço de raciocínio num modelo forte é mais seguro que
-   trocar por um modelo fraco: mantém-se a calibragem e o conhecimento, gasta-se menos
-   deliberação. Para tarefa de consulta e redação, modelo forte em esforço baixo tende a
-   bater modelo leve em esforço alto, com custo parecido.
+1. **Esforço, não modelo.** Baixar o esforço num modelo forte é mais seguro que trocar por um
+   modelo fraco: mantém-se a calibragem e o conhecimento, gasta-se menos deliberação. Desde o
+   Opus 5.5 (24/09/2026), **toda conversa de análise abre em Opus médio**, o padrão do modelo,
+   que a Anthropic mede como igual ou melhor que o Opus 5 em alto. O esforço fica o mesmo até
+   o fim da conversa, porque trocar no meio pode reiniciar o cache. Alto só em conversa própria
+   de tarefa rara e de erro caro, como incorporar norma. Esforço menor reduz o pensamento;
+   texto mais curto se pede no prompt. Haiku não tem ajuste de esforço.
 2. **Contrato de ordem de entrega.** Resposta que começa pelo entregável e não narra progresso
    é mais curta — e output é o que se paga.
 3. **Modo avulso.** Conversa aberta só para uma notificação não roda o pipeline de análise
@@ -85,3 +88,9 @@ Reabrir só com evidência nova de uma destas duas ordens:
 - medição real mostrando que as tarefas classe leve consomem parcela relevante da cota — hoje
   a suspeita é que consomem pouco, e a medição de 02/09/2026 aponta o custo para outro lado
   (geração de documento longo, não escolha de modelo).
+
+**Registro — teste de 24/09/2026** (doc "Novas regras do Claude — adaptação SSEG"): com a base
+em mãos, Haiku, Sonnet baixo e Sonnet médio copiaram uma nota errada (item 5.2.2.1); Opus em
+qualquer esforço e Sonnet alto apontaram o erro, e o Opus baixo custou pouco menos que o
+Sonnet alto. Isso reforça esta decisão. Nenhum modelo pegou o erro do CMAR na RT 05 P07, que só
+aparece no PDF: a trava continua sendo conferir no PDF, não trocar de modelo.

@@ -1,5 +1,5 @@
 ---
-name: ppci-analise-processo
+name: "ppci-analise-processo"
 description: "Pipeline completo de análise de PPCI no SOL-CBMRS: do print à CIA, com conferência de definidora, tabela de exigências, normas e laudo."
 ---
 
@@ -56,10 +56,15 @@ Medição de uma sessão real (02/09/2026, 147 rodadas): a **execução** das fe
    existe patch. Reescrever 3 mil palavras porque duas frases mudaram foi o maior desperdício
    da sessão. Acumular e gravar em bloco no final. **Exceção: dado errado na base** (uma
    contagem, uma vigência, uma fonte) — esse se corrige na hora, porque contamina a CIA.
-3. **Trazer os PDFs das normas da pasta local no início** — `Carpes\Normas`, ver a seção
+3. ⭐ **`<N>.pdf` e `<N>.json` da análise só quando o usuário pedir para "atualizar a pasta".**
+   Gerar no começo obriga a gerar de novo no fim, com os status finais — é crédito gasto duas
+   vezes (regra do usuário, 24/09/2026). Durante a análise, trabalhar pela leitura da API do
+   SOL, sem gerar arquivo. Ler os arquivos das análises ANTERIORES (`1.json`, `CIA 1.pdf`)
+   continua sendo o primeiro passo.
+4. **Trazer os PDFs das normas da pasta local no início** — `Carpes\Normas`, ver a seção
    "Ler os PDFs das normas" — e extrair todos de uma vez com `pdftotext -layout`.
-4. **Entregar a leva inteira de inconformidades**, revisar no fim, e só então gravar.
-5. **Delegar tarefa mecânica a subagente com modelo leve** (Haiku/Sonnet), que não consome o
+5. **Entregar a leva inteira de inconformidades**, revisar no fim, e só então gravar.
+6. **Delegar tarefa mecânica a subagente com modelo leve** (Haiku/Sonnet), que não consome o
    contexto principal: extrair texto de planta, montar o `<N>.json`, comparar duas análises,
    resolver célula de tabela, gerar PDF. O modelo forte fica para enquadramento de ocupação,
    aplicação de nota, escolha de definidora e redação de notificação.
@@ -75,9 +80,10 @@ código).
 A conferência das **normas do campo 4 vem depois da ocupação definidora**, nunca antes —
 tanto no raciocínio quanto na ordem em que o relatório é escrito.
 
-Veredito primeiro, em até 5 linhas ou uma tabela. Fundamentação completa só quando a
-conclusão vira exigência, ou quando o usuário pedir. **Não recapitular o que já foi dito em
-turno anterior** — referenciar e seguir.
+Veredito primeiro, em até 5 linhas ou uma tabela. Fundamentação só quando a conclusão vira
+exigência, ou quando o usuário pedir, no formato: fonte · item · trecho literal que decide
+(até 3 linhas) · aplicação em uma frase. Texto integral do item só se pedido.
+**Não recapitular o que já foi dito em turno anterior** — referenciar e seguir.
 
 ## 📖 Ler os PDFs das normas
 
@@ -125,39 +131,47 @@ Procurar "atualizado até" e contar menções a decretos alteradores antes de us
 
 ## Ferramentas
 
-Os scripts vivem no projeto, em `scripts/`. No Cowork, antes de usar, trazer para o disco:
+Os scripts vivem no projeto, em `scripts/`. No Cowork, antes de usar, trazer para o disco —
+**de preferência do clone local** (`Carpes\SSEG\sseg\scripts\` via `device_stage_files`), que
+não passa o arquivo pelo contexto:
 
 ```
-project_read scripts/sseg.py                            -> sseg/sseg.py
-project_read scripts/tabelas.py                         -> sseg/tabelas.py
-project_read scripts/dados/tabelas/tab-00-indice.json   -> sseg/dados/tabelas/
-project_read scripts/dados/tabelas/<arquivo do grupo>   -> sseg/dados/tabelas/
-project_read scripts/dados/indice_normas.json           -> sseg/dados/indice_normas.json
+Carpes\SSEG\sseg\scripts\sseg.py                           -> sseg/sseg.py
+Carpes\SSEG\sseg\scripts\tabelas.py                        -> sseg/tabelas.py
+Carpes\SSEG\sseg\scripts\dados\tabelas\tab-00-indice.json  -> sseg/dados/tabelas/
+Carpes\SSEG\sseg\scripts\dados\tabelas\<arquivo do grupo>  -> sseg/dados/tabelas/
+Carpes\SSEG\sseg\scripts\dados\indice_normas.json          -> sseg/dados/indice_normas.json
 python3 sseg/sseg.py schema | check | pdf | diff
 python3 sseg/tabelas.py rota | linha | divisao | notas
 ```
+
+Sem o clone, `project_read scripts/...` (carrega o arquivo no contexto — mais caro).
 
 **Sem sandbox (modo Chat) os scripts não rodam** — executar os mesmos passos manualmente,
 lendo os JSON diretamente.
 
 ## Passo a passo
 
-### 1. Identificar e arquivar
+### 1. Identificar
 
-Perguntar o número do processo se não vier. Criar/usar a subpasta em
+Perguntar o número do processo se não vier. A subpasta do processo fica em
 `C:\Users\55519\Desktop\Carpes\print ppci\<processo>\`.
-
-Nomear pelo **rótulo "Nª Análise" do próprio print**: `1.pdf`, `2.pdf`… e `CIA 1.pdf`,
-`CIA 2.pdf`. Pasta nova cujo primeiro arquivo já é a 2ª Análise vai como `2.pdf`.
 
 ⭐ **Antes de perguntar qualquer coisa ao usuário, abrir a pasta do processo.** `1.json` e
 `CIA 1.pdf` costumam responder metade das dúvidas de uma reanálise — inclusive as confirmações
 que o próprio analista já deu em turnos anteriores (altura, pavimento de descarga, área de
 ambiente). Perguntar o que a pasta já tem é retrabalho.
 
-Se a página estiver aberta no navegador, gerar a cópia em PDF — ver `sol-cbmrs-navegador`.
+### 1.1 Arquivar — SÓ quando o usuário pedir "atualizar a pasta"
 
-### 1.1 Data de protocolo — onde achar (não perguntar antes de olhar)
+🚫 **Não gerar `<N>.pdf` nem `<N>.json` no começo da análise.** Os status ainda vão mudar, e o
+arquivo teria de ser gerado de novo no fim. Quando o usuário pedir, gerar os dois com os
+status finais (ver `sol-cbmrs-navegador`, "Gerar a cópia em PDF da página").
+
+Nomear pelo **rótulo "Nª Análise" do próprio print**: `1.pdf`, `2.pdf`… e `CIA 1.pdf`,
+`CIA 2.pdf`. Pasta nova cujo primeiro arquivo já é a 2ª Análise vai como `2.pdf`.
+
+### 1.2 Data de protocolo — onde achar (não perguntar antes de olhar)
 
 **Não está na tela da análise técnica.** Sai da aba **"Consultar licenciamento" → "Marcos"**,
 no marco **"Número do licenciamento gerado"**. A mesma aba traz a linha do tempo inteira,
@@ -165,8 +179,9 @@ inclusive o **deferimento do laudo de inviabilidade** — registrar no JSON.
 
 ### 2. Extrair o registro estruturado
 
-Transformar a página no JSON do processo e gravá-lo como `<N>.json` ao lado do PDF. É o que
-torna a comparação entre análises barata. Nunca preencher campo que não está no print.
+Ler a página pela API e montar o registro do processo (em arquivo de trabalho no container,
+se precisar). É o que torna a comparação entre análises barata. Nunca preencher campo que não
+está no print. **Gravar `<N>.json` na pasta só no passo 1.1, quando pedido.**
 
 ### 3. Rodar as conferências
 
@@ -223,9 +238,13 @@ Sempre ler o texto da nota em `notas` e, se ela decidir alguma coisa, levar ao u
 Ainda exigem imagem: **Tabela 4** (roteamento) e **6M.1, 6M.2, 6M.4, 6M.5** (eixo em metros de
 extensão, não altura).
 
-⚠️ As Tabelas 6 da RT 05 P07 **não têm Segurança Estrutural, CMAR, Compartimentação Vertical
-nem Controle de Fumaça** — a ausência dessas medidas no campo 4 de uma existente regularizada
-**não é pendência**. O Anexo B do Decreto tem as 16 linhas.
+⚠️ As tabelas da RT 05 P07 têm menos linhas que as 16 do Anexo B do Decreto, e o número varia
+por tabela. **A falta de Segurança Estrutural, CMAR, Compartimentação Vertical ou Controle de
+Fumaça não é regra geral:** a Tabela 5 exige CMAR para F-5/F-6 e L; a 6F.3 exige CMAR para
+F-5/F-6; as duas exigem Controle de Fumaça para F-6 (ver notas); a 6L.1 exige Segurança
+Estrutural e CMAR para L-2 e L-3; a 6C tem Compartimentação Vertical para shopping acima de
+23 m. A ausência no campo 4 só não é pendência quando **a tabela da divisão** não traz a
+linha: conferir no `tab-rt05-<GRUPO>.json` (buscar sem acento).
 
 Roteamento: área ≤ 750 m² **e** altura ≤ 12 m → Tabela 5; senão → Tabelas 6, coluna por
 altura (`Térrea | H≤6 | 6<H≤12 | 12<H≤23 | 23<H≤30 | Acima de 30`); subsolo ocupado → Tabela 7.
@@ -291,10 +310,11 @@ de compensatória.
 
 ### 10. Comparação com a análise anterior (da 2ª em diante)
 
-`sseg.py diff`, ou comparação campo a campo. Reportar em quatro colunas: **o que mudou · o que
-não mudou · o que foi corrigido em resposta à CIA anterior · o que continua irregular**. Os
-textos das inconformidades não estão na página — comparar também as CIAs arquivadas. Decidir
-por exigência: **reiterar**, **complementar** ou **substituir**. Ver `ppci-notificacao-cia`.
+`sseg.py diff` (com um JSON de trabalho no container, não gravado na pasta), ou comparação
+campo a campo. Reportar em quatro colunas: **o que mudou · o que não mudou · o que foi
+corrigido em resposta à CIA anterior · o que continua irregular**. Os textos das
+inconformidades não estão na página — comparar também as CIAs arquivadas. Decidir por
+exigência: **reiterar**, **complementar** ou **substituir**. Ver `ppci-notificacao-cia`.
 
 ⭐ **Comparar os PDFs das plantas antes de olhar o desenho.** Um `diff` do texto extraído com
 `pdftotext -layout` das duas versões mostra na hora se o RT redesenhou ou só trocou um rótulo.
@@ -311,6 +331,7 @@ na definidora nova antes de notificar a ausência.
 - **Aplicar sozinho uma nota de tabela que decide contagem ou definidora** — parar e perguntar.
 - Abrir `scripts/dados/tabelas_conferidas.json` numa análise.
 - Contar medidas por resumo automático (WebFetch e afins).
+- **Gerar `<N>.pdf` / `<N>.json` da análise sem o usuário pedir para atualizar a pasta.**
 - **Pedir ao usuário PDF de norma que já está em `Carpes\Normas`**, ou tentar obter o arquivo
   pelo link oficial — o link não baixa.
 - Reescrever um doc do projeto no meio da análise por causa de ajuste de redação — acumular
@@ -335,5 +356,5 @@ na definidora nova antes de notificar a ausência.
 - [ ] O PDF de cada norma citada veio da **pasta local**, com a versão conferida na capa?
 - [ ] A data de protocolo saiu dos Marcos, e a versão da norma corresponde a ela?
 - [ ] Dados faltantes foram listados em vez de completados?
-- [ ] O PDF e o JSON da análise foram arquivados na pasta do processo?
+- [ ] `<N>.pdf` e `<N>.json` **só** foram gerados se o usuário pediu para atualizar a pasta?
 - [ ] As atualizações do projeto foram gravadas **em bloco, no fim**?
