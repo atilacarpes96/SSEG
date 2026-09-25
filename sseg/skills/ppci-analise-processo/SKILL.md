@@ -171,6 +171,18 @@ status finais (ver `sol-cbmrs-navegador`, "Gerar a cópia em PDF da página").
 Nomear pelo **rótulo "Nª Análise" do próprio print**: `1.pdf`, `2.pdf`… e `CIA 1.pdf`,
 `CIA 2.pdf`. Pasta nova cujo primeiro arquivo já é a 2ª Análise vai como `2.pdf`.
 
+Junto com os dois, gravar **`CIA <N> textos.json`**: o texto de cada caixa "Especificar" lido
+pela API (`resultado.justificativas[].justificativa` de cada item reprovado, ver
+`sol-cbmrs-navegador`), no formato `[{"campo": "4", "item": "<nome>", "texto": "..."}]`.
+É a entrada da revisão final.
+
+⭐ **Depois de arquivar, lembrar a revisão final em uma linha, sem rodá-la aqui:**
+
+> Revisão final: abra uma conversa nova em Opus alto e cole "revisa a CIA do processo <código>".
+
+A revisão rende mais lida de fora, sem o raciocínio que produziu a CIA (skill
+`ppci-revisao-cia`). Se o usuário preferir revisar aqui mesmo, seguir a mesma skill.
+
 ### 1.2 Data de protocolo — onde achar (não perguntar antes de olhar)
 
 **Não está na tela da análise técnica.** Sai da aba **"Consultar licenciamento" → "Marcos"**,
@@ -358,3 +370,4 @@ na definidora nova antes de notificar a ausência.
 - [ ] Dados faltantes foram listados em vez de completados?
 - [ ] `<N>.pdf` e `<N>.json` **só** foram gerados se o usuário pediu para atualizar a pasta?
 - [ ] As atualizações do projeto foram gravadas **em bloco, no fim**?
+- [ ] Ao arquivar, `CIA <N> textos.json` foi gravado e a revisão final foi lembrada?
