@@ -12,13 +12,25 @@ está na base de conhecimento do projeto está em `sseg/`.
 ```
 sseg/
 ├── normas/      transcrições das normas e o índice normativo (00-indice-normativo.md)
-├── processos/   registro por processo analisado (<CÓDIGO>.md)
+├── processos/   registro por processo analisado — SÓ LOCAL, fora do Git (ver abaixo)
 ├── scripts/     sseg.py, tabelas.py, gerar_recortes.py
 │   └── dados/   indice_normas.json, tabelas_conferidas.json
 │       └── tabelas/   os 30 recortes por grupo de ocupação
 ├── skills/      cópia de backup das 4 skills PPCI da conta do Claude
 └── workflow/    como o trabalho é conduzido (arquitetura, travas, políticas)
 ```
+
+## ⚠️ Dados de processo não entram no repositório
+
+Este repositório é **público**. Registros de processo e dados de cliente — `sseg/processos/`,
+CIA, JSON do SOL, plantas, prints — **não vão para o GitHub**:
+
+- `sseg/processos/` está no `.gitignore`. Pode existir no clone local, mas nunca é enviado.
+- Não usar `git add -f` nem tirar a pasta do `.gitignore`.
+- Prints e plantas ficam fora do clone (ex.: `Carpes\print ppci`).
+- Cada analista guarda seus registros numa pasta própria, fora do repo.
+
+Regra também em `CLAUDE.md`, para o Claude de quem clonar.
 
 ## Levantar o projeto em outra máquina
 
