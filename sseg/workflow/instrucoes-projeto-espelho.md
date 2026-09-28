@@ -25,6 +25,7 @@ divergência, e divergência já aconteceu.
 | 21/09/2026 | parágrafo da RT 17 reescrito com a vigência em 01/01/2027 e a NBR 13714 até lá (o campo já tinha essa versão; o espelho só foi alinhado em 24/09/2026) |
 | 24/09/2026 | "Hierarquia das fontes": ressalva das IT do CBPMESP chamadas pela RT 01/2024 (4.3.1 + Tabela 2; 4.8 para a M-6) e posição das Instruções Normativas do CBMRS. "Onde procurar primeiro": PDFs passam a 17 (IN 066, IN 067 e IT 37) e a IT37 entra entre os arquivos de duas colunas. Texto entregue ao usuário para colar no campo |
 | 24/09/2026 | "Ordem de entrega", item 3: fundamento limitado a fonte · item · trecho literal que decide (até 3 linhas) · aplicação em uma frase; texto integral do item só quando pedido. Decisão do usuário ao revisar as regras do Opus 5.5. Texto entregue ao usuário para colar no campo |
+| 28/09/2026 | "Onde procurar primeiro": entra `workflow/casos-referencia.md` como item 1 (lições anonimizadas das análises, versionadas no GitHub no lugar de `processos/`). Texto entregue ao usuário para colar no campo |
 
 <!-- ===== INÍCIO DO TEXTO DO CAMPO "INSTRUÇÕES" ===== -->
 
@@ -120,11 +121,12 @@ Processos são identificados por código (`A00049503AA001`). Manter o raciocíni
 
 ## Onde procurar primeiro
 
-1. `normas/banco-notificacoes-padrao.md` — ~80 modelos validados pela chefia. Se o problema já tem modelo, usar direto.
-2. `normas/00-indice-normativo.md` — o que está no projeto e o status de vigência.
-3. `normas/<rt>.md` — a transcrição comentada da norma: itens já conferidos, travas registradas e aplicação a casos anteriores.
-4. **Só quando faltar a letra do item:** `normas/md/` para localizar o trecho e `normas/pdf/` para conferir e citar. A conversão localiza; o PDF fundamenta.
-5. Não estando no projeto, pesquisar na fonte oficial (www.bombeiros.rs.gov.br).
+1. `workflow/casos-referencia.md` — lições das análises anteriores (definidora, roteamento, decisões de "não notificar", erros já cometidos). Ler ao começar um processo. É referência de aplicação, não fundamento: o dispositivo continua sendo conferido na norma.
+2. `normas/banco-notificacoes-padrao.md` — ~80 modelos validados pela chefia. Se o problema já tem modelo, usar direto.
+3. `normas/00-indice-normativo.md` — o que está no projeto e o status de vigência.
+4. `normas/<rt>.md` — a transcrição comentada da norma: itens já conferidos, travas registradas e aplicação a casos anteriores.
+5. **Só quando faltar a letra do item:** `normas/md/` para localizar o trecho e `normas/pdf/` para conferir e citar. A conversão localiza; o PDF fundamenta.
+6. Não estando no projeto, pesquisar na fonte oficial (www.bombeiros.rs.gov.br).
 
 **`normas/md/` não fundamenta nada.** É índice de busca literal, gerado por extração automática: hierarquia de título sai errada, tabela de exigências desalinha, expoente de nota se solta do X, e a busca só acha a palavra exata — ausência ali não prova ausência na norma. Item lido em `md/` é provisório: conferir no PDF de `normas/pdf/` antes de citar em CIA, e **nunca contar medidas por ali** (trava de erro nº 2).
 
