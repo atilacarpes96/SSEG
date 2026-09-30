@@ -1,6 +1,6 @@
 # RT CBMRS nº 01/2024 — Diretrizes Básicas de Segurança Contra Incêndio
 
-Última verificação: **09/09/2026** — acrescentadas as seções 4.5, 4.6 e 4.8 (⚠️ extração
+Última verificação: **30/09/2026** (regra da soma no 5.2.2.1); **09/09/2026** — acrescentadas as seções 4.5, 4.6 e 4.8 (⚠️ extração
 automática, provisórias). Itens das seções anteriores transcritos literalmente do PDF oficial
 da versão corrigida de 08/06/2026. Ver [[00-indice-normativo]].
 
@@ -165,6 +165,16 @@ sempre a área do depósito e a área total. A versão de 03/09 dizia que, acima
 critério dos 10% já teria disparado antes" — é o contrário. Aplicado no processo
 A00002419AB001 (ver [[divisao-trabalho-notificacao]]).
 
+⭐ **Soma das áreas de depósito (regra do analista, 30/09/2026):** o teste do 5.2.2.1 usa a
+**soma das áreas de todos os ambientes de depósito (grupo "J") subsidiários** da edificação,
+não cada ambiente isolado — o item fala em "a atividade subsidiária destinada a depósito", que
+é a atividade inteira. Ex.: depósitos de 250 m² e 200 m² em 4.000 m² somam 450 m² (11,25%) →
+excede os 10% → predominante, mesmo com nenhum ambiente passando de 10% sozinho. Na
+notificação, informar a área de cada depósito, a soma e a área total. Aplicado em
+duas análises reais (áreas de depósito somadas acima do limite de 10% da área total).
+Registrado depois que o Sonnet 5.5 deixou de somar no teste de 30/09/2026 (ver
+[[politica-modelo-e-custo]]).
+
 > **5.2.2.2** A atividade subsidiária destinada a local de reunião de público (grupo "F")
 > será classificada como ocupação predominante caso a lotação máxima exceda a 500 pessoas,
 > exceto para as ocupações da divisão "F-6" que deverá atender ao disposto no item 5.1.2.1
@@ -185,7 +195,8 @@ A regra do 5.2.2 (subsidiária integra a predominante, sem alterar grau de risco
 portas de saída**, e nenhuma delas é automática:
 
 1. **5.2.2.1 — depósito grupo J:** vira predominante só **se exceder** 10% da área total da
-   edificação **ou** 1.500 m². Abaixo disso continua subsidiária. Ao notificar, citar só o
+   edificação **ou** 1.500 m². Abaixo disso continua subsidiária. A área testada é a **soma** de
+   todos os depósitos J subsidiários, não cada ambiente isolado. Ao notificar, citar só o
    critério que decide: 10% até 15.000 m² de área total, 1.500 m² acima (ver padrão de
    redação acima).
 2. **5.2.2.2 — reunião de público grupo F:** vira predominante se a lotação máxima exceder

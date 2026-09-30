@@ -9,12 +9,12 @@ sources: [cowork]
 > Fato do setup, registrado em **09/09/2026**, depois de o usuário apontar que o pipeline
 > insistia em link/download em vez de usar esta pasta. Atualizado em **11/09/2026** (IN 45),
 > em **15/09/2026** (PDFs versionados no repositório), em **22/09/2026** (IT 37/2025) e em
-> **24/09/2026** (IN 066/2025 e IN 067/2025).
+> **24/09/2026** (IN 066/2025 e IN 067/2025) e em **30/09/2026** (RT 31/2025).
 
 ## ⭐ Primeira parada: `sseg/normas/pdf/`
 
 Os PDFs oficiais estão **dentro do repositório** desde 15/09/2026 (14 arquivos; 17 com a IN 66, a IN 67
-e a IT 37, em 24/09/2026), junto com as conversões do anydoc em `sseg/normas/md/`. Em qualquer
+e a IT 37, em 24/09/2026; 18 com a RT 31, em 30/09/2026), junto com as conversões do anydoc em `sseg/normas/md/`. Em qualquer
 máquina com o clone, a norma está em mãos — sem device bridge, sem stage, sem pedir arquivo ao
 usuário. Ler direto com `pdftotext`, seguindo as regras de extração abaixo, que continuam
 valendo integralmente.
@@ -97,7 +97,7 @@ falta dele lá, do arquivo que o usuário salvar na pasta ou anexar.
 Validado: staging + `pdftotext` funcionam; `pdftotext`, `pdftoppm`, `pdfinfo` e `qpdf` estão
 instalados no sandbox.
 
-## Inventário conferido — 09/09/2026, atualizado em 11/09/2026, 22/09/2026 e 24/09/2026
+## Inventário conferido — 09/09/2026, atualizado em 11/09/2026, 22/09/2026, 24/09/2026 e 30/09/2026
 
 Versão lida da capa e do Art. 2º de cada arquivo, um a um.
 
@@ -118,6 +118,7 @@ Versão lida da capa e do Art. 2º de cada arquivo, um a um.
 | `RT12.pdf` (41 p.) | RT 12 | **2021** — Art. 2º: **01/01/2022** | ✅ |
 | `RT14.pdf` (11 p.) | RT 14 | **2016** — 11/04/2016, DOE 077 de 26/04/2016, vigor 30 dias após | ✅ Tabela 2 e 5.4.5 (sobre rodas) conferidos em 22/09/2026 |
 | `RT17.pdf` (46 p.) | RT 17 Parte 01 | **2025** — Art. 2º: **1º de janeiro de 2027** | ✅ nota "f" da Tabela 1 (M-6 → IT 37) conferida em 22/09/2026 |
+| **`RT31.pdf`** (7 p.) ⭐ novo em 30/09/2026 | **RT 31** — Câmaras Frigoríficas | **2025** — assinada 20/05/2025, DOE 98 de 22/05/2025, Art. 2º: **1º de novembro de 2025**; revoga a IN 056 | ✅ íntegra em [[rt-31-2025-camaras-frigorificas]] |
 | `RT18.pdf` (10 p.) ⚠️ duas colunas | RT 18 | **2025** — assinada 20/05/2025, Art. 2º: **1º de novembro de 2025** | ✅ seção 8 e 9.3/9.4 transcritas do PDF |
 | `RTISOL.pdf` (15 p.) ⚠️ duas colunas | ⚠️ **RT de Implantação do SOL-CBMRS** | **4ª Edição/2022** — DOE 178 de 15/09/2022, vigor **19/09/2022** | ⚠️ ver abaixo |
 
@@ -160,9 +161,9 @@ Precisa de anexo do usuário ou de outra fonte:
   **RT 05 Parte 4B** (construções provisórias)
 - **RT 09/2025** (CMAR) · **RT 13/2025** (iluminação) · **RT 15 Parte 01/2023** (brigada) ·
   **RT 16/2017** (hidrante urbano)
-- RT 03/2016 e as RTs de ocupações específicas (20, 21, 22, 23, 31, 32)
+- RT 03/2016 e as RTs de ocupações específicas (20, 21, 22, 23, 32)
 - **IN 025/2020** (corredor enclausurado, revogada — mas é a aplicável a PPCI protocolado até
-  26/04/2023) e **IN 056/2024** (câmaras frigoríficas/amônia)
+  26/04/2023) e **IN 056** (câmaras frigoríficas/amônia — **revogada pela RT 31/2025**; só importa para PPCI protocolado antes de 01/11/2025)
 - **IN 068/2025** (enquadramento F-5, F-6, F-8, F-11, F-12 — conversa com a IN 066) e a
   **Portaria** que regula o Corpo Técnico da STE (IN 067, Art. 8º)
 - ITs do CBPMESP aplicáveis por remissão da RT 01/2024 e ainda sem PDF: **IT 08, IT 09, IT 15,
@@ -186,6 +187,8 @@ Na mesma leitura foi conferido o **item 5.12.1.2 da RT 11**, que é o regime do 
 ✅ **IN 066/2025 e IN 067/2025 entraram em 24/09/2026** — pasta local **e** repositório
 (`pdf/`, `md/`), íntegras em [[in-066-2025-saidas-reuniao-publico]] e
 [[in-067-2025-solucao-tecnica-equivalente]]. Na mesma leitura, conferido o **5.4.1.2.2 da RT 11**.
+
+✅ **RT 31/2025 entrou em 30/09/2026** (caso de recurso, 19/09/2026). PDF em `sseg/normas/pdf/RT31.pdf`, conversão em `sseg/normas/md/RT31.md`; íntegra em [[rt-31-2025-camaras-frigorificas]]. ⚠️ A cópia em `Carpes\Normas\` e a conversão em `Carpes\Normas\_md\` **não foram feitas** (pasta fora do acesso da sessão) — copiar `RT31.pdf` e `RT31.md` (sem cabeçalho de aviso) para lá.
 
 ## Sincronizar
 

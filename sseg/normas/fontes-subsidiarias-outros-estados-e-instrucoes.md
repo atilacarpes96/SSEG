@@ -38,7 +38,9 @@ As Instruções Técnicas do Corpo de Bombeiros da Polícia Militar do Estado de
 - Protocolo no upload de **ART/RRT** da janela "Adicionar Responsável Técnico", **passo 1** do SOL; avaliação pelo **Corpo Técnico do CBMRS**, só verificação **formal** (Art. 14).
 - **Vedada** em F-6, atividade de baixo risco, PSPCI e evento temporário (Art. 2º). **Não é medida compensatória** (Art. 1º, § 2º).
 
-## Instrução Normativa CBMRS nº 056/DSPCI/2024 — Câmaras frigoríficas / amônia
+## Instrução Normativa CBMRS nº 056/DSPCI/2024 — Câmaras frigoríficas / amônia — 🚫 REVOGADA pela RT 31/2025 (vigência 01/11/2025)
+
+🚫 **Revogada em 01/11/2025** pela **RTCBMRS nº 31/2025** (Art. 2º, que a grafa "056/CBMRS/DSPCI/2023, de 10 de janeiro de 2024"). Para PPCI protocolado a partir daí, a norma é a [[rt-31-2025-camaras-frigorificas]] (itens 5.5 e 6.2). O que segue vale só para PPCI protocolado antes de 01/11/2025.
 
 - Instrução Normativa do próprio CBMRS — nível 4, abaixo das RTs. ⚠️ **Data de vigência não conferida**; PDF não está na pasta local.
 - Arts. 4º, 5º e 6º — a planta baixa do PPCI deve indicar a temperatura de operação das câmaras frigoríficas, localização, volume e medidas de segurança exigidas para recipientes com mais de 50 litros contendo amônia ou fluido frigorífico inflamável.

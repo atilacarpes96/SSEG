@@ -1,7 +1,7 @@
 {
   "_leia_isto": "Forma legivel por maquina do normas/00-indice-normativo.md. Serve para a conferencia automatica das normas citadas no campo '4. Medidas de seguranca' do print do SOL. NAO e fundamento: o fundamento sai do PDF oficial. Manter em sincronia com o 00-indice-normativo.md.",
-  "_atualizado_em": "2026-09-24",
-  "_onde_estao_as_normas": "Os PDFs oficiais estao em normas/pdf/ (17 arquivos desde 24/09/2026, com IN66.pdf, IN67.pdf e IT37.pdf) DENTRO do repositorio desde 15/09/2026 - nao pedir PDF ao usuario sem olhar la. O texto integral convertido pelo anydoc esta em normas/md/, e serve so para LOCALIZAR trecho: nao fundamenta, porque a extracao automatica erra hierarquia de titulo e desalinha tabela. A copia local em C:\\\\Users\\\\55519\\\\Desktop\\\\Carpes\\\\Normas continua existindo e e a mesma coisa.",
+  "_atualizado_em": "2026-09-30",
+  "_onde_estao_as_normas": "Os PDFs oficiais estao em normas/pdf/ (18 arquivos desde 30/09/2026, com IN66.pdf, IN67.pdf, IT37.pdf e RT31.pdf) DENTRO do repositorio desde 15/09/2026 - nao pedir PDF ao usuario sem olhar la. O texto integral convertido pelo anydoc esta em normas/md/, e serve so para LOCALIZAR trecho: nao fundamenta, porque a extracao automatica erra hierarquia de titulo e desalinha tabela. A copia local em C:\\\\Users\\\\55519\\\\Desktop\\\\Carpes\\\\Normas continua existindo e e a mesma coisa.",
   "_regra_de_vigencia": "A versao aplicavel e a que estava vigente na DATA DE PROTOCOLO do PPCI PARA A PRIMEIRA ANALISE, nao a mais recente hoje. Fundamento: RT 01/2024, itens 3.4 e 4.3.3 (conferidos no PDF oficial em 01/09/2026, reconferidos em 02/09/2026 e 21/09/2026). Nunca 'atualizar' a citacao de um PPCI antigo para a versao nova. Em edificacao EXISTENTE REGULARIZADA a legislacao da epoca pode ser usada, desde que especificado no laudo de inviabilidade e no campo de medidas.",
   "_onde_achar_a_data_de_protocolo": "Aba 'Consultar licenciamento' > aba 'Marcos', marco 'Numero do licenciamento gerado'. Nao esta na tela da analise tecnica.",
   "_normas_por_remissao": "IT do CBPMESP e NBR listadas na Tabela 2 da RT 01/2024 (item 4.3.1: 'ate a entrada em vigor de Resolucao Tecnica especifica, deverao ser observadas as Normas Brasileiras e Instrucoes Tecnicas dispostas na Tabela 2, em sua edicao mais recente') e a IT 37 do CBPMESP para a M-6 (itens 4.8.1 e 4.8.7) SAO a norma aplicavel da medida, nao citacao irregular. Conferido no PDF da pasta local em 22/09/2026. O site do CBMRS (bombeiros.rs.gov.br/instrucoes-tecnicas) lista como 'em vigor no CBMRS', desde 01/07/2025: IT 08/2025 (P1 e P2), IT 09/2025, IT 15/2025 (P1 a P9), IT 25/2025 (P1 a P5) e IT 37/2025.",
@@ -186,6 +186,14 @@
       "titulo": "SPDA (ABNT NBR 5419)",
       "por_remissao": "RT 01/2024, item 4.3.1 + Tabela 2, item 10",
       "conferido_em": "2026-09-22"
+    },
+    "RT 31/2025": {
+      "titulo": "Camaras Frigorificas",
+      "vigente_desde": "2025-11-01",
+      "publicada_em": "2025-05-22",
+      "revoga": "IN 056/CBMRS/DSPCI (grafada 2023, de 10/01/2024 no Art. 2o)",
+      "conferido_em": "2026-09-30",
+      "obs": "DOE n.o 98, de 22/05/2025; assinada 20/05/2025 pelo Diretor do DSPCI. Art. 2o: vigor em 01/11/2025. NAO e medida do campo 4: complementa medidas (5.1.x), planta e recipientes. Item 5.5: planta baixa informa a temperatura de operacao das camaras frigorificas (toda camara, com ou sem amonia). Item 6.2: planta informa localizacao e volume (L de agua) de recipientes de amonia ou fluido inflamavel > 50 L e as medidas especificas (Tabela 1 do Anexo Unico, lida na imagem). Definicao 4 a: camara frigorifica = compartimento que possibilita acesso de pessoas ou movimenta produtos de forma automatizada. PPCI protocolado antes de 01/11/2025 segue a IN 056 (texto nao conferido). Integra em normas/rt-31-2025-camaras-frigorificas.md."
     }
   },
   "_chaves": "As chaves abaixo sao as chaves canonicas de medida do sseg.py (canon_medida). Casar por nome livre gera falso positivo entre Compartimentacao Horizontal e Vertical. Cada lista pode ter apelidos: o sseg.py normaliza 'Resolucao Tecnica n.o' -> 'RT' e 'Instrucao Tecnica n.o ... - CBPMESP' -> 'IT' antes de comparar.",
