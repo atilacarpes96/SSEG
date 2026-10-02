@@ -7,13 +7,15 @@ description: "Revisão final da CIA em conversa nova, antes de fechar a análise
 
 Roda numa **conversa nova**, depois de "atualizar a pasta" no `ppci-analise-processo`. O motivo
 de existir é ler a CIA de fora, sem o raciocínio que a produziu: na mesma conversa o modelo
-tende a concordar com o que ele mesmo decidiu. Esforço recomendado: **Opus médio**, escolhido
-pelo usuário ao abrir a conversa (decisão de 25/09/2026: a revisão roda em todo processo, e
-alto é só para tarefa rara — ver `workflow/politica-modelo-e-custo.md`). **Opus alto** só
-quando a CIA tiver fundamento lido apenas em `normas/md/`, tese nova sem modelo no banco ou
-mais de ~10 exigências. O que pega erro aqui é abrir o PDF, não o esforço. Revisão sem conferir na fonte primária não conta: foi assim que
-passou a frase errada sobre CMAR na RT 05 P07 (registro em
-`workflow/ocupacao-definidora-e-tabelas-exigencias.md`, erro 5).
+tende a concordar com o que ele mesmo decidiu. Modelo: **Sonnet 5.5 médio**, escolhido pelo
+usuário ao abrir a conversa (decisão de 30/09/2026, validada em teste controlado — ver
+`workflow/politica-modelo-e-custo.md`). Durante a análise o próprio analista já confere cada
+notificação, então a revisão final é uma segunda leitura, não a primeira defesa. **Opus 5.5 só
+em caso realmente necessário:** tese nova sem modelo no banco que o analista não tenha
+conferido na fonte, fundamento lido apenas em `normas/md/`, ou divergência entre o Sonnet e o
+analista sobre um fundamento. O que pega erro aqui é abrir o PDF, não o esforço. Revisão sem
+conferir na fonte primária não conta: foi assim que passou a frase errada sobre CMAR na
+RT 05 P07 (registro em `workflow/ocupacao-definidora-e-tabelas-exigencias.md`, erro 5).
 
 ## Entrada
 

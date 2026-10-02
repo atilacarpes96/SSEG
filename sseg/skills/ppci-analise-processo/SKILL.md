@@ -61,8 +61,9 @@ Medição de uma sessão real (02/09/2026, 147 rodadas): a **execução** das fe
    vezes (regra do usuário, 24/09/2026). Durante a análise, trabalhar pela leitura da API do
    SOL, sem gerar arquivo. Ler os arquivos das análises ANTERIORES (`1.json`, `CIA 1.pdf`)
    continua sendo o primeiro passo.
-4. **Trazer os PDFs das normas da pasta local no início** — ver a seção "Ler os PDFs das
-   normas" — e extrair todos de uma vez com `pdftotext`, guardando o `.txt` no container.
+4. **Os PDFs das normas vêm da pasta do projeto** (`sseg/normas/pdf/`, ver a seção "Ler os
+   PDFs das normas"), e só os que a análise for de fato citar — converter cada um uma vez e
+   guardar o `.txt` no container.
 5. **Entregar a leva inteira de inconformidades**, revisar no fim, e só então gravar.
 6. **Delegar tarefa mecânica a subagente com modelo leve** (Haiku), que não consome o
    contexto principal: extrair texto de planta, montar o `<N>.json`, comparar duas análises,
@@ -96,27 +97,6 @@ Medição de uma sessão real (02/09/2026, 147 rodadas): a **execução** das fe
      quando a pasta local estiver disponível: carrega 10–35 KB inteiros, que ficam na conversa
      e são relidos a cada resposta. `project_search` serve para descobrir em que arquivo está o
      assunto, e o snippet muitas vezes já basta.
-9. ⭐ **Conferir item de norma lendo só o trecho, nunca o arquivo inteiro.** Medição de
-   30/09/2026: conferir 3 itens da RT 11 custou ~110 mil de 580 mil (19% da sessão) porque a
-   transcrição comentada (29 KB) e o índice normativo (32 KB) foram lidos inteiros por
-   `project_read`, e o item passou por três fontes em sequência. Como cada análise confere
-   várias normas e vários itens, isso soma. Ordem:
-   - **a. Já conferido?** Item que o banco de notificações, os casos de referência ou o
-     registro do processo já citam com fundamento conferido → usar sem reabrir a norma.
-   - **b. Transcrição comentada (`normas/<rt>.md`) e índice (`normas/00-indice-normativo.md`):**
-     `grep -n -A15 '<item>'` na **cópia local** (pasta do projeto `sseg/normas/` via
-     `device_bash`, ou o clone do repositório) — só o trecho entra na conversa.
-     🚫 **Não usar `project_read` nesses arquivos** quando houver cópia local: carrega 10–35 KB
-     inteiros, que ficam na conversa e são relidos a cada resposta. `project_search` serve para
-     descobrir em que arquivo está o assunto, e o snippet muitas vezes já basta.
-   - **c. PDF oficial:** converter **uma vez por norma na sessão** e guardar o `.txt` no
-     container; dali em diante só `grep`/`sed -n` no `.txt`. Não restagear nem reconverter a
-     cada item.
-   - **d. Juntar os itens da mesma norma numa chamada só** (`grep -n -e '5\.3\.4' -e
-     '5\.4\.2\.1' …`), não um item por chamada.
-   - **e. `normas/md/`** só para localizar quando o grep no PDF não achar a palavra.
-   - Abrir a transcrição comentada só quando o item tiver trava ou nota registrada lá; para
-     fundamentar, o trecho do PDF é o que vale.
 
 Manter: **ler a página pela API ou com `get_page_text`, não com screenshot** — screenshot só
 quando a imagem É o dado (planta, corte, tabela em imagem) ou para conferir a textarea antes
@@ -138,14 +118,16 @@ exigência, ou quando o usuário pedir, no formato: fonte · item · trecho lite
 
 ### ⭐ De onde vem o arquivo: a pasta local, não o link
 
-**`C:\Users\55519\Desktop\Carpes\Normas\`** é a fonte primária. Inventário conferido, versão
-de cada arquivo e o que falta lá: doc `workflow/pasta-normas-local.md` do projeto.
+**`sseg/normas/pdf/`, dentro da pasta do projeto,** é a fonte primária — vale nos dois
+computadores (quartel: `C:\Users\55519\Desktop\Carpes\SSEG\`; casa: `E:\Atila\bombers\SSEG\`).
+A cópia do anydoc de cada PDF fica em `sseg/normas/md/`, com o mesmo nome. Lista dos PDFs e
+o que falta: `normas/00-indice-normativo.md` e `workflow/pasta-normas-local.md`.
 
 ```
-device_list_dir  C:\Users\55519\Desktop\Carpes\Normas      (confere se o arquivo está lá)
-device_stage_files <só os arquivos daquele passo>          -> /mnt/user-data/uploads/Carpes/Normas/
-pdftotext -layout <arquivo>.pdf - | tr -d '\f' > <norma>.txt   (uma vez por sessão)
-grep -n -e '<item1>' -e '<item2>' <norma>.txt                  (só o trecho)
+grep -n -A12 -e '<item>' "<pasta>/sseg/normas/md/<norma>.md"       (localizar, no device_bash)
+device_stage_files <só o PDF que vai ser citado>
+pdftotext -layout <arquivo>.pdf - | tr -d '\f' > <norma>.txt      (uma vez por sessão)
+grep -n -e '<item1>' -e '<item2>' <norma>.txt                      (só o trecho)
 ```
 
 🚫 **O campo "Link oficial" dos docs de norma serve para citar a fonte, não para obter o
@@ -420,7 +402,7 @@ na definidora nova antes de notificar a ausência.
 - **Aplicar sozinho uma nota de tabela que decide contagem ou definidora** — parar e perguntar.
 - Abrir `scripts/dados/tabelas_conferidas.json` numa análise.
 - **Ler inteira, por `project_read`, transcrição comentada de norma ou o índice normativo**
-  quando houver cópia local — buscar só o trecho do item (regra 9 de Custo).
+  quando a pasta local estiver disponível — buscar só o trecho do item (regra 9 de Custo).
 - **Reconverter ou restagear o PDF da mesma norma** a cada item conferido — converter uma vez
   e reutilizar o `.txt`.
 - Contar medidas por resumo automático (WebFetch e afins).
@@ -447,8 +429,6 @@ na definidora nova antes de notificar a ausência.
 - [ ] O texto de cada nota citada foi lido, e não só o número dela?
 - [ ] Antes de tratar como inviabilidade, foi checado se 5.4/5.5 da RT 05 P07 já dispensam?
 - [ ] Cada `XX` tem dispositivo localizado e conferido, não presumido?
-- [ ] Os itens de norma foram conferidos **pelo trecho** (grep na cópia local / `.txt` do PDF),
-      sem ler transcrição ou índice inteiros?
 - [ ] Os itens de norma foram localizados **pelo trecho** (grep em `md/`) e confirmados no PDF,
       sem ler transcrição ou índice inteiros?
 - [ ] O PDF de cada norma citada veio de `sseg/normas/pdf/`, com a versão conferida na capa?

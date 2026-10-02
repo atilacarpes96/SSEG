@@ -1,12 +1,31 @@
 ---
-name: sol-cbmrs-navegador
-description: "Operar o SOL-CBMRS no navegador: ler todas as inconformidades de uma vez pela API, lançar notificação no campo \"Outros\", limite de 2.000 caracteres da caixa Especificar, zoom utilizável e geração do PDF da página."
+name: "sol-cbmrs-navegador"
+description: "Operar o SOL-CBMRS no navegador: ler todas as inconformidades de uma vez pela API, lançar notificação no campo \"Outros\" (só quando o analista pedir), limite de 2.000 caracteres da caixa Especificar, zoom utilizável e geração do PDF da página."
 ---
 
 # Operar o SOL-CBMRS no navegador
 
 Página de trabalho: `solcbm.rs.gov.br/solcbm/adm/#/analise-tecnica/<id>` — "Análise técnica
 do licenciamento".
+
+## ⭐ Padrão: o Claude redige, o analista cola
+
+**Não lançar notificação pelo navegador por conta própria.** O fluxo padrão é:
+
+1. ler o processo **uma vez** pela API (seção abaixo);
+2. entregar no chat todos os textos de uma vez, um bloco citável por caixa "Especificar",
+   cada um com o **campo e o item do SOL** onde vai (ex.: "Campo 4 — Alarme de Incêndio");
+3. o analista cola no SOL.
+
+**Lançar pelo navegador só quando o analista pedir expressamente** ("lança", "pode lançar").
+Motivo: cada notificação lançada custa de 4 a 6 rodadas (abrir o modal, expandir "Outros",
+preencher, salvar, conferir pela API), e cada rodada relê a conversa inteira. Medição de
+27/09/2026: numa sessão de 68 passos, 64% do gasto foi a releitura das instruções fixas a
+cada passo. Numa CIA de 8 notificações, lançar pelo navegador soma de 30 a 50 rodadas. Esse
+padrão já tinha sido pedido antes e não foi seguido porque não estava escrito aqui.
+
+Aprovar itens em lote pelo navegador continua permitido quando o analista pedir: num único
+script, e não item por item.
 
 ## ⭐ Ler o processo inteiro pela API (fazer isto ANTES de abrir qualquer modal)
 
@@ -110,7 +129,7 @@ Não cabendo, **enxugar**: cortar a transcrição de listas normativas que o RT 
 citado (rol de incisos, requisitos de instalação), preservando fato + ação + fundamento. Não
 dividir a mesma exigência entre dois campos.
 
-## Lançar uma notificação (sempre no campo "Outros")
+## Lançar uma notificação (só quando o analista pedir; sempre no campo "Outros")
 
 Sequência que funciona, por estado do item:
 
@@ -190,7 +209,7 @@ Em ordem: **screenshots ≫ leitura de página ≫ texto**. Regras de trabalho:
   dado (planta, tabela em imagem). Login, modal aberto e gravação se conferem por JS/API.
 - Resumo filtrado na página, texto integral só do que for usado (seção "Trazer o texto").
 - Agrupar cliques, esperas e digitação num `browser_batch` único.
-- Lançar as inconformidades **em lote**: as referências da página se reaproveitam e se pula o
+- Quando o analista pedir para lançar, lançar as inconformidades **em lote**: as referências da página se reaproveitam e se pula o
   ciclo rolar/procurar/fotografar a cada item.
 - O layout **reescala** entre chamadas: coordenada capturada num screenshot pode estar errada
   no clique seguinte. Mais um motivo para usar `ref`.

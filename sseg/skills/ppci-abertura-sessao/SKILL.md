@@ -25,8 +25,12 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
 
    **"Bora pro próximo" / "o próximo da lista":** ler direto a planilha "Distribuição Análise"
    com `mcp__Google_Drive__read_file_content`, fileId
-   `1Ps3SbCXKtc6HxBq7HRRGpc8LdaxOYU2RM5pOQgNyIl0`. O próximo é a primeira linha com o nome
-   dele e "DATA CONCLUSÃO" em branco. **Não** buscar em conversas antigas, **não** procurar
+   `1Ps3SbCXKtc6HxBq7HRRGpc8LdaxOYU2RM5pOQgNyIl0`. Critério do próximo, nesta ordem:
+   aba **ANÁLISE** → linhas com o nome dele → "DATA CONCLUSÃO" em branco → a de **maior
+   "DIAS EM ANÁLISE"** (a coluna da planilha, não a contagem do SOL). **Não** é a primeira
+   linha da lista: o mais antigo vai primeiro, porque nenhum processo deve passar de 10 dias
+   na caixa. Empate em dias: a que aparece primeiro na planilha. Dizer na resposta o código e
+   quantos dias ele tem. **Não** buscar em conversas antigas, **não** procurar
    o arquivo no Drive e **não** abrir a planilha no Chrome — o ID já está aqui. Só se a
    leitura falhar (arquivo movido), procurar por `title contains 'Distribui'` e avisar para
    atualizar o ID nesta skill.
@@ -35,15 +39,16 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
 
    ```
    device_request_folder_access  ["C:/Users/55519/Desktop/Carpes"]
-   reason: ler os PDFs oficiais em Carpes/Normas e a pasta "print ppci" das análises
+   reason: ler os PDFs oficiais em Carpes/SSEG/sseg/normas/pdf e a pasta "print ppci" das análises
    ```
 
    **O consentimento de pasta vale por SESSÃO, não por projeto** — toda conversa nova começa
    sem acesso, por mais que o caminho esteja gravado nos docs. Pedir aqui, no começo, custa um
    clique; descobrir no meio da análise custa a análise parada.
 
-   Pedir **uma vez só** e a **pasta-mãe** `Carpes` (cobre `Normas`, `print ppci`, `Exemplos` e
-   `RECURSOS`), nunca subpasta por subpasta. Recusa ou silêncio: seguir sem, pedir os arquivos
+   Pedir **uma vez só** e a **pasta-mãe** `Carpes` (cobre `SSEG\sseg\normas\pdf`, `print ppci`,
+   `Normas`, `Exemplos` e `RECURSOS`), nunca subpasta por subpasta. Em casa o projeto está em
+   `E:\Atila\bombers\SSEG` (PDFs em `sseg\normas\pdf`). Recusa ou silêncio: seguir sem, pedir os arquivos
    por anexo, e **não repetir o pedido**.
 
 2. Abrir o SOL no **Chrome externo (Claude in Chrome)** — é o navegador padrão do usuário para
@@ -91,9 +96,12 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
 - Pipeline da análise, começando pela ocupação definidora e pela tabela do Anexo B:
   `ppci-analise-processo`.
 - Redação das inconformidades: `ppci-notificacao-cia`.
-- PDFs das normas: pasta local `Carpes/Normas` — inventário, armadilhas e o que falta estão
-  no doc `workflow/pasta-normas-local.md` do projeto. **Não pedir ao usuário PDF que já está
-  lá, nem tentar baixar pelo link oficial** — o link não baixa.
+- PDFs das normas: **`sseg/normas/pdf/`** dentro da pasta do projeto (quartel:
+  `C:\Users\55519\Desktop\Carpes\SSEG\sseg\normas\pdf\`; casa:
+  `E:\Atila\bombers\SSEG\sseg\normas\pdf\`) — a mesma fonte da `ppci-analise-processo`.
+  `Carpes\Normas` é só a entrada de PDF novo, antes de ele ser incorporado
+  (`ppci-incorporar-norma`). **Não pedir ao usuário PDF que já está em `sseg/normas/pdf/`,
+  nem tentar baixar pelo link oficial** — o link não baixa.
 
 ## Cuidados
 
