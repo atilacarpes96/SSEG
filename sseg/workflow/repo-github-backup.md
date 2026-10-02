@@ -24,15 +24,39 @@ sseg/
 ├── normas/      transcrições comentadas e o índice normativo
 │   ├── pdf/     os PDFs oficiais — fonte de citação
 │   └── md/      conversões do anydoc — índice de busca, NÃO fundamenta
-├── processos/   registro por processo (<CÓDIGO>.md)
+├── processos/   🚫 NÃO versionado desde 27/09/2026 (dados de cliente) — ver abaixo
 ├── scripts/     sseg.py, tabelas.py, gerar_recortes.py
 │   └── dados/   indice_normas.json, tabelas_conferidas.json
 │       └── tabelas/   os 30 recortes por grupo
-├── skills/      cópia das skills PPCI da conta do Claude
+├── skills/      FONTE das skills PPCI (a conta de cada analista recebe cópia instalada)
 └── workflow/    como o trabalho é conduzido
 ```
 
 As três camadas de `normas/` e o que cada uma pode fundamentar estão no `sseg/normas/README.md`.
+
+## 🔴 Dados de processo não vão para o GitHub (regra de 27/09/2026)
+
+Em 27/09/2026 constatou-se que o repositório estava **público** (clone anônimo funcionou) e que
+`sseg/processos/` expunha dados reais dos processos: razão social, CNPJ, endereço, nome do RT e
+do responsável pelo uso e as inconformidades de cada CIA. Contraria a regra do projeto de que
+documento de PPCI não sai da máquina.
+
+**Regra:**
+
+- **Nada que identifique processo, cliente, RT ou responsável vai para o repo**: `processos/`,
+  `print ppci`, CIA, JSON da API do SOL, plantas. O repo guarda só o que é reutilizável:
+  normas, banco de modelos, scripts, tabelas, skills e workflow.
+- `sseg/processos/` está no `.gitignore`. Os registros continuam **no projeto do Claude**
+  (privado), que é onde as skills os leem (`processos/<código>.md`).
+- **Cópia de arquivo dos registros: pasta "SSEG - Processos (privado)" no Google Drive**
+  do Átila, não compartilhada.
+- **O repositório deve ficar privado** (Settings → General → Danger Zone → Change visibility).
+- Exemplo em doc de norma, workflow ou banco (ex.: "caso Encruzilhada do Sul") pode citar
+  cidade e tipo de ocupação; **não** razão social, CNPJ, endereço nem nome de pessoa.
+
+Os arquivos antigos continuam no **histórico** do git mesmo depois de removidos. Com o repo
+privado isso deixa de ser exposição pública; apagar do histórico exige `git filter-repo` e
+só se faz se o Átila decidir.
 
 ## ⚠️ O projeto anda na frente do repo — sincronizar os dois (24/09/2026)
 
@@ -73,7 +97,7 @@ o Git abre no primeiro push, e a identidade está configurada como `--global`
 *"Author identity unknown"* — e o `git push` respondia *"Everything up-to-date"*, porque commit
 nenhum tinha sido criado. Se voltar a aparecer, é identidade, não autenticação.
 
-Avisos de `LF will be replaced by CRLF` são normais no Windows e não quebram nada.
+Avisos de `LF will be replaced by CRLF` (ou, depois do `.gitattributes`, `CRLF will be replaced by LF`) são normais no Windows e não quebram nada.
 
 ## 🚫 Upload pelo site: como se perde a estrutura
 
@@ -103,16 +127,42 @@ adianta: a próxima geração sobrescreve.
 recortes** `tab-b-C.json` e `tab-b-A.json`. Passadas para a fonte (chave `_correcoes_na_fonte`
 do `tabelas_conferidas.json`) e recortes regenerados.
 
+## ⭐ Skills: o GitHub é a fonte única (decisão de 02/10/2026)
+
+**Exceção à regra de que o projeto é o canônico:** para as **skills**, a fonte é
+`sseg/skills/<nome>/SKILL.md` no repo. A skill instalada na conta é cópia — antes era o
+contrário (a conta valia, o repo era backup), e o colega que dava `git pull` não recebia nada.
+
+**Por que o pull não basta:** skill de conta só muda quando o analista salva o cartão de
+revisão. Nenhum `git pull` instala skill. Por isso o fluxo tem dois lados:
+
+- **Quem muda a skill:** grava o `SKILL.md` completo em `sseg/skills/<nome>/` no mesmo passo
+  (LF), e dá commit e push do PC.
+- **Quem recebe:** dá `git pull` e diz "atualiza as skills pelo repositório" (skill
+  `sseg-sincronizar-skills`). O Claude compara cada `SKILL.md` do clone com o da conta e
+  apresenta um cartão de revisão por skill diferente; o analista salva.
+
+**Fim de linha:** o repo tem `.gitattributes` com `* text=auto eol=lf` desde 02/10/2026. No PC
+(Windows, `autocrlf`) estava tudo certo; o problema era o `git` rodado pelo shell do Cowork, que
+via os arquivos CRLF do Windows e acusava ~100 arquivos "modificados" sem mudança nenhuma. Com o
+`.gitattributes`, o Cowork passa a enxergar só as mudanças reais.
+
+**Git pelo shell do Cowork:** só com `--no-optional-locks` e só leitura (`status`, `log`, `diff`).
+`pull`/`add`/`commit` de lá deixam `.git/index.lock`, que a sessão não consegue apagar sem
+permissão de exclusão — aconteceu em 02/10/2026 e travaria o próximo commit no PC.
+
 ## O que NÃO está versionado
 
+- **Os registros de processo (`processos/`)** — desde 27/09/2026, por conter dados de
+  cliente. Ficam no projeto do Claude e na pasta do Drive (ver a regra acima).
 - **As memórias do Claude** — o que vale para o trabalho vira doc aqui.
 - **Os prints de `Carpes\print ppci`** — ver [[pasta-print-ppci-local]].
 - **O campo "Instruções" do projeto** — tem espelho em [[instrucoes-projeto-espelho]], que
   precisa ser editado junto com o campo.
 
 ✅ Os **PDFs oficiais** passaram a ser versionados em `sseg/normas/pdf/` em 15/09/2026 — antes
-só existiam na pasta local. ✅ As **skills** também, em `sseg/skills/`; a cópia do repo é
-backup, a que vale é a da conta, então ao editar uma skill, atualizar a cópia daqui.
+só existiam na pasta local. ✅ As **skills** também, em `sseg/skills/` — e desde 02/10/2026 o
+repo é a **fonte** delas (ver a seção acima).
 
 ## Levantar o projeto em outra máquina
 
@@ -120,9 +170,11 @@ backup, a que vale é a da conta, então ao editar uma skill, atualizar a cópia
 2. Criar/abrir um Projeto no Claude e apontar a *synced source* para ele, ou subir `sseg/`
    como base de conhecimento.
 3. Colar em "Instruções" o texto inteiro de [[instrucoes-projeto-espelho]].
-4. Recriar as skills a partir de `sseg/skills/`.
+4. Instalar as skills na conta com a skill `sseg-sincronizar-skills` (cartões de revisão a
+   partir de `sseg/skills/`).
 5. Para rodar os scripts: **Python 3** (não está instalado no PC do quartel — eles foram
    feitos para rodar no ambiente do Cowork).
-6. As normas vêm junto agora; só os prints de processo ficam de fora.
+6. As normas vêm junto agora; os prints e os registros de processo ficam de fora (os
+   registros estão no Drive, pasta "SSEG - Processos (privado)").
 
 O passo a passo detalhado está no `README.md` da raiz do repo.

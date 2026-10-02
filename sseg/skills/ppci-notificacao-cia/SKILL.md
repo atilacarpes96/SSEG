@@ -41,7 +41,9 @@ Toda notificação responde três coisas: **o que está errado** + **o que deve 
 
 Dizer **qual é o problema**, não só a solução. Nomear o objeto (qual medida, qual
 compartimento). Evitar jargão interno ("campo 4" → "campo '4. Medidas de Segurança'").
-Manter consistência de estilo entre os itens da mesma CIA ("Deverá..." em todos).
+Manter consistência de estilo entre os itens da mesma CIA (mesmo tom, mesma estrutura). O
+verbo de abertura segue o caso ("Adequar", "Apresentar", "Deverá"...): não é obrigatório
+começar todos por "Deverá".
 
 ## ⭐ Enxugar — a redação para no fundamento
 
@@ -97,6 +99,9 @@ o campo "Especificar" precisa corrigir isso, sob pena de o RT contestar com raz�
   "item" só para item de norma.
 - **O "²" não sobrevive à geração do PDF da CIA** — "m²" sai como "m". Escrever **"m2"**,
   "MJ/m2" ou "metros quadrados".
+- **Abertura na caixa "Especificar":** o texto começa com uma **quebra de linha**, e cada
+  notificação começa com **hífen** ("- "), seja qual for a primeira palavra. Melhora a
+  apresentação na CIA; fazer sempre, sem o usuário precisar ajustar.
 - **Sem quebra de linha dentro do parágrafo.** Texto destinado à caixa "Especificar" sai com
   cada item em **uma linha contínua**, e linha em branco **apenas entre um parágrafo e
   outro**. Quebra interna desformata na colagem. Vale para a saída entregue ao usuário, não

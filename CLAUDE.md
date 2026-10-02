@@ -15,5 +15,22 @@ Este repositório é **público** e compartilhado entre analistas (cada um com s
 ## Trabalho a dois
 
 - Começar a sessão com `git pull`; terminar com `git add` → `git commit` → `git push`.
+- Claude no Cowork (shell da nuvem sobre a pasta do PC): o push não sai dali — o Claude grava
+  no clone e o usuário faz `pull`/`commit`/`push` no PowerShell. Nesse shell, `git` só com
+  `--no-optional-locks` e nunca `pull`/`add`/`commit`: o comando deixa `.git/index.lock` que a
+  sessão não consegue apagar, e o próximo commit no PC trava.
 - **Nunca `git push --force`** — apagaria o trabalho enviado pelo outro analista.
 - Conflito no `pull`: mostrar ao usuário as duas versões e deixar ele escolher.
+
+## Skills: o GitHub é a fonte única
+
+- As skills PPCI vivem em `sseg/skills/<nome>/SKILL.md`. **O repositório é a fonte**; a skill
+  instalada na conta de cada analista é cópia.
+- Ao mudar uma skill: gravar o `SKILL.md` completo em `sseg/skills/<nome>/` **no mesmo passo**
+  (fim de linha LF) e lembrar o usuário de dar commit e push. Mudou na conta e não no repo =
+  o outro analista não recebe.
+- Depois de um `git pull` que traga mudança em `sseg/skills/`: rodar a skill
+  `sseg-sincronizar-skills`. O pull sozinho **não instala** nada na conta — a skill só vale
+  quando o analista salva o cartão de revisão.
+- Nunca sobrescrever a pasta do repo com a versão da conta, nem o contrário, sem mostrar a
+  diferença ao usuário e deixar ele escolher.

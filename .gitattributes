@@ -1,0 +1,7 @@
+# Fim de linha único (LF) em todas as máquinas: evita "modificado" falso entre Windows e Linux
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.zip binary
+*.bundle binary
