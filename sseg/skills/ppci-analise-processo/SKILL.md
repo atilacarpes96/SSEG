@@ -50,17 +50,28 @@ Medição de uma sessão real (02/09/2026, 147 rodadas): a **execução** das fe
 ~2 s por rodada e é irrelevante. O custo está na **geração**, dominada por duas coisas —
 **datilografar documento longo** e **carregar arquivo grande no contexto**.
 
+**O princípio por trás de todas as regras abaixo:** a cada passo, a conversa inteira é
+processada de novo — instruções, mensagens e o resultado de toda ferramenta já usada. O que
+entra na conversa é pago em todo passo seguinte, até o fim. O que fica **no disco** (arquivo
+copiado, PDF convertido em `.txt`, JSON de trabalho) não custa nada até ser mostrado. Então:
+trazer arquivo para o disco à vontade; para a conversa, só o trecho que a decisão precisa,
+na hora em que precisa. Acesso à pasta não custa; **listar** custa — listar só a subpasta do
+processo, nunca `Carpes` inteira nem recursivo.
+
 1. 🚫 **Nunca abrir `scripts/dados/tabelas_conferidas.json`.** É a origem, com as 48 tabelas
    juntas; foi fatiado justamente para não ser lido. Usar `scripts/dados/tabelas/` (passo 5).
-2. **Gravar no projeto UMA VEZ, no fim.** `project_write` substitui o documento inteiro — não
-   existe patch. Reescrever 3 mil palavras porque duas frases mudaram foi o maior desperdício
-   da sessão. Acumular e gravar em bloco no final. **Exceção: dado errado na base** (uma
+2. **Gravar no projeto pelo arquivo, não pelo texto.** `project_write` substitui o documento
+   inteiro — não existe patch. Reescrever 3 mil palavras porque duas frases mudaram foi o
+   maior desperdício da sessão. Jeito barato: editar uma cópia local do doc com `Edit`/`sed`
+   (só a frase que muda passa pela conversa) e gravar com `project_write` + `local_path`, que
+   envia o arquivo sem passar o conteúdo pela conversa. Mesmo assim, acumular as mudanças e
+   gravar em bloco no final, para economizar passos. **Exceção: dado errado na base** (uma
    contagem, uma vigência, uma fonte) — esse se corrige na hora, porque contamina a CIA.
 3. ⭐ **`<N>.pdf` e `<N>.json` da análise só quando o usuário pedir para "atualizar a pasta".**
    Gerar no começo obriga a gerar de novo no fim, com os status finais — é crédito gasto duas
    vezes (regra do usuário, 24/09/2026). Durante a análise, trabalhar pela leitura da API do
-   SOL, sem gerar arquivo. Ler os arquivos das análises ANTERIORES (`1.json`, `CIA 1.pdf`)
-   continua sendo o primeiro passo.
+   SOL, sem gerar arquivo. Ler os arquivos das análises ANTERIORES continua sendo o primeiro
+   passo — do jeito da regra 10.
 4. **Os PDFs das normas vêm da pasta do projeto** (`sseg/normas/pdf/`, ver a seção "Ler os
    PDFs das normas"), e só os que a análise for de fato citar — converter cada um uma vez e
    guardar o `.txt` no container.
@@ -97,6 +108,18 @@ Medição de uma sessão real (02/09/2026, 147 rodadas): a **execução** das fe
      quando a pasta local estiver disponível: carrega 10–35 KB inteiros, que ficam na conversa
      e são relidos a cada resposta. `project_search` serve para descobrir em que arquivo está o
      assunto, e o snippet muitas vezes já basta.
+10. ⭐ **CIA e registro da análise anterior: índice primeiro, texto completo sob demanda.**
+   - **CIA anterior:** a fonte é `CIA <N> textos.json` (o texto de cada caixa "Especificar",
+     já separado). Trazer para a conversa só o **índice** — uma linha por inconformidade:
+     campo · item · primeiros ~80 caracteres. O texto completo de uma inconformidade entra
+     só quando ela estiver em discussão (reiterar, complementar, dar como atendida).
+   - **Sem o `textos.json`** (CIA antiga): `pdftotext -layout "CIA <N>.pdf"` **uma vez**, para
+     um `.txt` no disco, e daí o mesmo índice. O PDF não é mais usado depois disso.
+   - **`<N>.json` anterior:** trazer só os campos que a análise vai comparar (ocupações,
+     áreas, alturas, campo 4, laudo), filtrados com `python3`/`jq` — nunca o arquivo inteiro.
+   - **Usuário anexou a CIA na conversa:** ela já está no contexto; usar dali, sem ler o
+     arquivo da pasta de novo. Para a próxima, avisar em uma linha que basta o código do
+     processo — a CIA arquivada na pasta é lida pelo índice, sem pesar a conversa.
 
 Manter: **ler a página pela API ou com `get_page_text`, não com screenshot** — screenshot só
 quando a imagem É o dado (planta, corte, tabela em imagem) ou para conferir a textarea antes
@@ -189,8 +212,8 @@ lendo os JSON diretamente.
 Perguntar o número do processo se não vier. A subpasta do processo fica em
 `C:\Users\55519\Desktop\Carpes\print ppci\<processo>\`.
 
-⭐ **Antes de perguntar qualquer coisa ao usuário, abrir a pasta do processo.** `1.json` e
-`CIA 1.pdf` costumam responder metade das dúvidas de uma reanálise — inclusive as confirmações
+⭐ **Antes de perguntar qualquer coisa ao usuário, abrir a pasta do processo** (pelo índice da
+regra 10 de Custo). `1.json` e `CIA 1 textos.json` costumam responder metade das dúvidas de uma reanálise — inclusive as confirmações
 que o próprio analista já deu em turnos anteriores (altura, pavimento de descarga, área de
 ambiente). Perguntar o que a pasta já tem é retrabalho.
 
@@ -384,7 +407,8 @@ de compensatória.
 `sseg.py diff` (com um JSON de trabalho no container, não gravado na pasta), ou comparação
 campo a campo. Reportar em quatro colunas: **o que mudou · o que não mudou · o que foi
 corrigido em resposta à CIA anterior · o que continua irregular**. Os textos das
-inconformidades não estão na página — comparar também as CIAs arquivadas. Decidir por
+inconformidades não estão na página — comparar também as CIAs arquivadas, pelo índice (regra
+10 de Custo): só o texto das inconformidades que mudaram de situação entra na conversa. Decidir por
 exigência: **reiterar**, **complementar** ou **substituir**. Ver `ppci-notificacao-cia`.
 
 ⭐ **Comparar os PDFs das plantas antes de olhar o desenho.** Um `diff` do texto extraído com
@@ -432,6 +456,8 @@ na definidora nova antes de notificar a ausência.
 - [ ] Os itens de norma foram localizados **pelo trecho** (grep em `md/`) e confirmados no PDF,
       sem ler transcrição ou índice inteiros?
 - [ ] O PDF de cada norma citada veio de `sseg/normas/pdf/`, com a versão conferida na capa?
+- [ ] A CIA e o `<N>.json` anteriores entraram na conversa só pelo índice e pelos trechos em
+      discussão, não inteiros?
 - [ ] A data de protocolo saiu dos Marcos, e a versão da norma corresponde a ela?
 - [ ] Dados faltantes foram listados em vez de completados?
 - [ ] `<N>.pdf` e `<N>.json` **só** foram gerados se o usuário pediu para atualizar a pasta?

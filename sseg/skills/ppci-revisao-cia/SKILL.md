@@ -30,6 +30,11 @@ Tudo na pasta do processo, `C:\Users\55519\Desktop\Carpes\print ppci\<processo>\
 Faltando o `textos.json`, seguir sem ele: o script avisa o que deixa de conferir. Não abrir o
 SOL só para isso.
 
+**Os arquivos entram no script pelo disco, não pela conversa.** Na conversa entram a saída do
+script e, exigência por exigência, só o texto da que estiver sendo julgada (do `textos.json`)
+e o trecho do item no PDF da norma. Não abrir `CIA <N>.pdf` nem `<N>.json` inteiros na
+conversa: o `textos.json` já tem o texto, e do `<N>.json` basta o campo que a exigência usa.
+
 ## 1. Script
 
 Trazer do clone, como na seção "Ferramentas" da `ppci-analise-processo`: `sseg.py`,
