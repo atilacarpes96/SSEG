@@ -51,7 +51,7 @@ dado · `OK` de item citado só diz que **o número existe no PDF**, não que o 
 CIA afirma.
 
 Sem sandbox (modo Chat): fazer as mesmas conferências à mão — até 1.950 caracteres por caixa,
-"m2", sem quebra dentro do parágrafo, "campo" x "item", item citado no PDF, versão da norma
+sem quebra dentro do parágrafo, "campo" x "item", item citado no PDF, versão da norma
 pela data de protocolo, medida exigida pela tabela da divisão x campo 4, REITERO x CIA anterior.
 
 ## 2. Julgamento, exigência por exigência
@@ -74,7 +74,7 @@ analista. Mostrar o texto da nota e perguntar, como no critério (b).
 ## 3. Entrega
 
 1. **Correções**, uma por bloco: campo e item, o problema em uma linha, o texto atual e o texto
-   proposto pronto para colar (uma linha contínua por parágrafo, até 1.950 caracteres, "m2").
+   proposto pronto para colar (uma linha contínua por parágrafo, até 1.950 caracteres).
 2. **O que está certo:** uma linha só ("demais N exigências conferidas no PDF").
 3. **O que depende do analista:** nota de tabela, leitura de planta.
 

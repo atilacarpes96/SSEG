@@ -97,8 +97,6 @@ o campo "Especificar" precisa corrigir isso, sob pena de o RT contestar com raz�
 
 - **"campo" x "item":** as seções do processo no SOL são **campos** (campo 3, campo 4);
   "item" só para item de norma.
-- **O "²" não sobrevive à geração do PDF da CIA** — "m²" sai como "m". Escrever **"m2"**,
-  "MJ/m2" ou "metros quadrados".
 - **Abertura na caixa "Especificar":** o texto começa com uma **quebra de linha**, e cada
   notificação começa com **hífen** ("- "), seja qual for a primeira palavra. Melhora a
   apresentação na CIA; fazer sempre, sem o usuário precisar ajustar.
@@ -148,7 +146,7 @@ Nunca só "melhorar o português". Conferir, nesta ordem:
 - [ ] Está proporcional — não exige mais do que a norma determina?
 - [ ] É executável — o RT entende o que apresentar?
 - [ ] É consistente com as demais exigências da mesma CIA e com as análises anteriores?
-- [ ] Evita jargão interno do sistema e escreve "m2" em vez de "m²"?
+- [ ] Evita jargão interno do sistema?
 
 ## Padrão de qualidade
 

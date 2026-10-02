@@ -248,9 +248,7 @@ catálogo transcrito está em `workflow/sol-catalogo-inconformidades-modal.md`, 
   predominante.
 - **Área do maior pavimento e população do pavimento de maior população em 0**, em edificação
   de pavimento único: correto — o pavimento único é o de descarga (RT 02/2014, item 4.30).
-- **O "²" não sobrevive à geração do PDF da CIA** — "m²" sai como "m", inclusive no cabeçalho
-  do próprio SOL ("Área total construída: 748,67 m"). Escrever **"m2"**, "MJ/m2" ou "metros
-  quadrados".
+- **Cabeçalho do SOL sem o "²":** "Área total construída: 748,67 m" é área em m².
 
 ## Detalhes de forma
 

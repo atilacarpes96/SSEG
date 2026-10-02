@@ -8,8 +8,7 @@ modelo esquece em esforco baixo e o que so a fonte primaria responde. NAO decide
 sai como insumo para o analista, no padrao do sseg.py (OK / !! / XX / ??).
 
 CONFERE
-  - forma de cada caixa "Especificar": ate 1.950 caracteres, "m2" em vez de "m²",
-    sem quebra de linha dentro do paragrafo, "campo" (e nao "item") para secao do SOL;
+  - forma de cada caixa "Especificar": ate 1.950 caracteres, sem quebra de linha dentro do paragrafo, "campo" (e nao "item") para secao do SOL;
   - cada item de norma citado existe no PDF oficial de normas/pdf/ (busca do numero no
     texto do pdftotext; achar o numero NAO prova que o texto diz o que a CIA afirma);
   - versao da norma citada x data de protocolo (dados/indice_normas.json);
@@ -130,8 +129,6 @@ def confere_forma(caixas, s, com_limite=True):
             s.erro("%s — %d caracteres: passa de %d e o SOL corta sem avisar." % (rot, tam, LIMITE_SOL))
         elif tam > LIMITE_SEGURO:
             s.atencao("%s — %d caracteres: acima da margem de %d." % (rot, tam, LIMITE_SEGURO))
-        if "²" in txt:
-            s.erro("%s — tem '²': no PDF da CIA 'm²' sai como 'm'. Escrever 'm2'." % rot)
         for par in re.split(r"\n\s*\n", txt.strip()):
             if "\n" in par.strip():
                 s.atencao("%s — quebra de linha dentro do paragrafo: '%s...'"

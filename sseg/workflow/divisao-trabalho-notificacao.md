@@ -24,11 +24,6 @@ indicada no campo 4 do processo", não "no item 4 do processo". Chamar campo de 
 o leitor justamente onde a CIA precisa ser precisa, porque na mesma frase costuma haver um
 item de norma citado.
 
-## O "²" não sobrevive à geração do PDF da CIA
-
-Na CIA gerada pelo SOL, "m²" sai como "m" (743,00 m², 1.571,7 m² viram "743,00 m" e
-"1571,7 m"). Escrever **"m2"**, **"MJ/m2"** ou "metros quadrados" na redação.
-
 ## ⚠️ Erro registrado — definição antes de geometria
 
 Já houve exigência indevida por apontar "inversão" nos campos de altura ascendente/

@@ -205,8 +205,8 @@ leitura da API na skill `sol-cbmrs-navegador`.
 ## Cuidados de redação
 
 Valem as regras da skill `ppci-notificacao-cia`: nomear os arquivos concretamente (é o que
-torna a exigência verificável), dizer o prejuízo (aqui é o que sustenta a interpretação),
-escrever "m2" em vez de "m²", e não transcrever requisito que só se verifica em vistoria.
+torna a exigência verificável), dizer o prejuízo (aqui é o que sustenta a interpretação)
+e não transcrever requisito que só se verifica em vistoria.
 Quando o problema é pontual, usar a variante enxuta em vez do modelo completo. Quando o
 problema é orientação geral sem arquivo específico identificado, dizer isso — não inventar
 nome de arquivo para "completar" a redação.

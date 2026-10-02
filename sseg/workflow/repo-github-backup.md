@@ -50,13 +50,14 @@ documento de PPCI não sai da máquina.
   (privado), que é onde as skills os leem (`processos/<código>.md`).
 - **Cópia de arquivo dos registros: pasta "SSEG - Processos (privado)" no Google Drive**
   do Átila, não compartilhada.
-- **O repositório deve ficar privado** (Settings → General → Danger Zone → Change visibility).
+- **O repositório é público, por decisão do Átila (02/10/2026):** os processos saíram do repo,
+  e o que fica nele (normas, modelos, scripts, skills, workflow) pode ser público.
 - Exemplo em doc de norma, workflow ou banco (ex.: "caso Encruzilhada do Sul") pode citar
   cidade e tipo de ocupação; **não** razão social, CNPJ, endereço nem nome de pessoa.
 
-Os arquivos antigos continuam no **histórico** do git mesmo depois de removidos. Com o repo
-privado isso deixa de ser exposição pública; apagar do histórico exige `git filter-repo` e
-só se faz se o Átila decidir.
+Os arquivos antigos continuam no **histórico** do git mesmo depois de removidos e, com o repo
+público, podem ser lidos por quem abrir commits antigos. Apagar do histórico exige
+`git filter-repo` e só se faz se o Átila decidir.
 
 ## ⚠️ O projeto anda na frente do repo — sincronizar os dois (24/09/2026)
 
