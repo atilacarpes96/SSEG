@@ -4,3 +4,7 @@ Claude outputs/
 
 # registros de processo não vão para o GitHub (27/09/2026)
 sseg/processos/
+
+# cache do Python
+__pycache__/
+*.pyc
