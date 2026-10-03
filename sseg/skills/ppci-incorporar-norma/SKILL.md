@@ -29,7 +29,8 @@ python3 anydoc_cli.py <arquivo>.pdf -o <arquivo>.md
 
 - Código de saída: 0 ok · 1 falha · 2 uso errado · 3 PDF escaneado (avisar quais páginas pedem OCR; nunca usar OCR online).
 - Versão do repo (`sseg/normas/md/`): prefixar o **cabeçalho de aviso** "ARQUIVO GERADO POR EXTRACAO AUTOMATICA (anydoc) - NAO E FONTE DE FUNDAMENTO", copiado de um `.md` já existente em `md/` (ex.: `IN45.md`).
-- Versão local (`Carpes\Normas\_md\`): a mesma conversão, sem cabeçalho.
+- Versão verificada (`sseg/normas/base/`): `scripts/normas_converter.py` + `scripts/normas_verificador.py`; só aceitar com `APROVADO: true` ou falha conferida na imagem (ver `base/README.md`).
+- Versão local (`Carpes\Normas\_md\`): cópia dos `.md` e de `img/` de `sseg/normas/base/`, não nova conversão.
 - Registrar onde o anydoc embaralhou (tabelas falsas `|...|`, títulos errados).
 
 ## 3. Ler e conferir o texto
@@ -44,7 +45,7 @@ python3 anydoc_cli.py <arquivo>.pdf -o <arquivo>.md
 | # | Arquivo | O que muda |
 |---|---|---|
 | 1 | `sseg/normas/pdf/<ARQ>.pdf` | PDF novo |
-| 2 | `sseg/normas/md/<ARQ>.md` + `Carpes\Normas\_md\<ARQ>.md` | conversões anydoc |
+| 2 | `sseg/normas/md/<ARQ>.md` + `sseg/normas/base/<ARQ>.md` (+ `img/`, `verificacao.json`) + cópia de `base/` em `Carpes\Normas\_md\` | conversões |
 | 3 | `normas/<sigla-num-ano-assunto>.md` (novo) | transcrição comentada: identificação, texto conferido, quadro de aplicação, relação com a norma complementada, **aparentes conflitos nomeados**, armadilhas (vigência por protocolo, condições, faculdade × obrigação), reflexo na análise (campo 4, planta, CIA), notas sobre a conversão anydoc |
 | 4 | `normas/00-indice-normativo.md` | linha "Última verificação"; contagem de PDFs na tabela de camadas; linha em **Datas de transição**; linha na tabela da categoria (RTs, Instruções Normativas, etc.); pendências novas; linha ✅ em Próximos passos |
 | 5 | `workflow/pasta-normas-local.md` | cabeçalho de datas; linha no **Inventário**; armadilha de extração, se houver; "O que NÃO está na pasta"; linha ✅ |
@@ -58,7 +59,7 @@ Depois de mexer no JSON: `python3 -c "import json; json.load(open(...))"`. Se ad
 ## 5. Gravar
 
 1. **Projeto:** `project_write` com `local_path` (arquivo dentro do diretório de trabalho) para cada doc de `normas/`, `workflow/` e `scripts/dados/`. PDFs e `md/` não vão como doc do projeto.
-2. **PC:** copiar para `/mnt/user-data/outputs/...` e `device_commit_files` para o clone (`Carpes\SSEG\sseg\...`) e para `Carpes\Normas\_md\`.
+2. **PC:** copiar para `/mnt/user-data/outputs/...` e `device_commit_files` para o clone (`Carpes\SSEG\sseg\...`) e a cópia de `base/` (`.md` e `img/`) para `Carpes\Normas\_md\`.
 3. **Push:** é do PC, no PowerShell (o proxy do Cowork recusa o push):
 
 ```powershell
