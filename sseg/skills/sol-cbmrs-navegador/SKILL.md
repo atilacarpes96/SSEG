@@ -8,6 +8,30 @@ description: "Operar o SOL-CBMRS no navegador: ler todas as inconformidades de u
 Página de trabalho: `solcbm.rs.gov.br/solcbm/adm/#/analise-tecnica/<id>` — "Análise técnica
 do licenciamento".
 
+## ⭐ Permissões do menu (perfil do Átila, mapeado em 03/10/2026)
+
+Abrem: **Consulta licenciamentos** (`#/licenciamento`), **Análise técnica**
+(`#/analise-tecnica`), **Dashboard** (`#/dashboard`), **Consulta Recurso**
+(`#/recurso/consulta-recurso`) e **Consulta FACT** (`#/fact`). Navegar direto pela URL.
+
+**Todo o resto dá "sem autorização" — não clicar:** Análise de Isenção de Taxa, Análise de
+inviabilidade, Distribuição para análise, Homologação de análise, Distribuição para vistoria,
+Vistoria ordinária, Homologação Vistoria, Cadastros pendentes, Consulta de cadastros,
+Credenciamentos Pendentes, Consulta Credenciamentos, Revisão de endereço, Consulta REDESIM,
+Valores Arrecadados, Distribuição Recurso, Recursos CIA, Recursos CIV, Análise de Recurso,
+Análise do FACT, Distribuição de FACT, Vinculação de FACT.
+
+Saindo de `#/pagina-nao-autorizada`, clique no menu às vezes não navega: usar a URL.
+Se um item mudar de permissão, corrigir esta lista.
+
+**Achar um licenciamento pelo código:** `#/licenciamento` → "Filtrar" do topo → campo
+"Número do licenciamento" → botão "Filtrar" do **rodapé** do painel (Enter não aplica) →
+clicar no **texto do código** na linha (o botão sem nome só expande os envolvidos). Abre
+`#/licenciamento/consulta/<id>`, com as abas 1–8 do projeto.
+
+**Leitura pesada ou repetitiva** (vários processos, todas as abas): delegar ao subagente
+`sol-leitor` (Haiku, só lê). O texto das páginas fica no contexto dele e só o resumo volta.
+
 ## ⭐ Padrão: o Claude redige, o analista cola
 
 **Não lançar notificação pelo navegador por conta própria.** O fluxo padrão é:

@@ -1,6 +1,6 @@
 ---
 name: "ppci-abertura-sessao"
-description: "Rotina de abertura quando o usuário diz que vai começar a analisar um PPCI: liberar a pasta Carpes, abrir o SOL-CBMRS no Chrome externo e parar na tela de login."
+description: "Rotina de abertura quando o usuário diz que vai começar a analisar um PPCI: liberar a pasta Carpes, abrir o SOL-CBMRS no Chrome externo e parar na tela de login. Também quando pedir para abrir a consulta técnica (CT) pendente ou marcada para hoje."
 ---
 
 # Abertura de sessão de análise de PPCI
@@ -88,6 +88,25 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
    **Nunca preencher senha.**
 
 4. Se o código do processo não veio na mensagem, pedir/aguardar (formato `A00049503AA001`).
+
+## Consulta técnica (CT) pendente
+
+"A CT que eu marquei", "a consulta técnica de hoje": o código **não** está na agenda nem na
+"Distribuição Análise" — está na planilha **"CONSULTAS TÉCNICAS 6°BBM"**, fileId
+`1HlFHKWzCOSPO5FxszNSMOVNDfKDAfs5dNw4lSmAf8_g`, aba "Consulta Técnica".
+
+- `read_file_content` só devolve amostra. Baixar inteira com `download_file_content`
+  (`exportMimeType: text/csv`); o resultado é grande e vai para arquivo — filtrar no
+  PowerShell (o Python do PC pode não estar no PATH do bash) as linhas com `Sd Carpes`.
+- Colunas: A PPCI (código) · D FACT · E data da solicitação · F nome · G telefone · I ME
+  (analista) · K/L/M data, hora, modalidade da CT · N minuta finalizada (1/0) · Q finalizado
+  pelo Chefe da SSeg (1/0) · S "aguardando há".
+- **Pendente do analista** = linha com `Sd Carpes` e N = 0. Linha com N = 1 e Q = 0 espera o
+  Chefe da SSeg, não o analista — citar à parte.
+- Abrir o projeto pela **Consulta licenciamentos** (caminho na skill `sol-cbmrs-navegador`).
+  A CT em si fica em **Consulta FACT** (`#/fact`); "Análise do FACT" e os demais itens de
+  FACT dão "sem autorização" no perfil do Átila.
+- Registrado em 03/10/2026.
 
 ## Depois do login
 
