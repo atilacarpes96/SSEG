@@ -77,6 +77,8 @@ Rodar **antes de instalar qualquer skill nova** de terceiro. Avisos de
 
 ## Pasta `Normas\_md\`
 
-Todas as normas da pasta `Carpes\Normas` convertidas com o anydoc, como índice de busca
-permanente. Os **PDFs originais continuam intactos** e seguem sendo a fonte para citação —
-ver [[pasta-normas-local]]. Ao acrescentar uma norma à pasta, converter também para `_md\`.
+Desde 03/10/2026 é **cópia de `sseg/normas/base/`** (19 normas, `.md` e `img/`), conversão do
+`normas_converter.py` conferida contra o PDF — não mais a conversão anydoc de 14/09/2026, que
+ficou em `Normas\_md_antigo\`. Continua sendo índice de busca: os **PDFs originais seguem sendo
+a fonte para citação** — ver [[pasta-normas-local]]. Ao acrescentar uma norma, converter para
+`base/` e copiar para `_md\`.

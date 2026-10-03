@@ -188,7 +188,9 @@ Na mesma leitura foi conferido o **item 5.12.1.2 da RT 11**, que é o regime do 
 (`pdf/`, `md/`), íntegras em [[in-066-2025-saidas-reuniao-publico]] e
 [[in-067-2025-solucao-tecnica-equivalente]]. Na mesma leitura, conferido o **5.4.1.2.2 da RT 11**.
 
-✅ **RT 31/2025 entrou em 30/09/2026** (caso de recurso, 19/09/2026). PDF em `sseg/normas/pdf/RT31.pdf`, conversão em `sseg/normas/md/RT31.md`; íntegra em [[rt-31-2025-camaras-frigorificas]]. ⚠️ A cópia em `Carpes\Normas\` e a conversão em `Carpes\Normas\_md\` **não foram feitas** (pasta fora do acesso da sessão) — copiar `RT31.pdf` e `RT31.md` (sem cabeçalho de aviso) para lá.
+✅ **RT 31/2025 entrou em 30/09/2026** (caso de recurso, 19/09/2026). PDF em `sseg/normas/pdf/RT31.pdf`, conversão em `sseg/normas/md/RT31.md`; íntegra em [[rt-31-2025-camaras-frigorificas]]. ✅ Copiada para `Carpes\Normas\` (PDF e `_md\`) em 03/10/2026.
+
+✅ **03/10/2026:** `Carpes\Normas\_md\` passou a **espelhar `sseg/normas/base/`** (19 normas convertidas por `normas_converter.py` e conferidas contra o PDF por `normas_verificador.py`, mais a pasta `img/`). A pasta antiga, feita com anydoc e com 17 normas, ficou em `Carpes\Normas\_md_antigo\`. `Carpes\Normas\` tem agora os 19 PDFs, iguais a `sseg/normas/pdf/`.
 
 ## Sincronizar
 
@@ -196,8 +198,9 @@ Acrescentando uma norma, são **quatro** lugares, sempre juntos:
 
 1. o PDF em `sseg/normas/pdf/` (e na pasta local do PC);
 2. a conversão em `sseg/normas/md/`, com `anydoc <arquivo> -o <saida>.md` — com o cabeçalho de
-   aviso "NAO E FONTE DE FUNDAMENTO" que os demais `.md` de `md/` têm; e a mesma conversão, sem
-   cabeçalho, em `Carpes\Normas\_md\` no PC;
+   aviso "NAO E FONTE DE FUNDAMENTO" que os demais `.md` de `md/` têm; e, para a versão verificada,
+   `normas_converter.py` + `normas_verificador.py` gravando em `sseg/normas/base/`. `Carpes\Normas\_md\`
+   é cópia de `base/` (`.md` e `img/`), não mais conversão anydoc própria;
 3. a linha correspondente no inventário acima e em [[00-indice-normativo]] — e, sendo norma
    nova com itens conferidos, o doc de transcrição comentada em `normas/`;
 4. a entrada em `scripts/dados/indice_normas.json`.
