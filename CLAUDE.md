@@ -76,8 +76,18 @@ exigência procede — isso fica no agente principal, nunca no subagente leve.
 
 ## Pré-requisitos no PC
 
-Python 3 (os scripts não têm dependência externa) e `pdftotext` (Poppler) no PATH. O PC do
-quartel não tinha Python em 09/2026 — sem eles, os scripts e a conferência no PDF não rodam.
+Python 3 e Poppler (`pdftotext`, `pdftoppm`) no PATH — sem eles, os scripts e a conferência no
+PDF não rodam. `sseg.py` só usa a biblioteca padrão; `normas_converter.py`,
+`normas_verificador.py` e `gerar_recortes.py` pedem `pip install pymupdf pymupdf4llm pillow numpy`.
+
+No Windows (instalado no PC do quartel em 03/10/2026):
+
+- `winget install -e --id Python.Python.3.12 --scope user` e `winget install -e --id oschwartz10612.Poppler`.
+- `python3` cai no atalho da Microsoft Store: copiar `python.exe` como `python3.exe` na pasta do Python.
+- O `pdftotext` que vem com o Git é Xpdf (sem acento, sem `pdftoppm`) e fica antes no PATH do
+  Git Bash: pôr a pasta `bin` do Poppler e a do Python no início do PATH em `~/.bashrc`.
+- `setx PYTHONUTF8 1`: sem isso o verificador lê a saída UTF-8 do `pdftotext` como cp1252 e quebra.
+- Teste: converter um PDF de `normas/pdf/` com `normas_converter.py` e comparar com `normas/base/`.
 
 ## Dados de processo nunca vão para o GitHub
 
@@ -113,3 +123,8 @@ quartel não tinha Python em 09/2026 — sem eles, os scripts e a conferência n
   quando o analista salva o cartão de revisão.
 - Nunca sobrescrever a pasta do repo com a versão da conta, nem o contrário, sem mostrar a
   diferença ao usuário e deixar ele escolher.
+- No Claude Code não há `propose_skills`: o analista sobe a skill em claude.ai > Configurações >
+  Capacidades > Skills > Substituir, com um `.zip` contendo `<nome>/SKILL.md`. **Não gerar o zip
+  com `Compress-Archive`** (Windows PowerShell 5.1): grava o caminho com `\` e o claude.ai
+  recusa com "Zip file contains path with invalid characters" (03/10/2026). Usar Python:
+  `zipfile.ZipFile("<nome>.zip","w").write("sseg/skills/<nome>/SKILL.md", "<nome>/SKILL.md")`.
