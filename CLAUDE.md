@@ -2,6 +2,81 @@
 
 Este repositório é **público** e compartilhado entre analistas (cada um com seu próprio Claude).
 
+## O que este projeto é
+
+Assistente técnico-normativo de Segurança Contra Incêndio e Pânico do CBMRS/RS: análise de
+PPCI no SOL-CBMRS, classificação de ocupações, cálculo populacional, fiscalização e redação de
+notificações da CIA. Usuário: Sd Carpes (Átila), analista do 6º BBM. Responder em português.
+
+## Doutrina (sempre ativa)
+
+As regras de raciocínio, entrega, hierarquia das fontes, vigência por data de protocolo,
+proibição de alucinação normativa e as travas de erro são as **Instruções do projeto**, cujo
+texto único está no espelho abaixo. Não copiar esse texto para cá: o espelho é a fonte, e cópia
+a mais já divergiu antes. Os caminhos citados nele (`normas/`, `workflow/`) são relativos a
+`sseg/`.
+
+@sseg/workflow/instrucoes-projeto-espelho.md
+
+## Mapa — onde cada coisa mora
+
+| O quê | Onde | Ler quando |
+|---|---|---|
+| Arquitetura e onde registrar algo novo | `sseg/workflow/00-arquitetura-do-projeto.md` | dúvida sobre onde gravar |
+| Lições de análises anteriores | `sseg/workflow/casos-referencia.md` | ao começar um processo |
+| Banco de ~80 notificações validadas | `sseg/normas/banco-notificacoes-padrao.md` | antes de redigir qualquer notificação |
+| Índice normativo e vigência | `sseg/normas/00-indice-normativo.md` | antes de citar norma |
+| Transcrição comentada de cada norma | `sseg/normas/<rt>.md` | quando o assunto é daquela norma |
+| Busca literal (provisório, nunca fundamenta) | `sseg/normas/md/` | só para localizar trecho |
+| PDF oficial (fundamenta) | `sseg/normas/pdf/` | sempre antes de citar item na CIA |
+| Tabelas de exigências conferidas | `sseg/scripts/dados/` (fonte: `tabelas_conferidas.json`) | roteamento de tabela |
+| Política de modelo e custo | `sseg/workflow/politica-modelo-e-custo.md` | antes de delegar a subagente |
+| Registro local dos processos | `sseg/processos/` (fora do Git) | processo em andamento |
+| Prints, CIA, JSON do SOL | `C:\Users\55519\Desktop\Carpes\print ppci\<processo>\` | análise e revisão |
+
+Ler só o arquivo de que a tarefa precisa — não abrir a base inteira.
+
+## Skills
+
+As skills PPCI estão em `sseg/skills/<nome>/SKILL.md`. Quando o pedido casar com uma delas,
+**ler o SKILL.md inteiro antes de começar** e seguir o passo a passo:
+
+| Pedido do usuário | Skill |
+|---|---|
+| "vou começar a analisar um PPCI", "o próximo da lista" | `ppci-abertura-sessao` |
+| código de processo A000... ou print de processo | `ppci-analise-processo` |
+| redigir ou revisar uma notificação | `ppci-notificacao-cia` |
+| ler o processo pela API, lançar no campo "Outros", PDF da página | `sol-cbmrs-navegador` |
+| "revisa a CIA", "revisão final" | `ppci-revisao-cia` (pelo subagente `revisor-cia`) |
+| norma nova para a base | `ppci-incorporar-norma` |
+| levar uma skill da conta ao repo, ou o contrário | `sseg-sincronizar-skills` |
+
+As skills foram escritas para o Cowork. No Claude Code, traduzir:
+
+- `device_bash`, `device_stage_files`, `device_commit_files` → o terminal e os arquivos locais;
+  não há nada a copiar entre nuvem e PC.
+- "gravar no projeto" / `project_write` / `Projects` → gravar o arquivo em `sseg/` neste clone.
+  O repositório é a fonte; o projeto do claude.ai recebe pelo GitHub sincronizado.
+- "trazer os scripts do clone" → rodar direto de `sseg/scripts/`.
+- Chrome (SOL): usar a integração do Claude in Chrome com o Claude Code. A senha do SOL é
+  sempre digitada pelo usuário.
+
+## Subagentes (`.claude/agents/`)
+
+A divisão segue `sseg/workflow/politica-modelo-e-custo.md`: **modelo leve só onde nenhuma
+escolha normativa acontece.** Escolher modelo do banco, enquadrar ocupação, decidir se uma
+exigência procede — isso fica no agente principal, nunca no subagente leve.
+
+- `localizador-normas` (Haiku) — devolve trechos literais com arquivo e linha/página. Não
+  conclui, não diz que algo "não existe": a decisão é do principal.
+- `revisor-cia` (Sonnet) — revisão final da CIA de fora do raciocínio que a produziu, conforme
+  `ppci-revisao-cia`. Opus só nos casos que a skill lista.
+
+## Pré-requisitos no PC
+
+Python 3 (os scripts não têm dependência externa) e `pdftotext` (Poppler) no PATH. O PC do
+quartel não tinha Python em 09/2026 — sem eles, os scripts e a conferência no PDF não rodam.
+
 ## Dados de processo nunca vão para o GitHub
 
 - Registros de processo e dados de cliente — `sseg/processos/`, CIA, JSON do SOL, plantas,
@@ -15,6 +90,8 @@ Este repositório é **público** e compartilhado entre analistas (cada um com s
 ## Trabalho a dois
 
 - Começar a sessão com `git pull`; terminar com `git add` → `git commit` → `git push`.
+- **Claude Code no PC:** git roda normalmente no terminal local — `pull`, `add`, `commit` e
+  `push` podem ser feitos pelo próprio Claude, sempre com a conferência do `git status` acima.
 - Claude no Cowork (shell da nuvem sobre a pasta do PC): o push não sai dali — o Claude grava
   no clone e o usuário faz `pull`/`commit`/`push` no PowerShell. Nesse shell, `git` só com
   `--no-optional-locks` e nunca `pull`/`add`/`commit`: o comando deixa `.git/index.lock` que a
