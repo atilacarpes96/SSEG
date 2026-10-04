@@ -1,6 +1,6 @@
 ---
 name: politica-modelo-e-custo
-description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram (revisada em 25/09/2026)
+description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram (revisada em 04/10/2026: padrão Sonnet 5.5 médio desde 30/09)
 sources: [cowork]
 ---
 
@@ -49,8 +49,8 @@ Só onde **nenhuma escolha normativa acontece** e o erro aparece na hora:
 - conversa só de sincronização (copiar arquivos do clone para o projeto, `git pull`/push).
 
 Dentro de uma conversa de análise essas rodadas são minúsculas e não vale trocar de modelo.
-Mas **conversa aberta só para isso** (ex.: "Atualizar projeto com arquivos") pode abrir em
-Sonnet ou Haiku.
+**Conversa aberta só para isso** (ex.: "Atualizar projeto com arquivos") abre em Sonnet 5.5
+médio, como as demais; Haiku só como subagente mecânico.
 
 ## As alavancas que sobraram (e valem mais)
 
@@ -59,15 +59,16 @@ Sonnet ou Haiku.
    a conversa acabou; ajuste posterior abre conversa nova lendo `processos/<N>.md`, não
    buscando em conversa antiga (medição de 25/09/2026, abaixo).
 2. **Esforço, não modelo.** Baixar o esforço num modelo forte é mais seguro que trocar por um
-   modelo fraco: mantém-se a calibragem e o conhecimento, gasta-se menos deliberação. Desde o
-   Opus 5.5 (24/09/2026), **toda conversa de análise abre em Opus médio**, o padrão do modelo,
-   que a Anthropic mede como igual ou melhor que o Opus 5 em alto. O esforço fica o mesmo até
-   o fim da conversa, porque trocar no meio pode reiniciar o cache. **A revisão final da CIA
-   também roda em Opus médio** (25/09/2026) — ela acontece em todo processo, não é tarefa
-   rara; alto só quando a CIA tiver fundamento lido só em `normas/md/`, tese nova sem modelo
-   no banco ou mais de ~10 exigências (`ppci-revisao-cia`). Alto em conversa própria de tarefa
-   rara e de erro caro, como incorporar norma. Esforço menor reduz o pensamento; texto mais
-   curto se pede no prompt. Haiku não tem ajuste de esforço.
+   modelo fraco: mantém-se a calibragem e o conhecimento, gasta-se menos deliberação. Desde
+   30/09/2026, **toda conversa abre em Sonnet 5.5 médio**: análise, notificação avulsa,
+   sincronização e **revisão final da CIA**. O esforço fica o mesmo até o fim da conversa,
+   porque trocar no meio pode reiniciar o cache. **Opus 5.5 só em caso realmente necessário**,
+   os listados em `ppci-revisao-cia`: tese nova sem modelo no banco que o analista não tenha
+   conferido na fonte, fundamento lido apenas em `normas/md/`, ou divergência entre o Sonnet e
+   o analista sobre um fundamento. O que pega erro é abrir o PDF, não o esforço. Esforço menor
+   reduz o pensamento; texto mais curto se pede no prompt. Haiku não tem ajuste de esforço e
+   fica só em subagente mecânico.
+   *Histórico:* de 24 a 29/09/2026 o padrão foi Opus 5.5 médio, inclusive na revisão final.
 3. **Menos rodadas no navegador.** Da API do SOL, só o resumo filtrado dentro da página vem
    para a conversa, nunca o JSON bruto em fatias; login, modal e gravação se conferem por
    JS/API, não por screenshot (`sol-cbmrs-navegador`). Todas as ferramentas numa única
