@@ -1,0 +1,132 @@
+---
+name: plano-servidor-24-7
+description: Plano de teste (04/10/2026) para rodar o SSEG num servidor sempre ligado — Oracle Cloud Always Free com Claude Code, arquivos e rotinas; o SOL continua aberto no Windows do trabalho — e os critérios para decidir depois de um mês
+sources: [claude-code]
+---
+
+# Servidor 24/7 para o SSEG — plano de teste
+
+> **Status (05/10/2026): servidor provisório no ar.** A A1.Flex (2 OCPU/12 GB) segue sem
+> vaga em São Paulo; o `criar_vm_oracle.py` continua tentando. Enquanto isso roda a
+> **AMD Micro grátis** `carpes-24-7-micro` (1/8 OCPU, 1 GB + 2 GB de swap): clone em
+> `~/SSEG` com deploy key, Claude Code logado pela assinatura, Sonnet como padrão,
+> sessão tmux `sseg` com `/remote-control`. Teste nº 1 (navegador do SOL) ainda não feito.
+>
+> Ideia vinda do vídeo "Como Eu Deixo o Claude Code
+> Programando 24/7 sem Pagar por Token" (Carol Tequita, VPS + tmux + Remote Control).
+> Versão revisada em 04/10/2026: o SOL fica no Windows do trabalho, não no servidor.
+
+## Por que
+
+1. **Um lugar só.** Hoje o trabalho vive em quatro: PC de casa (clone), PC do serviço
+   (`print ppci`, `sseg/processos/`), projeto do Cowork e GitHub. O vaivém de push/pull já
+   deixou o clone 3 commits atrás (24/09) e 4 atrás (04/10). No servidor existe uma cópia
+   viva; o GitHub vira backup.
+2. **Rotinas sem PC ligado.** Preparar a fila e ler os PDFs antes do expediente.
+3. **Acesso de qualquer lugar.** Do serviço, de casa ou do celular, pelo app do Claude.
+
+**O que não muda:** a cota. O servidor usa a mesma assinatura Pro. Economia continua vindo
+da auditoria de 30/09–03/10 (uma conversa por processo, subagente Haiku, texto do SOL em vez
+de screenshot).
+
+## Divisão de papéis
+
+| onde | o que fica lá |
+|---|---|
+| **Servidor** | clone do SSEG, `sseg/processos/` (fora do Git), pasta `print ppci`, skills, subagentes, Claude Code, rotinas agendadas, único lugar que faz commit |
+| **Windows do trabalho** | app do Claude e o navegador logado no SOL (Claude in Chrome ou navegador integrado), como hoje |
+| **Casa / celular** | acesso à mesma sessão pelo app do Claude (Remote Control ou SSH) |
+
+Vantagens sobre pôr o SOL no servidor: o acesso ao SOL continua saindo da rede do trabalho
+(sem risco de bloqueio a IP de data center), a skill `sol-cbmrs-navegador` não troca de
+ferramenta, e o servidor dispensa área de trabalho remota, Chromium e Playwright.
+
+## Ligação entre o servidor e o navegador do trabalho
+
+As ferramentas de navegador funcionam na máquina onde o app do Claude está aberto. Uma
+conversa que roda no servidor e é só acompanhada pelo Remote Control **não** alcança o
+navegador do trabalho. Dois caminhos, testados nesta ordem:
+
+1. **App do Claude no trabalho em sessão remota por SSH.** A conversa e os arquivos ficam no
+   servidor; o app continua no Windows. **Teste nº 1 do plano:** confirmar que, nesse modo,
+   o navegador integrado e o Claude in Chrome continuam disponíveis para a conversa. Se sim,
+   é o arranjo final.
+2. **Se não:** divisão de tarefas. Uma conversa no trabalho roda o `sol-leitor` (Haiku) e
+   grava o resumo do SOL direto na pasta do processo no servidor (por SSH); a análise roda
+   no servidor lendo esse resumo. Lançamento no SOL, quando pedido, volta a ser pela
+   conversa do trabalho.
+
+## A máquina: Oracle Cloud Always Free
+
+| item | valor |
+|---|---|
+| tipo | VM.Standard.A1.Flex (ARM Ampere) — até 4 OCPU e 24 GB de RAM grátis; 2 OCPU / 12 GB bastam sem navegador |
+| disco | até 200 GB grátis |
+| sistema | Ubuntu 24.04 (ARM64), sem interface gráfica |
+| região | São Paulo ou Vinhedo — **escolhida no cadastro e não muda depois** |
+| custo | zero; o cadastro pede cartão só para verificação |
+
+Cuidados:
+- A ARM grátis às vezes fica "sem capacidade" na região: tentar de novo em outro horário.
+- A Oracle pode recolher máquina grátis ociosa. Rotina diária afasta isso; converter a conta
+  para "Pay As You Go" (continua grátis dentro do limite) elimina o risco.
+
+## Montagem (o Claude faz, com o Átila nos passos marcados 👤)
+
+1. 👤 Criar a conta Oracle Cloud e a VM A1, guardar a chave SSH.
+2. Atualizar o sistema; firewall só com SSH, por chave.
+3. Python 3.12, Poppler (`pdftotext`), Git; clone do SSEG com chave de deploy só deste repo.
+4. Claude Code (instalador nativo, tem versão Linux ARM64); 👤 login pela **assinatura**, não
+   por API (o link abre no navegador do Átila e o código volta para o terminal).
+5. Sessão fixa: `tmux new -s sseg` → `claude` dentro do clone → `/remote-control`.
+6. 👤 No Windows do trabalho: configurar o app do Claude para abrir sessão remota por SSH no
+   servidor (chave SSH do trabalho autorizada no servidor). Fazer o teste nº 1.
+7. Migrar `print ppci` e `sseg/processos/` do PC do serviço para o servidor (cópia por SSH;
+   o original só sai depois de conferido).
+8. Rotinas: `cron` chamando `claude -p "<tarefa>"` (modo sem interface) no clone, com
+   permissões restritas por rotina.
+
+## Rotinas propostas
+
+| rotina | quando | entrega |
+|---|---|---|
+| Preparar a fila | dias úteis, 6h30 | lê a planilha de distribuição, cria `<N>.json` dos processos novos |
+| Ler os PDFs | logo depois | texto extraído de cada PDF já no servidor, pronto para a análise |
+| Manutenção | domingo | skills da conta x repositório, norma nova a incorporar |
+
+A **triagem da caixa do SOL** não roda sozinha nesta versão, porque o navegador logado fica
+no trabalho: vira o primeiro passo da primeira conversa do dia (`ppci-abertura-sessao`).
+Regras que valem para as rotinas: nada é lançado no SOL; nenhuma rotina faz login em nada.
+Onde chega o aviso de rotina concluída (arquivo no servidor, e-mail ou mensagem) se decide
+no teste.
+
+## O que muda no projeto
+
+| peça | hoje | no servidor |
+|---|---|---|
+| ambiente | Cowork + Projects | Claude Code no servidor, aberto pelo app (SSH ou Remote Control) |
+| navegador do SOL | Claude in Chrome / navegador integrado | o mesmo, no Windows do trabalho |
+| arquivos do processo | `print ppci` no PC do serviço + `sseg/processos/` | `sseg/processos/` no servidor (fora do Git, como hoje) — `print ppci` migra para dentro |
+| gravação | `device_commit_files`, `project_write` | gravação direta em disco — ajustar `ppci-analise-processo` e `pasta-print-ppci-local` |
+| skills e subagentes | plugin da conta + backup em `sseg/skills/` | lidos direto do repositório (`.claude/agents/` já existe) |
+| painel SSEG (artifact) | fila "pedidos" lida pelo Cowork | **a verificar:** se o Claude Code do servidor lê a fila; senão, os pedidos vão por mensagem |
+| sincronização | push/pull entre máquinas | só o servidor faz commit; outras máquinas só leem |
+
+## Riscos a medir no teste
+
+1. **Navegador numa sessão por SSH** (teste nº 1). Define entre o caminho 1 e o 2 acima.
+2. **Rede do trabalho permite SSH de saída** para o servidor. Se bloquear, sobra o Remote
+   Control (que não alcança o navegador) e o caminho 2 por outra via de cópia.
+3. **Dados de processo em servidor de terceiro.** Os arquivos já estão na nuvem do Cowork;
+   avisar o 6º BBM é decisão do Átila.
+4. **Latência** da sessão remota a partir do serviço.
+
+## Critérios para decidir depois de um mês
+
+Migrar de vez se: o navegador do trabalho funcionou com a conversa no servidor (caminho 1 ou
+2); pelo menos 5 processos reais foram analisados por esse caminho sem voltar para o Cowork;
+as rotinas da manhã entregaram na maioria dos dias; e não houve push/pull manual no período.
+
+Voltar para o Cowork se a rede do trabalho bloquear o acesso ao servidor ou se o caminho 2
+custar mais rodadas que o fluxo atual. Avaliar VPS paga só se a Oracle grátis falhar por
+capacidade ou recolhimento.
