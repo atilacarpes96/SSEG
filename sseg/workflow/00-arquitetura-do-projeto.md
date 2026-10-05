@@ -1,6 +1,6 @@
 ---
 name: 00-arquitetura-do-projeto
-description: Mapa de onde cada coisa mora neste projeto — Instruções, as 7 skills, docs de norma e docs de workflow — e a regra para decidir onde registrar algo novo
+description: Mapa de onde cada coisa mora neste projeto — Instruções, skills, subagentes, docs de norma, docs de workflow, scripts e servidor — e a regra para decidir onde registrar algo novo
 sources: [cowork]
 ---
 
@@ -16,8 +16,11 @@ regra duplicada divergindo com o tempo.
 | **`normas/`** | docs do projeto | busca semântica, quando o assunto aparece | conhecimento: texto das RTs, tabelas, banco de notificações |
 | **`workflow/`** | docs do projeto | busca semântica | registro: casos concretos, catálogos, fatos do setup |
 
-Visão de tudo isso numa página, com a fila de pedidos de alteração: Painel SSEG
-(ver `workflow/painel-do-projeto.md`). O painel é um retrato; a fonte continua sendo cada camada.
+Visão de tudo isso numa página, com a fila de pedidos de alteração: Painel SSEG. Desde
+05/10/2026 o painel é **gerado do repositório** por `scripts/painel.py` (página em
+`sseg/painel/index.html`), toda manhã, pela rotina do servidor: mostra o texto dos próprios
+arquivos e aponta sozinho as divergências entre eles. O painel é um retrato; a fonte continua
+sendo cada camada.
 
 ## O que está nas Instruções (sempre ativo)
 
@@ -28,9 +31,10 @@ quatro travas de erro (altura, contagem de medidas, sugestões do SOL, definiç�
 geometria) · escopo de processo · onde procurar primeiro. Texto exato em
 `workflow/instrucoes-projeto-espelho.md`.
 
-## As skills (7, em 02/10/2026)
+## As skills (8, em 05/10/2026)
 
-Ficam na conta do Claude; cópia de backup em `sseg/skills/` do repositório.
+A fonte é `sseg/skills/` do repositório (decisão de 02/10/2026); a conta de cada analista
+recebe cópia pela skill `sseg-sincronizar-skills`.
 
 - **`ppci-abertura-sessao`** — abrir a sessão: pedir a pasta `Carpes` uma vez, abrir o SOL no
   Chrome direto na caixa Análise técnica, parar no login; "o próximo da lista" pela planilha
@@ -47,19 +51,33 @@ Ficam na conta do Claude; cópia de backup em `sseg/skills/` do repositório.
 - **`ppci-incorporar-norma`** — norma nova na base: PDF, conversão anydoc, transcrição
   comentada e todos os índices dependentes, no projeto e no clone.
 - **`passar-contexto`** — bloco de passagem para continuar o trabalho em outra conversa.
+- **`sseg-sincronizar-skills`** — levar as skills do repositório para a conta depois de um
+  `git pull`, ou o contrário, sempre mostrando a diferença.
+
+## Os subagentes (Claude Code)
+
+Em `.claude/agents/`: **`localizador-normas`** (Haiku — trechos literais com arquivo e
+linha/página), **`sol-leitor`** (Haiku — lê o SOL no Chrome e devolve só o resumo) e
+**`revisor-cia`** (Sonnet — revisão final da CIA de fora do raciocínio que a produziu). Modelo
+leve só onde nenhuma escolha normativa acontece; a política está em
+`workflow/politica-modelo-e-custo.md`.
 
 ## Os scripts
 
-`scripts/sseg.py`, `scripts/tabelas.py` + `scripts/dados/`. Rodam só onde há sandbox (Cowork).
+`scripts/sseg.py`, `scripts/tabelas.py` + `scripts/dados/`. Rodam no Cowork, no PC do quartel
+(Python e Poppler desde 03/10/2026) e no servidor; no modo Chat, sem terminal, não rodam.
 Fazem o trabalho determinístico — roteamento de tabela, conferência de normas, travas de
 consistência, render/PDF da página, diff entre análises, revisão da CIA — e nunca criam
-fundamento nem contam medidas por extração de PDF. Sem sandbox, o passo a passo escrito nas
+fundamento nem contam medidas por extração de PDF. Sem terminal, o passo a passo escrito nas
 skills produz o mesmo resultado.
+
+`scripts/painel.py` gera o retrato do Painel SSEG e `scripts/painel_pedidos.py` aplica as trocas
+de texto pedidas no painel. As rotinas do servidor estão em `workflow/plano-servidor-24-7.md`.
 
 ## Onde registrar algo novo
 
 - É uma **regra que vale sempre**, mesmo sem gatilho? → Instruções (e o espelho).
-- É um **passo a passo** de uma tarefa específica? → skill (e a cópia em `sseg/skills/`).
+- É um **passo a passo** de uma tarefa específica? → skill, gravada em `sseg/skills/` (a fonte) e reinstalada na conta.
 - É **conteúdo de norma** (item, tabela, modelo de notificação validado)? → `normas/`.
 - É um **caso concreto**, uma leitura conferida à mão, um catálogo de tela, um fato do
   setup do usuário? → `workflow/`.

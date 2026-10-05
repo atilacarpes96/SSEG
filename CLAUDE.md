@@ -50,6 +50,7 @@ As skills PPCI estão em `sseg/skills/<nome>/SKILL.md`. Quando o pedido casar co
 | "revisa a CIA", "revisão final" | `ppci-revisao-cia` (pelo subagente `revisor-cia`) |
 | norma nova para a base | `ppci-incorporar-norma` |
 | levar uma skill da conta ao repo, ou o contrário | `sseg-sincronizar-skills` |
+| "passa o contexto", "vou continuar na outra conversa" | `passar-contexto` |
 
 As skills foram escritas para o Cowork. No Claude Code, traduzir:
 

@@ -44,11 +44,10 @@ de linha dentro do parágrafo**: cada item é uma linha contínua, com linha em 
 
 O limite da caixa é de **2.000 caracteres** — ver a skill `sol-cbmrs-navegador`.
 
-⚠️ As 7 skills do projeto (`ppci-abertura-sessao`, `ppci-analise-processo`,
-`ppci-notificacao-cia`, `sol-cbmrs-navegador`, `ppci-revisao-cia`, `ppci-incorporar-norma`,
-`passar-contexto`) ficam na conta do Claude. Desde **15/09/2026** há uma **cópia de backup** em
-`sseg/skills/` deste repositório — cópia, não a fonte: editando a skill na conta, atualizar a
-cópia. Conferida e atualizada com as 7 em 02/10/2026. Regra operacional que precise sobreviver: registrar também como doc aqui.
+⚠️ As skills do projeto (lista no `CLAUDE.md` e no Painel SSEG) têm a **fonte em `sseg/skills/`**
+deste repositório desde 02/10/2026; a skill instalada na conta de cada analista é cópia, levada
+pela skill `sseg-sincronizar-skills`. Mudou a skill: gravar o `SKILL.md` no repositório no mesmo
+passo. Regra operacional que precise sobreviver: registrar também como doc aqui.
 
 ## Terminologia
 

@@ -1,22 +1,30 @@
 # SSEG — Análises de PPCI (CBMRS/RS)
 
-Backup versionado do projeto **"SSEG - Análises"** do Claude: assistente técnico-normativo de
+Fonte versionada do projeto **"SSEG - Análises"** do Claude: assistente técnico-normativo de
 Segurança Contra Incêndio e Pânico para análise de PPCI, classificação de ocupações, cálculo
 populacional, fiscalização e elaboração/revisão de notificações no âmbito do CBMRS/RS.
 
 O objetivo deste repositório é **poder levantar o projeto inteiro em outra máquina**: tudo que
-está na base de conhecimento do projeto está em `sseg/`.
+está na base de conhecimento do projeto está em `sseg/`. Desde 02/10/2026 o repositório é a
+**fonte** (skills, docs, scripts); o projeto do claude.ai e a conta de cada analista recebem cópia.
 
 ## Estrutura
 
 ```
+CLAUDE.md        regras para o Claude Code (carrega o espelho das Instruções)
+.claude/agents/  subagentes do Claude Code (localizador-normas, sol-leitor, revisor-cia)
 sseg/
-├── normas/      transcrições das normas e o índice normativo (00-indice-normativo.md)
+├── normas/      transcrições das normas, índice normativo, banco de notificações
+│   ├── pdf/     os PDFs oficiais — o que se cita
+│   ├── md/      conversão automática (anydoc) — só localiza, não fundamenta
+│   └── base/    conversão verificada contra o PDF (normas_converter + normas_verificador)
+├── painel/      página do Painel SSEG (o conteúdo vem de scripts/painel.py)
 ├── processos/   registro por processo analisado — SÓ LOCAL, fora do Git (ver abaixo)
-├── scripts/     sseg.py, tabelas.py, gerar_recortes.py
-│   └── dados/   indice_normas.json, tabelas_conferidas.json
-│       └── tabelas/   os 30 recortes por grupo de ocupação
-├── skills/      cópia de backup das 4 skills PPCI da conta do Claude
+├── scripts/     sseg.py, tabelas.py, painel.py e os demais (ver "Scripts")
+│   ├── dados/   indice_normas.json, tabelas_conferidas.json
+│   │   └── tabelas/   os recortes por grupo de ocupação
+│   └── servidor/      criação e montagem do servidor 24/7
+├── skills/      as skills PPCI — FONTE; a conta de cada analista recebe cópia
 └── workflow/    como o trabalho é conduzido (arquitetura, travas, políticas)
 ```
 
@@ -40,17 +48,18 @@ Regra também em `CLAUDE.md`, para o Claude de quem clonar.
 3. **Instruções do projeto:** colar no campo "Instruções" o texto inteiro de
    `sseg/workflow/instrucoes-projeto-espelho.md` (da seção `## Papel` em diante). Esse arquivo
    é o espelho do campo; ao mudar um, mudar o outro.
-4. **Skills:** recriar as 4 de `sseg/skills/` na conta do Claude
-   (`ppci-abertura-sessao`, `ppci-analise-processo`, `ppci-notificacao-cia`,
-   `sol-cbmrs-navegador`). A cópia daqui é backup — a que vale é a da conta.
+4. **Skills:** instalar na conta as skills de `sseg/skills/` com a skill
+   `sseg-sincronizar-skills` (ou um `.zip` com `<nome>/SKILL.md` em Configurações > Capacidades >
+   Skills). O repositório é a fonte; a da conta é cópia.
 5. **Ler primeiro** `sseg/workflow/00-arquitetura-do-projeto.md`.
-6. **Scripts:** precisam de **Python 3**, sem dependência externa. Foram feitos para rodar no
-   ambiente do Cowork; o PC do quartel não tem Python instalado.
+6. **Scripts:** Python 3 e Poppler (`pdftotext`, `pdftoppm`) no PATH. `sseg.py`, `tabelas.py`
+   e `painel.py` só usam a biblioteca padrão; `normas_converter.py`, `normas_verificador.py` e
+   `gerar_recortes.py` pedem `pip install pymupdf pymupdf4llm pillow numpy`. Rodam no Cowork, no
+   PC do quartel (instalado em 03/10/2026, ver `CLAUDE.md`) e no servidor.
 
-O que **não** vem no repo: os PDFs oficiais de `Carpes\Normas`, os prints de
-`Carpes\print ppci` e as memórias do Claude. O repo guarda as **transcrições**, não os
-originais — copiar a pasta `Carpes` à parte, ou transcrever de novo conforme a necessidade.
-Ver `sseg/workflow/repo-github-backup.md`.
+O que **não** vem no repo: os prints de `Carpes\print ppci`, os registros de processo e as
+memórias do Claude. Os PDFs oficiais vêm (`sseg/normas/pdf/`). Ver
+`sseg/workflow/repo-github-backup.md`.
 
 ## Scripts
 
@@ -69,6 +78,10 @@ python3 sseg.py --help
 # regenerar os recortes de dados/tabelas/ a partir de tabelas_conferidas.json
 python3 gerar_recortes.py
 python3 gerar_recortes.py --conferir   # só compara; código 1 se divergir
+
+# Painel SSEG: retrato do repositório + divergências automáticas (sem modelo)
+python3 painel.py --saida /tmp/retrato --resumo
+python3 painel_pedidos.py --pedidos <pasta> --saida <pasta> --simular   # trocas de texto da fila
 ```
 
 ⚠️ **Os scripts dependem do caminho, não só do arquivo.** `sseg.py` e `tabelas.py` montam o

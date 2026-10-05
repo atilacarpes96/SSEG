@@ -9,7 +9,7 @@ regra está aqui em cima.
 | **Conversão automática** | `md/` | **localizar** item, artigo, palavra | fundamentar exigência |
 | **Transcrição comentada** | os `.md` desta pasta | raciocínio, travas, itens já conferidos | substituir o PDF na conferência |
 
-## `pdf/` — os PDFs oficiais (18 em 30/09/2026)
+## `pdf/` — os PDFs oficiais (19 em 02/10/2026)
 
 Cópia da pasta local `C:\Users\55519\Desktop\Carpes\Normas`, para que as normas viajem junto
 com o repositório em vez de ficarem só numa máquina. **A versão sai da capa e do Art. 2º**,

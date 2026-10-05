@@ -1,0 +1,444 @@
+<title>Painel SSEG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87.5,600;87.5,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: painel de consulta gerado do repositório — barra lateral com as seções, conteúdo em coluna larga; no celular a barra vira faixa rolável no topo */
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --ink:#17212B; --muted:#56636E; --line:#D5DCE2; --soft:#E9EDF1;
+  --accent:#B8241A; --accent-ink:#FFFFFF;
+  --stop:#A3221A; --stop-bg:#FCE9E7; --warn:#7D5200; --warn-bg:#FFF3D1; --ok:#1C6436; --ok-bg:#E3F3E8; --info:#1F4E79; --info-bg:#E4EEF7;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E141A; --surface:#161F27; --ink:#E4EAF0; --muted:#98A6B2; --line:#2A3641; --soft:#1D2731;
+  --accent:#EE5B4E; --accent-ink:#1A0806;
+  --stop:#FF9B91; --stop-bg:#3A1613; --warn:#F2C56A; --warn-bg:#352810; --ok:#86D6A0; --ok-bg:#12301D; --info:#9CC6EE; --info-bg:#132A40;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E141A; --surface:#161F27; --ink:#E4EAF0; --muted:#98A6B2; --line:#2A3641; --soft:#1D2731;
+  --accent:#EE5B4E; --accent-ink:#1A0806;
+  --stop:#FF9B91; --stop-bg:#3A1613; --warn:#F2C56A; --warn-bg:#352810; --ok:#86D6A0; --ok-bg:#12301D; --info:#9CC6EE; --info-bg:#132A40;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)}
+a{color:var(--info)}
+code,.mono{font-family:var(--f-mono);font-size:.86em;background:var(--soft);padding:.05em .35em;border-radius:3px;overflow-wrap:anywhere}
+h1,h2,h3,h4{font-family:var(--f-display);font-stretch:87.5%;text-wrap:balance;margin:0;line-height:1.15}
+h1{font-weight:800;font-size:1.9rem;letter-spacing:-.01em}
+h2{font-weight:800;font-size:1.45rem}
+h3{font-weight:600;font-size:1.08rem}
+p{margin:0}
+.wrap{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1240px;margin:0 auto;padding-inline:20px;gap:32px}
+header.top{border-top:5px solid var(--accent);background:var(--surface);border-bottom:1px solid var(--line)}
+header.top .in{max-width:1240px;margin:0 auto;padding:22px 20px 18px;display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;justify-content:space-between}
+.eyebrow{font:600 .72rem/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted);max-width:66ch;margin-top:6px}
+.stats{display:flex;gap:22px;flex-wrap:wrap}
+.stat b{display:block;font:800 1.5rem/1 var(--f-display);font-stretch:87.5%;font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted)}
+.stat.alert b{color:var(--accent)}
+nav.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;padding-block:24px;display:flex;flex-direction:column;gap:2px}
+nav.side a{display:flex;justify-content:space-between;gap:8px;text-decoration:none;color:var(--ink);padding:7px 10px;border-radius:var(--r);font-size:.92rem;border-left:3px solid transparent}
+nav.side a:hover{background:var(--soft)}
+nav.side a.on{border-left-color:var(--accent);background:var(--surface);font-weight:600}
+nav.side a small{color:var(--muted);font-variant-numeric:tabular-nums}
+main{padding-block:24px 80px;min-width:0;display:flex;flex-direction:column;gap:44px}
+section{scroll-margin-top:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.sec-head{display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.sec-head p{color:var(--muted);max-width:72ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.src{font:400 .76rem/1.3 var(--f-mono);color:var(--muted);overflow-wrap:anywhere}
+ul.clean{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;font:600 .7rem/1.2 var(--f-body);letter-spacing:.05em;text-transform:uppercase;padding:3px 7px;border-radius:999px;white-space:nowrap}
+.c-stop{background:var(--stop-bg);color:var(--stop)}
+.c-warn{background:var(--warn-bg);color:var(--warn)}
+.c-ok{background:var(--ok-bg);color:var(--ok)}
+.c-info{background:var(--info-bg);color:var(--info)}
+.c-soft{background:var(--soft);color:var(--muted)}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font:600 .72rem/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--soft)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+/* texto vindo dos arquivos */
+.md{display:flex;flex-direction:column;gap:8px;max-width:78ch;overflow-wrap:anywhere}
+.md h4{font-size:1.02rem;font-weight:800;margin-top:10px}
+.md h5{font:600 .9rem/1.3 var(--f-body);margin-top:6px}
+.md ul,.md ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:3px}
+.md blockquote{margin:0;padding:6px 12px;border-left:3px solid var(--line);color:var(--muted)}
+.md pre{margin:0;background:var(--soft);padding:10px 12px;border-radius:4px;overflow-x:auto;font:400 .8rem/1.45 var(--f-mono);white-space:pre}
+.md .t{overflow-x:auto}
+.md table{font-size:.86rem;border:1px solid var(--line)}
+.clamp{max-height:9.5em;overflow:hidden;position:relative}
+.clamp::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2.5em;background:linear-gradient(transparent,var(--surface))}
+.more{align-self:flex-start;border:0;background:none;color:var(--info);font-size:.84rem;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+/* skills */
+details.rot{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+details.rot>summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:start}
+details.rot>summary::-webkit-details-marker{display:none}
+details.rot>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+details.rot[open]>summary{border-bottom:1px solid var(--line)}
+.rot .desc{grid-column:1/-1;font-size:.92rem}
+.rot .inner{padding:14px 16px;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.rot h4{margin:0 0 6px;font:600 .72rem/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.tog{font-size:.8rem;color:var(--muted)}
+details.rot[open] .tog .a{display:none} details.rot:not([open]) .tog .b{display:none}
+.outline{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;font-size:.88rem}
+.outline li.n3{padding-left:14px;color:var(--muted)}
+.stopbox{background:var(--stop-bg);color:var(--ink);border-radius:4px;padding:8px 10px;font-size:.88rem}
+.stopbox b{color:var(--stop)}
+.li-ed{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:start}
+/* divergências */
+.div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:start}
+.div .full{grid-column:1/-1}
+/* botões */
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r);padding:6px 12px;font-size:.86rem;font-weight:500}
+.btn:hover{border-color:var(--muted)}
+.btn:focus-visible,.edit:focus-visible,.more:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.edit{border:0;background:none;color:var(--muted);font-size:.78rem;padding:2px 4px;border-radius:4px;white-space:nowrap;text-decoration:underline;text-underline-offset:2px;text-decoration-color:var(--line)}
+.edit:hover{color:var(--accent);text-decoration-color:var(--accent)}
+.edit[hidden]{display:none}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;font-size:.82rem}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.howto{background:var(--info-bg);border-radius:var(--r);padding:12px 14px;font-size:.92rem;display:flex;flex-direction:column;gap:6px}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:18px;color:var(--muted);text-align:center}
+/* pedidos */
+.req{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.req .meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.8rem;color:var(--muted)}
+.req .txt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9rem}
+.req .resp{font-size:.86rem;background:var(--soft);border-radius:4px;padding:6px 10px;white-space:pre-wrap}
+.diff{display:grid;gap:4px;font-size:.86rem}
+.diff .a{background:var(--stop-bg);border-radius:4px;padding:4px 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.diff .d{background:var(--ok-bg);border-radius:4px;padding:4px 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+/* diálogo */
+.ov{position:fixed;inset:0;background:rgba(10,15,20,.55);display:grid;place-items:center;padding:16px;z-index:50}
+.dlg{background:var(--surface);color:var(--ink);border-radius:10px;max-width:720px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;max-height:90vh;overflow:auto}
+.dlg label{font-size:.8rem;font-weight:600;color:var(--muted)}
+.dlg textarea,.dlg input{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px}
+.dlg textarea{min-height:150px;resize:vertical}
+.dlg textarea.big{min-height:55vh;font-family:var(--f-mono);font-size:.82rem;line-height:1.5}
+.dlg .acts{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:.88rem;z-index:60}
+.note{font-size:.84rem;color:var(--muted)}
+@media (max-width:820px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:0;padding-inline:16px}
+  header.top .in{padding-inline:16px}
+  nav.side{flex-direction:row;overflow-x:auto;padding-block:10px;background:var(--bg);z-index:5;margin-inline:-16px;padding-inline:16px;border-bottom:1px solid var(--line)}
+  nav.side a{white-space:nowrap;border-left:0;border-bottom:3px solid transparent;border-radius:0}
+  nav.side a.on{border-bottom-color:var(--accent);background:none}
+  nav.side a small{display:none}
+  h1{font-size:1.55rem}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+
+<header class="top"><div class="in">
+  <div>
+    <div class="eyebrow">Projeto SSEG — Análises · 6º BBM</div>
+    <h1>Painel SSEG</h1>
+    <p class="lead">O retrato do projeto como ele está no repositório: as skills, os subagentes, as rotinas do servidor, as Instruções e os parâmetros, com o texto tirado dos próprios arquivos. Um script refaz o retrato toda manhã e aponta sozinho o que não bate entre os arquivos. <b>Editar</b> em qualquer trecho vira pedido; a rotina das 6h30 aplica no arquivo o que for troca de texto e responde aqui.</p>
+    <p class="note" id="gerado" style="margin-top:6px">Carregando o retrato…</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="s-sk">–</b><span>skills</span></div>
+    <div class="stat"><b id="s-ag">–</b><span>subagentes</span></div>
+    <div class="stat alert"><b id="s-div">–</b><span>divergências</span></div>
+    <div class="stat alert"><b id="s-ped">–</b><span>pedidos pendentes</span></div>
+  </div>
+</div></header>
+
+<div class="wrap">
+<nav class="side" id="nav" aria-label="Seções">
+  <a href="#visao">Visão geral</a>
+  <a href="#divergencias">Divergências <small id="n-div"></small></a>
+  <a href="#skills">Skills <small id="n-sk"></small></a>
+  <a href="#agentes">Subagentes <small id="n-ag"></small></a>
+  <a href="#rotinas">Rotinas <small id="n-rot"></small></a>
+  <a href="#parametros">Parâmetros <small id="n-par"></small></a>
+  <a href="#instrucoes">Instruções</a>
+  <a href="#arquivos">Arquivos <small id="n-arq"></small></a>
+  <a href="#pedidos">Pedidos <small id="n-ped"></small></a>
+</nav>
+
+<main>
+<section id="visao">
+  <div class="sec-head"><div class="eyebrow">Visão geral</div><h2>Como o projeto se organiza</h2>
+  <p id="arq-src" class="src"></p></div>
+  <div class="card"><div class="md" id="arq"><p class="muted">O mapa do projeto aparece aqui quando o retrato carregar.</p></div></div>
+</section>
+
+<section id="divergencias">
+  <div class="sec-head"><div class="eyebrow">Divergências</div><h2>O que não bate entre os arquivos</h2>
+  <p>Conferências automáticas a cada geração: contagens escritas nos docs, links e caminhos que não existem, frases que deixaram de valer, skills fora do CLAUDE.md, parâmetro cuja linha mudou e código de processo em arquivo público. Some daqui quando o arquivo for corrigido.</p></div>
+  <div class="filters" id="f-div" role="group" aria-label="Filtrar divergências"></div>
+  <div id="l-div" style="display:flex;flex-direction:column;gap:10px"></div>
+</section>
+
+<section id="skills">
+  <div class="sec-head"><div class="eyebrow">Skills</div><h2>O que você diz → o que acontece</h2>
+  <p>A <b>descrição</b> é o gatilho: a skill carrega quando a sua mensagem casa com ela. Em cada skill estão o roteiro (os títulos do arquivo), onde ela para e pergunta, e o que nunca faz. A fonte é <code>sseg/skills/</code>; a skill da conta de cada analista é cópia.</p></div>
+  <div id="l-sk" style="display:flex;flex-direction:column;gap:10px"></div>
+</section>
+
+<section id="agentes">
+  <div class="sec-head"><div class="eyebrow">Subagentes</div><h2>Quem trabalha em segundo plano</h2>
+  <p>Subagentes do Claude Code (<code>.claude/agents/</code>). Modelo leve só onde nenhuma escolha normativa acontece.</p></div>
+  <div class="tbl"><table><thead><tr><th style="min-width:150px">Subagente</th><th>Modelo</th><th style="min-width:280px">Quando usar</th><th style="min-width:160px">Ferramentas</th><th></th></tr></thead><tbody id="t-ag"></tbody></table></div>
+</section>
+
+<section id="rotinas">
+  <div class="sec-head"><div class="eyebrow">Rotinas</div><h2>O que roda sozinho no servidor</h2>
+  <p>Lido do agendamento (crontab) do servidor no momento da geração.</p></div>
+  <div class="tbl"><table><thead><tr><th style="min-width:140px">Quando</th><th style="min-width:260px">O que faz</th><th style="min-width:200px">Comando</th></tr></thead><tbody id="t-rot"></tbody></table></div>
+</section>
+
+<section id="parametros">
+  <div class="sec-head"><div class="eyebrow">Parâmetros</div><h2>Números, datas e regras que decidem o fluxo</h2>
+  <p>Cada linha é o texto do arquivo que define o parâmetro, com o lugar exato. Se a frase mudar e deixar de ser achada, o parâmetro vai para Divergências.</p></div>
+  <div class="filters" id="f-par" role="group" aria-label="Filtrar parâmetros"></div>
+  <div class="tbl"><table><thead><tr><th style="min-width:170px">Parâmetro</th><th style="min-width:300px">Texto da fonte</th><th style="min-width:150px">Onde</th><th></th></tr></thead><tbody id="t-par"></tbody></table></div>
+</section>
+
+<section id="instrucoes">
+  <div class="sec-head"><div class="eyebrow">Instruções do projeto</div><h2>A doutrina carregada em toda conversa</h2>
+  <p>Texto entre os marcadores do espelho (<code>sseg/workflow/instrucoes-projeto-espelho.md</code>). É o que se cola no campo “Instruções” do projeto no claude.ai.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="inst-cp" type="button">Copiar o texto</button><button class="btn" id="inst-ed" type="button">Editar o texto</button></div>
+  <div class="card"><div class="md" id="inst"><p class="muted">O texto das Instruções aparece aqui quando o retrato carregar.</p></div></div>
+  <div><h3 style="margin-bottom:6px">Últimas mudanças registradas no espelho</h3><div class="tbl"><table><thead><tr><th>Data</th><th>O que mudou</th></tr></thead><tbody id="t-hist"></tbody></table></div></div>
+</section>
+
+<section id="arquivos">
+  <div class="sec-head"><div class="eyebrow">Arquivos</div><h2>Docs de workflow e de normas</h2>
+  <p>A descrição de cada doc (frontmatter ou primeiro parágrafo) e o peso dele em tokens, que é o que custa ler o arquivo inteiro numa conversa.</p></div>
+  <div class="filters" id="f-arq" role="group" aria-label="Filtrar arquivos"></div>
+  <div class="tbl"><table><thead><tr><th style="min-width:220px">Arquivo</th><th style="min-width:300px">Do que trata</th><th>Tokens</th><th>Atualizado</th></tr></thead><tbody id="t-arq"></tbody></table></div>
+</section>
+
+<section id="pedidos">
+  <div class="sec-head"><div class="eyebrow">Pedidos</div><h2>Fila de mudanças</h2>
+  <p>Tudo que você edita ou pede aqui fica nesta fila até ser aplicado.</p></div>
+  <div class="howto"><span><b>Troca de texto</b> (feita pelo “Editar” de um trecho): a rotina das 6h30 aplica no arquivo, faz o commit e marca como aplicado, com o commit na resposta. Para aplicar na hora, diga <code>aplica o painel</code> numa conversa.</span><span><b>Pedido livre</b> (“Novo pedido”): precisa de julgamento e é aplicado numa conversa, com <code>aplica o painel</code>. Mudança em skill vale na conta depois de reinstalada; mudança nas Instruções vale depois de colada no campo do projeto.</span></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+    <div class="filters" id="f-ped" role="group" aria-label="Filtrar pedidos"></div>
+    <button class="btn pri" id="novo" type="button">Novo pedido</button>
+  </div>
+  <div id="l-ped" style="display:flex;flex-direction:column;gap:10px"><div class="empty">Carregando a fila…</div></div>
+</section>
+</main>
+</div>
+
+<div id="ov" class="ov" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-t">
+    <h3 id="dlg-t">Pedir alteração</h3>
+    <p class="src" id="d-src"></p>
+    <div id="d-alvo-box"><label for="d-alvo">O que mudar</label><input id="d-alvo" type="text"></div>
+    <div><label for="d-txt" id="d-lbl">Como deve ficar</label><textarea id="d-txt"></textarea></div>
+    <p class="note" id="d-ctx"></p>
+    <div class="acts"><button class="btn" id="d-can" type="button">Cancelar</button><button class="btn pri" id="d-ok" type="button">Registrar pedido</button></div>
+  </div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>el.hidden=true,2800)}
+
+/* ---------- markdown seguro (escapa tudo e só depois aplica o subconjunto) ---------- */
+function inl(s){
+  return s.split(/(`[^`]+`)/g).map(p=>{
+    if(/^`[^`]+`$/.test(p))return "<code>"+esc(p.slice(1,-1))+"</code>";
+    let h=esc(p);
+    h=h.replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g,"<code>$1</code>");
+    h=h.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(m,t,u)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`);
+    h=h.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*\w])\*([^*\s][^*]*?)\*(?=[^*\w]|$)/g,"$1<i>$2</i>");
+    return h;
+  }).join("");
+}
+function md(src){
+  const L=String(src||"").replace(/\r/g,"").split("\n");let out="",i=0;
+  const isList=l=>/^\s*([-*]|\d+\.)\s+/.test(l);
+  while(i<L.length){
+    let l=L[i];
+    if(/^\s*```/.test(l)){let b=[];i++;while(i<L.length&&!/^\s*```/.test(L[i]))b.push(L[i++]);i++;out+="<pre>"+esc(b.join("\n"))+"</pre>";continue}
+    if(/^<!--/.test(l.trim())){i++;continue}
+    let m=l.match(/^(#{1,6})\s+(.*)$/);
+    if(m){out+=(m[1].length<=2?"<h4>":"<h5>")+inl(m[2])+(m[1].length<=2?"</h4>":"</h5>");i++;continue}
+    if(/^\s*\|/.test(l)){let rows=[];while(i<L.length&&/^\s*\|/.test(L[i]))rows.push(L[i++]);
+      const cells=r=>r.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim());
+      let h=`<div class="t"><table>`;rows.forEach((r,k)=>{if(/^\s*\|?\s*:?-{2,}/.test(r.replace(/\|/g,"")))return;const tag=k===0?"th":"td";h+="<tr>"+cells(r).map(c=>`<${tag}>${inl(c)}</${tag}>`).join("")+"</tr>"});
+      out+=h+"</table></div>";continue}
+    if(/^\s*>/.test(l)){let b=[];while(i<L.length&&/^\s*>/.test(L[i]))b.push(L[i++].replace(/^\s*>\s?/,""));out+="<blockquote>"+inl(b.join(" "))+"</blockquote>";continue}
+    if(isList(l)){const ord=/^\s*\d+\./.test(l);let items=[],cur=null;
+      while(i<L.length&&(isList(L[i])||(cur!==null&&L[i].trim()&&!/^#/.test(L[i])&&!/^\s*\|/.test(L[i])))){
+        if(isList(L[i])){if(cur!==null)items.push(cur);cur=L[i].replace(/^\s*([-*]|\d+\.)\s+/,"")}else cur+=" "+L[i].trim();i++}
+      if(cur!==null)items.push(cur);
+      out+=(ord?"<ol>":"<ul>")+items.map(t=>"<li>"+inl(t)+"</li>").join("")+(ord?"</ol>":"</ul>");continue}
+    if(!l.trim()){i++;continue}
+    let p=[];while(i<L.length&&L[i].trim()&&!/^(#{1,6})\s/.test(L[i])&&!isList(L[i])&&!/^\s*(\||>|```)/.test(L[i]))p.push(L[i++].trim());
+    out+="<p>"+inl(p.join(" "))+"</p>";
+  }
+  return out;
+}
+
+/* ---------- estado ---------- */
+let R=null,db=null,pedidos=[],canWrite=true;
+const sel={div:"Todas",par:"Todos",arq:"Todos",ped:"pendente"};
+const GRAV={alta:["Alta","c-stop"],"média":["Média","c-warn"],baixa:["Baixa","c-soft"]};
+const STATUS={pendente:["Pendente","c-warn"],aplicado:["Aplicado","c-ok"],recusado:["Recusado","c-soft"]};
+const fmt=iso=>{try{return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}catch(e){return iso||""}};
+const fdia=d=>d?d.split("-").reverse().join("/"):"";
+const ed=(k)=>`<button class="edit" type="button" data-k="${esc(k)}">Editar</button>`;
+const ALVOS={};let nAlvo=0;
+function alvo(o){const k="a"+(nAlvo++);ALVOS[k]=o;return k}
+function filtros(el,lista,chave){el.innerHTML=lista.map(g=>`<button type="button" aria-pressed="${g===sel[chave]}" data-v="${esc(g)}">${esc(g)}</button>`).join("")}
+
+function render(){
+  if(!R)return;
+  nAlvo=0;for(const k in ALVOS)delete ALVOS[k];
+  const m=R.meta||{},c=m.contagens||{};
+  $("#gerado").textContent=`Gerado em ${fmt(m.gerado_em)} a partir do commit ${m.commit||"?"} (${fdia(m.data_commit)}, ${m.autor_commit||""}: ${m.assunto_commit||""}).`;
+  $("#s-sk").textContent=c.skills??"–";$("#s-ag").textContent=c.subagentes??"–";$("#s-div").textContent=c.divergencias??"–";
+  $("#n-sk").textContent=c.skills??"";$("#n-ag").textContent=c.subagentes??"";$("#n-div").textContent=c.divergencias||"";
+  /* visão geral */
+  const a=R.arquitetura||{};$("#arq").innerHTML=md(a.texto);$("#arq-src").textContent=a.arquivo?`${a.arquivo} · atualizado em ${fdia(a.atualizado)}`:"";
+  /* divergências */
+  const dl=(R.divergencias||{}).lista||[];const tipos=["Todas",...new Set(dl.map(d=>d.tipo))];
+  if(!tipos.includes(sel.div))sel.div="Todas";filtros($("#f-div"),tipos,"div");
+  const dv=dl.filter(d=>sel.div==="Todas"||d.tipo===sel.div);
+  $("#l-div").innerHTML=dv.length?dv.map(d=>{const g=GRAV[d.gravidade]||GRAV.baixa;const k=alvo({tipo:"livre",alvo:"Divergência: "+d.titulo,arquivo:(d.onde[0]||"").replace(/[:(].*$/,""),texto:"Corrigir: "+d.titulo+(d.sugestao?"\nSugestão do painel: "+d.sugestao:"")});
+    return `<div class="card div"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="chip ${g[1]}">${g[0]}</span><span class="chip c-soft">${esc(d.tipo)}</span></div>${ed(k)}<h3 class="full">${esc(d.titulo)}</h3>${d.detalhe?`<p class="small full">${esc(d.detalhe)}</p>`:""}${d.onde&&d.onde.length?`<p class="src full">${d.onde.slice(0,8).map(esc).join(" · ")}${d.onde.length>8?` · e mais ${d.onde.length-8}`:""}</p>`:""}${d.sugestao?`<p class="small full"><b>Sugestão:</b> ${esc(d.sugestao)}</p>`:""}</div>`}).join(""):'<div class="empty">Nenhuma divergência nesta geração.</div>';
+  /* skills */
+  const sk=(R.skills||{}).lista||[];
+  $("#l-sk").innerHTML=sk.map(s=>{
+    const kd=alvo({tipo:"literal",alvo:`Skill ${s.nome}: descrição (gatilho)`,arquivo:s.arquivo,antes:s.descricao});
+    const kq=alvo({tipo:"literal",alvo:`Skill ${s.nome}: quando usar`,arquivo:s.arquivo,antes:s.quando});
+    const out=s.roteiro.length?`<ul class="outline">${s.roteiro.map(r=>`<li class="n${r.nivel}">${inl(r.titulo)}</li>`).join("")}</ul>`:'<p class="muted small">—</p>';
+    const par=s.paradas.length?s.paradas.map(p=>`<div class="stopbox">${inl(p)}</div>`).join(""):'<p class="muted small">Não tem parada obrigatória.</p>';
+    const nun=s.nunca.length?`<ul class="outline">${s.nunca.map(t=>`<li class="li-ed"><span>${inl(t)}</span>${ed(alvo({tipo:"literal",alvo:`Skill ${s.nome}: nunca`,arquivo:s.arquivo,antes:t}))}</li>`).join("")}</ul>`:'<p class="muted small">—</p>';
+    return `<details class="rot"><summary><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><h3><code style="background:none;padding:0;font-size:.95em">${esc(s.nome)}</code></h3><span class="src">${esc(s.arquivo)} · ${s.tamanho_kb} KB · ~${(s.tokens/1000).toFixed(1)} mil tokens · atualizado em ${fdia(s.atualizado)}</span></div><span class="tog"><span class="a">abrir ▾</span><span class="b">fechar ▴</span></span><div class="desc li-ed"><span>${inl(s.descricao)}</span>${ed(kd)}</div></summary>
+      <div class="inner"><div style="grid-column:1/-1"><h4>Quando usar</h4><div class="li-ed"><div class="md small">${md(s.quando)}</div>${ed(kq)}</div></div>
+      <div><h4>Roteiro</h4>${out}</div><div style="display:flex;flex-direction:column;gap:6px"><h4>Onde para e pergunta</h4>${par}</div><div><h4>Nunca</h4>${nun}</div></div></details>`}).join("")||'<div class="empty">Nenhuma skill no retrato.</div>';
+  /* subagentes */
+  const ag=(R.agentes||{}).lista||[];
+  $("#t-ag").innerHTML=ag.map(x=>`<tr><td><code>${esc(x.nome)}</code><div class="src">${esc(x.arquivo)}</div></td><td><span class="chip ${/haiku/i.test(x.modelo)?"c-soft":/opus/i.test(x.modelo)?"c-stop":"c-info"}">${esc(x.modelo)}</span></td><td class="small">${inl(x.descricao)}</td><td class="src">${esc(x.ferramentas)}</td><td>${ed(alvo({tipo:"literal",alvo:`Subagente ${x.nome}: descrição`,arquivo:x.arquivo,antes:x.descricao}))}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">Nenhum subagente.</td></tr>';
+  /* rotinas */
+  const rt=(R.rotinas||{}).lista||[];$("#n-rot").textContent=rt.length||"";
+  $("#t-rot").innerHTML=rt.map(r=>`<tr><td class="num">${esc(r.quando)}</td><td class="small">${esc(r.descricao)}</td><td class="src">${esc(r.comando)}</td></tr>`).join("")||'<tr><td colspan="3" class="muted">Agendamento não lido nesta geração (o script rodou fora do servidor).</td></tr>';
+  /* parâmetros */
+  const pl=(R.parametros||{}).lista||[];const gr=["Todos",...new Set(pl.map(p=>p.grupo))];filtros($("#f-par"),gr,"par");$("#n-par").textContent=pl.length||"";
+  $("#t-par").innerHTML=pl.filter(p=>sel.par==="Todos"||p.grupo===sel.par).map(p=>`<tr><td><b>${esc(p.nome)}</b><br><span class="chip c-soft" style="margin-top:4px">${esc(p.grupo)}</span></td><td class="small">${p.texto?inl(p.texto):'<span class="chip c-warn">não encontrado</span>'}</td><td class="src">${esc(p.arquivo)}${p.linha?":"+p.linha:""}</td><td>${p.texto?ed(alvo({tipo:"literal",alvo:"Parâmetro: "+p.nome,arquivo:p.arquivo,antes:p.texto})):""}</td></tr>`).join("");
+  /* instruções */
+  const ins=R.instrucoes||{};$("#inst").innerHTML=md(ins.texto);
+  $("#t-hist").innerHTML=(ins.historico||[]).slice().reverse().map(h=>`<tr><td class="num">${esc(h.data)}</td><td class="small">${inl(h.mudanca)}</td></tr>`).join("")||'<tr><td colspan="2" class="muted">—</td></tr>';
+  /* arquivos */
+  const dc=(R.docs||{}).lista||[];const ga=["Todos",...new Set(dc.map(d=>d.grupo))];filtros($("#f-arq"),ga,"arq");$("#n-arq").textContent=dc.length||"";
+  $("#t-arq").innerHTML=dc.filter(d=>sel.arq==="Todos"||d.grupo===sel.arq).map(d=>`<tr><td><code>${esc(d.arquivo.replace(/^sseg\//,""))}</code></td><td class="small">${inl(d.descricao||d.titulo||"")}</td><td class="num">~${(d.tokens/1000).toFixed(1)} mil</td><td class="num">${fdia(d.atualizado)}</td></tr>`).join("");
+  applyWrite();
+}
+
+/* ---------- pedidos ---------- */
+function renderPed(){
+  const pend=pedidos.filter(p=>(p.status||"pendente")==="pendente").length;
+  $("#s-ped").textContent=db?pend:"–";$("#n-ped").textContent=db&&pend?pend:"";
+  filtros($("#f-ped"),["pendente","aplicado","recusado","todos"],"ped");
+  [...$("#f-ped").children].forEach(b=>b.textContent={pendente:"Pendentes",aplicado:"Aplicados",recusado:"Recusados",todos:"Todos"}[b.dataset.v]);
+  const box=$("#l-ped");
+  if(!db){box.innerHTML='<div class="empty">A fila não está disponível nesta visualização. Abra o painel logado no claude.ai.</div>';return}
+  const lista=pedidos.filter(p=>sel.ped==="todos"||(p.status||"pendente")===sel.ped);
+  if(!lista.length){box.innerHTML=`<div class="empty">${sel.ped==="pendente"?"Nenhum pedido pendente. Use “Editar” num trecho, ou “Novo pedido”.":"Nada aqui."}</div>`;return}
+  box.innerHTML="";
+  lista.forEach(p=>{
+    const st=STATUS[p.status||"pendente"]||STATUS.pendente;
+    const el=document.createElement("div");el.className="req";
+    el.innerHTML=`<div class="meta"><span class="chip ${st[1]}">${st[0]}</span><span class="chip c-soft">${p.tipo==="literal"?"troca de texto":p.tipo==="instrucoes"?"Instruções":"livre"}</span><span class="m-arq src"></span><span>·</span><span>${esc(fmt(p.criadoEm))}</span></div><b class="m-alvo"></b>`;
+    el.querySelector(".m-arq").textContent=p.arquivo||p.camada||"";
+    el.querySelector(".m-alvo").textContent=p.alvo||"(sem título)";
+    if(p.tipo==="literal"||p.tipo==="instrucoes"){
+      const d=document.createElement("div");d.className="diff";
+      const a=document.createElement("div");a.className="a";a.textContent=p.tipo==="instrucoes"?(p.resumo||"Texto integral das Instruções editado."):("Antes: "+(p.antes||""));
+      d.appendChild(a);
+      if(p.tipo!=="instrucoes"){const b=document.createElement("div");b.className="d";b.textContent="Depois: "+(p.depois||"(apagar)");d.appendChild(b)}
+      el.appendChild(d);
+    }else{const t=document.createElement("div");t.className="txt";t.textContent=p.texto||"";el.appendChild(t)}
+    if(p.resposta){const r=document.createElement("div");r.className="resp";r.textContent="Resposta: "+p.resposta;el.appendChild(r)}
+    if((p.status||"pendente")==="pendente"&&canWrite){
+      const b=document.createElement("button");b.className="btn";b.type="button";b.textContent="Excluir pedido";b.style.alignSelf="flex-start";
+      b.addEventListener("click",async()=>{if(b.dataset.c!=="1"){b.dataset.c="1";b.textContent="Confirmar exclusão";return}
+        try{await db.collection("pedidos").doc(p._id).delete();toast("Pedido excluído")}catch(e){toast("Não foi possível excluir: "+(e.message||e.code))}});
+      el.appendChild(b)}
+    box.appendChild(el)});
+}
+
+/* ---------- diálogo ---------- */
+let ATUAL=null,lastFocus=null;
+function abrir(o){
+  ATUAL=o;lastFocus=document.activeElement;
+  $("#dlg-t").textContent=o.tipo==="livre"&&!o.antes?(o.alvo?"Pedir correção":"Novo pedido"):"Editar trecho";
+  $("#d-src").textContent=o.arquivo?("Fonte: "+o.arquivo):"";
+  $("#d-alvo-box").hidden=o.tipo!=="livre";$("#d-alvo").value=o.alvo||"";
+  const ta=$("#d-txt");ta.classList.toggle("big",o.tipo==="instrucoes");
+  if(o.tipo==="literal"||o.tipo==="instrucoes"){$("#d-lbl").textContent="Escreva por cima do texto atual";ta.value=o.antes||""}
+  else{$("#d-lbl").textContent="Como deve ficar";ta.value=o.texto||""}
+  $("#d-ctx").textContent=!db?"A fila não está disponível nesta visualização; o pedido não será salvo.":o.tipo==="literal"?"A troca é aplicada no arquivo pela rotina das 6h30 (ou na hora, com “aplica o painel”).":o.tipo==="instrucoes"?"Aplicada no espelho pela rotina; depois é preciso colar o texto no campo Instruções do projeto.":"Pedido livre: aplicado numa conversa, com “aplica o painel”.";
+  $("#ov").hidden=false;setTimeout(()=>ta.focus(),30);
+}
+function fechar(){$("#ov").hidden=true;ATUAL=null;if(lastFocus)lastFocus.focus()}
+const norm=t=>String(t||"").replace(/\r/g,"").replace(/[ \t]+\n/g,"\n").trim();
+$("#d-ok").addEventListener("click",async()=>{
+  if(!ATUAL)return;const o=ATUAL,txt=norm($("#d-txt").value);
+  if(!db){toast("Fila indisponível nesta visualização");return}
+  let doc;
+  if(o.tipo==="literal"||o.tipo==="instrucoes"){
+    if(txt===norm(o.antes)){toast("Nada foi alterado");return}
+    doc={tipo:o.tipo,alvo:o.alvo,arquivo:o.arquivo,antes:o.antes,depois:txt};
+    if(o.tipo==="instrucoes"){const A=new Set(norm(o.antes).split("\n")),D=new Set(txt.split("\n"));const ret=[...A].filter(l=>l.trim()&&!D.has(l)).length,acr=[...D].filter(l=>l.trim()&&!A.has(l)).length;doc.resumo=`Instruções: ${ret} linha(s) retirada(s), ${acr} acrescentada(s).`}
+  }else{
+    if(!txt){toast("Escreva o que deve mudar");return}
+    doc={tipo:"livre",alvo:norm($("#d-alvo").value)||"(geral)",arquivo:o.arquivo||"",texto:txt};
+  }
+  const b=$("#d-ok");b.disabled=true;
+  try{await db.collection("pedidos").add(Object.assign(doc,{status:"pendente",criadoEm:new Date().toISOString()}));fechar();sel.ped="pendente";renderPed();toast("Pedido registrado")}
+  catch(e){toast("Não foi possível registrar: "+(e.message||e.code))}
+  finally{b.disabled=false}
+});
+$("#d-can").addEventListener("click",fechar);
+$("#ov").addEventListener("click",e=>{if(e.target.id==="ov")fechar()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#ov").hidden)fechar()});
+document.addEventListener("click",e=>{const b=e.target.closest(".edit");if(!b)return;e.preventDefault();e.stopPropagation();const o=ALVOS[b.dataset.k];if(o)abrir(o)},true);
+$("#novo").addEventListener("click",()=>abrir({tipo:"livre",alvo:"",texto:""}));
+$("#inst-ed").addEventListener("click",()=>{const ins=(R||{}).instrucoes||{};if(!ins.texto){toast("O texto ainda não carregou");return}abrir({tipo:"instrucoes",alvo:"Instruções do projeto (texto integral)",arquivo:ins.arquivo,antes:ins.texto})});
+$("#inst-cp").addEventListener("click",async()=>{const t=((R||{}).instrucoes||{}).texto||"";if(!t){toast("O texto ainda não carregou");return}
+  try{await navigator.clipboard.writeText(t);toast("Texto copiado")}catch(err){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(x){}ta.remove();toast(ok?"Texto copiado":"Não foi possível copiar: selecione o texto na página")}});
+for(const [id,ch] of [["#f-div","div"],["#f-par","par"],["#f-arq","arq"],["#f-ped","ped"]]){
+  $(id).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;sel[ch]=b.dataset.v;ch==="ped"?renderPed():render()});
+}
+function applyWrite(){if(!canWrite){document.querySelectorAll(".edit").forEach(b=>b.hidden=true);$("#novo").hidden=true;$("#inst-ed").hidden=true}}
+
+/* nav ativa */
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id))}})},{rootMargin:"-30% 0px -65% 0px"});
+document.querySelectorAll("main section").forEach(s=>io.observe(s));
+
+renderPed();
+(async()=>{
+  try{
+    const c=window.claude;if(!c||!c.use){$("#gerado").textContent="Abra o painel logado no claude.ai para ver o retrato.";return}
+    db=await c.use("db");
+    const user=await c.use("user");
+    if(user){try{const w=await user.can("data.write");if(w===false)canWrite=false}catch(e){}}
+    if(!db){$("#gerado").textContent="O retrato fica no banco do painel, que não está disponível nesta visualização.";renderPed();return}
+    db.doc("retrato/atual").onSnapshot(s=>{if(!s.exists){$("#gerado").textContent="O retrato ainda não foi gerado. A rotina das 6h30 grava o primeiro.";return}R=s.data();render()},err=>{$("#gerado").textContent="Não foi possível ler o retrato: "+(err.message||err.code)});
+    db.collection("pedidos").orderBy("criadoEm","desc").onSnapshot(s=>{pedidos=s.docs.map(d=>Object.assign({_id:d.id},d.data()));renderPed()},err=>{$("#l-ped").innerHTML='<div class="empty"></div>';$("#l-ped .empty").textContent="Não foi possível ler a fila: "+(err.message||err.code)});
+    renderPed();
+  }catch(e){renderPed()}
+})();
+</script>

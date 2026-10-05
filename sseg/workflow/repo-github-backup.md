@@ -66,9 +66,12 @@ só recebe o que for gravado no clone e enviado por push. Em 24/09/2026 o GitHub
 no commit de 15/09/2026 enquanto o projeto tinha uma semana de trabalho a mais: 8 registros de
 processo ausentes, `sseg.py`, índices, transcrições e duas correções de tabela só no projeto.
 
-**Regra:** ao fim de sessão que alterou doc do projeto, gravar os mesmos arquivos no clone e
-dar push. **O projeto é a versão canônica** — nunca usar o arquivo do clone como base para
-editar um doc que existe no projeto.
+**Regra (revista em 05/10/2026):** o **repositório é a fonte** — é o que o `CLAUDE.md` manda desde
+que o projeto do claude.ai passou a receber o GitHub como *synced source*. No Claude Code, grava-se
+direto no clone; no Cowork, grava-se no clone (`device_commit_files`) e o push é do PC. Doc gravado
+só no projeto (`project_write`) fica fora do repositório e se perde na próxima sincronização.
+*Histórico:* de 24/09 a 02/10/2026 a regra era a inversa (o projeto era o canônico), porque o
+clone vivia atrasado; o atraso acabou quando o servidor passou a ter a cópia viva.
 
 ## ⭐ Como atualizar — PowerShell, do PC
 
@@ -173,8 +176,8 @@ repo é a **fonte** delas (ver a seção acima).
 3. Colar em "Instruções" o texto inteiro de [[instrucoes-projeto-espelho]].
 4. Instalar as skills na conta com a skill `sseg-sincronizar-skills` (cartões de revisão a
    partir de `sseg/skills/`).
-5. Para rodar os scripts: **Python 3** (não está instalado no PC do quartel — eles foram
-   feitos para rodar no ambiente do Cowork).
+5. Para rodar os scripts: **Python 3** e **Poppler** no PATH (instalados no PC do quartel em
+   03/10/2026; passo a passo no `CLAUDE.md`).
 6. As normas vêm junto agora; os prints e os registros de processo ficam de fora (os
    registros estão no Drive, pasta "SSEG - Processos (privado)").
 

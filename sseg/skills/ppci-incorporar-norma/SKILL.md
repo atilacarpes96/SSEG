@@ -9,7 +9,7 @@ Use quando o usuário pedir para "adicionar a IN/RT/IT X na base", "fazer o prax
 
 ## 0. Onde está a verdade
 
-- **O canônico são os docs do Projeto** (lidos com `project_read`). O clone do PC (`C:\Users\55519\Desktop\Carpes\SSEG`) e o GitHub costumam estar atrasados. Nunca use a cópia do clone como base para editar um doc que já existe no projeto.
+- **A fonte é o repositório** (`sseg/` no clone; regra do `CLAUDE.md`). No Claude Code, edite o arquivo do clone. No Cowork, leia e grave no clone do PC (`C:\Users\55519\Desktop\Carpes\SSEG`) e confira com `git --no-optional-locks status` que ele não está atrás do GitHub antes de editar; se estiver, peça o `git pull` primeiro.
 - Peça acesso à pasta `C:\Users\55519\Desktop\Carpes` (uma vez, a pasta-mãe) se a sessão ainda não tiver.
 
 ## 1. Obter o PDF
