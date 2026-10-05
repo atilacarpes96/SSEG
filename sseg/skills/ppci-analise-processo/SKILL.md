@@ -231,6 +231,28 @@ pela API (`resultado.justificativas[].justificativa` de cada item reprovado, ver
 `sol-cbmrs-navegador`), no formato `[{"campo": "4", "item": "<nome>", "texto": "..."}]`.
 É a entrada da revisão final.
 
+⭐ **Arquivar sem datilografar — `sseg.py arquivar` (em teste desde 04/10/2026).** Reescrever o
+`<N>.json` com os status finais e digitar o `textos.json` é documento longo saindo como
+resposta, o token mais caro. O script faz os três arquivos a partir da API, no disco:
+
+1. `device_bash` (PowerShell, no PC): subir o receptor em segundo plano —
+   `Start-Process python -ArgumentList '<clone>\sseg\scripts\sseg.py','receber','--saida',"$env:TEMP\sseg" -WindowStyle Hidden`
+2. Na aba do SOL, com `window.__d` já carregado (receita do `sol-cbmrs-navegador`), **uma**
+   chamada que devolve só o caminho do arquivo:
+   `await fetch('http://127.0.0.1:8765/', {method:'POST', headers:{'Content-Type':'application/json'}, body: window.__d}).then(r => r.text())`
+3. Levar o registro de trabalho (`<N>.json` do passo 2, com definidora, protocolo, alturas)
+   ao PC com `device_commit_files` para `%TEMP%\sseg\`, e rodar no `device_bash`:
+   `python <clone>\sseg\scripts\sseg.py arquivar --api <arquivo do passo 2> --trabalho "$env:TEMP\sseg\<N>.json" --pasta "C:\Users\55519\Desktop\Carpes\print ppci\<processo>"`
+4. Ler só o resumo que ele imprime (status, quantas caixas, divergências). Cada linha `!` é
+   item do SOL sem par no registro, ou o contrário: resolver com o analista antes de seguir.
+
+O script não decide status (copia o gravado no SOL), não descarta justificativa (o que cai
+fora dos campos 3–6 sai com `campo: "?"` e aviso) e não sobrescreve a pasta sem `--forcar`.
+**Primeiro uso real:** rodar também o caminho antigo uma vez e comparar com
+`sseg.py diff --a <N>.json antigo --b <N>.json novo`; registrar aqui o resultado. Se o `fetch`
+para `127.0.0.1` for bloqueado pela página do SOL (erro de CSP ou "Private Network Access" no
+console), voltar ao caminho antigo e anotar o erro aqui.
+
 ⭐ **Depois de arquivar, lembrar a revisão final em uma linha, sem rodá-la aqui:**
 
 > Revisão final: abra uma conversa nova em Sonnet 5.5 médio e cole "revisa a CIA do processo <código>".

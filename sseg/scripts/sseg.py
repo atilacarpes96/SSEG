@@ -32,6 +32,8 @@ USO
   python3 sseg.py pdf       --json processo.json --out 1.pdf
   python3 sseg.py diff      --a 1.json --b 2.json
   python3 sseg.py revisar-cia --cia "CIA 2.pdf" --textos "CIA 2 textos.json" --json 2.json --anterior "CIA 1.pdf"
+  python3 sseg.py receber   --saida <pasta temporaria>
+  python3 sseg.py arquivar  --api api-<ID>.json --trabalho 2.json --pasta "<print ppci>/<processo>"
 """
 
 import argparse
@@ -742,16 +744,26 @@ def _chrome():
         hits = sorted(glob.glob(pat))
         if hits:
             return hits[-1]
-    return shutil.which("chromium") or shutil.which("google-chrome") or shutil.which("chrome")
+    achado = shutil.which("chromium") or shutil.which("google-chrome") or shutil.which("chrome")
+    if achado:
+        return achado
+    # Windows (arquivar roda no PC pelo device_bash): Chrome ou Edge instalados
+    for base in (os.environ.get("PROGRAMFILES"), os.environ.get("PROGRAMFILES(X86)"),
+                 os.environ.get("LOCALAPPDATA")):
+        for rel in (r"Google\Chrome\Application\chrome.exe",
+                    r"Microsoft\Edge\Application\msedge.exe"):
+            if base and os.path.exists(os.path.join(base, rel)):
+                return os.path.join(base, rel)
+    return None
 
 
 def gerar_pdf(html_path, out_pdf):
     chrome = _chrome()
     if not chrome:
         raise SystemExit("Chromium nao encontrado neste ambiente.")
+    url = "file:///" + os.path.abspath(html_path).replace("\\", "/").lstrip("/")
     cmd = [chrome, "--headless", "--disable-gpu", "--no-sandbox",
-           "--no-pdf-header-footer", "--print-to-pdf=%s" % os.path.abspath(out_pdf),
-           "file://%s" % os.path.abspath(html_path)]
+           "--no-pdf-header-footer", "--print-to-pdf=%s" % os.path.abspath(out_pdf), url]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     if not os.path.exists(out_pdf):
         raise SystemExit("Falha ao gerar PDF.\n%s\n%s" % (r.stdout, r.stderr))
@@ -894,7 +906,19 @@ def main():
     import revisar_cia
     revisar_cia.args_parser(sub.add_parser("revisar-cia", help="conferencias da CIA antes de fechar a analise"))
 
+    import arquivar
+    arquivar.args_parser(sub.add_parser("receber", help="recebe o JSON da API do SOL direto da pagina"),
+                         sub.add_parser("arquivar", help="atualiza a pasta do processo sem datilografar"))
+
     args = ap.parse_args()
+
+    if args.cmd == "receber":
+        arquivar.receber(args.saida, args.porta)
+        return
+
+    if args.cmd == "arquivar":
+        arquivar.arquivar(args.api, args.trabalho, args.pasta, args.forcar)
+        return
 
     if args.cmd == "schema":
         print(json.dumps(SCHEMA, indent=2, ensure_ascii=False))

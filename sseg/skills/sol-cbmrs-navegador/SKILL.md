@@ -295,6 +295,11 @@ Caminho que funciona:
 4. `SendUserFile` + `device_commit_files` para a pasta do processo em
    `C:\Users\55519\Desktop\Carpes\print ppci\<processo>\`.
 
+Caminho mais barato, em teste desde 04/10/2026: `sseg.py receber` + `sseg.py arquivar` fazem
+`<N>.json`, `<N>.pdf` e `CIA <N> textos.json` no PC, com o JSON da API indo da página direto
+para o disco (`fetch` para `http://127.0.0.1:8765/`). Passo a passo em `ppci-analise-processo`,
+seção 1.1.
+
 Sem o script: montar um HTML limpo com as mesmas seções e renderizar com o Chromium do
 container (`--headless --disable-gpu --no-sandbox --no-pdf-header-footer --print-to-pdf`).
 
