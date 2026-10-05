@@ -43,7 +43,9 @@ grep -q "^github.com " "$HOME/.ssh/known_hosts" 2>/dev/null || ssh-keyscan githu
 passo "4/6 Clone do SSEG"
 if [ -d "$PASTA/.git" ]; then
   echo "já existe em $PASTA"
-elif ssh -o BatchMode=yes -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+# O GitHub sai com codigo 1 mesmo autenticando ("does not provide shell
+# access"); com pipefail o if dava falso e o clone nunca acontecia.
+elif (ssh -o BatchMode=yes -T git@github.com 2>&1 || true) | grep -q "successfully authenticated"; then
   git clone -q "$REPO_SSH" "$PASTA"
   mkdir -p "$PASTA/sseg/processos"
   echo "clonado em $PASTA"
