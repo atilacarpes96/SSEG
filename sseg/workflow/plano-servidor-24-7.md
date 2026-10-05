@@ -16,6 +16,14 @@ sources: [claude-code]
 > decisão do Átila. Teste nº 1 (navegador do SOL) ainda não feito; falta migrar
 > `print ppci` e `sseg/processos/` do PC do serviço (passo 7).
 >
+> **Decisão de 05/10/2026:** a A1 é a principal e única ativa; a Micro fica **desligada** (só
+> liga se a A1 falhar, e então `git pull` + conferir o crontab antes). Nunca apagar a A1
+> (ARM grátis pode não voltar). Automático em `~/rotinas` (fora do Git): `subir-sessao.sh`
+> (`@reboot` religa o tmux `sseg`) e `verificar.sh` (domingo 20h, e também quando uma rotina
+> falha em `rodar.sh`): confere tmux, Claude, crontab, disco, memória, repo, falhas e backup;
+> resultado em `~/rotinas/logs/verificar.log` (última linha OK ou PROBLEMAS). Backup semanal
+> de `~/rotinas` + config do Claude em `~/rotinas/backups/` (guarda 4, só local).
+>
 > Ideia vinda do vídeo "Como Eu Deixo o Claude Code
 > Programando 24/7 sem Pagar por Token" (Carol Tequita, VPS + tmux + Remote Control).
 > Versão revisada em 04/10/2026: o SOL fica no Windows do trabalho, não no servidor.
