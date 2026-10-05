@@ -6,11 +6,15 @@ sources: [claude-code]
 
 # Servidor 24/7 para o SSEG — plano de teste
 
-> **Status (05/10/2026): servidor provisório no ar.** A A1.Flex (2 OCPU/12 GB) segue sem
-> vaga em São Paulo; o `criar_vm_oracle.py` continua tentando. Enquanto isso roda a
-> **AMD Micro grátis** `carpes-24-7-micro` (1/8 OCPU, 1 GB + 2 GB de swap): clone em
-> `~/SSEG` com deploy key, Claude Code logado pela assinatura, Sonnet como padrão,
-> sessão tmux `sseg` com `/remote-control`. Teste nº 1 (navegador do SOL) ainda não feito.
+> **Status (05/10/2026): A1 em produção, Micro de reserva.** A A1.Flex `carpes-24-7`
+> (2 OCPU/12 GB, ARM, IP 163.176.190.159) saiu às 08h01 pelo `criar_vm_oracle.py` e foi
+> montada no mesmo dia: clone em `~/SSEG` com deploy key própria (`servidor-oracle-a1`),
+> Claude Code logado pela assinatura com os conectores do claude.ai (Gmail, Agenda, Drive,
+> Docs), `~/rotinas` copiado da Micro, crontab dos dois painéis, sessão tmux `sseg` com
+> `--remote-control`. A **AMD Micro** `carpes-24-7-micro` (168.75.105.200) fica ligada de
+> reserva, com o crontab apagado para os painéis não rodarem em dobro. Não apagar sem
+> decisão do Átila. Teste nº 1 (navegador do SOL) ainda não feito; falta migrar
+> `print ppci` e `sseg/processos/` do PC do serviço (passo 7).
 >
 > Ideia vinda do vídeo "Como Eu Deixo o Claude Code
 > Programando 24/7 sem Pagar por Token" (Carol Tequita, VPS + tmux + Remote Control).
