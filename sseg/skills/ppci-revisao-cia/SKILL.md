@@ -47,7 +47,9 @@ python3 sseg/sseg.py revisar-cia --cia "CIA <N>.pdf" --textos "CIA <N> textos.js
 ```
 
 Marcas: `XX` corrigir antes de fechar, salvo decisão do analista · `!!` conferir · `??` falta
-dado · `OK` de item citado só diz que **o número existe no PDF**, não que o texto diz o que a
+dado. Desde 05/10/2026 o script também aponta, na seção "Conteúdo de cada caixa", requisito de
+instalação transcrito, Decreto citado junto com RT e caixa que não abre com hífen; e dá `XX` para
+REITERO em 1ª análise · `OK` de item citado só diz que **o número existe no PDF**, não que o texto diz o que a
 CIA afirma.
 
 Sem sandbox (modo Chat): fazer as mesmas conferências à mão — até 1.950 caracteres por caixa,
@@ -61,10 +63,18 @@ pela data de protocolo, medida exigida pela tabela da divisão x campo 4, REITER
 2. **Modelo do banco:** se a redação veio de `normas/banco-notificacoes-padrao.md`, dizer por
    que **este caso é o caso daquele modelo**.
 3. **Fase e força:** análise x vistoria; obrigação x faculdade; versão da norma pela data de
-   protocolo.
-4. **REITERO, alteração ou complementação:** regra da `ppci-notificacao-cia`.
-5. **Coerência:** nenhuma exigência desfaz outra da mesma CIA.
-6. **Afirmação geral da base** ("não é pendência", "nenhuma tabela tem") que sustente
+   protocolo. **Requisito de instalação transcrito é erro de fase**, mesmo com o item certo: altura
+   de montagem, distância do piso ou do acesso, fixação (ex.: "a 1,80 m do piso e a no máximo
+   0,20 m do acesso" da sinalização de lotação, item 5.4.2.3.1.1 da RT 12; altura do acionador,
+   item 8.7 da RT 18) → cortar o trecho e manter só a citação do item. No teste de 05/10/2026 todos
+   os modelos deram esse texto como correto.
+4. **Fundamento duplicado:** artigo do Decreto citado junto com item de RT que diz o mesmo → citar
+   só o item da RT (ex.: art. 28 do Decreto × itens 5.4.2.3.1 e 5.4.2.3.1.1 da RT 12).
+5. **REITERO, alteração ou complementação:** regra da `ppci-notificacao-cia`. REITERO numa 1ª
+   análise é sempre erro.
+6. **Forma:** cada caixa abre com quebra de linha e "- "; parágrafo numa linha só.
+7. **Coerência:** nenhuma exigência desfaz outra da mesma CIA.
+8. **Afirmação geral da base** ("não é pendência", "nenhuma tabela tem") que sustente
    exigência ou dispensa: conferir no PDF ou no `tab-*.json`, buscando sem acento, antes de
    aceitar.
 

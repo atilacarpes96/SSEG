@@ -140,6 +140,35 @@ def confere_forma(caixas, s, com_limite=True):
             s.atencao("%s — '%s': secao do SOL e 'campo', 'item' so para norma." % (rot, m.group(0)))
 
 
+INSTALACAO = re.compile(
+    r"(altura\s+(?:de|entre|m[ií]nima|m[aá]xima)[^.;\n]{0,30}?\d+(?:[,.]\d+)?\s*m\b)"
+    r"|(\d+(?:[,.]\d+)?\s*m\b[^.;\n]{0,40}?(?:do piso|piso acabado|acima do piso))", re.I)
+DECRETO_ART = re.compile(r"\bart(?:igo)?s?\.?\s*\d+[ºo°-]*[A-Z]?\b[^.;\n]{0,60}?Decreto", re.I)
+RT_CITADA = re.compile(r"\b(?:RT|RTCBMRS|Resolu[cç][aã]o T[eé]cnica)\b", re.I)
+
+
+def confere_conteudo(caixas, s):
+    """Erros que a revisão por modelo deixou passar no teste de 05/10/2026 (todos os modelos)."""
+    s.titulo("Conteúdo de cada caixa")
+    achou = False
+    for rot, txt in caixas:
+        t = txt.strip()
+        if t and not t.startswith("-"):
+            s.atencao("%s — não começa com hífen: o texto da caixa abre com quebra de linha e '- '." % rot)
+            achou = True
+        m = INSTALACAO.search(t)
+        if m:
+            s.atencao("%s — '%s': requisito de instalação (altura, distância do piso) é de VISTORIA; "
+                      "na CIA de análise cita-se o item e para." % (rot, m.group(0).strip()))
+            achou = True
+        if DECRETO_ART.search(t) and RT_CITADA.search(t):
+            s.atencao("%s — cita artigo do Decreto junto com item de RT: se dizem o mesmo, citar só o item "
+                      "da RT (ppci-notificacao-cia)." % rot)
+            achou = True
+    if not achou:
+        s.ok("Abertura com hífen, sem requisito de instalação e sem Decreto redundante com RT.")
+
+
 def confere_citacoes(texto, protocolo, s):
     s.titulo("Itens de norma citados")
     idx = sseg._dados("indice_normas.json")["normas"]
@@ -312,6 +341,8 @@ def revisar(a):
         caixas = [("CIA inteira", texto_cia)]
         s.pergunta("Sem --textos: limite de caracteres por caixa NAO conferido.")
     confere_forma(caixas, s, com_limite=bool(a.textos))
+    if a.textos:
+        confere_conteudo(caixas, s)
 
     p = sseg._load(a.json) if a.json else {}
     protocolo = sseg._data(p.get("data_protocolo"))
@@ -324,6 +355,8 @@ def revisar(a):
     else:
         s.pergunta("Sem --json: medidas exigidas x campo 4 NAO conferidas.")
 
+    if str(p.get("analise", "")) == "1" and (re.search(r"\bREITER", texto_cia) or any(re.search(r"\bREITER", t) for _, t in caixas)):
+        s.erro("REITERO numa 1ª análise: não há notificação anterior para reiterar.")
     confere_reitero(caixas if a.textos else [("CIA", x) for x in re.split(r"\n\s*\n", texto_cia)],
                     texto_de(a.anterior) if a.anterior else None, s)
     return s
