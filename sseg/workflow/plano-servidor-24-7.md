@@ -83,8 +83,27 @@ Cuidados:
    servidor (chave SSH do trabalho autorizada no servidor). Fazer o teste nº 1.
 7. Migrar `print ppci` e `sseg/processos/` do PC do serviço para o servidor (cópia por SSH;
    o original só sai depois de conferido).
-8. Rotinas: `cron` chamando `claude -p "<tarefa>"` (modo sem interface) no clone, com
-   permissões restritas por rotina.
+8. Rotinas: `cron` chamando `claude --bg` (sessão em segundo plano) no clone. Feito em
+   05/10/2026 para os dois painéis (ver "Rotinas em funcionamento").
+
+## Rotinas em funcionamento (05/10/2026)
+
+| rotina | quando | o que faz |
+|---|---|---|
+| Painel SSEG | todo dia, 6h30 | `git pull`; se mudou algo em `sseg/skills`, `sseg/workflow`, índice normativo, banco, `sseg/scripts`, `CLAUDE.md` ou `.claude/agents`, atualiza só as constantes de conteúdo e o texto das Instruções do painel e republica no mesmo link. Não aplica pedidos da fila: isso continua sendo o `aplica o painel` |
+| Painel do Dia | dias úteis, 7h47 | agenda, Gmail e Drive pelos conectores, mais os processos em andamento em `sseg/processos/`; grava só no banco do painel. Substitui a rotina da nuvem de mesmo nome, desligada em 05/10/2026 |
+
+- Por que `--bg` e não `claude -p`: testado em 05/10/2026, o modo `-p` tem os conectores
+  (Gmail, Agenda, Drive), mas **não** as ferramentas dos artifacts (`Artifact`, `ArtifactData`).
+  A sessão em segundo plano tem as duas.
+- Os prompts, o `rodar.sh` e os logs ficam em `~/rotinas/` no servidor, **fora do repositório**:
+  levam endereço dos painéis e dados pessoais da agenda, e o repo é público. Cada execução
+  grava uma linha de fim em `~/rotinas/logs/<rotina>.log`; sem essa linha em 30 min, o script
+  encerra a sessão e registra as últimas linhas do log.
+- O Painel SSEG é compartilhado por link: a rotina dele nunca põe código de processo, nome de
+  proprietário ou RT na página. Dado de processo só vai para o Painel do Dia, que é privado.
+- Continuam na nuvem, sem pasta: "Escala na agenda" (domingo, 18h) e "Resumo semanal"
+  (sexta, 16h).
 
 ## Rotinas propostas
 
