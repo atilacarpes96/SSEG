@@ -8,3 +8,8 @@ sseg/processos/
 # cache do Python
 __pycache__/
 *.pyc
+
+# Obsidian: zoom/posição do grafo e arquivos vazios de 'novo canvas/base' (05/10/2026)
+**/.obsidian/graph.json
+**/Sem título*.canvas
+**/Sem título*.base
