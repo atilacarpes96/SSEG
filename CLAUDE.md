@@ -46,6 +46,7 @@ As skills PPCI estão em `sseg/skills/<nome>/SKILL.md`. Quando o pedido casar co
 | "vou começar a analisar um PPCI", "o próximo da lista" | `ppci-abertura-sessao` |
 | código de processo A000... ou print de processo | `ppci-analise-processo` |
 | redigir ou revisar uma notificação | `ppci-notificacao-cia` |
+| minuta ou ata de consulta técnica (FACT), despacho de recurso | `ppci-minuta-despacho` |
 | ler o processo pela API, lançar no campo "Outros", PDF da página | `sol-cbmrs-navegador` |
 | "revisa a CIA", "revisão final" | `ppci-revisao-cia` (pelo subagente `revisor-cia`) |
 | norma nova para a base | `ppci-incorporar-norma` |

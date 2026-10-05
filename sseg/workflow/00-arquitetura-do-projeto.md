@@ -31,7 +31,7 @@ quatro travas de erro (altura, contagem de medidas, sugestões do SOL, definiç�
 geometria) · escopo de processo · onde procurar primeiro. Texto exato em
 `workflow/instrucoes-projeto-espelho.md`.
 
-## As skills (8, em 05/10/2026)
+## As skills (9, em 05/10/2026)
 
 A fonte é `sseg/skills/` do repositório (decisão de 02/10/2026); a conta de cada analista
 recebe cópia pela skill `sseg-sincronizar-skills`.
@@ -42,6 +42,9 @@ recebe cópia pela skill `sseg-sincronizar-skills`.
 - **`ppci-analise-processo`** — pipeline do print à CIA: data de protocolo, registro pela API,
   `sseg.py check`, definidora, tabela de exigências, planta × memorial, normas do campo 4,
   população e laudo, comparação com a análise anterior; "atualizar a pasta" no fim.
+- **`ppci-minuta-despacho`** — minuta de despacho de CT (FACT) e de recurso, e ata da reunião
+  de CT: até 2.000 caracteres, só o que foi tratado ou alegado, conclusão prática em cada ponto
+  (orientação do Chefe da SSeg, 05/10/2026).
 - **`ppci-notificacao-cia`** — redigir e revisar inconformidades: banco primeiro, estrutura
   padrão, REITERO, cláusula de salvaguarda, corte do que é de vistoria, checklist de revisão.
 - **`sol-cbmrs-navegador`** — operar o SOL: ler o processo pela API, lançar no campo "Outros"
