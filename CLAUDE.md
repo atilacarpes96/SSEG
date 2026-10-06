@@ -108,8 +108,11 @@ No Windows (instalado no PC do quartel em 03/10/2026):
 ## Dados de processo nunca vão para o GitHub
 
 - Registros de processo e dados de cliente — `sseg/processos/`, CIA, JSON do SOL, plantas,
-  prints, qualquer arquivo com código de processo (A000...) ou dado de proprietário/RT —
+  prints, qualquer arquivo com código de processo (A000...) no nome ou dado de proprietário/RT —
   **não entram em commit**.
+- Citar só o código num doc versionado (lição de `casos-referencia.md`, exemplo de skill) pode:
+  sem acesso ao SOL ele não identifica ninguém (decisão do Átila, 06/10/2026). Nome, CPF/CNPJ,
+  endereço e texto de CIA, não.
 - `sseg/processos/` está no `.gitignore`. Pode gravar ali localmente; nunca usar `git add -f`,
   nunca remover a linha do `.gitignore`, nunca mover esses dados para outra pasta versionada.
 - Antes de todo `git commit`, rodar `git status` e conferir que nenhum desses arquivos aparece.

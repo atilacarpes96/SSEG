@@ -118,7 +118,7 @@ requeridas, conforme coluna "B" da Tabela L-1.
 
 ⭐ **Uso:** é o fundamento para exigir que o risco específico declarado no campo 5 seja
 **identificado e localizado em planta baixa**, com as medidas que o protegem representadas.
-Resolve a pendência aberta no [[A00046618AA001]] ("fundamento da declaração de risco
+Resolve a pendência aberta no processo A00046618AA001 ("fundamento da declaração de risco
 específico") **para a parte da planta**. A obrigação de **declarar** o risco no campo 5 continua
 sem dispositivo específico localizado — a L.3 manda analisar o memorial, mas não diz, por si,
 que o risco não declarado é pendência.

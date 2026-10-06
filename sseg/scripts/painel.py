@@ -454,23 +454,9 @@ def divergencias(sk, ag):
                 if re.search(rx, ln):
                     add("desatualizado", "média", "Texto que deixou de valer", ln.strip()[:300], [f"{f}:{i}"], motivo)
 
-    # 8. códigos de processo em arquivos versionados (repositório público)
-    por_arq = {}
-    for f in git("ls-files").splitlines():
-        if f.startswith(("sseg/normas/md/", "sseg/normas/base/")) or not f.endswith((".md", ".json", ".py")):
-            continue
-        try:
-            cods = set(CODIGO.findall(ler(os.path.join(RAIZ, f))))
-        except Exception:
-            continue
-        if cods:
-            por_arq[f] = len(cods)
-    if por_arq:
-        total = len({c for f in por_arq for c in CODIGO.findall(ler(os.path.join(RAIZ, f)))})
-        add("privacidade", "alta", f"{total} códigos de processo reais em {len(por_arq)} arquivos do repositório público",
-            "O CLAUDE.md proíbe dado de processo no GitHub. Código de licenciamento identifica o processo no SOL.",
-            [f"{f} ({n})" for f, n in sorted(por_arq.items(), key=lambda x: -x[1])],
-            "Decisão do Átila: trocar por exemplo genérico (ex.: A000XXXXXAA001) ou manter só nos registros locais.")
+    # 8. Código de processo citado em doc versionado não é divergência: sem acesso ao SOL o código
+    # sozinho não identifica ninguém (decisão do Átila, 06/10/2026). O que não vai para o GitHub é
+    # o registro do processo, e isso o hook de commit barra.
 
     # 9. espelho das Instruções sem marcadores
     ins = textos.get("sseg/workflow/instrucoes-projeto-espelho.md", "")

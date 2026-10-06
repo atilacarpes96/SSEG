@@ -128,6 +128,15 @@ Cuidados:
 A **triagem da caixa do SOL** não roda sozinha nesta versão, porque o navegador logado fica
 no trabalho: vira o primeiro passo da primeira conversa do dia (`ppci-abertura-sessao`).
 Regras que valem para as rotinas: nada é lançado no SOL; nenhuma rotina faz login em nada.
+
+**Consulta ao SOL sem o navegador do analista: para o futuro (decisão de 06/10/2026).** Por ora
+vale o caminho do navegador logado (`sol-cbmrs-navegador`, subagente `sol-leitor`), que já tem
+o fluxo pronto. Mais adiante, a ideia é um acesso só de consulta (licenciamentos, marcos,
+recursos, FACT) para o Claude buscar contexto sem o Átila estar com o SOL aberto; lançamento de
+análise fica de fora. Antes de implementar: autorização expressa do Átila, conferência com a
+chefia ou a PROCERGS de que o acesso automatizado é permitido, senha sempre digitada pelo
+Átila e nunca gravada, e revisão da regra acima. Em 06/10/2026 o modo automático do Claude Code
+barrou as primeiras tentativas, por isso o tema só volta com essa autorização.
 Onde chega o aviso de rotina concluída (arquivo no servidor, e-mail ou mensagem) se decide
 no teste.
 
