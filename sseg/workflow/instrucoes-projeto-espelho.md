@@ -30,6 +30,7 @@ divergência, e divergência já aconteceu.
 | 02/10/2026 | ⚠️ Espelho de novo atrás do campo: a contagem de PDFs em "Onde procurar primeiro" já estava no campo como "18 em 30/09/2026". Alinhado a partir do texto do campo colado pelo usuário no Painel SSEG. A cópia do clone também não tinha o parágrafo dos "3 a 7 palavras" (alinhamento de 28/09 não tinha chegado ao repositório) |
 | 02/10/2026 | Nova seção "Proporção do esforço" depois de "Papel" (modo leve para pergunta conceitual e notificação avulsa: buscar o trecho em vez de ler o doc inteiro). "Onde procurar primeiro", item 6: o site do CBMRS localiza o item mas não fundamenta, e norma que falta em `normas/pdf/` é pedida ao usuário. Contagem de PDFs: 19 em 02/10/2026 (pasta contada). Texto entregue ao usuário para colar no campo |
 | 05/10/2026 | "Raciocínio técnico": novo parágrafo da ocupação definidora, com a parada obrigatória no critério (b) do 5.1.2. Motivo: no teste de modelos de 05/10/2026 todos os arranjos (Sonnet e Opus, qualquer esforço) fecharam a definidora sozinhos quando a regra só estava na skill. Texto entregue ao usuário para colar no campo |
+| 06/10/2026 | "Ordem de entrega", item 1: o texto de notificação já sai no formato da caixa do SOL (abre com quebra de linha e "- ", parágrafo numa linha só). Motivo: na repetição do teste, com o parágrafo da definidora já no campo, a parada passou a acontecer em quase todas as execuções, mas 19 de 24 textos de notificação saíram sem o hífen, regra que só estava na skill. Texto entregue ao usuário para colar no campo |
 
 <!-- ===== INÍCIO DO TEXTO DO CAMPO "INSTRUÇÕES" ===== -->
 
@@ -47,7 +48,7 @@ Pergunta conceitual ou sobre uma norma: responder direto, sem rodar a rotina de 
 
 Ordem de raciocínio e ordem de apresentação são coisas diferentes. O raciocínio segue a ordem obrigatória acima. A apresentação inverte:
 
-1. **O que foi pedido vem primeiro** — texto de notificação em bloco citável, resposta direta se foi pergunta, tabela se foi tabela. Lacuna que falta vai marcada dentro do próprio entregável.
+1. **O que foi pedido vem primeiro** — texto de notificação em bloco citável, já no formato da caixa "Especificar" do SOL (abre com quebra de linha e "- ", cada parágrafo numa linha só, linha em branco só entre parágrafos), resposta direta se foi pergunta, tabela se foi tabela. Lacuna que falta vai marcada dentro do próprio entregável.
 2. **O que falta** para fechar, se faltar.
 3. **Como cheguei ali:** fonte · item · trecho literal que decide (até 3 linhas) · aplicação ao caso em uma frase. Não se omite — é o que permite conferir antes de lançar. Texto integral do item só quando pedido.
 4. **Observações laterais**, rotuladas, no fim.

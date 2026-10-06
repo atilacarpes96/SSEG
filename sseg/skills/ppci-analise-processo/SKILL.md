@@ -255,7 +255,7 @@ console), voltar ao caminho antigo e anotar o erro aqui.
 
 ⭐ **Depois de arquivar, lembrar a revisão final em uma linha, sem rodá-la aqui:**
 
-> Revisão final: abra uma conversa nova em Sonnet 5.5 médio e cole "revisa a CIA do processo <código>".
+> Revisão final: abra uma conversa nova em Sonnet 5.5 alto e cole "revisa a CIA do processo <código>".
 
 Trocar por Opus 5.5 no lembrete só nos casos que a `ppci-revisao-cia` lista (tese nova sem
 modelo no banco não conferida pelo analista, fundamento só de `normas/md/`, divergência entre o

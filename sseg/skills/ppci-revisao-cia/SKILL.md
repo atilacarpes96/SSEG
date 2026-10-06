@@ -7,8 +7,9 @@ description: "Revisão final da CIA em conversa nova, antes de fechar a análise
 
 Roda numa **conversa nova**, depois de "atualizar a pasta" no `ppci-analise-processo`. O motivo
 de existir é ler a CIA de fora, sem o raciocínio que a produziu: na mesma conversa o modelo
-tende a concordar com o que ele mesmo decidiu. Modelo: **Sonnet 5.5 médio**, escolhido pelo
-usuário ao abrir a conversa (decisão de 30/09/2026, validada em teste controlado — ver
+tende a concordar com o que ele mesmo decidiu. Modelo: **Sonnet 5.5 alto**, escolhido pelo
+usuário ao abrir a conversa (desde 06/10/2026: no teste de modelos, o alto pegou todos os erros
+plantados nas duas rodadas, e o baixo e o médio reescreveram um texto que estava certo — ver
 `workflow/politica-modelo-e-custo.md`). Durante a análise o próprio analista já confere cada
 notificação, então a revisão final é uma segunda leitura, não a primeira defesa. **Opus 5.5 só
 em caso realmente necessário:** tese nova sem modelo no banco que o analista não tenha
@@ -95,6 +96,7 @@ Sem reescrever exigência que está certa. Sem narrar progresso.
 | Desculpa | Por que não vale |
 |---|---|
 | "O script deu OK." | O OK só diz que o número existe no PDF, não que o texto diz o que a CIA afirma. |
+| "Está certo, mas dá para melhorar a redação." | A revisão aponta erro de fundamento, de fase ou de forma. Texto certo se declara certo e fica como está. No teste de 06/10/2026, reescrever um texto correto mexeu no fundamento já conferido. |
 | "O item citado está certo, então a exigência está certa." | Fase (instalação é vistoria), fundamento duplicado (Decreto + RT) e força (obrigação x faculdade) também são erro. No teste de 05/10/2026 todos os modelos deram como correto um texto com o item certo e o requisito de instalação transcrito. |
 | "É só ajuste de redação, não precisa corrigir." | Requisito de vistoria na CIA de análise é erro de fase, não estilo. |
 | "Concordo com o analista, ele já conferiu." | A revisão existe para ler de fora. Conferir no PDF do mesmo jeito. |

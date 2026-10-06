@@ -1,6 +1,6 @@
 ---
 name: politica-modelo-e-custo
-description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram (revisada em 04/10/2026: padrão Sonnet 5.5 médio desde 30/09)
+description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram (revisada em 06/10/2026 com o teste de 196 execuções: análise em Sonnet 5.5 médio, revisão final em Sonnet 5.5 alto)
 sources: [cowork]
 ---
 
@@ -60,8 +60,11 @@ médio, como as demais; Haiku só como subagente mecânico.
    buscando em conversa antiga (medição de 25/09/2026, abaixo).
 2. **Esforço, não modelo.** Baixar o esforço num modelo forte é mais seguro que trocar por um
    modelo fraco: mantém-se a calibragem e o conhecimento, gasta-se menos deliberação. Desde
-   30/09/2026, **toda conversa abre em Sonnet 5.5 médio**: análise, notificação avulsa,
-   sincronização e **revisão final da CIA**. O esforço fica o mesmo até o fim da conversa,
+   30/09/2026, **toda conversa abre em Sonnet 5.5 médio**: análise, notificação avulsa e
+   sincronização. **A revisão final da CIA abre em Sonnet 5.5 alto** desde 06/10/2026 (teste
+   no fim deste doc: o alto acertou tudo nas duas rodadas; o médio reescreveu texto que estava
+   certo). Esforço máximo não se justifica: no Opus, o alto empatou com o médio (99 × 98)
+   custando 34% a mais, e o máximo nem foi medido. O esforço fica o mesmo até o fim da conversa,
    porque trocar no meio pode reiniciar o cache. **Opus 5.5 só em caso realmente necessário**,
    os listados em `ppci-revisao-cia`: tese nova sem modelo no banco que o analista não tenha
    conferido na fonte, fundamento lido apenas em `normas/md/`, ou divergência entre o Sonnet e
@@ -121,3 +124,57 @@ em conversa antiga só para achar a planilha de distribuição; 3 `tabs_context`
 Chrome fora; `device_commit_files` um arquivo por chamada; revisão final sempre em Opus alto;
 sincronização clone → projeto repetida. Correções aplicadas nas skills `ppci-abertura-sessao`,
 `sol-cbmrs-navegador`, `ppci-analise-processo` e `ppci-revisao-cia`.
+
+**Registro — teste de modelos de 05–06/10/2026** (196 execuções no servidor). Onze tarefas do
+dia a dia com gabarito conferido no PDF, cada uma em sete arranjos (Haiku; Sonnet 5.5 e Opus 5.5
+em esforço baixo, médio e alto), `claude -p` só leitura sobre o mesmo retrato do repositório, e
+nota dada às cegas por um juiz (Opus). Custo em US$ é preço de API, usado como medida relativa
+de cota.
+
+Todas as tarefas, rodadas 1 e 2 (22 execuções por arranjo):
+
+| Arranjo | Nota | Erros fatais | US$ por execução |
+|---|---|---|---|
+| Haiku | 67 | 3 | 0,09 |
+| Sonnet baixo | 93 | 0 | 0,13 |
+| Sonnet médio | 91 | 0 | 0,16 |
+| Sonnet alto | 94 | 0 | 0,19 |
+| Opus baixo | 94 | 0 | 0,23 |
+| Opus médio | 94 | 0 | 0,32 |
+| Opus alto | 96 | 0 | 0,41 |
+
+As três difíceis — ocupação definidora com subsidiária J (T01), vigência da câmara frigorífica
+(T05) e revisão de CIA com erros plantados (T06) —, antes e depois das correções do commit
+`f311f9c` (parada no critério (b) do 5.1.2 nas Instruções, travas novas no `revisar-cia`):
+
+| Arranjo | Antes | Depois: T01 · T05 · T06 | US$ depois |
+|---|---|---|---|
+| Sonnet baixo | 75 | 86 · 93 · 80 | 0,15 |
+| Sonnet médio | 66 | 95 · 93 · 83 | 0,21 |
+| Sonnet alto | 79 | 95 · 93 · 100 | 0,32 |
+| Opus baixo | 80 | 90 · 93 · 98 | 0,27 |
+| Opus médio | 76 | 98 · 96 · 100 | 0,44 |
+| Opus alto | 84 | 98 · 100 · 100 | 0,59 |
+
+O que o teste decidiu:
+
+1. **Regra no lugar certo vale mais que modelo maior.** A correção subiu todos os arranjos de
+   11 a 24 pontos; trocar de Sonnet para Opus no mesmo esforço, de 3 a 10. Fechar a definidora sozinho caiu de
+   9 em 12 execuções para nenhuma; os dois erros plantados que passavam em 9 de 12 revisões
+   (requisito de instalação transcrito, Decreto junto com RT) passaram a ser pegos em todas.
+2. **Skill não carrega sozinha.** Com a ferramenta de skills disponível, 1 de 77 execuções a
+   usou e 10 leram o `SKILL.md`. Regra que tem de valer sempre vai para as Instruções; a skill
+   guarda o passo a passo. Foi o que levou o formato da caixa do SOL (quebra de linha e "- ")
+   para a "Ordem de entrega": depois da correção, 19 de 24 textos ainda saíam sem o hífen.
+3. **Revisão final em Sonnet alto.** Pegou tudo nas duas rodadas; o baixo e o médio declararam
+   errado ou reescreveram um texto correto (falso positivo que mexe em fundamento conferido).
+4. **Análise e notificação seguem em Sonnet médio.** Na definidora, empatou com o alto (95)
+   depois da correção, e a falta que sobrou era o hífen.
+5. **Tarefa mecânica, qualquer modelo.** Altura, JSON do SOL, planilha de CT, localizar trecho
+   e norma sem PDF: todos os arranjos tiraram 100, inclusive o Haiku. Haiku segue só em
+   subagente mecânico: 3 erros fatais nas tarefas normativas e, em sessão de segundo plano,
+   sem modo automático (a rotina trava pedindo permissão), por isso as rotinas rodam em Sonnet.
+
+Duas execuções por célula: diferença de 2 a 3 pontos entre arranjos é ruído. O roteiro, as
+tarefas e as notas ficaram no servidor, em `~/rotinas/avaliacao-modelos-2026-10/`, para repetir
+quando mudar modelo ou regra.
