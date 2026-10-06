@@ -505,6 +505,17 @@ def gerar(crontab_txt):
             div.append({"tipo": "atualizações", "gravidade": "baixa", "titulo": f"Atualização de {u['data']} sem prompt",
                         "detalhe": "A aba Atualizações mostra o prompt que cada analista cola no próprio Claude.",
                         "onde": [atu["arquivo"]], "sugestao": "Acrescentar “### Prompt para atualizar” com um bloco de código."})
+    # skill ou Instruções que mudaram depois da última entrada: o outro analista não fica sabendo
+    datas = ["-".join(reversed(u["data"].split("/"))) for u in atu["lista"]]
+    ultima = max(datas) if datas else ""
+    for caminho, nome in (("sseg/skills", "Skills"), ("sseg/workflow/instrucoes-projeto-espelho.md", "Instruções")):
+        quando = git("log", "-1", "--format=%cs", "--", caminho)
+        if quando and quando > ultima:
+            div.append({"tipo": "atualizações", "gravidade": "média",
+                        "titulo": f"{nome} mudaram em {'/'.join(reversed(quando.split('-')))}, depois da última entrada de Atualizações",
+                        "detalhe": "Sem entrada nova, o outro analista não sabe que precisa atualizar o lado dele.",
+                        "onde": [atu["arquivo"], caminho],
+                        "sugestao": "Acrescentar a entrada da data, com o que mudou e o prompt para atualizar."})
     dc = docs()
     rot = rotinas(crontab_txt)
     commit = git("log", "-1", "--format=%h|%cs|%an|%s")

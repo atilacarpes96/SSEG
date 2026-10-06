@@ -129,6 +129,10 @@ No Windows (instalado no PC do quartel em 03/10/2026):
   sessão não consegue apagar, e o próximo commit no PC trava.
 - **Nunca `git push --force`** — apagaria o trabalho enviado pelo outro analista.
 - Conflito no `pull`: mostrar ao usuário as duas versões e deixar ele escolher.
+- Mudou skill, Instruções ou o modelo de alguma conversa: acrescentar no mesmo commit uma
+  entrada em `sseg/workflow/atualizacoes.md` (o que mudou e o prompt para o outro analista
+  atualizar o lado dele). Ela vira a aba Atualizações do Painel SSEG, e o painel acusa skill ou
+  Instruções que mudaram depois da última entrada.
 
 ## Skills: o GitHub é a fonte única
 
