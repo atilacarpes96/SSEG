@@ -98,12 +98,13 @@ Cuidados:
 8. Rotinas: `cron` chamando `claude --bg` (sessão em segundo plano) no clone. Feito em
    05/10/2026 para os dois painéis (ver "Rotinas em funcionamento").
 
-## Rotinas em funcionamento (05/10/2026)
+## Rotinas em funcionamento (06/10/2026)
 
 | rotina | quando | o que faz |
 |---|---|---|
-| Painel SSEG | todo dia, 6h30 | `git pull`; se mudou algo em `sseg/skills`, `sseg/workflow`, índice normativo, banco, `sseg/scripts`, `CLAUDE.md` ou `.claude/agents`, atualiza só as constantes de conteúdo e o texto das Instruções do painel e republica no mesmo link. Não aplica pedidos da fila: isso continua sendo o `aplica o painel` |
-| Painel do Dia | dias úteis, 7h47 | agenda, Gmail e Drive pelos conectores, mais os processos em andamento em `sseg/processos/`; grava só no banco do painel. Substitui a rotina da nuvem de mesmo nome, desligada em 05/10/2026 |
+| Painel SSEG | todo dia, 6h30 | o script `preparar.sh` faz o trabalho pesado: `git pull`, aplica os pedidos da fila do painel (`sseg/scripts/painel_pedidos.py`, com commit e push) e gera o retrato do repositório (`sseg/scripts/painel.py`). O modelo (Sonnet, ~30 s) só lê a fila e grava o retrato no banco do painel quando ele mudou. Pedido "livre" fica para uma conversa |
+| Painel do Dia | dias úteis, 7h47 | agenda, Gmail e Drive pelos conectores, as planilhas da SSEG (`planilhas.py`), os processos em andamento em `sseg/processos/` e o resumo da última verificação do servidor; grava só no banco do painel. Substitui a rotina da nuvem de mesmo nome, desligada em 05/10/2026 |
+| Verificação | domingo, 20h, e quando uma rotina falha | `verificar.sh`, sem modelo: sessão tmux, crontab, disco, memória, repo em dia, falhas das rotinas (falha já explicada vai para `logs/reconhecidas.txt` e sai do alarme), skills da conta iguais às do repositório e backup. O resumo vai para o Painel do Dia, que só mostra algo quando há problema |
 
 - Por que `--bg` e não `claude -p`: testado em 05/10/2026, o modo `-p` tem os conectores
   (Gmail, Agenda, Drive), mas **não** as ferramentas dos artifacts (`Artifact`, `ArtifactData`).
@@ -123,7 +124,7 @@ Cuidados:
 |---|---|---|
 | Preparar a fila | dias úteis, 6h30 | lê a planilha de distribuição, cria `<N>.json` dos processos novos |
 | Ler os PDFs | logo depois | texto extraído de cada PDF já no servidor, pronto para a análise |
-| Manutenção | domingo | skills da conta x repositório, norma nova a incorporar |
+| Manutenção | domingo | norma nova a incorporar (skills da conta x repositório já entrou na Verificação) |
 
 A **triagem da caixa do SOL** não roda sozinha nesta versão, porque o navegador logado fica
 no trabalho: vira o primeiro passo da primeira conversa do dia (`ppci-abertura-sessao`).
