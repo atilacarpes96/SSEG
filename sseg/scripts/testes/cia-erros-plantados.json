@@ -1,0 +1,27 @@
+[
+ {
+  "campo": "4",
+  "item": "Sinalização de Emergência",
+  "texto": "\n- Deverá prever a sinalização de lotação máxima de pessoas para a área de risco de incêndio da divisão F-8 declarada no campo 3, a qual deverá ser instalada a uma altura de 1,80 m do piso acabado à base da sinalização e a no máximo 0,20 m do acesso principal, tendo em vista que não foi representada nos elementos gráficos apresentados. Observar art. 28 do Decreto Estadual nº 51.803/2014 e itens 5.4.2.3.1 e 5.4.2.3.1.1 da RTCBMRS nº 12 de 2021."
+ },
+ {
+  "campo": "4",
+  "item": "Alarme de Incêndio",
+  "texto": "\n- Deverá prever pelo menos um acionador manual em cada pavimento, tendo em vista que o segundo pavimento não possui acionador. Observar alínea \"a\" do item 8.1 da RTCBMRS nº 18 de 2025."
+ },
+ {
+  "campo": "4",
+  "item": "Saídas de Emergência",
+  "texto": "\n- A largura mínima das saídas de emergência, em casos gerais, deverá ser de 1,10 m, exceto para portas, tendo em vista que o corredor de acesso à escada do pavimento superior foi cotado com 1,00 m. Observar item 5.4.2.1 da RTCBMRS nº 11, parte 1 de 2016."
+ },
+ {
+  "campo": "6",
+  "item": "PLANTA BAIXA PAVIMENTO SUPERIOR",
+  "texto": "\n- REITERO: As medidas de segurança contra incêndio e suas respectivas distâncias máximas a percorrer deverão ser representadas em camadas diferentes, de modo a poderem ser habilitadas ou desabilitadas para visualização. Observar item 6.3.6.1.2.4 da RT de Implantação do SOL-CBMRS."
+ },
+ {
+  "campo": "4",
+  "item": "Extintores",
+  "texto": "\n- De acordo com o item 5.4.1.2 da RTCBMRS nº 14 de 2016 cada pavimento deve possuir, no mínimo, duas unidades\nextintoras, sendo uma para incêndio classe A e outra para incêndio classe B e C, tendo em vista que o segundo pavimento possui apenas uma unidade extintora."
+ }
+]

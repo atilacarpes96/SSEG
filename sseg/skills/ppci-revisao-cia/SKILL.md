@@ -90,6 +90,15 @@ analista. Mostrar o texto da nota e perguntar, como no critério (b).
 
 Sem reescrever exigência que está certa. Sem narrar progresso.
 
+## Desculpas que não valem
+
+| Desculpa | Por que não vale |
+|---|---|
+| "O script deu OK." | O OK só diz que o número existe no PDF, não que o texto diz o que a CIA afirma. |
+| "O item citado está certo, então a exigência está certa." | Fase (instalação é vistoria), fundamento duplicado (Decreto + RT) e força (obrigação x faculdade) também são erro. No teste de 05/10/2026 todos os modelos deram como correto um texto com o item certo e o requisito de instalação transcrito. |
+| "É só ajuste de redação, não precisa corrigir." | Requisito de vistoria na CIA de análise é erro de fase, não estilo. |
+| "Concordo com o analista, ele já conferiu." | A revisão existe para ler de fora. Conferir no PDF do mesmo jeito. |
+
 ## Nunca
 
 - Lançar ou alterar texto no SOL nesta conversa sem o usuário pedir.

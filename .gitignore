@@ -13,3 +13,6 @@ __pycache__/
 **/.obsidian/graph.json
 **/Sem título*.canvas
 **/Sem título*.base
+
+# .zip das skills gerado pelo hook (05/10/2026)
+.skills-zip/

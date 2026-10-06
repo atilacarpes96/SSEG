@@ -76,6 +76,20 @@ exigência procede — isso fica no agente principal, nunca no subagente leve.
 - `revisor-cia` (Sonnet) — revisão final da CIA de fora do raciocínio que a produziu, conforme
   `ppci-revisao-cia`. Opus só nos casos que a skill lista.
 
+## Hooks (`.claude/settings.json`, desde 05/10/2026)
+
+Regras deste arquivo que acontecem sozinhas no Claude Code (`.claude/hooks/sseg_hooks.py`):
+
+- **Ao abrir a sessão:** `git pull`; avisa se vieram skills ou Instruções novas e se há mudança sem commit.
+- **Antes de `git commit`:** barra o add forçado e arquivo de processo (`sseg/processos/`, CIA, `textos.json`,
+  código A000... no nome) e roda `python3 sseg/scripts/testar.py`; teste falhando, o commit não sai.
+- **Antes de editar o banco de notificações:** barra a alteração do texto de um modelo validado
+  (a ressalva vai em linha própria). Mudança validada pela chefia: `SSEG_BANCO_LIBERADO=1`.
+- **Depois de editar um `SKILL.md`:** gera `.skills-zip/<nome>.zip` e lembra de instalar na conta.
+- **No fim do turno:** lembra de commit quando há mudança parada há mais de 20 minutos.
+
+Revisar ou desligar em `/hooks`.
+
 ## Pré-requisitos no PC
 
 Python 3 e Poppler (`pdftotext`, `pdftoppm`) no PATH — sem eles, os scripts e a conferência no

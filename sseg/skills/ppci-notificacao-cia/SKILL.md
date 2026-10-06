@@ -163,6 +163,17 @@ Redações **usadas em análises reais mas ainda não validadas** (ponto de part
 modelo): `workflow/divisao-trabalho-notificacao.md` e
 `workflow/analise-laudo-inviabilidade-tecnica.md`.
 
+## Desculpas que não valem
+
+| Desculpa | Por que não vale |
+|---|---|
+| "Tem modelo no banco para esse tema, então uso." | O modelo vale para o caso dele. Dizer por que este caso é o caso do modelo, inclusive a vigência: câmara frigorífica protocolada antes de 01/11/2025 cita a IN 056, não a RT 31. |
+| "Transcrevo o requisito para ficar claro (altura, distância, fixação)." | Requisito de instalação é de vistoria: citar o item e parar. |
+| "Cito o Decreto e a RT juntos para reforçar." | Se dizem o mesmo, só o item da RT. |
+| "REITERO deixa claro que já foi pedido." | Só para exigência anterior não atendida; numa 1ª análise, nunca. |
+| "Em bloco citado já está pronto para colar." | A caixa do SOL pede quebra de linha e "- " no começo e parágrafo numa linha só. No teste de 05/10/2026 quase todos os modelos entregaram sem o hífen. |
+| "Não achei o item, mas o assunto é dessa RT." | Sem dispositivo localizado não há exigência: dizer que não localizou. |
+
 ## Nunca
 
 - Citar item obtido por extração automática de PDF sem conferir no PDF oficial.

@@ -62,6 +62,15 @@ não transcrever a norma.
    pronto: dizer o que cortar ou que o caso vai para o Chefe da SSeg.
 3. Fundamento conferido (fonte · item · trecho que decide) fora do bloco, para o analista conferir.
 
+## Desculpas que não valem
+
+| Desculpa | Por que não vale |
+|---|---|
+| "Um parágrafo de contexto ajuda quem vai ler." | Só entra o que foi tratado na reunião ou alegado no recurso. |
+| "Passou de 2.000; tiro o fundamento para caber." | Fundamento não se corta. O caso vai para o Chefe da SSeg. |
+| "Pela documentação do processo dá para deduzir o que foi tratado na reunião." | Ata não se reconstrói por dedução: pedir os pontos ao analista. |
+| "O recurso tem razão; já escrevo deferido." | A decisão é do analista e do Chefe da SSeg; a minuta redige a decisão tomada. |
+
 ## Nunca
 
 - Passar de 2.000 caracteres, nem cortar fundamento para caber.

@@ -443,6 +443,20 @@ a definidora mudou, a lista de exigências muda junto: no Spessato o RT retirou 
 Emergência, e estava certo, porque a nota 8 da 6C o restringe à Divisão C-3. Recontar a tabela
 na definidora nova antes de notificar a ausência.
 
+## Desculpas que não valem
+
+Atalhos que o modelo tende a tomar nesta análise, e por que não valem. Cada linha já aconteceu.
+
+| Desculpa | Por que não vale |
+|---|---|
+| "O grau de risco empatou, mas a divisão X claramente exige mais medidas: ela é a definidora." | O critério (b) é do analista: a nota colada na célula decide a contagem. No teste de 05/10/2026 todos os modelos, Opus incluído, fecharam a definidora sozinhos. Parar e perguntar (exceção 2). |
+| "Essa nota não muda nada, posso contar a célula." | Nota nunca se aplica sozinha. Mostrar o texto da nota e perguntar. |
+| "Vi o item no `md/`, está certo." | `md/` localiza, não fundamenta. Conferir o trecho no PDF. |
+| "A RT 05 P07 não tem CMAR / Segurança Estrutural, então não é pendência." | Afirmação geral sem abrir a tabela da divisão já errou (24/09/2026: Tabela 5, 6F.3 e 6L.1 têm CMAR). Conferir no `tab-rt05-<GRUPO>.json`. |
+| "O processo é antigo, mas cito a versão nova da RT, que é a vigente." | Vale a versão da data de protocolo da 1ª análise. |
+| "Altura descendente preenchida num prédio que sobe: o RT inverteu." | Trava 1: RT 02/2014, item 4.20. É o correto. |
+| "Li o começo do JSON, são 6 ocupações." | Ler o JSON inteiro antes de contar: já eram 8. |
+
 ## Nunca
 
 - **Aplicar sozinho uma nota de tabela que decide contagem ou definidora** — parar e perguntar.

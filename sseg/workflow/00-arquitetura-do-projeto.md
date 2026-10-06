@@ -57,6 +57,13 @@ recebe cópia pela skill `sseg-sincronizar-skills`.
 - **`sseg-sincronizar-skills`** — levar as skills do repositório para a conta depois de um
   `git pull`, ou o contrário, sempre mostrando a diferença.
 
+## Os hooks (Claude Code)
+
+Em `.claude/settings.json` + `.claude/hooks/sseg_hooks.py`: `git pull` ao abrir a sessão, commit
+barrado com dado de processo ou com teste falhando (`scripts/testar.py`), texto validado do banco
+protegido, `.zip` da skill gerado ao editar um `SKILL.md`, lembrete de commit. Lista completa no
+`CLAUDE.md`.
+
 ## Os subagentes (Claude Code)
 
 Em `.claude/agents/`: **`localizador-normas`** (Haiku — trechos literais com arquivo e
