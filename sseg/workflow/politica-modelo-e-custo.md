@@ -168,8 +168,10 @@ O que o teste decidiu:
    para a "Ordem de entrega": depois da correção, 19 de 24 textos ainda saíam sem o hífen.
 3. **Revisão final em Sonnet alto.** Pegou tudo nas duas rodadas; o baixo e o médio declararam
    errado ou reescreveram um texto correto (falso positivo que mexe em fundamento conferido).
-4. **Análise e notificação seguem em Sonnet médio.** Na definidora, empatou com o alto (95)
-   depois da correção, e a falta que sobrou era o hífen.
+4. **Análise em Sonnet médio: em reavaliação.** Nas rodadas 3–4 o médio empatou com o alto na
+   definidora (95), mas na validação de 06/10/2026 (registro abaixo) errou feio uma vez. A
+   recomendação passou a ser análise de processo em Sonnet alto, com o médio para pergunta
+   rápida e notificação avulsa com modelo do banco. Decisão do Átila pendente.
 5. **Tarefa mecânica, qualquer modelo.** Altura, JSON do SOL, planilha de CT, localizar trecho
    e norma sem PDF: todos os arranjos tiraram 100, inclusive o Haiku. Haiku segue só em
    subagente mecânico: 3 erros fatais nas tarefas normativas e, em sessão de segundo plano,
@@ -178,3 +180,22 @@ O que o teste decidiu:
 Duas execuções por célula: diferença de 2 a 3 pontos entre arranjos é ruído. O roteiro, as
 tarefas e as notas ficaram no servidor, em `~/rotinas/avaliacao-modelos-2026-10/`, para repetir
 quando mudar modelo ou regra.
+
+**Registro — validação de 06/10/2026** (18 execuções). As mesmas três tarefas difíceis, sobre o
+repositório com as mudanças do dia (formato do SOL na "Ordem de entrega" e revisão em Sonnet
+alto), nos três arranjos que a política usa:
+
+| Arranjo | T01 · T05 · T06 | Média | US$ por execução |
+|---|---|---|---|
+| Sonnet médio | 55 · 100 · 100 | 85 (1 erro fatal) | 0,20 |
+| Sonnet alto | 100 · 96 · 100 | 99 | 0,27 |
+| Opus médio | 100 · 100 · 100 | 100 | 0,43 |
+
+- **Hífen resolvido:** nenhum texto para o SOL saiu sem ele (antes da mudança, 19 de 24).
+- **Revisão da CIA:** os três arranjos pegaram todos os erros plantados sem mexer no texto
+  correto.
+- **Sonnet médio na definidora:** numa das duas execuções não reconheceu o empate de risco
+  médio entre I-2 e J-3 e citou como fundamento uma tabela que não decide o grau de risco (erro
+  fatal pela rubrica). Somando as rodadas depois da correção, o médio teve 1 erro fatal em 4
+  execuções da definidora e o alto nenhum; o alto ficou acima do médio nas duas comparações
+  (96 × 90 e 99 × 85), custando de 40% a 55% a mais.
