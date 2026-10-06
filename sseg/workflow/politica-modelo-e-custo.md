@@ -1,6 +1,6 @@
 ---
 name: politica-modelo-e-custo
-description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram (revisada em 06/10/2026 com o teste de 196 execuções: análise em Sonnet 5.5 médio, revisão final em Sonnet 5.5 alto)
+description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram (revisada em 06/10/2026 com o teste de 214 execuções: análise de processo e revisão final em Sonnet 5.5 alto; pergunta rápida e notificação avulsa em Sonnet 5.5 médio)
 sources: [cowork]
 ---
 
@@ -50,7 +50,7 @@ Só onde **nenhuma escolha normativa acontece** e o erro aparece na hora:
 
 Dentro de uma conversa de análise essas rodadas são minúsculas e não vale trocar de modelo.
 **Conversa aberta só para isso** (ex.: "Atualizar projeto com arquivos") abre em Sonnet 5.5
-médio, como as demais; Haiku só como subagente mecânico.
+médio; Haiku só como subagente mecânico.
 
 ## As alavancas que sobraram (e valem mais)
 
@@ -60,10 +60,10 @@ médio, como as demais; Haiku só como subagente mecânico.
    buscando em conversa antiga (medição de 25/09/2026, abaixo).
 2. **Esforço, não modelo.** Baixar o esforço num modelo forte é mais seguro que trocar por um
    modelo fraco: mantém-se a calibragem e o conhecimento, gasta-se menos deliberação. Desde
-   30/09/2026, **toda conversa abre em Sonnet 5.5 médio**: análise, notificação avulsa e
-   sincronização. **A revisão final da CIA abre em Sonnet 5.5 alto** desde 06/10/2026 (teste
-   no fim deste doc: o alto acertou tudo nas duas rodadas; o médio reescreveu texto que estava
-   certo). Esforço máximo não se justifica: no Opus, o alto empatou com o médio (99 × 98)
+   06/10/2026 (testes no fim deste doc): **análise de processo e revisão final da CIA em
+   Sonnet 5.5 alto**; **pergunta rápida, notificação avulsa com modelo do banco e sincronização
+   em Sonnet 5.5 médio**. Na definidora o médio errou feio 1 vez em 4 e o alto nenhuma; na
+   revisão o médio reescreveu texto que estava certo. Esforço máximo não se justifica: no Opus, o alto empatou com o médio (99 × 98)
    custando 34% a mais, e o máximo nem foi medido. O esforço fica o mesmo até o fim da conversa,
    porque trocar no meio pode reiniciar o cache. **Opus 5.5 só em caso realmente necessário**,
    os listados em `ppci-revisao-cia`: tese nova sem modelo no banco que o analista não tenha
@@ -71,7 +71,8 @@ médio, como as demais; Haiku só como subagente mecânico.
    o analista sobre um fundamento. O que pega erro é abrir o PDF, não o esforço. Esforço menor
    reduz o pensamento; texto mais curto se pede no prompt. Haiku não tem ajuste de esforço e
    fica só em subagente mecânico.
-   *Histórico:* de 24 a 29/09/2026 o padrão foi Opus 5.5 médio, inclusive na revisão final.
+   *Histórico:* de 24 a 29/09/2026 o padrão foi Opus 5.5 médio, inclusive na revisão final; de
+   30/09 a 05/10/2026, Sonnet 5.5 médio em toda conversa.
 3. **Menos rodadas no navegador.** Da API do SOL, só o resumo filtrado dentro da página vem
    para a conversa, nunca o JSON bruto em fatias; login, modal e gravação se conferem por
    JS/API, não por screenshot (`sol-cbmrs-navegador`). Todas as ferramentas numa única
@@ -168,10 +169,10 @@ O que o teste decidiu:
    para a "Ordem de entrega": depois da correção, 19 de 24 textos ainda saíam sem o hífen.
 3. **Revisão final em Sonnet alto.** Pegou tudo nas duas rodadas; o baixo e o médio declararam
    errado ou reescreveram um texto correto (falso positivo que mexe em fundamento conferido).
-4. **Análise em Sonnet médio: em reavaliação.** Nas rodadas 3–4 o médio empatou com o alto na
-   definidora (95), mas na validação de 06/10/2026 (registro abaixo) errou feio uma vez. A
-   recomendação passou a ser análise de processo em Sonnet alto, com o médio para pergunta
-   rápida e notificação avulsa com modelo do banco. Decisão do Átila pendente.
+4. **Análise de processo em Sonnet alto** (decisão do Átila, 06/10/2026). Nas rodadas 3–4 o
+   médio empatou com o alto na definidora (95), mas na validação (registro abaixo) errou feio
+   uma vez. O médio fica para pergunta rápida e notificação avulsa com modelo do banco, em que
+   todos os arranjos acertaram.
 5. **Tarefa mecânica, qualquer modelo.** Altura, JSON do SOL, planilha de CT, localizar trecho
    e norma sem PDF: todos os arranjos tiraram 100, inclusive o Haiku. Haiku segue só em
    subagente mecânico: 3 erros fatais nas tarefas normativas e, em sessão de segundo plano,

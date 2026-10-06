@@ -79,8 +79,8 @@ processo, nunca `Carpes` inteira nem recursivo.
 6. **Delegar tarefa mecânica a subagente com modelo leve** (Haiku), que não consome o
    contexto principal: extrair texto de planta, montar o `<N>.json`, comparar duas análises,
    resolver célula de tabela, gerar PDF. Enquadramento de ocupação, aplicação de nota, escolha
-   de definidora e redação de notificação ficam na conversa principal (Sonnet 5.5 médio, padrão
-   desde 30/09/2026).
+   de definidora e redação de notificação ficam na conversa principal (Sonnet 5.5 alto desde
+   06/10/2026; ver `workflow/politica-modelo-e-custo.md`).
 7. **Da API do SOL, trazer só o resumo filtrado na página** (receita em
    `sol-cbmrs-navegador`, "Trazer o texto para a conversa"). Nunca o JSON bruto em fatias.
 8. **`device_commit_files` com todos os arquivos numa chamada só** (`1.pdf`, `1.json`,
