@@ -89,6 +89,7 @@ details.rot[open]>summary{border-bottom:1px solid var(--line)}
 .rot h4{margin:0 0 6px;font:600 .72rem/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .tog{font-size:.8rem;color:var(--muted)}
 details.rot[open] .tog .a{display:none} details.rot:not([open]) .tog .b{display:none}
+.prompt{margin:0;background:var(--soft);padding:12px 14px;border-radius:4px;font:400 .82rem/1.5 var(--f-mono);white-space:pre-wrap;overflow-wrap:anywhere}
 .outline{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;font-size:.88rem}
 .outline li.n3{padding-left:14px;color:var(--muted)}
 .stopbox{background:var(--stop-bg);color:var(--ink);border-radius:4px;padding:8px 10px;font-size:.88rem}
@@ -159,6 +160,7 @@ button{font:inherit;cursor:pointer}
 <div class="wrap">
 <nav class="side" id="nav" aria-label="Seções">
   <a href="#visao">Visão geral</a>
+  <a href="#atualizacoes">Atualizações <small id="n-atu"></small></a>
   <a href="#divergencias">Divergências <small id="n-div"></small></a>
   <a href="#skills">Skills <small id="n-sk"></small></a>
   <a href="#agentes">Subagentes <small id="n-ag"></small></a>
@@ -174,6 +176,12 @@ button{font:inherit;cursor:pointer}
   <div class="sec-head"><div class="eyebrow">Visão geral</div><h2>Como o projeto se organiza</h2>
   <p id="arq-src" class="src"></p></div>
   <div class="card"><div class="md" id="arq"><p class="muted">O mapa do projeto aparece aqui quando o retrato carregar.</p></div></div>
+</section>
+
+<section id="atualizacoes">
+  <div class="sec-head"><div class="eyebrow">Atualizações</div><h2>O que mudou e como atualizar o seu lado</h2>
+  <p>Para os analistas que usam o projeto. Cada entrada traz o que mudou e um prompt pronto: copie e cole numa conversa nova do seu Claude, dentro do projeto SSEG, e ele atualiza as skills da sua conta e entrega o texto novo das Instruções. <span id="atu-src" class="src"></span></p></div>
+  <div id="l-atu" style="display:flex;flex-direction:column;gap:10px"></div>
 </section>
 
 <section id="divergencias">
@@ -311,6 +319,11 @@ function render(){
   $("#n-sk").textContent=c.skills??"";$("#n-ag").textContent=c.subagentes??"";$("#n-div").textContent=c.divergencias||"";
   /* visão geral */
   const a=R.arquitetura||{};$("#arq").innerHTML=md(a.texto);$("#arq-src").textContent=a.arquivo?`${a.arquivo} · atualizado em ${fdia(a.atualizado)}`:"";
+  /* atualizações */
+  const au=R.atualizacoes||{},at=au.lista||[];$("#n-atu").textContent=at.length||"";$("#atu-src").textContent=au.arquivo?`Fonte: ${au.arquivo}.`:"";
+  $("#l-atu").innerHTML=at.map((u,i)=>`<details class="rot"${i===0?" open":""}><summary><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><h3>${esc(u.data)} — ${inl(u.titulo)}</h3>${i===0?'<span class="src">a mais recente</span>':""}</div><span class="tog"><span class="a">abrir ▾</span><span class="b">fechar ▴</span></span></summary>
+    <div class="inner"><div style="grid-column:1/-1"><h4>O que mudou</h4><div class="md small">${md(u.mudou)}</div></div>
+    <div style="grid-column:1/-1;display:flex;flex-direction:column;gap:8px"><h4>Prompt para atualizar o seu lado</h4><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn pri cp-atu" type="button" data-i="${i}">Copiar o prompt</button>${u.prompt?ed(alvo({tipo:"literal",alvo:`Atualização de ${u.data}: prompt`,arquivo:au.arquivo,antes:u.prompt})):""}</div><pre class="prompt">${esc(u.prompt||"(sem prompt)")}</pre></div></div></details>`).join("")||'<div class="empty">Nenhuma atualização registrada.</div>';
   /* divergências */
   const dl=(R.divergencias||{}).lista||[];const tipos=["Todas",...new Set(dl.map(d=>d.tipo))];
   if(!tipos.includes(sel.div))sel.div="Todas";filtros($("#f-div"),tipos,"div");
@@ -417,8 +430,10 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#ov").hidden)fe
 document.addEventListener("click",e=>{const b=e.target.closest(".edit");if(!b)return;e.preventDefault();e.stopPropagation();const o=ALVOS[b.dataset.k];if(o)abrir(o)},true);
 $("#novo").addEventListener("click",()=>abrir({tipo:"livre",alvo:"",texto:""}));
 $("#inst-ed").addEventListener("click",()=>{const ins=(R||{}).instrucoes||{};if(!ins.texto){toast("O texto ainda não carregou");return}abrir({tipo:"instrucoes",alvo:"Instruções do projeto (texto integral)",arquivo:ins.arquivo,antes:ins.texto})});
-$("#inst-cp").addEventListener("click",async()=>{const t=((R||{}).instrucoes||{}).texto||"";if(!t){toast("O texto ainda não carregou");return}
-  try{await navigator.clipboard.writeText(t);toast("Texto copiado")}catch(err){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(x){}ta.remove();toast(ok?"Texto copiado":"Não foi possível copiar: selecione o texto na página")}});
+async function copiar(t,msg){
+  try{await navigator.clipboard.writeText(t);toast(msg)}catch(err){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(x){}ta.remove();toast(ok?msg:"Não foi possível copiar: selecione o texto na página")}}
+$("#inst-cp").addEventListener("click",()=>{const t=((R||{}).instrucoes||{}).texto||"";if(!t){toast("O texto ainda não carregou");return}copiar(t,"Texto copiado")});
+document.addEventListener("click",e=>{const b=e.target.closest(".cp-atu");if(!b)return;const u=(((R||{}).atualizacoes||{}).lista||[])[+b.dataset.i];if(u&&u.prompt)copiar(u.prompt,"Prompt copiado")});
 for(const [id,ch] of [["#f-div","div"],["#f-par","par"],["#f-arq","arq"],["#f-ped","ped"]]){
   $(id).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;sel[ch]=b.dataset.v;ch==="ped"?renderPed():render()});
 }

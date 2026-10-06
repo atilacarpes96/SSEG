@@ -10,7 +10,7 @@ Uso:
     python3 painel.py --saida <pasta> --resumo # idem, e imprime as divergências encontradas
 
 Saída: <pasta>/<doc>.json para cada documento da coleção "retrato" do painel (meta, instrucoes,
-arquitetura, skills, agentes, docs, rotinas, parametros, divergencias) e <pasta>/hashes.json.
+arquitetura, atualizacoes, skills, agentes, docs, rotinas, parametros, divergencias) e <pasta>/hashes.json.
 Só biblioteca padrão.
 """
 import argparse, datetime, glob, hashlib, json, os, re, subprocess, sys
@@ -290,7 +290,7 @@ PARAMETROS = [
     ("Vigência", "RT 01/2022 → RT 01/2024", "sseg/workflow/instrucoes-projeto-espelho.md", r"PPCI protocolado até \*\*31/12/2024\*\*"),
     ("Vigência", "RT 17 (hidrantes)", "sseg/workflow/instrucoes-projeto-espelho.md", r"RT 17 Parte 01/2025 \(hidrantes e mangotinhos\) entra em vigor"),
     ("Vigência", "RT 31 (câmaras frigoríficas)", "sseg/normas/banco-notificacoes-padrao.md", r"A IN 056/CBMRS/DSPCI foi revogada"),
-    ("Modelo", "Modelo padrão das conversas", "sseg/workflow/politica-modelo-e-custo.md", r"\*\*toda conversa abre em"),
+    ("Modelo", "Modelo de cada tipo de conversa", "sseg/workflow/politica-modelo-e-custo.md", r"\*\*análise de processo e revisão final da CIA em"),
     ("Modelo", "Revisão final da CIA", "sseg/skills/ppci-revisao-cia/SKILL.md", r"Modelo: \*\*"),
     ("Modelo", "Onde modelo leve não entra", "sseg/workflow/politica-modelo-e-custo.md", r"Haiku só como subagente mecânico"),
     ("Rotina", "Meta de produção", "sseg/workflow/modo-de-trabalho-do-analista.md", r"Meta: dois PPCI"),
@@ -356,6 +356,8 @@ DESATUALIZADAS = [
      "Desde 02/10/2026 o repositório é a FONTE das skills; a conta é cópia."),
     (r"O canônico são os docs do Projeto|[Oo] projeto é a versão canônica",
      "CLAUDE.md: o repositório é a fonte; o projeto do claude.ai recebe pelo GitHub sincronizado."),
+    (r"toda conversa abre em Sonnet 5\.5 médio|[Rr]evisão final[^.\n]{0,60}Sonnet 5\.5 médio|Sonnet 5\.5 médio, padrão",
+     "Desde 06/10/2026, análise de processo e revisão final em Sonnet 5.5 alto; médio só para pergunta rápida e notificação avulsa (politica-modelo-e-custo)."),
 ]
 
 CODIGO = re.compile(r"\bA000\d{5}[A-Z]{2}\d{3}\b")
@@ -468,6 +470,24 @@ def divergencias(sk, ag):
     return achados
 
 
+def atualizacoes():
+    """Aba Atualizações: o que mudou, data a data, e o prompt para cada analista atualizar o lado dele."""
+    arq = "sseg/workflow/atualizacoes.md"
+    caminho = os.path.join(RAIZ, arq)
+    t = ler(caminho) if os.path.exists(caminho) else ""
+    lista = []
+    for bloco in re.split(r"(?m)^## ", t)[1:]:
+        cab, _, corpo = bloco.partition("\n")
+        m = re.match(r"(\d{2}/\d{2}/\d{4})\s*[—–-]\s*(.+)", cab.strip())
+        if not m:
+            continue
+        mudou, _, resto = corpo.partition("### Prompt para atualizar")
+        p = re.search(r"^```[\w-]*\n(.*?)\n```", resto, re.S | re.M)
+        lista.append({"data": m.group(1), "titulo": m.group(2).strip(), "mudou": mudou.strip(),
+                      "prompt": p.group(1).strip() if p else ""})
+    return {"arquivo": arq, "atualizado": ultima_mudanca(caminho) if t else None, "lista": lista}
+
+
 # ---------------------------------------------------------------- principal
 
 def gerar(crontab_txt):
@@ -479,6 +499,12 @@ def gerar(crontab_txt):
             div.insert(0, {"tipo": "parâmetro", "gravidade": "média", "titulo": f"Parâmetro “{p['nome']}” não encontrado",
                            "detalhe": "O texto da fonte mudou e a linha que define o parâmetro não foi achada.",
                            "onde": [p["arquivo"]], "sugestao": "Conferir a fonte e ajustar a busca em scripts/painel.py (PARAMETROS)."})
+    atu = atualizacoes()
+    for u in atu["lista"]:
+        if not u["prompt"]:
+            div.append({"tipo": "atualizações", "gravidade": "baixa", "titulo": f"Atualização de {u['data']} sem prompt",
+                        "detalhe": "A aba Atualizações mostra o prompt que cada analista cola no próprio Claude.",
+                        "onde": [atu["arquivo"]], "sugestao": "Acrescentar “### Prompt para atualizar” com um bloco de código."})
     dc = docs()
     rot = rotinas(crontab_txt)
     commit = git("log", "-1", "--format=%h|%cs|%an|%s")
@@ -496,7 +522,7 @@ def gerar(crontab_txt):
         },
     }
     return {
-        "meta": meta, "instrucoes": instrucoes(), "arquitetura": arquitetura(),
+        "meta": meta, "instrucoes": instrucoes(), "arquitetura": arquitetura(), "atualizacoes": atu,
         "skills": {"lista": sk}, "agentes": {"lista": ag}, "docs": {"lista": dc},
         "rotinas": {"lista": rot}, "parametros": {"lista": par}, "divergencias": {"lista": div},
     }

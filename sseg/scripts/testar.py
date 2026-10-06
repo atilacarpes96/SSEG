@@ -64,6 +64,8 @@ def main():
         if ok:
             r = json.load(open(os.path.join(d, "atual.json"), encoding="utf-8"))
             ok = len(r["skills"]["lista"]) >= 1 and r["instrucoes"]["marcadores"]
+            atu = (r.get("atualizacoes") or {}).get("lista") or []
+            caso("painel.py lê a aba Atualizações com prompt", bool(atu) and bool(atu[0]["prompt"]), str(atu[:1])[:300])
         caso("painel.py gera o retrato", ok, out[-300:])
     # 6. painel_pedidos.py (simulação)
     with tempfile.TemporaryDirectory() as d:
