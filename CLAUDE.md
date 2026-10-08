@@ -47,7 +47,7 @@ As skills PPCI estão em `sseg/skills/<nome>/SKILL.md`. Quando o pedido casar co
 | código de processo A000... ou print de processo | `ppci-analise-processo` |
 | redigir ou revisar uma notificação | `ppci-notificacao-cia` |
 | minuta ou ata de consulta técnica (FACT), despacho de recurso | `ppci-minuta-despacho` |
-| ler o processo pela API, lançar no campo "Outros", PDF da página | `sol-cbmrs-navegador` |
+| ler o processo pela API, lançar no campo "Outros", PDF da página | `sol-cbmrs-navegador` — **leitura vai ao subagente `sol-leitor`, sem carregar a skill no contexto principal**; a skill só para lançar no SOL, quando o analista pedir |
 | "revisa a CIA", "revisão final" | `ppci-revisao-cia` (pelo subagente `revisor-cia`) |
 | norma nova para a base | `ppci-incorporar-norma` |
 | levar uma skill da conta ao repo, ou o contrário | `sseg-sincronizar-skills` |
@@ -61,7 +61,10 @@ As skills foram escritas para o Cowork. No Claude Code, traduzir:
   O repositório é a fonte; o projeto do claude.ai recebe pelo GitHub sincronizado.
 - "trazer os scripts do clone" → rodar direto de `sseg/scripts/`.
 - Chrome (SOL): usar a integração do Claude in Chrome com o Claude Code. A senha do SOL é
-  sempre digitada pelo usuário.
+  sempre digitada pelo usuário. Antes de abrir aba nova, chamar `tabs_context_mcp` e **reutilizar
+  a aba do SOL que já estiver no grupo** (o login mora nela); o analista autorizou isso
+  (08/10/2026). As ferramentas só agem em abas do grupo do Claude, então o login tem de ser feito
+  nelas.
 
 ## Subagentes (`.claude/agents/`)
 

@@ -8,6 +8,14 @@ model: claude-haiku-5-5
 Você lê o SOL-CBMRS (`https://solcbm.rs.gov.br/solcbm/adm/`) e devolve um resumo curto.
 Não analisa o PPCI, não enquadra, não opina sobre exigências.
 
+## Ao começar
+
+Chamar `tabs_context_mcp` antes de qualquer coisa. Se o grupo de abas já tem uma aba do SOL
+(`solcbm.rs.gov.br`), **usar essa aba**: o login e o `sessionStorage.access_token` moram nela, e
+abrir outra obriga o analista a logar de novo. Só criar aba (`createIfEmpty` / `tabs_create_mcp`)
+se não houver grupo ou aba do SOL, e então avisar que precisa de login. A autorização de usar
+a aba existente já está dada pelo analista (08/10/2026).
+
 ## Pode
 
 - Navegar por URL, abrir menus, filtrar listas, abrir a consulta de um licenciamento e
@@ -29,6 +37,23 @@ Não analisa o PPCI, não enquadra, não opina sobre exigências.
   botão "Filtrar" do topo → campo "Número do licenciamento" → digitar o código → botão
   "Filtrar" do rodapé do painel (não o Enter) → clicar no **texto do código** na linha
   (o botão sem nome da linha só expande os envolvidos). Abre `#/licenciamento/consulta/<id>`.
+- **Clicou no código e a página não abriu o processo** (a URL não mudou para
+  `#/licenciamento/consulta/<id>`): o SOL às vezes trava. Não insistir no mesmo clique nem
+  desistir — recarregar a página (`navigate` na própria URL de `#/licenciamento`), refazer o
+  filtro e clicar de novo. Só reportar falha depois de uma segunda tentativa assim.
+- **Ler o processo pela API, sem clicar** (testado em 08/10/2026): o token válido está em
+  `sessionStorage.access_token`. O de `localStorage` é resíduo vencido e dá 401 — não usar.
+  `fetch` com `Authorization: Bearer <token do sessionStorage>` e `credentials:'include'`:
+  - `/solcbm/api/v1/adm/licenciamentos/<id>` — dados completos do licenciamento
+    (`caracteristica`, `especSeguranca`, `especsRiscos`, `elemGraficos`), mesmo para processo
+    ainda sem análise. `<id>` é o número da URL `#/licenciamento/consulta/<id>`.
+  - `/solcbm/api/v1/adm/licenciamentos/informacoes-processo/<id>` — traz `licenciamentoDTO` e
+    `laudos`.
+  - `/solcbm/api/v1/adm/analise-tecnica/<id>` — só existe com análise iniciada; antes disso
+    devolve 500, não 401.
+  Carga de incêndio: `caracteristica.ocupacoes[].cargaIncendio`; área por ocupação não existe
+  ali, fica em `caracteristica.areasMemorial[]`. Guardar o texto em `window`, sob chave própria
+  (não sobrescrever `window.__d`), e trazer só o resumo. O token vale cerca de 30 min.
 - **Caixa de análise do usuário:** `#/analise-tecnica`.
 - Menus sem permissão para o usuário: ver a seção "Permissões do menu" da skill
   `sol-cbmrs-navegador`. Não tentar abri-los.
