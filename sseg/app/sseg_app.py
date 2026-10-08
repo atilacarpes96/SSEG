@@ -32,7 +32,7 @@ import urllib.request
 import webbrowser
 import zipfile
 
-VERSAO = "1.0.0"
+VERSAO = "1.0.1"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -199,7 +199,7 @@ def janela():
     raiz = tk.Tk()
     raiz.title("SSEG")
     raiz.configure(bg=FUNDO)
-    raiz.minsize(560, 640)
+    raiz.minsize(560, 600)
     try:
         raiz.iconbitmap(recurso("brasao.ico"))
     except tk.TclError:
@@ -222,10 +222,11 @@ def janela():
         pass
     tit = tk.Frame(cab, bg=CARTAO)
     tit.pack(side="left", pady=12)
-    linha = tk.Frame(tit, bg=CARTAO)
-    linha.pack(anchor="w")
-    tk.Label(linha, text="SS", font=F(26, "bold"), fg=AMARELO, bg=CARTAO).pack(side="left")
-    tk.Label(linha, text="EG", font=F(26, "bold"), fg=LARANJA, bg=CARTAO).pack(side="left")
+    # "SS" amarelo e "EG" laranja colados, como o "CBM" + "RS" do letreiro do site
+    letreiro = tk.Canvas(tit, bg=CARTAO, highlightthickness=0, height=42, width=160)
+    letreiro.pack(anchor="w")
+    a = letreiro.create_text(0, 21, text="SS", anchor="w", font=F(26, "bold"), fill=AMARELO)
+    letreiro.create_text(letreiro.bbox(a)[2], 21, text="EG", anchor="w", font=F(26, "bold"), fill=LARANJA)
     tk.Label(tit, text="SEGURANÇA CONTRA INCÊNDIO · CBMRS", font=F(9, "bold"), fg=LARANJA,
              bg=CARTAO).pack(anchor="w")
     tk.Label(cab, text="v" + VERSAO, font=F(9), fg=SUAVE, bg=CARTAO).pack(side="right", anchor="n", padx=14, pady=10)
@@ -303,7 +304,7 @@ def janela():
     botao(lin, "Pasta do SSEG", lambda: abrir(campos["clone"].get()), primario=False).pack(side="left")
 
     # Registro
-    reg = tk.Text(corpo, height=9, font=("Consolas", 9), bg="#FBF9F8", fg=TEXTO, relief="solid", bd=1,
+    reg = tk.Text(corpo, height=7, font=("Consolas", 9), bg="#FBF9F8", fg=TEXTO, relief="solid", bd=1,
                   wrap="word", state="disabled")
     reg.pack(fill="both", expand=True)
     tk.Label(raiz, text="Ferramenta de uso interno da SSeg — não é sistema oficial do CBMRS.",
