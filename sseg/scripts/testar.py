@@ -91,6 +91,13 @@ def main():
                                                      "new_string": alvo + "\n  > ⚠️ ressalva de teste"}}
         p = subprocess.run([PY, hook, "banco"], input=json.dumps(ev2), capture_output=True, text=True, timeout=30, cwd=RAIZ)
         caso("hook deixa anotar ressalva", '"deny"' not in p.stdout, p.stdout[-300:])
+    # 8. enviar: planta nunca sai do PC
+    sys.path.insert(0, AQUI)
+    import enviar
+    vai, fica = enviar.selecionar(["1.json", "1.pdf", "CIA 1.pdf", "CIA 1 textos.json", "api-123.json",
+                                   "Planta Baixa Térreo.pdf", "prancha 01.pdf", "corte.dwg", "print.png"])
+    caso("enviar deixa as plantas no PC", set(fica) == {"Planta Baixa Térreo.pdf", "prancha 01.pdf", "corte.dwg", "print.png"}
+         and "CIA 1 textos.json" in vai, f"vai={vai} fica={fica}")
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

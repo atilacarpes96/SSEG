@@ -45,8 +45,8 @@ de screenshot).
 
 | onde | o que fica lá |
 |---|---|
-| **Servidor** | clone do SSEG, `sseg/processos/` (fora do Git), pasta `print ppci`, skills, subagentes, Claude Code, rotinas agendadas, único lugar que faz commit |
-| **Windows do trabalho** | app do Claude e o navegador logado no SOL (Claude in Chrome ou navegador integrado), como hoje |
+| **Servidor** | clone do SSEG, `sseg/processos/` (fora do Git) com memorial, JSON e CIA de cada processo — **sem plantas**, skills, subagentes, Claude Code, rotinas agendadas |
+| **Windows do trabalho** | app do Claude, conversa **Local** de cada processo, `print ppci` com as plantas da hora e o navegador logado no SOL (Claude in Chrome ou navegador integrado) |
 | **Casa / celular** | acesso à mesma sessão pelo app do Claude (Remote Control ou SSH) |
 
 Vantagens sobre pôr o SOL no servidor: o acesso ao SOL continua saindo da rede do trabalho
@@ -67,6 +67,27 @@ navegador do trabalho. Dois caminhos, testados nesta ordem:
    grava o resumo do SOL direto na pasta do processo no servidor (por SSH); a análise roda
    no servidor lendo esse resumo. Lançamento no SOL, quando pedido, volta a ser pela
    conversa do trabalho.
+
+### Como fica o dia a dia (decisão do Átila, 08/10/2026)
+
+O caminho 2 virou o arranjo, sem esperar o teste nº 1:
+
+- **Processo no trabalho:** app do Claude → Novo → **Local** → pasta do SSEG, Sonnet 5.5 alto,
+  uma conversa por processo (é o "novo chat" do Cowork). Arquivos do SOL e Chrome logado estão
+  no PC, então os três subagentes funcionam ali, `sol-leitor` incluído.
+- **Ao abrir e ao arquivar o processo:** `sseg.py enviar` leva JSON da API, `<N>.pdf`, CIA e
+  memorial para `~/SSEG/sseg/processos/<código>/` no servidor, por SSH (passo na
+  `ppci-analise-processo`). **Planta não vai:** só serve na hora e o SOL guarda o original; o
+  Átila apaga do PC depois.
+- **Servidor ("Oraculo 23-7", Remote Control):** painéis, rotinas, verificação, pedidos do
+  "Mudar o painel", e conversas de casa ou do celular — pergunta de norma, notificação avulsa
+  e continuação de processo já enviado. No servidor rodam `localizador-normas` e
+  `revisor-cia`; `sol-leitor` não (sem Chrome nem login).
+- **Leitura autônoma do SOL pelo servidor** continua fora: pede o login do SOE no servidor e
+  só entra com autorização expressa e consulta à chefia/PROCERGS (barrado em 06/10/2026).
+- Sessão nova no servidor pelo app: hoje o tmux roda `claude --remote-control`, que é uma
+  sessão só. Para o botão "Novo" abrir conversa no servidor, trocar por
+  `claude remote-control --spawn same-dir` (encerra a sessão em curso; fazer com o Átila).
 
 ## A máquina: Oracle Cloud Always Free
 
@@ -91,10 +112,12 @@ Cuidados:
 4. Claude Code (instalador nativo, tem versão Linux ARM64); 👤 login pela **assinatura**, não
    por API (o link abre no navegador do Átila e o código volta para o terminal).
 5. Sessão fixa: `tmux new -s sseg` → `claude` dentro do clone → `/remote-control`.
-6. 👤 No Windows do trabalho: configurar o app do Claude para abrir sessão remota por SSH no
-   servidor (chave SSH do trabalho autorizada no servidor). Fazer o teste nº 1.
-7. Migrar `print ppci` e `sseg/processos/` do PC do serviço para o servidor (cópia por SSH;
-   o original só sai depois de conferido).
+6. 👤 No Windows do trabalho: chave SSH do trabalho autorizada no servidor, apelido
+   `sseg-servidor` no `~/.ssh/config` e teste `ssh sseg-servidor echo ok` (a rede do
+   trabalho precisa liberar SSH de saída). Basta para o `sseg.py enviar`; sessão do app por
+   SSH deixou de ser necessária (08/10/2026).
+7. Levar ao servidor os processos em andamento com `sseg.py enviar`, pasta por pasta (planta
+   fica no PC); o original no PC só sai depois de conferido.
 8. Rotinas: `cron` chamando `claude --bg` (sessão em segundo plano) no clone. Feito em
    05/10/2026 para os dois painéis (ver "Rotinas em funcionamento").
 

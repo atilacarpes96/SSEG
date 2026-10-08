@@ -12,6 +12,21 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 08/10/2026 — Processo no PC, memorial e CIA no servidor
+
+- **Onde roda a análise:** no PC do trabalho, numa conversa **Local** do app do Claude (Novo → Local → pasta do SSEG), uma por processo. É onde estão o Chrome logado no SOL e os arquivos baixados.
+- **Novo comando `sseg.py enviar`:** leva à pasta do processo no servidor os JSON, `<N>.pdf`, a CIA e o memorial, por SSH. Planta baixa não vai: só serve na hora e o SOL guarda o original. A `ppci-analise-processo` passou a chamá-lo ao abrir e ao arquivar o processo.
+- **Quem não tem servidor:** nada muda. O envio falha com aviso de uma linha e a análise segue.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a mudança de 08/10/2026 (processo no PC, memorial no servidor) e no fim me diga o que ficou feito e o que depende de mim:
+1. Confira se o clone está em dia com o GitHub (git status e git log -1). Se estiver atrás, me peça para rodar git pull no PowerShell; no Claude Code, rode você.
+2. Rode a skill sseg-sincronizar-skills no sentido repositório → conta. Deve aparecer como diferente: ppci-analise-processo. No Claude Code, em vez do cartão, gere o .zip com o zipfile do Python, como manda o CLAUDE.md, e me diga onde ficou.
+3. Se eu não tenho servidor, me diga em uma linha que o passo "enviar" da skill vai só avisar e seguir.
+```
+
 ## 08/10/2026 — Haiku 5.5 na pergunta rápida e nos subagentes
 
 - **Modelo de cada conversa:** pergunta rápida, notificação avulsa com modelo do banco e sincronização passam do Sonnet 5.5 médio para o **Haiku 5.5 médio**. Análise de processo e revisão final da CIA continuam em **Sonnet 5.5 alto**.

@@ -245,6 +245,8 @@ resposta, o token mais caro. O script faz os três arquivos a partir da API, no 
    `python <clone>\sseg\scripts\sseg.py arquivar --api <arquivo do passo 2> --trabalho "$env:TEMP\sseg\<N>.json" --pasta "C:\Users\55519\Desktop\Carpes\print ppci\<processo>"`
 4. Ler só o resumo que ele imprime (status, quantas caixas, divergências). Cada linha `!` é
    item do SOL sem par no registro, ou o contrário: resolver com o analista antes de seguir.
+5. Rodar `sseg.py enviar --pasta "<print ppci>\<processo>"` de novo, para a CIA e os
+   arquivos finais chegarem ao servidor.
 
 O script não decide status (copia o gravado no SOL), não descarta justificativa (o que cai
 fora dos campos 3–6 sai com `campo: "?"` e aviso) e não sobrescreve a pasta sem `--forcar`.
@@ -281,6 +283,15 @@ inclusive o **deferimento do laudo de inviabilidade** — registrar no JSON.
 Ler a página pela API e montar o registro do processo (em arquivo de trabalho no container,
 se precisar). É o que torna a comparação entre análises barata. Nunca preencher campo que não
 está no print. **Gravar `<N>.json` na pasta só no passo 1.1, quando pedido.**
+
+⭐ **Levar o memorial ao servidor ao abrir (desde 08/10/2026).** Com `window.__d` carregado,
+gravar o JSON bruto da API na pasta do processo (passos 1 e 2 do 1.1, com
+`--saida "<print ppci>\<processo>"` no `receber`) e rodar
+`python <clone>\sseg\scripts\sseg.py enviar --pasta "<print ppci>\<processo>"`. Leva os JSON,
+`<N>.pdf`, `CIA <N>.pdf` e o memorial para `~/SSEG/sseg/processos/<código>/` no servidor, por
+SSH, para o processo seguir de casa ou pelo celular. **Planta não vai** (só serve na hora; o
+SOL guarda o original): o script só envia o que está na lista dele e mostra o que ficou.
+Falhou o envio → avisar em uma linha e seguir a análise; não é bloqueio.
 
 ### 3. Rodar as conferências
 

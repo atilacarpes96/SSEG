@@ -34,6 +34,7 @@ USO
   python3 sseg.py revisar-cia --cia "CIA 2.pdf" --textos "CIA 2 textos.json" --json 2.json --anterior "CIA 1.pdf"
   python3 sseg.py receber   --saida <pasta temporaria>
   python3 sseg.py arquivar  --api api-<ID>.json --trabalho 2.json --pasta "<print ppci>/<processo>"
+  python3 sseg.py enviar    --pasta "<print ppci>/<processo>" [--simular]
 """
 
 import argparse
@@ -910,7 +911,14 @@ def main():
     arquivar.args_parser(sub.add_parser("receber", help="recebe o JSON da API do SOL direto da pagina"),
                          sub.add_parser("arquivar", help="atualiza a pasta do processo sem datilografar"))
 
+    import enviar
+    enviar.args_parser(sub.add_parser("enviar", help="leva a pasta do processo ao servidor, sem as plantas"))
+
     args = ap.parse_args()
+
+    if args.cmd == "enviar":
+        enviar.enviar(args.pasta, args.processo, args.servidor, args.simular)
+        return
 
     if args.cmd == "receber":
         arquivar.receber(args.saida, args.porta)
