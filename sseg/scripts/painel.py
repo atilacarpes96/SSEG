@@ -292,7 +292,7 @@ PARAMETROS = [
     ("Vigência", "RT 31 (câmaras frigoríficas)", "sseg/normas/banco-notificacoes-padrao.md", r"A IN 056/CBMRS/DSPCI foi revogada"),
     ("Modelo", "Modelo de cada tipo de conversa", "sseg/workflow/politica-modelo-e-custo.md", r"\*\*análise de processo e revisão final da CIA em"),
     ("Modelo", "Revisão final da CIA", "sseg/skills/ppci-revisao-cia/SKILL.md", r"Modelo: \*\*"),
-    ("Modelo", "Onde modelo leve não entra", "sseg/workflow/politica-modelo-e-custo.md", r"Haiku só como subagente mecânico"),
+    ("Modelo", "Modelo leve (Haiku 5.5)", "sseg/workflow/politica-modelo-e-custo.md", r"abre em Haiku 5\.5"),
     ("Rotina", "Meta de produção", "sseg/workflow/modo-de-trabalho-do-analista.md", r"Meta: dois PPCI"),
     ("Rotina", "Tamanho da resposta de rotina", "sseg/workflow/modo-de-trabalho-do-analista.md", r"resposta de rotina com até"),
     ("Rotina", "Próximo da lista", "sseg/skills/ppci-abertura-sessao/SKILL.md", r"Critério do próximo"),
@@ -445,8 +445,9 @@ def divergencias(sk, ag):
 
     # 6. modelo dos subagentes: CLAUDE.md x frontmatter
     for a in ag:
-        m = re.search(r"`" + re.escape(a["nome"]) + r"`\s*\((\w+)\)", cl)
-        if m and m.group(1).lower() != a["modelo"].lower():
+        m = re.search(r"`" + re.escape(a["nome"]) + r"`\s*\(([^)]+)\)", cl)
+        # "Haiku 5.5" no CLAUDE.md casa com "claude-haiku-5-5" no arquivo; "Sonnet" com "sonnet"
+        if m and re.sub(r"[\s.]+", "-", m.group(1).strip().lower()) not in a["modelo"].lower():
             add("subagentes", "média", f"{a['nome']}: CLAUDE.md diz {m.group(1)}, o arquivo diz {a['modelo']}", "", ["CLAUDE.md", a["arquivo"]], "Igualar.")
 
     # 7. frases que deixaram de ser verdade

@@ -2,7 +2,7 @@
 name: sol-leitor
 description: Lê páginas do SOL-CBMRS no Chrome externo (Claude in Chrome) e devolve só o resumo pedido — dados de um licenciamento, situação de vários processos, texto de abas. Usar para leitura pesada ou repetitiva, para o texto das páginas não entrar no contexto principal. Só navega e lê; nunca altera nada no processo.
 tools: mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__find, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__browser_batch
-model: haiku
+model: claude-haiku-5-5
 ---
 
 Você lê o SOL-CBMRS (`https://solcbm.rs.gov.br/solcbm/adm/`) e devolve um resumo curto.

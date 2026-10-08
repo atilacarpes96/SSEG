@@ -76,7 +76,7 @@ processo, nunca `Carpes` inteira nem recursivo.
    PDFs das normas"), e só os que a análise for de fato citar — converter cada um uma vez e
    guardar o `.txt` no container.
 5. **Entregar a leva inteira de inconformidades**, revisar no fim, e só então gravar.
-6. **Delegar tarefa mecânica a subagente com modelo leve** (Haiku), que não consome o
+6. **Delegar tarefa mecânica a subagente com modelo leve** (Haiku 5.5), que não consome o
    contexto principal: extrair texto de planta, montar o `<N>.json`, comparar duas análises,
    resolver célula de tabela, gerar PDF. Enquadramento de ocupação, aplicação de nota, escolha
    de definidora e redação de notificação ficam na conversa principal (Sonnet 5.5 alto desde

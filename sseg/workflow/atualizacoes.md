@@ -12,6 +12,23 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 08/10/2026 — Haiku 5.5 na pergunta rápida e nos subagentes
+
+- **Modelo de cada conversa:** pergunta rápida, notificação avulsa com modelo do banco e sincronização passam do Sonnet 5.5 médio para o **Haiku 5.5 médio**. Análise de processo e revisão final da CIA continuam em **Sonnet 5.5 alto**.
+- **Subagentes do Claude Code:** `localizador-normas` e `sol-leitor` passam do Haiku 4.5 para o Haiku 5.5. No arquivo vai o nome completo, `claude-haiku-5-5`, porque o atalho `haiku` ainda aponta para o 4.5.
+- **Motivo:** no teste de 08/10 (66 execuções) o Haiku 5.5 médio tirou 97 nas onze tarefas, sem erro fatal, contra 91 do Sonnet 5.5 médio e 67 do Haiku 4.5. Na definidora e na revisão ficou abaixo do Sonnet alto, por isso essas seguem no Sonnet. Detalhes em `workflow/politica-modelo-e-custo.md`.
+- **Skills:** `ppci-analise-processo` e `sol-cbmrs-navegador` só trocaram a menção ao modelo.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 08/10/2026 e no fim me diga o que ficou feito e o que depende de mim:
+1. Confira se o clone está em dia com o GitHub (git status e git log -1). Se estiver atrás, me peça para rodar git pull no PowerShell; no Claude Code, rode você.
+2. Rode a skill sseg-sincronizar-skills no sentido repositório → conta. Devem aparecer como diferentes: ppci-analise-processo e sol-cbmrs-navegador. No Claude Code, em vez do cartão, gere um .zip por skill com o zipfile do Python, como manda o CLAUDE.md, e me diga onde ficaram.
+3. Confira em .claude/agents/ que localizador-normas e sol-leitor estão com model: claude-haiku-5-5.
+4. Feche com três linhas: análise de processo e revisão final da CIA em Sonnet 5.5 alto; pergunta rápida e notificação avulsa em Haiku 5.5 médio; Haiku 5.5 no máximo não compensa (gasta muito e demora).
+```
+
 ## 06/10/2026 — Modelo de cada conversa, formato do SOL e minuta de despacho
 
 - **Nova skill `ppci-minuta-despacho`:** ata de consulta técnica (FACT) e despacho de recurso com até 2.000 caracteres, só o que foi tratado ou alegado e conclusão prática em cada ponto (orientação do Chefe da SSeg de 05/10/2026).

@@ -63,7 +63,7 @@ navegador do trabalho. Dois caminhos, testados nesta ordem:
    servidor; o app continua no Windows. **Teste nº 1 do plano:** confirmar que, nesse modo,
    o navegador integrado e o Claude in Chrome continuam disponíveis para a conversa. Se sim,
    é o arranjo final.
-2. **Se não:** divisão de tarefas. Uma conversa no trabalho roda o `sol-leitor` (Haiku) e
+2. **Se não:** divisão de tarefas. Uma conversa no trabalho roda o `sol-leitor` (Haiku 5.5) e
    grava o resumo do SOL direto na pasta do processo no servidor (por SSH); a análise roda
    no servidor lendo esse resumo. Lançamento no SOL, quando pedido, volta a ser pela
    conversa do trabalho.

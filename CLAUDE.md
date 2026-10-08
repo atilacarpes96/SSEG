@@ -69,9 +69,9 @@ A divisão segue `sseg/workflow/politica-modelo-e-custo.md`: **modelo leve só o
 escolha normativa acontece.** Escolher modelo do banco, enquadrar ocupação, decidir se uma
 exigência procede — isso fica no agente principal, nunca no subagente leve.
 
-- `localizador-normas` (Haiku) — devolve trechos literais com arquivo e linha/página. Não
+- `localizador-normas` (Haiku 5.5) — devolve trechos literais com arquivo e linha/página. Não
   conclui, não diz que algo "não existe": a decisão é do principal.
-- `sol-leitor` (Haiku) — lê páginas do SOL no Chrome e devolve só o resumo pedido (vários
+- `sol-leitor` (Haiku 5.5) — lê páginas do SOL no Chrome e devolve só o resumo pedido (vários
   processos, todas as abas). Só navega e lê: nunca analisa, reprova, salva ou distribui.
 - `revisor-cia` (Sonnet) — revisão final da CIA de fora do raciocínio que a produziu, conforme
   `ppci-revisao-cia`. Opus só nos casos que a skill lista.

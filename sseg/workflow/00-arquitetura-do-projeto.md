@@ -66,8 +66,8 @@ protegido, `.zip` da skill gerado ao editar um `SKILL.md`, lembrete de commit. L
 
 ## Os subagentes (Claude Code)
 
-Em `.claude/agents/`: **`localizador-normas`** (Haiku — trechos literais com arquivo e
-linha/página), **`sol-leitor`** (Haiku — lê o SOL no Chrome e devolve só o resumo) e
+Em `.claude/agents/`: **`localizador-normas`** (Haiku 5.5 — trechos literais com arquivo e
+linha/página), **`sol-leitor`** (Haiku 5.5 — lê o SOL no Chrome e devolve só o resumo) e
 **`revisor-cia`** (Sonnet — revisão final da CIA de fora do raciocínio que a produziu). Modelo
 leve só onde nenhuma escolha normativa acontece; a política está em
 `workflow/politica-modelo-e-custo.md`.

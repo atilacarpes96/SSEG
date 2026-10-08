@@ -1,6 +1,6 @@
 ---
 name: politica-modelo-e-custo
-description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram (revisada em 06/10/2026 com o teste de 214 execuções: análise de processo e revisão final em Sonnet 5.5 alto; pergunta rápida e notificação avulsa em Sonnet 5.5 médio)
+description: Decisão de 03/09/2026 sobre qual modelo usar em cada tipo de tarefa do SSEG — por que a rota de "modelo leve para tarefa simples" foi avaliada e descartada, e quais são as alavancas de economia que sobraram (revisada em 08/10/2026 com o teste de 280 execuções: análise de processo e revisão final em Sonnet 5.5 alto; pergunta rápida, notificação avulsa e subagentes mecânicos em Haiku 5.5 médio)
 sources: [cowork]
 ---
 
@@ -49,8 +49,8 @@ Só onde **nenhuma escolha normativa acontece** e o erro aparece na hora:
 - conversa só de sincronização (copiar arquivos do clone para o projeto, `git pull`/push).
 
 Dentro de uma conversa de análise essas rodadas são minúsculas e não vale trocar de modelo.
-**Conversa aberta só para isso** (ex.: "Atualizar projeto com arquivos") abre em Sonnet 5.5
-médio; Haiku só como subagente mecânico.
+**Conversa aberta só para isso** (ex.: "Atualizar projeto com arquivos") abre em Haiku 5.5
+médio, que também é o modelo dos subagentes mecânicos (`localizador-normas`, `sol-leitor`).
 
 ## As alavancas que sobraram (e valem mais)
 
@@ -61,18 +61,20 @@ médio; Haiku só como subagente mecânico.
 2. **Esforço, não modelo.** Baixar o esforço num modelo forte é mais seguro que trocar por um
    modelo fraco: mantém-se a calibragem e o conhecimento, gasta-se menos deliberação. Desde
    06/10/2026 (testes no fim deste doc): **análise de processo e revisão final da CIA em
-   Sonnet 5.5 alto**; **pergunta rápida, notificação avulsa com modelo do banco e sincronização
-   em Sonnet 5.5 médio**. Na definidora o médio errou feio 1 vez em 4 e o alto nenhuma; na
-   revisão o médio reescreveu texto que estava certo. Esforço máximo não se justifica: no Opus, o alto empatou com o médio (99 × 98)
+   Sonnet 5.5 alto**; desde 08/10/2026, **pergunta rápida, notificação avulsa com modelo do banco
+   e sincronização em Haiku 5.5 médio**. Na definidora o Sonnet médio errou feio 1 vez em 4 e o
+   alto nenhuma; na revisão o médio reescreveu texto que estava certo. O Haiku 5.5 médio empatou
+   com o Sonnet alto no conjunto, mas ficou abaixo na definidora (86) e na revisão (88). Esforço máximo não se justifica: no Opus, o alto empatou com o médio (99 × 98)
    custando 34% a mais, e o máximo nem foi medido. O esforço fica o mesmo até o fim da conversa,
    porque trocar no meio pode reiniciar o cache. **Opus 5.5 só em caso realmente necessário**,
    os listados em `ppci-revisao-cia`: tese nova sem modelo no banco que o analista não tenha
    conferido na fonte, fundamento lido apenas em `normas/md/`, ou divergência entre o Sonnet e
    o analista sobre um fundamento. O que pega erro é abrir o PDF, não o esforço. Esforço menor
-   reduz o pensamento; texto mais curto se pede no prompt. Haiku não tem ajuste de esforço e
-   fica só em subagente mecânico.
+   reduz o pensamento; texto mais curto se pede no prompt. Haiku 5.5 no máximo não compensa:
+   15 vezes os tokens de saída do Sonnet alto e 4 minutos por tarefa.
    *Histórico:* de 24 a 29/09/2026 o padrão foi Opus 5.5 médio, inclusive na revisão final; de
-   30/09 a 05/10/2026, Sonnet 5.5 médio em toda conversa.
+   30/09 a 05/10/2026, Sonnet 5.5 médio em toda conversa; até 07/10/2026, Haiku 4.5 nos
+   subagentes e Sonnet 5.5 médio na pergunta rápida.
 3. **Menos rodadas no navegador.** Da API do SOL, só o resumo filtrado dentro da página vem
    para a conversa, nunca o JSON bruto em fatias; login, modal e gravação se conferem por
    JS/API, não por screenshot (`sol-cbmrs-navegador`). Todas as ferramentas numa única
@@ -200,3 +202,26 @@ alto), nos três arranjos que a política usa:
   fatal pela rubrica). Somando as rodadas depois da correção, o médio teve 1 erro fatal em 4
   execuções da definidora e o alto nenhum; o alto ficou acima do médio nas duas comparações
   (96 × 90 e 99 × 85), custando de 40% a 55% a mais.
+
+**Registro — Haiku 5.5, 08/10/2026** (66 execuções). As onze tarefas, duas vezes cada, sobre o
+mesmo retrato do repositório da validação de 06/10, em esforço médio, alto e máximo. Nome
+completo `claude-haiku-5-5`: o atalho `haiku` do Claude Code ainda aponta para o Haiku 4.5, e o
+Claude Code não tem o preço do 5.5 cadastrado, então o custo em US$ que ele mostra não vale;
+a comparação é por tokens.
+
+| Arranjo | Nota (11 tarefas) | Erros fatais | T01 · T05 · T06 | Saída por execução | Entrada por execução |
+|---|---|---|---|---|---|
+| Haiku 5.5 médio | 97 | 0 | 86 · 100 · 88 | 6,1 mil | 232 mil |
+| Haiku 5.5 alto | 97 | 0 | 74 · 100 · 100 | 9,7 mil | 322 mil |
+| Haiku 5.5 máximo | 99 | 0 | 96 · 100 · 100 | 58,5 mil | 670 mil |
+| Sonnet 5.5 médio (rodadas 1–2) | 91 | 0 | — | 2,9 mil | 142 mil |
+| Haiku 4.5 (rodadas 1–2) | 67 | 3 | — | 3,5 mil | — |
+
+- A qualidade mudou de patamar: o Haiku 5.5 médio tirou 100 em todas as tarefas mecânicas e
+  passou o Sonnet médio no conjunto, sem erro fatal.
+- Gasta mais tokens que o Sonnet no mesmo esforço (cerca de 2 vezes a saída no médio). A troca
+  só economiza porque o preço por token do Haiku é bem menor; conferir de novo se o preço mudar.
+- Definidora e revisão continuam no Sonnet alto: ali o Haiku médio e alto ficaram abaixo, e o
+  máximo, que chegou perto, custa e demora demais.
+- Decisão do Átila, 08/10/2026: Haiku 5.5 médio na pergunta rápida e na notificação avulsa, e
+  nos subagentes `localizador-normas` e `sol-leitor`.

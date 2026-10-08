@@ -30,7 +30,7 @@ clicar no **texto do código** na linha (o botão sem nome só expande os envolv
 `#/licenciamento/consulta/<id>`, com as abas 1–8 do projeto.
 
 **Leitura pesada ou repetitiva** (vários processos, todas as abas): delegar ao subagente
-`sol-leitor` (Haiku, só lê). O texto das páginas fica no contexto dele e só o resumo volta.
+`sol-leitor` (Haiku 5.5, só lê). O texto das páginas fica no contexto dele e só o resumo volta.
 
 ## ⭐ Padrão: o Claude redige, o analista cola
 
