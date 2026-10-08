@@ -12,6 +12,21 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 08/10/2026 — Programa SSEG para o PC (SSEG.exe)
+
+- **Novo programa `SSEG.exe`** em https://github.com/atilacarpes96/SSEG/releases/latest: cria a pasta dos processos e baixa o SSEG do GitHub se ainda não estiver no PC, confere Git, Python e Poppler, e o botão **Verificar atualizações** mostra o que mudou no GitHub e faz o `git pull`. Skill que mudou sai em `.zip` pronta para subir na conta. Tem atalho para este Painel.
+- Não dá commit nem push e não força nada: se o pull conflitar, ele avisa e não mexe.
+- Na primeira vez o Windows avisa que o programa não tem assinatura: Mais informações → Executar assim mesmo.
+
+### Prompt para atualizar
+
+```text
+Quero começar a usar o programa SSEG.exe (mudança de 08/10/2026). Me guie, sem rodar nada por mim:
+1. Me diga para baixar o SSEG.exe em https://github.com/atilacarpes96/SSEG/releases/latest e abrir (se o Windows avisar, Mais informações > Executar assim mesmo).
+2. Me ajude a preencher as duas pastas do programa: onde já está o meu clone do SSEG (confira com git rev-parse --show-toplevel) e a minha pasta dos processos (print ppci).
+3. Me peça para clicar em "Criar / conferir pastas" e depois em "Verificar atualizações", e para colar aqui o que aparecer no quadro de baixo se tiver algum ✗.
+```
+
 ## 08/10/2026 — Processo no PC, memorial e CIA no servidor
 
 - **Onde roda a análise:** no PC do trabalho, numa conversa **Local** do app do Claude (Novo → Local → pasta do SSEG), uma por processo. É onde estão o Chrome logado no SOL e os arquivos baixados.

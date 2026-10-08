@@ -1,0 +1,45 @@
+# Gera o SSEG.exe (sseg/app/sseg_app.py) num Windows do GitHub e publica em Releases.
+# Roda quando sseg/app/ muda no main. Para o programa avisar os analistas, subir sseg/app/VERSION
+# junto com a VERSAO de sseg_app.py.
+name: SSEG app (Windows)
+
+on:
+  push:
+    branches: [main]
+    paths: ["sseg/app/**", ".github/workflows/sseg-app.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Conferir versão
+        shell: bash
+        run: |
+          v=$(tr -d '[:space:]' < sseg/app/VERSION)
+          grep -q "VERSAO = \"$v\"" sseg/app/sseg_app.py || { echo "VERSION ($v) diferente da VERSAO do sseg_app.py"; exit 1; }
+          echo "V=$v" >> "$GITHUB_ENV"
+      - run: pip install "pyinstaller==6.*"
+      - run: pyinstaller --onefile --windowed --name SSEG --icon sseg/app/brasao.ico --add-data "sseg/app/brasao.png;." --add-data "sseg/app/brasao.ico;." sseg/app/sseg_app.py
+      - name: Abrir a janela e fotografar (prova de que monta no Windows)
+        shell: bash
+        run: |
+          pip install pillow
+          SSEG_TESTE_FOTO=dist/previa.png timeout 60 python sseg/app/sseg_app.py
+          test -s dist/previa.png
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-v${{ env.V }}
+          name: SSEG ${{ env.V }}
+          body: Baixe o SSEG.exe abaixo. Na primeira vez o Windows pode avisar "Windows protegeu o computador" (programa sem assinatura) — Mais informações > Executar assim mesmo.
+          files: |
+            dist/SSEG.exe
+            dist/previa.png
+          make_latest: true

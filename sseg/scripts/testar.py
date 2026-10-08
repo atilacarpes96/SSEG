@@ -37,7 +37,8 @@ def rodar(args, **kw):
 
 def main():
     # 1. compilação
-    for f in glob.glob(os.path.join(AQUI, "*.py")) + glob.glob(os.path.join(RAIZ, ".claude", "hooks", "*.py")):
+    for f in (glob.glob(os.path.join(AQUI, "*.py")) + glob.glob(os.path.join(RAIZ, ".claude", "hooks", "*.py"))
+              + glob.glob(os.path.join(RAIZ, "sseg", "app", "*.py"))):
         try:
             py_compile.compile(f, doraise=True, cfile=os.path.join(tempfile.gettempdir(), "sseg_pyc_teste"))
         except py_compile.PyCompileError as e:
