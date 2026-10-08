@@ -4,6 +4,15 @@ Fonte versionada do projeto **"SSEG - Análises"** do Claude: assistente técnic
 Segurança Contra Incêndio e Pânico para análise de PPCI, classificação de ocupações, cálculo
 populacional, fiscalização e elaboração/revisão de notificações no âmbito do CBMRS/RS.
 
+## Como o projeto funciona
+
+![Fluxograma do SSEG: o analista trabalha no PC com o Claude Code, que lê o SOL pelo Chrome; skills, normas e documentos vão e voltam pelo GitHub; os arquivos do processo vão direto do PC ao servidor por SSH, nunca pelo GitHub; o servidor gera o Painel SSEG toda manhã.](sseg/painel/fluxograma.svg)
+
+O analista decide; o Claude pesquisa, confere a norma no PDF oficial e redige. O GitHub (este repositório,
+público) guarda skills, normas e documentos, para todos os analistas terem a mesma versão. Dados de processo
+nunca passam por aqui: vão do PC direto ao servidor próprio. Este repositório é só a parte versionável do
+projeto inteiro, e o fluxograma acima é o mesmo do Painel SSEG, que o servidor gera toda manhã.
+
 O objetivo deste repositório é **poder levantar o projeto inteiro em outra máquina**: tudo que
 está na base de conhecimento do projeto está em `sseg/`. Desde 02/10/2026 o repositório é a
 **fonte** (skills, docs, scripts); o projeto do claude.ai e a conta de cada analista recebem cópia.

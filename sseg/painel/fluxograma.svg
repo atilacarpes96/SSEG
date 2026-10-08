@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 410" role="img" aria-label="O analista trabalha no PC com o Claude Code, que lê o SOL pelo Chrome já logado. Skills, normas e documentos vão e voltam pelo GitHub. Os arquivos do processo vão do PC direto ao servidor por SSH, nunca pelo GitHub. O servidor grava o retrato neste painel às 6h30 e aplica os pedidos de mudança."><style>
+:root{--surface:#fff;--ink:#17212B;--muted:#56636E;--line:#D5DCE2;--soft:#E9EDF1;--accent:#B8241A;--info:#1F4E79;--info-bg:#E4EEF7}
+@media (prefers-color-scheme:dark){:root{--surface:#161F27;--ink:#E4EAF0;--muted:#98A6B2;--line:#2A3641;--soft:#1D2731;--accent:#EE5B4E;--info:#9CC6EE;--info-bg:#132A40}}
+.d-grp{fill:var(--soft);stroke:var(--line)}.d-box{fill:var(--surface);stroke:var(--muted);stroke-width:1}
+.d-hot{fill:var(--info-bg);stroke:var(--info);stroke-width:1.2}
+.d-t{fill:var(--ink);font:600 12.5px "Segoe UI",Arial,sans-serif}.d-s{fill:var(--muted);font:400 11px "Segoe UI",Arial,sans-serif}
+.d-g{fill:var(--muted);font:600 10.5px "Segoe UI",Arial,sans-serif;letter-spacing:.1em}
+.d-l{fill:var(--ink);font:500 11px "Segoe UI",Arial,sans-serif}.d-la{fill:var(--accent);font:600 11px "Segoe UI",Arial,sans-serif}
+.d-ln{stroke:var(--muted);stroke-width:1.3;fill:none}.d-acc{stroke:var(--accent);stroke-width:1.6;fill:none;stroke-dasharray:6 4}
+.d-ah{fill:var(--muted)}.d-aha{fill:var(--accent)}
+</style><rect width="760" height="410" fill="var(--surface)"/>
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-ah"/></marker>
+        <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-aha"/></marker>
+      </defs>
+      <!-- PC do trabalho -->
+      <rect x="16" y="16" width="236" height="300" rx="10" class="d-grp"/>
+      <text x="30" y="38" class="d-g">PC DO TRABALHO</text>
+      <rect x="36" y="52" width="196" height="40" rx="6" class="d-box"/>
+      <text x="134" y="77" text-anchor="middle" class="d-t">Analista</text>
+      <rect x="36" y="128" width="196" height="56" rx="6" class="d-hot"/>
+      <text x="134" y="151" text-anchor="middle" class="d-t">Claude Code (conversa Local)</text>
+      <text x="134" y="169" text-anchor="middle" class="d-s">skills · subagentes</text>
+      <rect x="36" y="240" width="196" height="56" rx="6" class="d-box"/>
+      <text x="134" y="263" text-anchor="middle" class="d-t">Chrome com o SOL</text>
+      <text x="134" y="281" text-anchor="middle" class="d-s">login feito pelo analista</text>
+      <line x1="134" y1="93" x2="134" y2="126" class="d-ln" marker-end="url(#ah)"/>
+      <text x="142" y="113" class="d-l">pede e confere</text>
+      <line x1="134" y1="185" x2="134" y2="238" class="d-ln" marker-end="url(#ah)"/>
+      <text x="142" y="215" class="d-l">lê pela API (sol-leitor)</text>
+
+      <!-- GitHub -->
+      <rect x="292" y="40" width="176" height="56" rx="6" class="d-box"/>
+      <text x="380" y="63" text-anchor="middle" class="d-t">GitHub (público)</text>
+      <text x="380" y="81" text-anchor="middle" class="d-s">skills · normas · docs</text>
+      <line x1="233" y1="140" x2="290" y2="92" class="d-ln" marker-start="url(#ah)" marker-end="url(#ah)"/>
+      <line x1="470" y1="70" x2="526" y2="76" class="d-ln" marker-start="url(#ah)" marker-end="url(#ah)"/>
+      <text x="380" y="114" text-anchor="middle" class="d-l">pull · push dos dois lados</text>
+
+      <!-- Servidor -->
+      <rect x="508" y="16" width="236" height="300" rx="10" class="d-grp"/>
+      <text x="522" y="38" class="d-g">SERVIDOR 24/7 (ORACLE)</text>
+      <rect x="528" y="52" width="196" height="56" rx="6" class="d-box"/>
+      <text x="626" y="75" text-anchor="middle" class="d-t">Claude Code (Remote Control)</text>
+      <text x="626" y="93" text-anchor="middle" class="d-s">conversas do celular e de casa</text>
+      <rect x="528" y="128" width="196" height="56" rx="6" class="d-box"/>
+      <text x="626" y="151" text-anchor="middle" class="d-t">Pastas dos processos</text>
+      <text x="626" y="169" text-anchor="middle" class="d-s">sem plantas · fora do GitHub</text>
+      <rect x="528" y="240" width="196" height="56" rx="6" class="d-box"/>
+      <text x="626" y="263" text-anchor="middle" class="d-t">Rotinas agendadas</text>
+      <text x="626" y="281" text-anchor="middle" class="d-s">6h30 · 7h47 · domingo</text>
+
+      <!-- envio do processo -->
+      <line x1="233" y1="164" x2="526" y2="164" class="d-acc" marker-end="url(#aha)"/>
+      <text x="380" y="156" text-anchor="middle" class="d-la">sseg.py enviar (SSH)</text>
+      <text x="380" y="182" text-anchor="middle" class="d-l">JSON do SOL · CIA · memorial</text>
+
+      <!-- Painel -->
+      <rect x="292" y="330" width="176" height="56" rx="6" class="d-hot"/>
+      <text x="380" y="353" text-anchor="middle" class="d-t">Painel SSEG</text>
+      <text x="380" y="371" text-anchor="middle" class="d-s">esta página</text>
+      <polyline points="626,297 626,350 470,350" class="d-ln" marker-end="url(#ah)"/>
+      <text x="548" y="343" text-anchor="middle" class="d-l">retrato do repositório</text>
+      <polyline points="470,370 664,370 664,298" class="d-ln" marker-end="url(#ah)"/>
+      <text x="566" y="390" text-anchor="middle" class="d-l">pedidos de mudança</text>
+      <polyline points="134,317 134,358 290,358" class="d-ln" marker-end="url(#ah)"/>
+      <text x="212" y="350" text-anchor="middle" class="d-l">analistas leem e sugerem</text>
+    </svg>

@@ -7,7 +7,7 @@ sources: [claude-code]
 # Servidor 24/7 para o SSEG — plano de teste
 
 > **Status (05/10/2026): A1 em produção, Micro de reserva.** A A1.Flex `carpes-24-7`
-> (2 OCPU/12 GB, ARM, IP 163.176.190.159) saiu às 08h01 pelo `criar_vm_oracle.py` e foi
+> (2 OCPU/12 GB, ARM, IP omitido) saiu às 08h01 pelo `criar_vm_oracle.py` e foi
 > montada no mesmo dia: clone em `~/SSEG` com deploy key própria (`servidor-oracle-a1`),
 > Claude Code logado pela assinatura com os conectores do claude.ai (Gmail, Agenda, Drive,
 > Docs), `~/rotinas` copiado da Micro, crontab dos dois painéis, sessão tmux `sseg` com
