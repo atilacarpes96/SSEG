@@ -37,7 +37,7 @@ import zipfile
 
 import instalar
 
-VERSAO = "1.0.4"
+VERSAO = "1.0.5"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -126,7 +126,7 @@ def instalar_travas(clone):
         return "✗ Travas do commit não instaladas: falta o Python (cartão Programas) ou o clone está incompleto"
     p = subprocess.run([py, gancho, "instalar-git"], capture_output=True, text=True, encoding="utf-8",
                        errors="replace", timeout=60, creationflags=SEM_JANELA, stdin=subprocess.DEVNULL,
-                       env={**os.environ, "CLAUDE_PROJECT_DIR": clone})
+                       env={**os.environ, "CLAUDE_PROJECT_DIR": clone, "PYTHONUTF8": "1"})
     msg = p.stdout.strip() or p.stderr.strip()[-200:] or "travas do commit: sem resposta"
     return ("✓ " if "instalad" in msg and "não" not in msg else "✗ ") + msg
 
@@ -370,7 +370,11 @@ def janela():
                            encoding="utf-8", errors="replace", timeout=900, creationflags=SEM_JANELA,
                            stdin=subprocess.DEVNULL, env={**os.environ, "PYTHONUTF8": "1"})
         if p.returncode:
-            raise RuntimeError((p.stderr or p.stdout).strip()[-1500:])
+            erro = (p.stderr or p.stdout).strip()
+            if "invalid choice" in erro:
+                raise RuntimeError("O SSEG desta pasta está desatualizado e ainda não tem esse comando: "
+                                   "clique em \"Verificar atualizações\" e depois em \"Atualizar agora\".")
+            raise RuntimeError(erro[-1500:])
         return p.stdout
 
     def planejar_sinc():
