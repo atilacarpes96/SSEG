@@ -103,6 +103,7 @@ jobs:
           $depois = (Get-FileHash "C:\teste sseg\SSEG.exe").Hash
           $reaberto = @(Get-Process SSEG -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "C:\teste sseg\SSEG.exe" }).Count
           Write-Output "::notice title=autoatualizacao::trocou=$($depois -eq $publicado) mudou=$($antes -ne $depois) reaberto=$reaberto segundos=$i"
-          Get-Process SSEG -ErrorAction SilentlyContinue | Stop-Process -Force
+          Get-Process SSEG -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
           if ($depois -ne $publicado -or $reaberto -lt 1) { exit 1 }
+          exit 0
           make_latest: true
