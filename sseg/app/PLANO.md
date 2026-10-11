@@ -20,12 +20,12 @@ Decisões do Átila em 11/10/2026. Marcar `[x]` no mesmo commit em que o item fi
 ## Itens
 
 - [x] **0. Decisões** (11/10/2026)
-- [ ] **1. Instalar o que falta**
-  - [ ] conferir cada pré-requisito (Git, Python que não seja o atalho da Store, Poppler, Claude Code)
-  - [ ] botão "Instalar o que falta" com `winget --scope user` e o instalador oficial do Claude Code, com o andamento no quadro
-  - [ ] ajustes do CLAUDE.md feitos sozinhos: `python3.exe`, PATH com Poppler e Python antes do Git, `PYTHONUTF8=1`
-  - [ ] PC sem `winget`: dizer o que baixar e onde, sem travar o resto
-  - [ ] "Entrar no Claude Code": abre o login uma vez e confere que ficou logado
+- [x] **1. Instalar o que falta** (1.0.2, 11/10/2026 — falta o teste no PC do trabalho, item 8)
+  - [x] conferir cada pré-requisito (Git, Python que não seja o atalho da Store, Poppler, Claude Code)
+  - [x] botão "Instalar o que falta" com `winget --scope user` e o instalador oficial do Claude Code, com o andamento no quadro
+  - [x] ajustes do CLAUDE.md feitos sozinhos: `python3.exe`, PATH com Poppler e Python antes do Git, `PYTHONUTF8=1`
+  - [x] PC sem `winget`: dizer o que baixar e onde, sem travar o resto
+  - [x] "Entrar no Claude Code": abre o login uma vez e confere que ficou logado
 - [ ] **2. Travas no git**
   - [ ] `pre-commit` que chama as regras do `sseg_hooks.py` (arquivo de processo, `add -f`, `testar.py`)
   - [ ] instalado e conferido pelo "Criar / conferir pastas"

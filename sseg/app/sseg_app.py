@@ -6,7 +6,8 @@ sseg_app.py — o programa "SSEG" do PC do analista (Windows), empacotado em SSE
 FAZ
   - cria e confere as pastas de que o projeto precisa: o clone do repositório (git clone,
     se ainda não existir), a pasta dos processos (print ppci) e `sseg/processos/` no clone;
-  - confere os pré-requisitos do CLAUDE.md (Git, Python, Poppler) e diz o comando que falta;
+  - confere e instala Git, Python, Poppler e Claude Code, com os ajustes do CLAUDE.md
+    (instalar.py), e abre o login do Claude Code;
   - "Verificar atualizações": compara o clone com o GitHub, mostra o que chegou (commits,
     skills mudadas, última entrada de Atualizações) e oferece o `git pull`; skill mudada sai
     em .zip pronto para subir na conta;
@@ -15,7 +16,7 @@ FAZ
 
 NÃO FAZ
   - não grava nada de processo no repositório, não dá commit nem push, não força pull;
-  - não instala nada sozinho: mostra o comando e deixa o analista rodar.
+  - não faz o login do Claude Code pelo analista: só abre a janela dele.
 
 Lógica sem tkinter no topo (testável no servidor); a janela só é montada em `janela()`.
 Build: .github/workflows/sseg-app.yml (PyInstaller no Windows do GitHub Actions).
@@ -32,7 +33,9 @@ import urllib.request
 import webbrowser
 import zipfile
 
-VERSAO = "1.0.1"
+import instalar
+
+VERSAO = "1.0.2"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -83,18 +86,6 @@ def git(clone, *args, timeout=120):
 
 def eh_clone(clone):
     return os.path.isdir(os.path.join(clone, ".git")) and os.path.isdir(os.path.join(clone, "sseg", "skills"))
-
-
-def prerequisitos():
-    """[(nome, ok, comando para instalar)] — os do CLAUDE.md, 'Pré-requisitos no PC'."""
-    py = shutil.which("python3") or shutil.which("python")
-    return [
-        ("Git", bool(shutil.which("git")), "winget install -e --id Git.Git"),
-        ("Python 3", bool(py) and "WindowsApps" not in (py or ""),
-         "winget install -e --id Python.Python.3.12 --scope user"),
-        ("Poppler (pdftotext, pdftoppm)", bool(shutil.which("pdftoppm")),
-         "winget install -e --id oschwartz10612.Poppler"),
-    ]
 
 
 def preparar_pastas(clone, processos):
@@ -262,6 +253,19 @@ def janela():
         dentro.pack(fill="x", padx=14, pady=(0, 12))
         return dentro
 
+    # Programas (Git, Python, Poppler, Claude Code) — primeiro, porque o resto depende deles
+    progc = cartao("Programas")
+    prog = tk.Label(progc, text="Conferindo…", font=F(10), fg=SUAVE, bg=CARTAO, justify="left", anchor="w")
+    prog.pack(fill="x", pady=(0, 8))
+    acoes_g = tk.Frame(progc, bg=CARTAO)
+    acoes_g.pack(fill="x")
+    b_inst = botao(acoes_g, "Instalar o que falta", lambda: rodar(instalar_tudo))
+    b_inst.pack(side="left")
+    b_login = botao(acoes_g, "Entrar no Claude Code", lambda: rodar(entrar), primario=False)
+    b_login.pack(side="left", padx=8)
+    b_conf = botao(acoes_g, "Conferir", lambda: rodar(conferir_programas), primario=False)
+    b_conf.pack(side="left")
+
     # Pastas
     pastas = cartao("Pastas")
     campos = {}
@@ -324,7 +328,7 @@ def janela():
 
     def rodar(tarefa):
         """Roda fora da janela (git pode demorar) e devolve o resultado na thread da interface."""
-        for b in (b_pastas, b_verif, b_atual):
+        for b in (b_pastas, b_verif, b_atual, b_inst, b_login, b_conf):
             b.ligar(False)
 
         def trabalho():
@@ -332,16 +336,50 @@ def janela():
                 r = tarefa()
             except Exception as e:  # mostra o erro em vez de fechar o programa
                 r = lambda m=str(e): escrever("✗ " + m)  # noqa: E731
-            raiz.after(0, lambda: (r and r(), b_pastas.ligar(True), b_verif.ligar(True),
+            raiz.after(0, lambda: (r and r(), b_pastas.ligar(True), b_verif.ligar(True), b_conf.ligar(True),
+                                   b_inst.ligar(estado.get("falta", True)), b_login.ligar(True),
                                    b_atual.ligar(bool(estado["dados"] and estado["dados"]["atras"]))))
         threading.Thread(target=trabalho, daemon=True).start()
 
     def criar():
         clone, processos = salvar()
         linhas = preparar_pastas(clone, processos)
-        pre = prerequisitos()
-        linhas += [("✓ " if ok else "✗ ") + nome + ("" if ok else "  →  no PowerShell: " + cmd) for nome, ok, cmd in pre]
         return lambda: escrever("— Pastas —", *linhas)
+
+    def mostrar_programas(achados, logado):
+        partes = []
+        for chave, nome, _id in instalar.PROGRAMAS:
+            ok = bool(achados.get(chave))
+            extra = "" if chave != "claude" or not ok else (" (logado)" if logado else " (falta entrar)")
+            partes.append(("✓ " if ok else "✗ ") + nome + extra)
+        falta = instalar.faltando(achados)
+        prog.configure(text="   ·   ".join(partes), fg="#2E7D32" if not falta and logado else VERMELHO_ESC)
+        estado["claude"] = achados.get("claude")
+        estado["falta"] = bool(falta)
+        estado["logado"] = logado
+
+    def conferir_programas():
+        achados = instalar.localizar()
+        logado = bool(achados.get("claude")) and instalar.claude_logado(achados["claude"])
+        return lambda: mostrar_programas(achados, logado)
+
+    def instalar_tudo():
+        resto = instalar.instalar(lambda l: raiz.after(0, escrever, l))
+        achados = instalar.localizar()
+        logado = bool(achados.get("claude")) and instalar.claude_logado(achados["claude"])
+
+        def fim():
+            mostrar_programas(achados, logado)
+            if not resto and not logado:
+                escrever("Falta só entrar no Claude Code: clique em \"Entrar no Claude Code\".")
+        return fim
+
+    def entrar():
+        if not estado.get("claude"):
+            return lambda: escrever("✗ Instale o Claude Code antes (\"Instalar o que falta\").")
+        instalar.abrir_login(estado["claude"])
+        return lambda: escrever("Abri a janela de login: entre pelo navegador e depois clique em "
+                                "\"Conferir\" para confirmar.")
 
     def verif():
         clone, _ = salvar()
@@ -393,6 +431,7 @@ def janela():
         return mostrar
 
     escrever("SSEG %s. Confira as pastas e clique em \"Verificar atualizações\"." % VERSAO)
+    rodar(conferir_programas)
     foto = os.environ.get("SSEG_TESTE_FOTO")  # só no build: abre, fotografa a janela e fecha
     if foto:
         def fotografar():

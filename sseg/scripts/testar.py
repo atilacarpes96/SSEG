@@ -99,6 +99,12 @@ def main():
                                    "Planta Baixa Térreo.pdf", "prancha 01.pdf", "corte.dwg", "print.png"])
     caso("enviar deixa as plantas no PC", set(fica) == {"Planta Baixa Térreo.pdf", "prancha 01.pdf", "corte.dwg", "print.png"}
          and "CIA 1 textos.json" in vai, f"vai={vai} fica={fica}")
+    # 9. programa SSEG: bloco do ~/.bashrc reescrito sem duplicar, resto do arquivo intacto
+    sys.path.insert(0, os.path.join(RAIZ, "sseg", "app"))
+    import instalar
+    b = instalar.bloco_bashrc(instalar.bloco_bashrc("alias ll='ls -l'\n", [r"C:\P\bin"]), [r"D:\Novo"])
+    caso("instalar: bloco do .bashrc", b.count(instalar.INICIO_BLOCO) == 1 and "/d/Novo:$PATH" in b
+         and "/c/P" not in b and b.startswith("alias ll"), b)
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

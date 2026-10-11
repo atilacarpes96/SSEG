@@ -13,6 +13,34 @@ permissions:
   contents: write
 
 jobs:
+  # Instala de verdade num Windows limpo do GitHub (sem Poppler e sem Claude Code) e confere o
+  # resultado como um PC novo veria. Não bloqueia o .exe: o resultado é lido nos passos.
+  instalacao:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Antes (o que o PC já tem)
+        continue-on-error: true
+        run: python sseg/app/instalar.py --conferir
+      - name: Instalar o que falta
+        continue-on-error: true
+        run: python sseg/app/instalar.py --instalar
+      - name: PATH do usuário tem Poppler e Claude Code
+        shell: pwsh
+        run: |
+          $p = [Environment]::GetEnvironmentVariable('Path','User'); $p
+          if ($p -notmatch 'Poppler') { exit 1 }
+          if ($p -notmatch '\.local\\bin') { exit 1 }
+          if ([Environment]::GetEnvironmentVariable('PYTHONUTF8','User') -ne '1') { exit 1 }
+      - name: Git Bash usa o pdftotext do Poppler, não o do Git
+        shell: bash
+        run: |
+          cat ~/.bashrc
+          bash -ic 'which pdftotext pdftoppm python3; pdftotext -v 2>&1 | tee /dev/stderr | grep -q Poppler'
+      - name: Claude Code responde
+        shell: bash
+        run: bash -ic 'claude --version'
+
   exe:
     runs-on: windows-latest
     steps:
