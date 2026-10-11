@@ -97,9 +97,10 @@ def caminho_bash(p):
 
 def juntar_path(atual, novos):
     """Põe `novos` na frente do PATH, sem repetir o que já está lá."""
+    chave = lambda p: p.lower().replace("/", "\\").rstrip("\\")  # noqa: E731 — o winget grava com "/"
     partes = [p for p in atual.split(os.pathsep) if p]
-    baixo = [p.lower().rstrip("\\/") for p in partes]
-    frente = [n for n in novos if n and n.lower().rstrip("\\/") not in baixo]
+    baixo = [chave(p) for p in partes]
+    frente = [n for n in novos if n and chave(n) not in baixo]
     return os.pathsep.join(frente + partes)
 
 
