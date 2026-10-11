@@ -237,6 +237,7 @@ def abrir_login(claude):
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # console do Windows é cp1252: "✓" quebraria
     if "--instalar" in sys.argv:
         resto = instalar()
     else:

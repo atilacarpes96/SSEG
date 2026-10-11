@@ -19,24 +19,35 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      # A saída de cada passo vira anotação (::notice), que a API mostra sem login; o log não.
       - name: Antes (o que o PC já tem)
         continue-on-error: true
-        run: python sseg/app/instalar.py --conferir
+        shell: bash
+        run: |
+          python sseg/app/instalar.py --conferir > saida.txt 2>&1; rc=$?
+          python -c "t=open('saida.txt',encoding='utf-8',errors='replace').read();print('::notice title=antes::'+t[-3000:].replace('%','%25').replace(chr(13),'').replace(chr(10),'%0A'))"
+          exit $rc
       - name: Instalar o que falta
         continue-on-error: true
-        run: python sseg/app/instalar.py --instalar
+        shell: bash
+        run: |
+          python sseg/app/instalar.py --instalar > saida.txt 2>&1; rc=$?
+          python -c "t=open('saida.txt',encoding='utf-8',errors='replace').read();print('::notice title=instalar::'+t[-3500:].replace('%','%25').replace(chr(13),'').replace(chr(10),'%0A'))"
+          exit $rc
       - name: PATH do usuário tem Poppler e Claude Code
         shell: pwsh
         run: |
-          $p = [Environment]::GetEnvironmentVariable('Path','User'); $p
+          $p = [Environment]::GetEnvironmentVariable('Path','User')
+          Write-Output "::notice title=path-usuario::$($p -replace ';','%0A')"
           if ($p -notmatch 'Poppler') { exit 1 }
           if ($p -notmatch '\.local\\bin') { exit 1 }
           if ([Environment]::GetEnvironmentVariable('PYTHONUTF8','User') -ne '1') { exit 1 }
       - name: Git Bash usa o pdftotext do Poppler, não o do Git
         shell: bash
         run: |
-          cat ~/.bashrc
-          bash -ic 'which pdftotext pdftoppm python3; pdftotext -v 2>&1 | tee /dev/stderr | grep -q Poppler'
+          s=$(bash -ic 'which pdftotext pdftoppm python3; pdftotext -v' 2>&1)
+          echo "::notice title=git-bash::$(echo "$s" | tr '\n' '|')"
+          echo "$s" | grep -q Poppler
       - name: Claude Code responde
         shell: bash
         run: bash -ic 'claude --version'
