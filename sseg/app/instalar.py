@@ -68,9 +68,8 @@ def localizar(which=shutil.which):
     """{chave: caminho do executável ou None}."""
     loc, pf, casa = _env("LOCALAPPDATA"), _env("ProgramFiles"), os.path.expanduser("~")
     j = os.path.join
-    py = which("python")
-    if py and "WindowsApps" in py:  # atalho da Microsoft Store não é Python
-        py = None
+    py = next((c for c in (which("python"), which("python3"))
+               if c and "WindowsApps" not in c), None)  # atalho da Microsoft Store não é Python
     exe = ".exe" if NO_WINDOWS else ""
     return {
         "git": which("git") or _primeiro(j(loc, "Programs", "Git", "cmd", "git" + exe),
