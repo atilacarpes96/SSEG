@@ -60,14 +60,14 @@ Decisões do Átila em 11/10/2026. Marcar `[x]` no mesmo commit em que o item fi
 - [x] **9. Reportar bug** (praxe dos apps do Átila): descrição + versão + sistema + fim do quadro, limpos de código de processo, pasta e nome de planta/PDF/CIA; abre issue no GitHub ou copia para a conversa do servidor
 - [x] **10. Procurar atualização** no rodapé, com a versão atual, junto do Reportar bug
 - [ ] **8. Entrega**
-  - [x] versão 1.1.0; o build abre e fotografa cada tela (janela, Subagentes, Gasto, Reportar bug, Iniciar conversa, GitHub) e falha se alguma der erro
+  - [x] versão 1.1.0 (1.1.1: janela cabe em tela de 768 px); o build abre e fotografa cada tela (janela, Subagentes, Gasto, Reportar bug, Iniciar conversa, GitHub) e falha se alguma der erro
   - [x] entrada em `workflow/atualizacoes.md`
   - [ ] teste do Átila no PC (lista abaixo); ajustes
 
-## O que o Átila testa no PC (1.1.0)
+## O que o Átila testa no PC (1.1.1)
 
-Abrir o SSEG.exe 1.0.6 que já está no PC: ele deve oferecer "Atualizar o programa (1.1.0)". É o
-teste da atualização automática — clicar e ver se fecha, troca e reabre já na 1.1.0.
+Abrir o SSEG.exe 1.0.6 que já está no PC: ele deve oferecer "Atualizar o programa (1.1.1)". É o
+teste da atualização automática — clicar e ver se fecha, troca e reabre já na 1.1.1.
 
 1. **Rolagem:** a janela rola com a roda do mouse; quadro e rodapé ficam fixos embaixo.
 2. **Programas e Pastas:** tudo ✓ como na 1.0.4 (pasta do SSEG `E:\Atila\bombers\SSEG`).

@@ -42,7 +42,7 @@ import git_sinc
 import instalar
 import relato
 
-VERSAO = "1.1.0"
+VERSAO = "1.1.1"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -245,7 +245,8 @@ def janela():
     raiz.title("SSEG")
     raiz.configure(bg=FUNDO)
     raiz.minsize(560, 480)
-    raiz.geometry("640x760")
+    # cabe em tela de notebook (768 px): desconta a barra de tarefas e a borda da janela
+    raiz.geometry("640x%d+40+10" % max(480, min(760, raiz.winfo_screenheight() - 110)))
     try:
         raiz.iconbitmap(recurso("brasao.ico"))
     except tk.TclError:
@@ -395,7 +396,7 @@ def janela():
     botao(lin, "Pasta do SSEG", lambda: abrir(campos["clone"].get()), primario=False).pack(side="left")
 
     # Registro e rodapé (fixos embaixo)
-    reg = tk.Text(baixo, height=7, font=("Consolas", 9), bg="#FBF9F8", fg=TEXTO, relief="solid", bd=1,
+    reg = tk.Text(baixo, height=5, font=("Consolas", 9), bg="#FBF9F8", fg=TEXTO, relief="solid", bd=1,
                   wrap="word", state="disabled")
     reg.pack(fill="x", pady=(8, 6))
     rod = tk.Frame(baixo, bg=FUNDO)
