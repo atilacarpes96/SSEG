@@ -13,7 +13,8 @@ FAZ
     em .zip pronto para subir na conta;
   - "Sincronizar processos": PC <-> servidor por SSH (sseg.py sincronizar), com tela de
     conferência e escolha nos conflitos; planta não vai; nada passa pelo GitHub;
-  - avisa quando há versão nova do próprio programa;
+  - confere ao abrir se há versão nova do próprio programa e se atualiza com um botão
+    (baixa o .exe novo, fecha, troca e reabre);
   - abre o Painel SSEG, que é o manual.
 
 NÃO FAZ
@@ -37,7 +38,7 @@ import zipfile
 
 import instalar
 
-VERSAO = "1.0.5"
+VERSAO = "1.0.6"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -143,6 +144,39 @@ def versao_nova_do_programa():
     except Exception:
         return None
     return v if _versao(v) > _versao(VERSAO) else None
+
+
+EXE_URL = "https://github.com/%s/releases/latest/download/SSEG.exe" % REPO
+
+
+def atualizar_programa():
+    """Baixa o SSEG.exe novo ao lado do atual e deixa um .bat trocar o arquivo depois que este
+    fechar (o Windows não deixa um .exe aberto se sobrescrever) e reabrir. Quem chama fecha a janela."""
+    if not getattr(sys, "frozen", False):
+        raise RuntimeError("Rodando pelo .py: o programa atualiza junto com o SSEG (\"Atualizar agora\").")
+    exe = sys.executable
+    novo = exe + ".novo"
+    try:
+        with urllib.request.urlopen(EXE_URL, timeout=120) as r, open(novo, "wb") as fh:
+            shutil.copyfileobj(r, fh)
+    except PermissionError:
+        raise RuntimeError("Sem permissão para gravar em %s. Mova o SSEG.exe para uma pasta sua "
+                           "(Documentos ou Área de Trabalho) e tente de novo." % os.path.dirname(exe))
+    with open(novo, "rb") as fh:
+        ok = fh.read(2) == b"MZ"
+    if not ok or os.path.getsize(novo) < 1_000_000:
+        os.remove(novo)
+        raise RuntimeError("O download veio incompleto. Tente de novo ou baixe em " + RELEASES_URL)
+    bat = os.path.join(os.environ.get("TEMP", os.path.dirname(exe)), "sseg-atualizar.bat")
+    # O .exe de arquivo único roda em dois processos e o de fora solta o arquivo por último:
+    # em vez de esperar um PID, tenta trocar a cada segundo, por até um minuto.
+    script = ("@echo off\r\nset n=0\r\n:troca\r\ntimeout /t 1 /nobreak >nul\r\n"
+              'move /y "NOVO" "EXE" >nul 2>&1 && goto abre\r\n'
+              "set /a n+=1\r\nif %n% lss 60 goto troca\r\nexit /b 1\r\n"
+              ':abre\r\nstart "" "EXE"\r\ndel "%~f0"\r\n')
+    with open(bat, "w", encoding="mbcs" if os.name == "nt" else "utf-8", errors="replace") as fh:
+        fh.write(script.replace("NOVO", novo).replace("EXE", exe))
+    subprocess.Popen(["cmd", "/c", bat], creationflags=SEM_JANELA | 0x00000008)  # DETACHED_PROCESS
 
 
 def verificar(clone):
@@ -315,6 +349,8 @@ def janela():
     b_verif.pack(side="left")
     b_atual = botao(acoes_a, "Atualizar agora", lambda: rodar(aplicar))
     b_atual.pack(side="left", padx=8)
+    b_prog = botao(acoes_a, "Atualizar o programa", lambda: rodar(trocar_programa))
+    # aparece só quando há versão nova (conferida ao abrir e em "Verificar atualizações")
     b_atual.ligar(False)
 
     # Atalhos
@@ -346,7 +382,7 @@ def janela():
 
     def rodar(tarefa):
         """Roda fora da janela (git pode demorar) e devolve o resultado na thread da interface."""
-        for b in (b_pastas, b_sinc, b_verif, b_atual, b_inst, b_login, b_conf):
+        for b in (b_pastas, b_sinc, b_verif, b_atual, b_inst, b_login, b_conf, b_prog):
             b.ligar(False)
 
         def trabalho():
@@ -354,7 +390,7 @@ def janela():
                 r = tarefa()
             except Exception as e:  # mostra o erro em vez de fechar o programa
                 r = lambda m=str(e): escrever("✗ " + m)  # noqa: E731
-            raiz.after(0, lambda: (r and r(), b_pastas.ligar(True), b_sinc.ligar(True), b_verif.ligar(True), b_conf.ligar(True),
+            raiz.after(0, lambda: (r and r(), b_pastas.ligar(True), b_sinc.ligar(True), b_prog.ligar(True), b_verif.ligar(True), b_conf.ligar(True),
                                    b_inst.ligar(estado.get("falta", True)), b_login.ligar(True),
                                    b_atual.ligar(bool(estado["dados"] and estado["dados"]["atras"]))))
         threading.Thread(target=trabalho, daemon=True).start()
@@ -471,6 +507,21 @@ def janela():
                 escrever("Falta só entrar no Claude Code: clique em \"Entrar no Claude Code\".")
         return fim
 
+    def mostrar_versao(nova):
+        if nova and not b_prog.winfo_ismapped():
+            b_prog.configure(text="Atualizar o programa (%s)" % nova)
+            b_prog.pack(side="left")
+
+    def conferir_versao():
+        nova = versao_nova_do_programa()
+        return (lambda: (mostrar_versao(nova), escrever("Programa SSEG %s disponível: clique em "
+                                                        "\"Atualizar o programa\"." % nova))) if nova else None
+
+    def trocar_programa():
+        atualizar_programa()
+        return lambda: (escrever("Baixado. Fechando para trocar o programa; ele abre de novo sozinho."),
+                        raiz.after(1200, raiz.destroy))
+
     def entrar():
         if not estado.get("claude"):
             return lambda: escrever("✗ Instale o Claude Code antes (\"Instalar o que falta\").")
@@ -505,7 +556,8 @@ def janela():
             if d["frente"]:
                 linhas.append("Este PC tem %d commit(s) que ainda não foram para o GitHub (git push)." % d["frente"])
             if nova:
-                linhas.append("Programa SSEG %s disponível (este é o %s): %s" % (nova, VERSAO, RELEASES_URL))
+                linhas.append("Programa SSEG %s disponível (este é o %s): clique em \"Atualizar o programa\"." % (nova, VERSAO))
+                mostrar_versao(nova)
             escrever(*linhas)
         return mostrar
 
@@ -529,6 +581,7 @@ def janela():
 
     escrever("SSEG %s. Confira as pastas e clique em \"Verificar atualizações\"." % VERSAO)
     rodar(conferir_programas)
+    raiz.after(1500, lambda: rodar(conferir_versao))
     foto = os.environ.get("SSEG_TESTE_FOTO")  # só no build: abre, fotografa a janela e fecha
     if foto:
         def fotografar():
@@ -542,4 +595,7 @@ def janela():
 
 
 if __name__ == "__main__":
-    janela()
+    if "--atualizar" in sys.argv:  # sem janela: usado no teste do build
+        atualizar_programa()
+    else:
+        janela()
