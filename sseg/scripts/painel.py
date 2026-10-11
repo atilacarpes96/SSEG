@@ -8,9 +8,10 @@ próxima geração, e o que deixa de bater vira item em "divergências".
 Uso:
     python3 painel.py --saida <pasta>          # grava um JSON por documento do banco + hashes.json
     python3 painel.py --saida <pasta> --resumo # idem, e imprime as divergências encontradas
+    python3 painel.py --fluxos                 # regrava sseg/workflow/fluxos.json (o SSEG.exe lê)
 
 Saída: <pasta>/<doc>.json para cada documento da coleção "retrato" do painel (meta, instrucoes,
-arquitetura, atualizacoes, skills, agentes, docs, rotinas, parametros, divergencias) e <pasta>/hashes.json.
+arquitetura, atualizacoes, fluxos, skills, agentes, docs, rotinas, parametros, divergencias) e <pasta>/hashes.json.
 Só biblioteca padrão.
 """
 import argparse, datetime, glob, hashlib, json, os, re, subprocess, sys
@@ -168,6 +169,51 @@ def agentes():
             "atualizado": ultima_mudanca(arq),
         })
     return out
+
+
+# ---------------------------------------------------------------- fluxos (fonte única: Painel SSEG e SSEG.exe)
+# O que cada tipo de demanda abre: skill, subagentes e o prompt de abertura ficam aqui; o MODELO e o
+# ESFORÇO saem do texto da política (item 2), para a política continuar sendo a única que decide.
+
+POLITICA = "sseg/workflow/politica-modelo-e-custo.md"
+GRUPOS_POLITICA = {
+    "pesado": r"análise de processo e revisão final da CIA em\s+(\w+ 5\.5)\s+(baixo|médio|alto|máximo)",
+    "leve": r"pergunta rápida, notificação avulsa com modelo do banco\s+e sincronização em\s+(\w+ 5\.5)\s+(baixo|médio|alto|máximo)",
+}
+MODELO_ID = {"Sonnet 5.5": "claude-sonnet-5-5", "Opus 5.5": "claude-opus-5-5", "Haiku 5.5": "claude-haiku-5-5"}
+ESFORCO_ID = {"baixo": "low", "médio": "medium", "alto": "high", "máximo": "max"}
+
+FLUXOS = [
+    # id, título, grupo da política, skill, subagentes, pede código?, prompt ({codigo} quando pede)
+    ("abertura", "Começar o dia", "pesado", "ppci-abertura-sessao", ["sol-leitor"], False,
+     "Vou começar a analisar PPCI. Siga a skill ppci-abertura-sessao."),
+    ("analise", "Analisar processo", "pesado", "ppci-analise-processo", ["localizador-normas", "sol-leitor"], True,
+     "Analisar o processo {codigo}. Siga a skill ppci-analise-processo."),
+    ("revisao", "Revisar CIA", "pesado", "ppci-revisao-cia", ["revisor-cia"], True,
+     "Revisa a CIA do processo {codigo}."),
+    ("minuta", "Minuta ou despacho", "pesado", "ppci-minuta-despacho", ["localizador-normas"], False,
+     "Preciso de uma minuta (ata de consulta técnica ou despacho de recurso). Siga a skill ppci-minuta-despacho. "),
+    ("norma", "Incorporar norma", "pesado", "ppci-incorporar-norma", ["localizador-normas"], False,
+     "Norma nova para a base. Siga a skill ppci-incorporar-norma. "),
+    ("notificacao", "Notificação avulsa", "leve", "ppci-notificacao-cia", ["localizador-normas"], False,
+     "Preciso de uma notificação, sem rodar a análise do processo. Siga a skill ppci-notificacao-cia. "),
+    ("pergunta", "Pergunta de norma", "leve", None, ["localizador-normas"], False, ""),
+]
+
+
+def fluxos():
+    texto = re.sub(r"\s+", " ", re.sub(r"\*\*", "", ler(os.path.join(RAIZ, POLITICA))))
+    grupos = {}
+    for g, rx in GRUPOS_POLITICA.items():
+        m = re.search(rx, texto)
+        grupos[g] = {"modelo": MODELO_ID.get(m.group(1)) if m else None, "esforco": ESFORCO_ID.get(m.group(2)) if m else None,
+                     "texto": (m.group(1) + " " + m.group(2)) if m else None}
+    lista = []
+    for fid, titulo, g, skill, subs, pede, prompt in FLUXOS:
+        lista.append({"id": fid, "titulo": titulo, "skill": skill, "subagentes": subs, "pede_codigo": pede,
+                      "prompt": prompt, "modelo": grupos[g]["modelo"], "esforco": grupos[g]["esforco"],
+                      "modelo_texto": grupos[g]["texto"], "grupo": g})
+    return {"fonte": POLITICA, "lista": lista}
 
 
 # ---------------------------------------------------------------- docs
@@ -533,8 +579,18 @@ def gerar(crontab_txt):
             "divergencias_altas": sum(1 for x in div if x["gravidade"] == "alta"),
         },
     }
+    fl = fluxos()
+    for f in fl["lista"]:
+        if not f["modelo"]:
+            div.insert(0, {"tipo": "fluxos", "gravidade": "alta", "titulo": f"Fluxo “{f['titulo']}” sem modelo",
+                           "detalhe": "A frase da política que define o modelo desse grupo não foi achada.",
+                           "onde": [POLITICA, "sseg/scripts/painel.py"], "sugestao": "Ajustar GRUPOS_POLITICA no painel.py."})
+        for s in f["subagentes"]:
+            if s not in {a["nome"] for a in ag}:
+                div.append({"tipo": "fluxos", "gravidade": "média", "titulo": f"Fluxo “{f['titulo']}” cita subagente inexistente: {s}",
+                            "detalhe": "", "onde": ["sseg/scripts/painel.py", ".claude/agents/"], "sugestao": "Corrigir FLUXOS."})
     return {
-        "meta": meta, "instrucoes": instrucoes(), "arquitetura": arquitetura(), "atualizacoes": atu,
+        "meta": meta, "instrucoes": instrucoes(), "arquitetura": arquitetura(), "atualizacoes": atu, "fluxos": fl,
         "skills": {"lista": sk}, "agentes": {"lista": ag}, "docs": {"lista": dc},
         "rotinas": {"lista": rot}, "parametros": {"lista": par}, "divergencias": {"lista": div},
     }
@@ -542,10 +598,19 @@ def gerar(crontab_txt):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--saida", required=True)
+    ap.add_argument("--saida", help="pasta do retrato")
+    ap.add_argument("--fluxos", action="store_true", help="grava sseg/workflow/fluxos.json (lido pelo SSEG.exe) e sai")
     ap.add_argument("--crontab", help="arquivo com o crontab; sem ele, tenta `crontab -l`")
     ap.add_argument("--resumo", action="store_true")
     a = ap.parse_args()
+    if a.fluxos:
+        with open(os.path.join(SSEG, "workflow", "fluxos.json"), "w", encoding="utf-8", newline="\n") as f:
+            json.dump(fluxos(), f, ensure_ascii=False, indent=1)
+            f.write("\n")
+        print("sseg/workflow/fluxos.json gravado")
+        return
+    if not a.saida:
+        ap.error("--saida é obrigatório (ou --fluxos)")
     if a.crontab:
         cron = ler(a.crontab) if os.path.exists(a.crontab) else ""
     else:

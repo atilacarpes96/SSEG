@@ -12,6 +12,23 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 11/10/2026 — SSEG.exe 1.1.0 e revisor-cia com nome completo de modelo
+
+- **Subagente `revisor-cia`:** `model: sonnet` passa a `model: claude-sonnet-5-5`. O atalho funcionava, mas a regra é nome completo (o atalho `haiku` ainda aponta para o 4.5) e o `testar.py` agora barra atalho.
+- **Programa SSEG.exe 1.1.0:** botão "Sincronizar com o GitHub" (pull, commit e push com conferência; dado de processo fica fora), "Sincronizar processos" com o servidor por SSH, um botão por tipo de conversa (abre o Claude Code com o modelo e o esforço da política), Subagentes, Gasto em tokens, Reportar bug, Procurar atualização e atualização automática do próprio programa.
+- **Travas do commit** no pre-commit do git: valem também para commit fora do Claude.
+- **Fonte única das conversas:** `workflow/fluxos.json`, gerado da política pelo `painel.py`; aparece na aba Conversas deste painel.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 11/10/2026 e no fim me diga o que ficou feito e o que depende de mim:
+1. Confira se o clone está em dia com o GitHub (git status e git log -1). Se estiver atrás, me peça para rodar git pull no PowerShell; no Claude Code, rode você.
+2. Confira em .claude/agents/revisor-cia.md que está model: claude-sonnet-5-5.
+3. Rode python sseg/scripts/testar.py e me diga o resultado.
+4. Me diga para baixar o SSEG.exe em https://github.com/atilacarpes96/SSEG/releases/latest (se eu já tenho a 1.0.6, ele mesmo oferece "Atualizar o programa").
+```
+
 ## 08/10/2026 — Programa SSEG para o PC (SSEG.exe)
 
 - **Novo programa `SSEG.exe`** em https://github.com/atilacarpes96/SSEG/releases/latest: cria a pasta dos processos e baixa o SSEG do GitHub se ainda não estiver no PC, confere Git, Python e Poppler, e o botão **Verificar atualizações** mostra o que mudou no GitHub e faz o `git pull`. Skill que mudou sai em `.zip` pronta para subir na conta. Tem atalho para este Painel.

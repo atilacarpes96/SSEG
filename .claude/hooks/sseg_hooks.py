@@ -9,6 +9,7 @@ Uso (chamado pelo .claude/settings.json; recebe o JSON do evento na entrada padr
     python3 sseg_hooks.py fim         Stop          — lembra de commit quando há mudança parada
     python3 sseg_hooks.py pre-commit  git pre-commit — as mesmas travas em QUALQUER commit (programa, PowerShell)
     python3 sseg_hooks.py instalar-git               — instala o pre-commit (o "inicio" e o programa SSEG chamam)
+    python3 sseg_hooks.py conferir    < lista JSON   — prévia do que seria barrado (botão Sincronizar do programa)
 
 Só biblioteca padrão. Roda no servidor (Linux) e no PC do quartel (Git Bash). Nunca quebra a
 sessão: erro interno vira silêncio, nunca bloqueio — menos no pre-commit, que fecha o commit.
@@ -174,6 +175,25 @@ def instalar_gancho():
 def problemas_do_stage():
     """{arquivo: motivo} do que está no stage e não pode ir para o GitHub."""
     staged = [f for f in git("diff", "--cached", "--name-only", "--diff-filter=ACMR")[1].splitlines() if f]
+    return problemas(staged, lambda f: git("show", ":" + f)[1])
+
+
+def conferir(_):
+    """Prévia do Sincronizar do programa: lista de arquivos na entrada (JSON), {arquivo: motivo} na saída,
+    olhando o arquivo como está na pasta (ainda não foi para o stage)."""
+    def ler_pasta(f):
+        try:
+            return open(os.path.join(RAIZ, f), encoding="utf-8", errors="replace").read()
+        except OSError:
+            return ""
+    print(json.dumps(problemas(_ARQUIVOS, ler_pasta), ensure_ascii=False))
+    sys.exit(0)
+
+
+_ARQUIVOS = []
+
+
+def problemas(staged, ler_novo):
     ruins = {}
     if staged:
         for f in git("check-ignore", "--no-index", "--", *staged)[1].splitlines():
@@ -184,7 +204,7 @@ def problemas_do_stage():
             if rx.search(f):
                 ruins[f] = nome
     if BANCO in staged and os.environ.get("SSEG_BANCO_LIBERADO") != "1":
-        novo = git("show", ":" + BANCO)[1]
+        novo = ler_novo(BANCO)
         sumidas = [l for l in linhas_protegidas(git("show", "HEAD:" + BANCO)[1]) if l not in novo]
         if sumidas:
             ruins[BANCO] = 'texto de modelo validado alterado ("%s"); ressalva vai em linha própria' % sumidas[0][:100]
@@ -295,10 +315,13 @@ if __name__ == "__main__":
         evento = json.load(sys.stdin) if not sys.stdin.isatty() else {}
     except Exception:
         evento = {}
+    if isinstance(evento, list):  # "conferir": a entrada é a lista de arquivos
+        _ARQUIVOS[:] = evento
+        evento = {}
     acao = sys.argv[1] if len(sys.argv) > 1 else ""
     try:
         {"inicio": inicio, "commit": commit, "banco": banco, "skill": skill, "fim": fim,
-         "pre-commit": pre_commit, "instalar-git": instalar_git}.get(acao, lambda e: sys.exit(0))(evento)
+         "pre-commit": pre_commit, "instalar-git": instalar_git, "conferir": conferir}.get(acao, lambda e: sys.exit(0))(evento)
     except SystemExit:
         raise
     except Exception as e:

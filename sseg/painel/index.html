@@ -163,6 +163,7 @@ button{font:inherit;cursor:pointer}
   <a href="#atualizacoes">Atualizações <small id="n-atu"></small></a>
   <a href="#divergencias">Divergências <small id="n-div"></small></a>
   <a href="#skills">Skills <small id="n-sk"></small></a>
+  <a href="#conversas">Conversas <small id="n-flu"></small></a>
   <a href="#agentes">Subagentes <small id="n-ag"></small></a>
   <a href="#rotinas">Rotinas <small id="n-rot"></small></a>
   <a href="#parametros">Parâmetros <small id="n-par"></small></a>
@@ -195,6 +196,12 @@ button{font:inherit;cursor:pointer}
   <div class="sec-head"><div class="eyebrow">Skills</div><h2>O que você diz → o que acontece</h2>
   <p>A <b>descrição</b> é o gatilho: a skill carrega quando a sua mensagem casa com ela. Em cada skill estão o roteiro (os títulos do arquivo), onde ela para e pergunta, e o que nunca faz. A fonte é <code>sseg/skills/</code>; a skill da conta de cada analista é cópia.</p></div>
   <div id="l-sk" style="display:flex;flex-direction:column;gap:10px"></div>
+</section>
+
+<section id="conversas">
+  <div class="sec-head"><div class="eyebrow">Conversas</div><h2>Que conversa abrir para cada demanda</h2>
+  <p>O modelo e o esforço saem do texto da política (<code>workflow/politica-modelo-e-custo.md</code>), e o programa SSEG.exe abre cada conversa com eles, pelo mesmo arquivo (<code>workflow/fluxos.json</code>). No app do Claude, escolha o mesmo modelo e esforço.</p></div>
+  <div class="tbl"><table><thead><tr><th style="min-width:150px">Demanda</th><th>Modelo · esforço</th><th style="min-width:150px">Skill</th><th style="min-width:150px">Subagentes</th><th style="min-width:240px">Prompt de abertura</th></tr></thead><tbody id="t-flu"></tbody></table></div>
 </section>
 
 <section id="agentes">
@@ -341,6 +348,9 @@ function render(){
     return `<details class="rot"><summary><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><h3><code style="background:none;padding:0;font-size:.95em">${esc(s.nome)}</code></h3><span class="src">${esc(s.arquivo)} · ${s.tamanho_kb} KB · ~${(s.tokens/1000).toFixed(1)} mil tokens · atualizado em ${fdia(s.atualizado)}</span></div><span class="tog"><span class="a">abrir ▾</span><span class="b">fechar ▴</span></span><div class="desc li-ed"><span>${inl(s.descricao)}</span>${ed(kd)}</div></summary>
       <div class="inner"><div style="grid-column:1/-1"><h4>Quando usar</h4><div class="li-ed"><div class="md small">${md(s.quando)}</div>${ed(kq)}</div></div>
       <div><h4>Roteiro</h4>${out}</div><div style="display:flex;flex-direction:column;gap:6px"><h4>Onde para e pergunta</h4>${par}</div><div><h4>Nunca</h4>${nun}</div></div></details>`}).join("")||'<div class="empty">Nenhuma skill no retrato.</div>';
+  /* conversas (fluxos) */
+  const fl=(R.fluxos||{}).lista||[];$("#n-flu").textContent=fl.length||"";
+  $("#t-flu").innerHTML=fl.map(f=>`<tr><td><b>${esc(f.titulo)}</b></td><td><span class="chip ${/haiku/i.test(f.modelo||"")?"c-soft":/opus/i.test(f.modelo||"")?"c-stop":"c-info"}">${esc(f.modelo_texto||"não achado na política")}</span></td><td>${f.skill?`<code>${esc(f.skill)}</code>`:'<span class="muted small">—</span>'}</td><td class="small">${f.subagentes.map(s=>`<code>${esc(s)}</code>`).join(" ")||"—"}</td><td class="small">${esc(f.prompt||"(a pergunta, direto)")}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">Retrato sem fluxos (gerado por uma versão antiga do painel.py).</td></tr>';
   /* subagentes */
   const ag=(R.agentes||{}).lista||[];
   $("#t-ag").innerHTML=ag.map(x=>`<tr><td><code>${esc(x.nome)}</code><div class="src">${esc(x.arquivo)}</div></td><td><span class="chip ${/haiku/i.test(x.modelo)?"c-soft":/opus/i.test(x.modelo)?"c-stop":"c-info"}">${esc(x.modelo)}</span></td><td class="small">${inl(x.descricao)}</td><td class="src">${esc(x.ferramentas)}</td><td>${ed(alvo({tipo:"literal",alvo:`Subagente ${x.nome}: descrição`,arquivo:x.arquivo,antes:x.descricao}))}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">Nenhum subagente.</td></tr>';

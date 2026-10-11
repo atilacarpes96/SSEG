@@ -74,8 +74,12 @@ jobs:
         shell: bash
         run: |
           pip install pillow
-          SSEG_TESTE_FOTO=dist/previa.png timeout 60 python sseg/app/sseg_app.py
+          mkdir -p "$APPDATA/SSEG"
+          python -c "import json,os; json.dump({'clone': os.getcwd(), 'processos': os.path.join(os.getcwd(), 'ppci-teste')}, open(os.path.join(os.environ['APPDATA'], 'SSEG', 'config.json'), 'w'))"
+          SSEG_TESTE_FOTO=dist/previa.png timeout 120 python sseg/app/sseg_app.py
           test -s dist/previa.png
+          echo "::notice title=telas::$(ls dist/previa*.png | tr '\n' ' ')"
+          if [ -s dist/previa-erros.txt ]; then echo "::error title=erro-em-tela::$(tr '\n' '|' < dist/previa-erros.txt | head -c 3000)"; exit 1; fi
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: app-v${{ env.V }}
@@ -83,7 +87,7 @@ jobs:
           body: Baixe o SSEG.exe abaixo. Na primeira vez o Windows pode avisar "Windows protegeu o computador" (programa sem assinatura) — Mais informações > Executar assim mesmo.
           files: |
             dist/SSEG.exe
-            dist/previa.png
+            dist/previa*.png
       # Uma cópia "antiga" (versão 0.0.1) numa pasta com espaço se atualiza para a que acabou de
       # sair: o arquivo tem de ficar igual ao publicado e o programa tem de reabrir.
       - name: Atualização automática do programa
@@ -91,7 +95,7 @@ jobs:
         run: |
           New-Item -ItemType Directory velho -Force | Out-Null
           (Get-Content sseg/app/sseg_app.py -Raw) -replace 'VERSAO = "[^"]*"','VERSAO = "0.0.1"' | Set-Content velho/sseg_app.py -Encoding utf8
-          Copy-Item sseg/app/instalar.py velho/
+          Get-ChildItem sseg/app/*.py | Where-Object { $_.Name -ne 'sseg_app.py' } | Copy-Item -Destination velho/
           pyinstaller --onefile --windowed --name SSEG --distpath dist-velho --workpath build-velho --add-data "sseg/app/brasao.png;." --add-data "sseg/app/brasao.ico;." velho/sseg_app.py
           New-Item -ItemType Directory "C:\teste sseg" -Force | Out-Null
           Copy-Item dist-velho/SSEG.exe "C:\teste sseg\SSEG.exe"

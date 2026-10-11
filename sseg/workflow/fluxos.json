@@ -1,0 +1,104 @@
+{
+ "fonte": "sseg/workflow/politica-modelo-e-custo.md",
+ "lista": [
+  {
+   "id": "abertura",
+   "titulo": "Começar o dia",
+   "skill": "ppci-abertura-sessao",
+   "subagentes": [
+    "sol-leitor"
+   ],
+   "pede_codigo": false,
+   "prompt": "Vou começar a analisar PPCI. Siga a skill ppci-abertura-sessao.",
+   "modelo": "claude-sonnet-5-5",
+   "esforco": "high",
+   "modelo_texto": "Sonnet 5.5 alto",
+   "grupo": "pesado"
+  },
+  {
+   "id": "analise",
+   "titulo": "Analisar processo",
+   "skill": "ppci-analise-processo",
+   "subagentes": [
+    "localizador-normas",
+    "sol-leitor"
+   ],
+   "pede_codigo": true,
+   "prompt": "Analisar o processo {codigo}. Siga a skill ppci-analise-processo.",
+   "modelo": "claude-sonnet-5-5",
+   "esforco": "high",
+   "modelo_texto": "Sonnet 5.5 alto",
+   "grupo": "pesado"
+  },
+  {
+   "id": "revisao",
+   "titulo": "Revisar CIA",
+   "skill": "ppci-revisao-cia",
+   "subagentes": [
+    "revisor-cia"
+   ],
+   "pede_codigo": true,
+   "prompt": "Revisa a CIA do processo {codigo}.",
+   "modelo": "claude-sonnet-5-5",
+   "esforco": "high",
+   "modelo_texto": "Sonnet 5.5 alto",
+   "grupo": "pesado"
+  },
+  {
+   "id": "minuta",
+   "titulo": "Minuta ou despacho",
+   "skill": "ppci-minuta-despacho",
+   "subagentes": [
+    "localizador-normas"
+   ],
+   "pede_codigo": false,
+   "prompt": "Preciso de uma minuta (ata de consulta técnica ou despacho de recurso). Siga a skill ppci-minuta-despacho. ",
+   "modelo": "claude-sonnet-5-5",
+   "esforco": "high",
+   "modelo_texto": "Sonnet 5.5 alto",
+   "grupo": "pesado"
+  },
+  {
+   "id": "norma",
+   "titulo": "Incorporar norma",
+   "skill": "ppci-incorporar-norma",
+   "subagentes": [
+    "localizador-normas"
+   ],
+   "pede_codigo": false,
+   "prompt": "Norma nova para a base. Siga a skill ppci-incorporar-norma. ",
+   "modelo": "claude-sonnet-5-5",
+   "esforco": "high",
+   "modelo_texto": "Sonnet 5.5 alto",
+   "grupo": "pesado"
+  },
+  {
+   "id": "notificacao",
+   "titulo": "Notificação avulsa",
+   "skill": "ppci-notificacao-cia",
+   "subagentes": [
+    "localizador-normas"
+   ],
+   "pede_codigo": false,
+   "prompt": "Preciso de uma notificação, sem rodar a análise do processo. Siga a skill ppci-notificacao-cia. ",
+   "modelo": "claude-haiku-5-5",
+   "esforco": "medium",
+   "modelo_texto": "Haiku 5.5 médio",
+   "grupo": "leve"
+  },
+  {
+   "id": "pergunta",
+   "titulo": "Pergunta de norma",
+   "skill": null,
+   "subagentes": [
+    "localizador-normas"
+   ],
+   "pede_codigo": false,
+   "prompt": "",
+   "modelo": "claude-haiku-5-5",
+   "esforco": "medium",
+   "modelo_texto": "Haiku 5.5 médio",
+   "grupo": "leve"
+  }
+ ]
+}

@@ -36,9 +36,13 @@ import urllib.request
 import webbrowser
 import zipfile
 
+import claude_local
+import gasto
+import git_sinc
 import instalar
+import relato
 
-VERSAO = "1.0.6"
+VERSAO = "1.1.0"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -240,7 +244,8 @@ def janela():
     raiz = tk.Tk()
     raiz.title("SSEG")
     raiz.configure(bg=FUNDO)
-    raiz.minsize(560, 600)
+    raiz.minsize(560, 480)
+    raiz.geometry("640x760")
     try:
         raiz.iconbitmap(recurso("brasao.ico"))
     except tk.TclError:
@@ -273,8 +278,23 @@ def janela():
     tk.Label(cab, text="v" + VERSAO, font=F(9), fg=SUAVE, bg=CARTAO).pack(side="right", anchor="n", padx=14, pady=10)
     tk.Frame(raiz, bg=VERMELHO, height=5).pack(fill="x")
 
-    corpo = tk.Frame(raiz, bg=FUNDO)
-    corpo.pack(fill="both", expand=True, padx=18, pady=14)
+    # embaixo, fixos: o quadro de registro e o rodapé (versão, procurar atualização, reportar bug)
+    baixo = tk.Frame(raiz, bg=FUNDO)
+    baixo.pack(side="bottom", fill="x", padx=18, pady=(0, 6))
+    # no meio, com rolagem: os cartões (a janela não cabe em tela de notebook sem isso)
+    meio = tk.Frame(raiz, bg=FUNDO)
+    meio.pack(fill="both", expand=True)
+    tela = tk.Canvas(meio, bg=FUNDO, highlightthickness=0)
+    rolagem = tk.Scrollbar(meio, orient="vertical", command=tela.yview)
+    tela.configure(yscrollcommand=rolagem.set)
+    rolagem.pack(side="right", fill="y")
+    tela.pack(side="left", fill="both", expand=True)
+    corpo = tk.Frame(tela, bg=FUNDO)
+    item_corpo = tela.create_window((18, 14), window=corpo, anchor="nw")
+    corpo.bind("<Configure>", lambda e: tela.configure(scrollregion=(0, 0, e.width + 36, e.height + 20)))
+    tela.bind("<Configure>", lambda e: tela.itemconfigure(item_corpo, width=max(e.width - 36, 200)))
+    raiz.bind_all("<MouseWheel>", lambda e: str(e.widget).startswith(str(tela))
+                  and tela.yview_scroll(int(-e.delta / 120), "units"))
 
     def botao(pai, texto, cmd, primario=True):
         cor, hover = (VERMELHO, VERMELHO_ESC) if primario else ("#EDE6E4", "#E2D8D5")
@@ -339,8 +359,21 @@ def janela():
     b_sinc = botao(acoes_p, "Sincronizar processos", lambda: rodar(planejar_sinc), primario=False)
     b_sinc.pack(side="left", padx=8)
 
-    # Atualizações
-    atual = cartao("Atualizações")
+    # Claude: uma conversa por tipo de demanda (modelo e esforço vêm de sseg/workflow/fluxos.json)
+    claudec = cartao("Iniciar conversa")
+    grade = tk.Frame(claudec, bg=CARTAO)
+    grade.pack(fill="x")
+    tk.Label(claudec, text="Modelo e esforço vêm da política do SSEG (o mesmo do Painel SSEG).",
+             font=F(8), fg=SUAVE, bg=CARTAO).pack(anchor="w", pady=(6, 6))
+    acoes_c = tk.Frame(claudec, bg=CARTAO)
+    acoes_c.pack(fill="x")
+    b_subs = botao(acoes_c, "Subagentes", lambda: rodar(ver_subagentes), primario=False)
+    b_subs.pack(side="left")
+    b_gasto = botao(acoes_c, "Gasto", lambda: rodar(ver_gasto), primario=False)
+    b_gasto.pack(side="left", padx=8)
+
+    # GitHub
+    atual = cartao("GitHub")
     st = tk.Label(atual, text="Ainda não verificado.", font=F(10), fg=TEXTO, bg=CARTAO, justify="left", anchor="w")
     st.pack(fill="x", pady=(0, 8))
     acoes_a = tk.Frame(atual, bg=CARTAO)
@@ -349,8 +382,8 @@ def janela():
     b_verif.pack(side="left")
     b_atual = botao(acoes_a, "Atualizar agora", lambda: rodar(aplicar))
     b_atual.pack(side="left", padx=8)
-    b_prog = botao(acoes_a, "Atualizar o programa", lambda: rodar(trocar_programa))
-    # aparece só quando há versão nova (conferida ao abrir e em "Verificar atualizações")
+    b_git = botao(acoes_a, "Sincronizar com o GitHub", lambda: rodar(conferir_git), primario=False)
+    b_git.pack(side="left")
     b_atual.ligar(False)
 
     # Atalhos
@@ -361,12 +394,21 @@ def janela():
     botao(lin, "Pasta dos processos", lambda: abrir(campos["processos"].get()), primario=False).pack(side="left", padx=8)
     botao(lin, "Pasta do SSEG", lambda: abrir(campos["clone"].get()), primario=False).pack(side="left")
 
-    # Registro
-    reg = tk.Text(corpo, height=7, font=("Consolas", 9), bg="#FBF9F8", fg=TEXTO, relief="solid", bd=1,
+    # Registro e rodapé (fixos embaixo)
+    reg = tk.Text(baixo, height=7, font=("Consolas", 9), bg="#FBF9F8", fg=TEXTO, relief="solid", bd=1,
                   wrap="word", state="disabled")
-    reg.pack(fill="both", expand=True)
-    tk.Label(raiz, text="Ferramenta de uso interno da SSeg — não é sistema oficial do CBMRS.",
-             font=F(8), fg=SUAVE, bg=FUNDO).pack(pady=(0, 8))
+    reg.pack(fill="x", pady=(8, 6))
+    rod = tk.Frame(baixo, bg=FUNDO)
+    rod.pack(fill="x")
+    tk.Label(rod, text="SSEG v" + VERSAO, font=F(9, "bold"), fg=TEXTO, bg=FUNDO).pack(side="left")
+    b_procurar = botao(rod, "Procurar atualização", lambda: rodar(procurar_versao), primario=False)
+    b_procurar.pack(side="left", padx=(10, 0))
+    b_bug = botao(rod, "Reportar bug", lambda: reportar_bug(), primario=False)
+    b_bug.pack(side="left", padx=8)
+    b_prog = botao(rod, "Atualizar o programa", lambda: rodar(trocar_programa))
+    # b_prog aparece só quando há versão nova (conferida ao abrir e nos botões de procurar/verificar)
+    tk.Label(baixo, text="Ferramenta de uso interno da SSeg — não é sistema oficial do CBMRS.",
+             font=F(8), fg=SUAVE, bg=FUNDO).pack(anchor="w", pady=(4, 0))
 
     def escrever(*linhas):
         reg.configure(state="normal")
@@ -382,17 +424,23 @@ def janela():
 
     def rodar(tarefa):
         """Roda fora da janela (git pode demorar) e devolve o resultado na thread da interface."""
-        for b in (b_pastas, b_sinc, b_verif, b_atual, b_inst, b_login, b_conf, b_prog):
+        todos = [b_pastas, b_sinc, b_verif, b_atual, b_inst, b_login, b_conf, b_prog, b_git, b_subs, b_gasto,
+                 b_procurar] + estado.get("botoes_fluxo", [])
+        for b in todos:
             b.ligar(False)
+
+        def religar():
+            for b in todos:
+                b.ligar(True)
+            b_inst.ligar(estado.get("falta", True))
+            b_atual.ligar(bool(estado["dados"] and estado["dados"]["atras"]))
 
         def trabalho():
             try:
                 r = tarefa()
             except Exception as e:  # mostra o erro em vez de fechar o programa
                 r = lambda m=str(e): escrever("✗ " + m)  # noqa: E731
-            raiz.after(0, lambda: (r and r(), b_pastas.ligar(True), b_sinc.ligar(True), b_prog.ligar(True), b_verif.ligar(True), b_conf.ligar(True),
-                                   b_inst.ligar(estado.get("falta", True)), b_login.ligar(True),
-                                   b_atual.ligar(bool(estado["dados"] and estado["dados"]["atras"]))))
+            raiz.after(0, lambda: (r and r(), religar()))
         threading.Thread(target=trabalho, daemon=True).start()
 
     # ---- Sincronizar processos com o servidor (SSH; nada pelo GitHub) — sseg.py sincronizar
@@ -477,7 +525,7 @@ def janela():
     def criar():
         clone, processos = salvar()
         linhas = preparar_pastas(clone, processos)
-        return lambda: escrever("— Pastas —", *linhas)
+        return lambda: (escrever("— Pastas —", *linhas), montar_fluxos())
 
     def mostrar_programas(achados, logado):
         partes = []
@@ -577,20 +625,270 @@ def janela():
         def mostrar():
             st.configure(text="Atualizado. Clique em verificar de novo para conferir.", fg="#2E7D32")
             escrever(*linhas)
+            montar_fluxos()
         return mostrar
 
+    # ---- janelas auxiliares
+    def dialogo(titulo, subtitulo=""):
+        jan = tk.Toplevel(raiz)
+        jan.title(titulo)
+        jan.configure(bg=CARTAO)
+        jan.transient(raiz)
+        tk.Label(jan, text=titulo.upper(), font=F(9, "bold"), fg=VERMELHO, bg=CARTAO).pack(anchor="w", padx=16, pady=(12, 2))
+        if subtitulo:
+            tk.Label(jan, text=subtitulo, font=F(9), fg=SUAVE, bg=CARTAO, justify="left", wraplength=560).pack(anchor="w", padx=16)
+        meio_d = tk.Frame(jan, bg=CARTAO)
+        meio_d.pack(fill="both", expand=True, padx=16, pady=8)
+        rod_d = tk.Frame(jan, bg=CARTAO)
+        rod_d.pack(fill="x", padx=16, pady=(4, 14))
+        return jan, meio_d, rod_d
+
+    def caixa_texto(pai, texto, altura=18, largura=88):
+        caixa = tk.Text(pai, height=altura, width=largura, font=("Consolas", 9), bg="#FBF9F8", fg=TEXTO,
+                        relief="solid", bd=1, wrap="none")
+        caixa.insert("1.0", texto)
+        caixa.configure(state="disabled")
+        caixa.pack(fill="both", expand=True)
+        return caixa
+
+    def copiar(texto):
+        raiz.clipboard_clear()
+        raiz.clipboard_append(texto)
+
+    # ---- Iniciar conversa (item 5) e Subagentes (item 6)
+    def montar_fluxos():
+        for w in grade.winfo_children():
+            w.destroy()
+        estado["botoes_fluxo"] = []
+        try:
+            fluxos = claude_local.ler_fluxos(campos["clone"].get().strip())
+        except (OSError, ValueError, KeyError):
+            tk.Label(grade, text="Atualize o SSEG desta pasta para ver os tipos de conversa (\"Atualizar agora\").",
+                     font=F(9), fg=SUAVE, bg=CARTAO).grid(row=0, column=0, sticky="w")
+            return
+        estado["fluxos"] = fluxos
+        for i, f in enumerate(fluxos):
+            b = botao(grade, f["titulo"], lambda f=f: iniciar_fluxo(f), primario=f["grupo"] == "pesado")
+            b.grid(row=i // 3, column=i % 3, sticky="ew", padx=(0, 6), pady=3)
+            estado["botoes_fluxo"].append(b)
+        for c in range(3):
+            grade.grid_columnconfigure(c, weight=1)
+
+    def iniciar_fluxo(f):
+        sub = "%s · %s%s" % (f["modelo_texto"] or "?", ("skill " + f["skill"]) if f["skill"] else "sem skill",
+                            (" · subagentes: " + ", ".join(f["subagentes"])) if f["subagentes"] else "")
+        jan, m, r = dialogo(f["titulo"], sub)
+        cod = tk.StringVar()
+        if f["pede_codigo"]:
+            tk.Label(m, text="Código do processo", font=F(9), fg=SUAVE, bg=CARTAO).pack(anchor="w")
+            e = tk.Entry(m, textvariable=cod, font=F(11), relief="solid", bd=1, width=22)
+            e.pack(anchor="w", ipady=4, pady=(2, 8))
+            e.focus_set()
+        tk.Label(m, text="Abre o Claude Code numa janela própria, na pasta do SSEG, com o modelo e o esforço da "
+                         "política. Para usar o app do Claude: \"Copiar o prompt\" e escolha lá o mesmo modelo.",
+                 font=F(9), fg=TEXTO, bg=CARTAO, justify="left", wraplength=520).pack(anchor="w")
+
+        def prompt():
+            try:
+                return claude_local.montar_prompt(f, cod.get())
+            except ValueError as e:
+                escrever("✗ " + str(e))
+                return None
+
+        def abrir_terminal():
+            p = prompt()
+            if p is None:
+                return
+            if not estado.get("claude"):
+                escrever("✗ Falta o Claude Code (cartão Programas).")
+                return
+            claude_local.iniciar(campos["clone"].get().strip(), f, p, estado["claude"])
+            escrever("— Conversa — %s aberta (%s)." % (f["titulo"], f["modelo_texto"]))
+            jan.destroy()
+
+        def copiar_prompt():
+            p = prompt()
+            if p is None:
+                return
+            copiar(p or "")
+            escrever("— Conversa — prompt copiado. No app do Claude: Novo → Local → pasta do SSEG → %s, e cole."
+                     % f["modelo_texto"])
+            jan.destroy()
+        botao(r, "Abrir no terminal", abrir_terminal).pack(side="left")
+        botao(r, "Copiar o prompt", copiar_prompt, primario=False).pack(side="left", padx=8)
+        botao(r, "Cancelar", jan.destroy, primario=False).pack(side="left")
+
+    def ver_subagentes():
+        clone, _ = salvar()
+        lista = claude_local.subagentes(clone, estado.get("fluxos"))
+
+        def mostrar():
+            jan, m, r = dialogo("Subagentes", "Quem chama é a conversa principal, quando a skill manda. Aqui: quem "
+                                              "existe, com que modelo, e em que tipo de conversa entra.")
+            linhas = []
+            for a in lista:
+                linhas.append("%s  —  %s%s" % (a["nome"], a["modelo"], ("   ⚠ " + a["aviso"]) if a["aviso"] else ""))
+                linhas.append("   usado em: " + (", ".join(a["usado_em"]) or "nenhum tipo de conversa"))
+                linhas.append("   " + a["descricao"][:150])
+                linhas.append("")
+            caixa_texto(m, "\n".join(linhas) or "Nenhum subagente em .claude/agents/.", altura=14)
+            botao(r, "Fechar", jan.destroy, primario=False).pack(side="left")
+        return mostrar
+
+    # ---- Gasto (item 7)
+    def ver_gasto():
+        clone, _ = salvar()
+        txt = gasto.texto(gasto.resumo(gasto.ler(clone, dias=30)), 30)
+
+        def mostrar():
+            jan, m, r = dialogo("Gasto do Claude Code", "Conversas do Claude Code na pasta do SSEG neste PC, em "
+                                                        "tokens. Conversas do app do Claude no navegador não entram.")
+            caixa_texto(m, txt, altura=24)
+            botao(r, "Copiar", lambda: copiar(txt), primario=False).pack(side="left")
+            botao(r, "Fechar", jan.destroy, primario=False).pack(side="left", padx=8)
+        return mostrar
+
+    # ---- Sincronizar com o GitHub (item 3)
+    def conferir_git():
+        clone, _ = salvar()
+        py = instalar.localizar().get("python")
+        info = git_sinc.conferir(clone, py)
+        return lambda: tela_git(info, py)
+
+    def tela_git(info, py):
+        jan, m, r = dialogo("Sincronizar com o GitHub", "Traz o que chegou, faz o commit do que mudou neste PC e "
+                                                        "envia. Dado de processo fica fora. Nunca força nada.")
+        linhas = []
+        if info["atras"]:
+            linhas.append("↓ %d commit(s) no GitHub a trazer" % info["atras"])
+        if info["frente"]:
+            linhas.append("↑ %d commit(s) deste PC ainda não enviados" % info["frente"])
+        for cod, arq in info["itens"][:40]:
+            motivo = info["barrados"].get(arq)
+            linhas.append(("  ✗ %s  — fica fora: %s" % (arq, motivo)) if motivo else ("  %-2s %s" % (cod, arq)))
+        if len(info["itens"]) > 40:
+            linhas.append("  … e mais %d" % (len(info["itens"]) - 40))
+        if not linhas:
+            linhas.append("Nada a fazer: este PC e o GitHub estão iguais.")
+        caixa_texto(m, "\n".join(linhas), altura=min(16, len(linhas) + 2))
+        campos_g = {}
+        if info["itens"]:
+            pedir = [("mensagem", "O que mudou (mensagem do commit)", "")]
+            if not info["nome"]:
+                pedir.append(("nome", "Seu nome (fica registrado no commit)", ""))
+            if not info["email"]:
+                pedir.append(("email", "Seu e-mail do GitHub", ""))
+            for k, rot, val in pedir:
+                tk.Label(m, text=rot, font=F(9), fg=SUAVE, bg=CARTAO).pack(anchor="w", pady=(8, 0))
+                v = tk.StringVar(value=val)
+                tk.Entry(m, textvariable=v, font=F(10), relief="solid", bd=1).pack(fill="x", ipady=4)
+                campos_g[k] = v
+
+        def enviar():
+            dados = {k: v.get().strip() for k, v in campos_g.items()}
+            if info["itens"] and not dados.get("mensagem"):
+                escrever("✗ Escreva o que mudou (mensagem do commit).")
+                return
+            if (not info["nome"] and not dados.get("nome")) or (not info["email"] and not dados.get("email")):
+                if info["itens"]:
+                    escrever("✗ Falta nome ou e-mail para o commit.")
+                    return
+            jan.destroy()
+            clone = campos["clone"].get().strip()
+
+            def tarefa():
+                linhas = git_sinc.sincronizar(clone, dados.get("mensagem", ""), py, dados.get("nome", ""),
+                                              dados.get("email", ""))
+                return lambda: escrever("— GitHub —", *linhas)
+            rodar(tarefa)
+        if info["itens"] or info["atras"] or info["frente"]:
+            botao(r, "Sincronizar", enviar).pack(side="left")
+        botao(r, "Cancelar" if (info["itens"] or info["atras"] or info["frente"]) else "Fechar", jan.destroy,
+              primario=False).pack(side="left", padx=8)
+
+    # ---- Procurar atualização e Reportar bug (rodapé)
+    def procurar_versao():
+        nova = versao_nova_do_programa()
+        if nova:
+            return lambda: (mostrar_versao(nova), escrever("Programa SSEG %s disponível (este é o %s): clique em "
+                                                           "\"Atualizar o programa\"." % (nova, VERSAO)))
+        return lambda: escrever("Você já está na versão mais nova do programa (%s)." % VERSAO)
+
+    def reportar_bug():
+        jan, m, r = dialogo("Reportar bug", "Vai sem código de processo, sem caminho de pasta e sem nome de "
+                                            "planta, PDF ou CIA. Confira abaixo antes de enviar.")
+        tk.Label(m, text="O que aconteceu? (o que você clicou, o que esperava, o que apareceu)", font=F(9),
+                 fg=SUAVE, bg=CARTAO).pack(anchor="w")
+        desc = tk.Text(m, height=5, width=80, font=F(10), relief="solid", bd=1, wrap="word")
+        desc.pack(fill="x", pady=(2, 8))
+        tk.Label(m, text="Vai junto (versão, sistema e o fim do quadro, já limpos):", font=F(9), fg=SUAVE,
+                 bg=CARTAO).pack(anchor="w")
+        caminhos = [campos["clone"].get().strip(), campos["processos"].get().strip()]
+
+        def corpo():
+            return relato.montar(VERSAO, desc.get("1.0", "end"), reg.get("1.0", "end"), caminhos)
+        prev = caixa_texto(m, corpo(), altura=12)
+
+        def atualizar_previa(_e=None):
+            prev.configure(state="normal")
+            prev.delete("1.0", "end")
+            prev.insert("1.0", corpo())
+            prev.configure(state="disabled")
+        desc.bind("<KeyRelease>", atualizar_previa)
+
+        def issue():
+            titulo = relato.limpar(desc.get("1.0", "end").strip().splitlines()[0][:80] if desc.get("1.0", "end").strip()
+                                   else "Bug no SSEG.exe " + VERSAO, caminhos)
+            webbrowser.open(relato.url_issue(REPO, "[SSEG.exe %s] %s" % (VERSAO, titulo), corpo()))
+            escrever("Abri a página de nova issue no GitHub: confira e clique em \"Submit new issue\".")
+            jan.destroy()
+
+        def copiar_rel():
+            copiar(corpo())
+            escrever("Relato copiado: cole na conversa do servidor (Oraculo 23-7).")
+            jan.destroy()
+        botao(r, "Abrir issue no GitHub", issue).pack(side="left")
+        botao(r, "Copiar para a conversa", copiar_rel, primario=False).pack(side="left", padx=8)
+        botao(r, "Cancelar", jan.destroy, primario=False).pack(side="left")
+
     escrever("SSEG %s. Confira as pastas e clique em \"Verificar atualizações\"." % VERSAO)
+    montar_fluxos()
     rodar(conferir_programas)
     raiz.after(1500, lambda: rodar(conferir_versao))
-    foto = os.environ.get("SSEG_TESTE_FOTO")  # só no build: abre, fotografa a janela e fecha
+    foto = os.environ.get("SSEG_TESTE_FOTO")  # só no build: abre cada tela, fotografa e anota erro
     if foto:
-        def fotografar():
+        import traceback
+        erros = []
+        raiz.report_callback_exception = lambda *a: erros.append("".join(traceback.format_exception(*a)))
+        git_falso = {"itens": [("M", "sseg/normas/exemplo.md"), ("??", "CIA 1.pdf")],
+                     "barrados": {"CIA 1.pdf": "CIA de processo"}, "atras": 1, "frente": 0, "nome": "", "email": ""}
+        passos = [("janela", None), ("subagentes", lambda: ver_subagentes()()), ("gasto", lambda: ver_gasto()()),
+                  ("bug", reportar_bug), ("conversa", lambda: iniciar_fluxo(estado["fluxos"][1])),
+                  ("github", lambda: tela_git(git_falso, None))]
+
+        def passo(i):
+            try:
+                if passos[i][1]:
+                    passos[i][1]()
+            except Exception:
+                erros.append(passos[i][0] + ": " + traceback.format_exc())
+            raiz.after(1500, lambda: fotografar(i))
+
+        def fotografar(i):
             from PIL import ImageGrab
             raiz.update()
-            x, y = raiz.winfo_rootx(), raiz.winfo_rooty()
-            ImageGrab.grab((x, y, x + raiz.winfo_width(), y + raiz.winfo_height())).save(foto)
-            raiz.destroy()
-        raiz.after(2500, fotografar)
+            base_f, ext = os.path.splitext(foto)
+            ImageGrab.grab().save(foto if i == 0 else "%s-%s%s" % (base_f, passos[i][0], ext))
+            for w in raiz.winfo_children():
+                if isinstance(w, tk.Toplevel):
+                    w.destroy()
+            if i + 1 < len(passos):
+                passo(i + 1)
+            else:
+                with open(base_f + "-erros.txt", "w", encoding="utf-8") as fh:
+                    fh.write("\n".join(erros))
+                raiz.destroy()
+        raiz.after(2500, lambda: passo(0))
     raiz.mainloop()
 
 

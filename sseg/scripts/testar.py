@@ -196,6 +196,58 @@ def main():
         caso("sincronizar: chave fora da lista é barrada",
              not sc.chave_valida(cod + "/Planta.pdf") and not sc.chave_valida("../x.json")
              and not sc.chave_valida(cod + "/../../x.json") and sc.chave_valida(cod + "/api-1.json"))
+    # 12. programa SSEG 1.1: fluxos em dia com a política, relato sem dado de processo, gasto
+    import painel, relato, gasto as gasto_m, claude_local
+    gravado = json.load(open(os.path.join(RAIZ, "sseg", "workflow", "fluxos.json"), encoding="utf-8"))
+    caso("fluxos.json igual ao que a política gera (rodar: python3 sseg/scripts/painel.py --fluxos)",
+         gravado == painel.fluxos() and all(f["modelo"] and f["esforco"] for f in gravado["lista"]))
+    caso("subagentes com nome completo de modelo (o atalho 'haiku' é o 4.5)",
+         not [a for a in claude_local.subagentes(RAIZ) if a["aviso"]], str(claude_local.subagentes(RAIZ)))
+    r = relato.montar("9.9", "erro no A00012345AA001 ao abrir Planta Baixa.pdf",
+                      "✓ Pasta dos processos: E:\\X\\PROCESSOS\n✗ CIA 2.pdf\n", [r"E:\X\PROCESSOS"])
+    caso("relato de bug sem código, pasta, CIA nem nome de arquivo",
+         "A00012345" not in r and "PROCESSOS" not in r and "CIA 2" not in r and ".pdf" not in r.replace("<arquivo .pdf>", ""), r)
+    with tempfile.TemporaryDirectory() as d:
+        clone = os.path.join(d, "E", "SSEG")
+        proj = os.path.join(d, "projects", __import__("re").sub(r"[^A-Za-z0-9]", "-", os.path.abspath(clone)))
+        os.makedirs(os.path.join(proj, "s1", "subagents"))
+        agora = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+        msg = lambda i, mod, n: json.dumps({"type": "assistant", "timestamp": agora, "sessionId": "s1", "message": {  # noqa: E731
+            "id": i, "model": mod, "usage": {"input_tokens": n, "output_tokens": n, "cache_read_input_tokens": n}}})
+        open(os.path.join(proj, "s1.jsonl"), "w").write("\n".join([msg("a", "claude-sonnet-5-5", 10)] * 3))  # repetido: conta 1
+        open(os.path.join(proj, "s1", "subagents", "x.jsonl"), "w").write(msg("b", "claude-haiku-5-5", 5))
+        res = gasto_m.resumo(gasto_m.ler(clone, base=os.path.join(d, "projects")))
+        caso("gasto: conta cada resposta uma vez e separa subagente",
+             res["total"]["respostas"] == 2 and res["total"]["saida"] == 15
+             and dict(res["subagentes"]).get("subagente", {}).get("saida") == 5, str(res["total"]))
+    # 13. botão Sincronizar com o GitHub: commit + push num "GitHub" local; a CIA fica fora e na pasta
+    import git_sinc
+    with tempfile.TemporaryDirectory() as d:
+        env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_") and k != "CLAUDE_PROJECT_DIR"}
+        sh = lambda *a, cwd=d: subprocess.run(a, cwd=cwd, capture_output=True, text=True, env=env)  # noqa: E731
+        sh("git", "init", "-q", "--bare", "-b", "main", "origem.git")
+        sh("git", "clone", "-q", "origem.git", "pc")
+        pc = os.path.join(d, "pc")
+        os.makedirs(os.path.join(pc, ".claude", "hooks"))
+        import shutil
+        shutil.copy(hook, os.path.join(pc, ".claude", "hooks"))
+        for a in (("config", "user.email", "t@t"), ("config", "user.name", "t")):
+            sh("git", *a, cwd=pc)
+        open(os.path.join(pc, "leia.md"), "w").write("1")
+        sh("git", "add", "-A", cwd=pc); sh("git", "commit", "-q", "-m", "base", cwd=pc); sh("git", "push", "-q", "origin", "HEAD:main", cwd=pc)
+        open(os.path.join(pc, "leia.md"), "w").write("2")
+        open(os.path.join(pc, "CIA 1.pdf"), "w").write("cia")
+        old = {k: os.environ.pop(k) for k in list(os.environ) if k.startswith("GIT_") or k == "CLAUDE_PROJECT_DIR"}
+        try:
+            info = git_sinc.conferir(pc, PY)
+            linhas = git_sinc.sincronizar(pc, "teste do botão", PY)
+        finally:
+            os.environ.update(old)
+        no_github = sh("git", "--git-dir", os.path.join(d, "origem.git"), "show", "main:leia.md").stdout
+        arqs = sh("git", "--git-dir", os.path.join(d, "origem.git"), "ls-tree", "--name-only", "main").stdout
+        caso("Sincronizar com o GitHub: envia o que mudou, CIA fica fora e na pasta",
+             info["barrados"].get("CIA 1.pdf") and no_github == "2" and "CIA" not in arqs
+             and os.path.exists(os.path.join(pc, "CIA 1.pdf")), str(linhas) + arqs)
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

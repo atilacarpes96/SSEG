@@ -36,28 +36,46 @@ Decisões do Átila em 11/10/2026. Marcar `[x]` no mesmo commit em que o item fi
   - [x] planta não vai nem vem; nada pelo GitHub; apagar não se propaga
   - [x] sem chave SSH ou sem o apelido `sseg-servidor`: diz o que falta
   - [ ] teste do Átila no PC (precisa da chave SSH autorizada)
-- [ ] **3. Sincronizar com o GitHub**
-  - [ ] tela de conferência: arquivos mudados, o que ficaria barrado, campo da mensagem
-  - [ ] confere `user.name` e `user.email` e pede se faltar
-  - [ ] `pull --ff-only` → commit → push; conflito e trava explicados em português, nada alterado
-  - [ ] skill que mudou no pull sai em `.zip` (já existe no 1.0)
-- [ ] **4. Fonte única dos fluxos**
-  - [ ] `painel.py` gera `sseg/workflow/fluxos.json`: demanda → skill, modelo, esforço, subagentes, prompt de abertura, pede código?
-  - [ ] Painel SSEG lê o mesmo arquivo
-  - [ ] `testar.py`: o modelo de cada fluxo bate com `politica-modelo-e-custo.md`
-- [ ] **5. Iniciar conversa**
-  - [ ] tela de cartões: Analisar processo, Revisar CIA, Notificação avulsa, Pergunta de norma, Minuta/despacho, Incorporar norma
-  - [ ] abre o terminal na pasta do SSEG com `claude --model … --effort …` e o prompt
-  - [ ] cópia do prompt + modelo a escolher, para quem prefere o app do Claude
-- [ ] **6. Subagentes**
-  - [ ] lista de `.claude/agents/`: nome, modelo, para que serve
-  - [ ] acusa modelo inválido ou atalho velho (`haiku` = 4.5)
-  - [ ] quais subagentes cada fluxo usa (vem do `fluxos.json`)
-- [ ] **7. Gasto**
-  - [ ] lê os registros do Claude Code no PC (`~/.claude/projects/<pasta>/*.jsonl`) só da pasta do SSEG
-  - [ ] tokens por conversa, por modelo e por subagente, por dia e por semana
-  - [ ] em tokens, não em US$ (o Claude Code não tem preço do Haiku 5.5)
+- [x] **2c. Atualização automática do programa** (1.0.6): confere a versão ao abrir; "Atualizar o programa" baixa, fecha, troca o .exe e reabre. Testado no build numa cópia 0.0.1 numa pasta com espaço
+- [x] **3. Sincronizar com o GitHub** (1.1.0, 11/10/2026)
+  - [x] tela de conferência: arquivos mudados, o que fica fora (mesmas travas, `sseg_hooks.py conferir`), campo da mensagem
+  - [x] confere `user.name` e `user.email` e pede se faltar
+  - [x] `pull --ff-only` → commit → push; parou, explica em português; o barrado fica fora do commit e na pasta
+  - [x] skill que mudou no pull sai em `.zip` (já existe no 1.0)
+- [x] **4. Fonte única dos fluxos**
+  - [x] `painel.py --fluxos` gera `sseg/workflow/fluxos.json`: modelo e esforço tirados do texto da política; skill, subagentes e prompt no `painel.py`
+  - [x] Painel SSEG: aba Conversas, do mesmo retrato
+  - [x] `testar.py`: `fluxos.json` igual ao que a política gera; subagente com nome completo de modelo (o `revisor-cia` estava com o atalho `sonnet`)
+- [x] **5. Iniciar conversa**
+  - [x] um botão por demanda: Começar o dia, Analisar processo, Revisar CIA, Minuta ou despacho, Incorporar norma, Notificação avulsa, Pergunta de norma
+  - [x] "Abrir no terminal": Claude Code na pasta do SSEG com `--model` e `--effort` da política e o prompt (código do processo pedido quando precisa)
+  - [x] "Copiar o prompt", para quem usa o app do Claude, dizendo qual modelo escolher
+- [x] **6. Subagentes**
+  - [x] lista de `.claude/agents/`: nome, modelo, para que serve, em que conversa entra
+  - [x] acusa atalho (`haiku` = 4.5, `sonnet`, `opus`) e nome desconhecido
+- [x] **7. Gasto**
+  - [x] lê `~/.claude/projects/<pasta do SSEG>/**/*.jsonl` (inclui subagentes), cada resposta uma vez
+  - [x] hoje, 7 e 30 dias, por dia, por modelo, principal × subagente, as 10 conversas que mais gastaram
+  - [x] em tokens (entrada, cache, saída), não em US$
+- [x] **9. Reportar bug** (praxe dos apps do Átila): descrição + versão + sistema + fim do quadro, limpos de código de processo, pasta e nome de planta/PDF/CIA; abre issue no GitHub ou copia para a conversa do servidor
+- [x] **10. Procurar atualização** no rodapé, com a versão atual, junto do Reportar bug
 - [ ] **8. Entrega**
-  - [ ] versão 1.1.0, foto da janela no build
-  - [ ] entrada em `workflow/atualizacoes.md`
-  - [ ] teste do Átila no PC do trabalho; ajustes
+  - [x] versão 1.1.0; o build abre e fotografa cada tela (janela, Subagentes, Gasto, Reportar bug, Iniciar conversa, GitHub) e falha se alguma der erro
+  - [x] entrada em `workflow/atualizacoes.md`
+  - [ ] teste do Átila no PC (lista abaixo); ajustes
+
+## O que o Átila testa no PC (1.1.0)
+
+Abrir o SSEG.exe 1.0.6 que já está no PC: ele deve oferecer "Atualizar o programa (1.1.0)". É o
+teste da atualização automática — clicar e ver se fecha, troca e reabre já na 1.1.0.
+
+1. **Rolagem:** a janela rola com a roda do mouse; quadro e rodapé ficam fixos embaixo.
+2. **Programas e Pastas:** tudo ✓ como na 1.0.4 (pasta do SSEG `E:\Atila\bombers\SSEG`).
+3. **GitHub → Verificar atualizações → Atualizar agora** (traz o 1.1.0 do repositório: fluxos e subagentes).
+4. **Sincronizar processos** (agora com a chave SSH): ver a tela de conferência; conflito, se houver, mostrar antes de escolher; conferir que planta não subiu.
+5. **Iniciar conversa:** "Pergunta de norma" → "Abrir no terminal" deve abrir o Claude Code em Haiku 5.5 médio na pasta do SSEG; "Analisar processo" pede o código; "Copiar o prompt" copia.
+6. **Subagentes:** três, todos com nome completo de modelo, sem ⚠.
+7. **Gasto:** mostra as conversas do Claude Code feitas neste PC na pasta do SSEG (pode estar vazio se este PC usou só o app).
+8. **Sincronizar com o GitHub:** com uma mudança pequena de teste (ou sem mudança: deve dizer que está igual); se houver arquivo de processo dentro do clone, ele aparece "fica fora".
+9. **Reportar bug:** escrever qualquer coisa e conferir na prévia que não aparece código de processo, pasta nem nome de planta; "Copiar para a conversa" e colar aqui.
+10. **Procurar atualização:** deve dizer que já está na mais nova.
