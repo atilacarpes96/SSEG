@@ -35,7 +35,7 @@ import zipfile
 
 import instalar
 
-VERSAO = "1.0.2"
+VERSAO = "1.0.3"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -112,7 +112,21 @@ def preparar_pastas(clone, processos):
     with open(os.path.join(local, "local.json"), "w", encoding="utf-8") as fh:
         json.dump({"print_ppci": os.path.abspath(processos)}, fh, ensure_ascii=False, indent=2)
     out.append("✓ sseg/processos/ (fora do GitHub) com o caminho da pasta dos processos")
+    out.append(instalar_travas(clone))
     return out
+
+
+def instalar_travas(clone):
+    """pre-commit do git com as travas do CLAUDE.md — a mesma regra do hook do Claude Code."""
+    py = instalar.localizar().get("python")
+    gancho = os.path.join(clone, ".claude", "hooks", "sseg_hooks.py")
+    if not py or not os.path.exists(gancho):
+        return "✗ Travas do commit não instaladas: falta o Python (cartão Programas) ou o clone está incompleto"
+    p = subprocess.run([py, gancho, "instalar-git"], capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", timeout=60, creationflags=SEM_JANELA, stdin=subprocess.DEVNULL,
+                       env={**os.environ, "CLAUDE_PROJECT_DIR": clone})
+    msg = p.stdout.strip() or p.stderr.strip()[-200:] or "travas do commit: sem resposta"
+    return ("✓ " if "instalad" in msg and "não" not in msg else "✗ ") + msg
 
 
 def _versao(t):

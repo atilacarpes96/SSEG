@@ -105,6 +105,45 @@ def main():
     b = instalar.bloco_bashrc(instalar.bloco_bashrc("alias ll='ls -l'\n", [r"C:\P\bin"]), [r"D:\Novo"])
     caso("instalar: bloco do .bashrc", b.count(instalar.INICIO_BLOCO) == 1 and "/d/Novo:$PATH" in b
          and "/c/P" not in b and b.startswith("alias ll"), b)
+    # 10. pre-commit do git (item 2 do plano do programa): barra em QUALQUER commit, num repo temporário
+    if os.path.exists(hook) and not os.environ.get("SSEG_DENTRO_DO_GANCHO"):
+        with tempfile.TemporaryDirectory() as d:
+            # sem GIT_*: dentro do pre-commit real, GIT_INDEX_FILE apontaria para o índice do SSEG
+            env = {k: v for k, v in os.environ.items()
+                   if not k.startswith("GIT_") and k not in ("CLAUDE_PROJECT_DIR", "SSEG_BANCO_LIBERADO")}
+            env["SSEG_DENTRO_DO_GANCHO"] = "1"
+
+            def g(*a, **kw):
+                return subprocess.run(["git", "-C", d, *a], capture_output=True, text=True, env={**env, **kw}).returncode
+            os.makedirs(os.path.join(d, ".claude", "hooks"))
+            os.makedirs(os.path.join(d, "sseg", "normas"))
+            import shutil
+            shutil.copy(hook, os.path.join(d, ".claude", "hooks"))
+            open(os.path.join(d, ".gitignore"), "w").write("sseg/processos/\n")
+            open(os.path.join(d, "sseg", "normas", "banco-notificacoes-padrao.md"), "w", encoding="utf-8").write(
+                "- Deverá prever extintor.\n\n## Histórico de correções\n")
+            g("init", "-q"); g("config", "user.email", "t@t"); g("config", "user.name", "t")
+            g("add", "-A"); g("commit", "-q", "-m", "base")
+            subprocess.run([PY, os.path.join(d, ".claude", "hooks", "sseg_hooks.py"), "instalar-git"],
+                           capture_output=True, env={**env, "CLAUDE_PROJECT_DIR": d}, stdin=subprocess.DEVNULL)
+            os.makedirs(os.path.join(d, "sseg", "processos"))
+            open(os.path.join(d, "sseg", "processos", "x.md"), "w").write("x")
+            g("add", "--force", "sseg/processos/x.md")
+            caso("pre-commit barra arquivo forçado de sseg/processos", g("commit", "-q", "-m", "t1") != 0)
+            g("restore", "--staged", "sseg/processos/x.md")
+            open(os.path.join(d, "CIA 1.pdf"), "w").write("x")
+            g("add", "CIA 1.pdf")
+            caso("pre-commit barra CIA", g("commit", "-q", "-m", "t2") != 0)
+            g("restore", "--staged", "CIA 1.pdf")
+            banco_t = os.path.join(d, "sseg", "normas", "banco-notificacoes-padrao.md")
+            open(banco_t, "w", encoding="utf-8").write("- Deve prever extintor.\n\n## Histórico de correções\n")
+            g("add", "sseg/normas")
+            caso("pre-commit barra modelo do banco alterado", g("commit", "-q", "-m", "t3") != 0)
+            caso("pre-commit libera banco com SSEG_BANCO_LIBERADO=1",
+                 g("commit", "-q", "-m", "t3b", SSEG_BANCO_LIBERADO="1") == 0)
+            open(os.path.join(d, "leia.md"), "w").write("ok")
+            g("add", "leia.md")
+            caso("pre-commit deixa commit normal", g("commit", "-q", "-m", "t4") == 0)
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

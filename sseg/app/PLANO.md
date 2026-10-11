@@ -26,10 +26,10 @@ Decisões do Átila em 11/10/2026. Marcar `[x]` no mesmo commit em que o item fi
   - [x] ajustes do CLAUDE.md feitos sozinhos: `python3.exe`, PATH com Poppler e Python antes do Git, `PYTHONUTF8=1`
   - [x] PC sem `winget`: dizer o que baixar e onde, sem travar o resto
   - [x] "Entrar no Claude Code": abre o login uma vez e confere que ficou logado
-- [ ] **2. Travas no git**
-  - [ ] `pre-commit` que chama as regras do `sseg_hooks.py` (arquivo de processo, `add -f`, `testar.py`)
-  - [ ] instalado e conferido pelo "Criar / conferir pastas"
-  - [ ] caso no `testar.py`: commit com arquivo de processo é barrado
+- [x] **2. Travas no git** (1.0.3, 11/10/2026: também barra `--no-verify` no Claude, texto validado do banco e arquivo ignorado forçado; instala sozinho ao abrir o Claude Code no clone)
+  - [x] `pre-commit` que chama as regras do `sseg_hooks.py` (arquivo de processo, `add -f`, `testar.py`)
+  - [x] instalado e conferido pelo "Criar / conferir pastas"
+  - [x] caso no `testar.py`: commit com arquivo de processo é barrado
 - [ ] **3. Sincronizar com o GitHub**
   - [ ] tela de conferência: arquivos mudados, o que ficaria barrado, campo da mensagem
   - [ ] confere `user.name` e `user.email` e pede se faltar

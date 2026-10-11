@@ -7,9 +7,11 @@ Uso (chamado pelo .claude/settings.json; recebe o JSON do evento na entrada padr
     python3 sseg_hooks.py banco       PreToolUse    — protege o texto dos modelos validados do banco
     python3 sseg_hooks.py skill       PostToolUse   — skill mudou: gera o .zip e lembra de instalar
     python3 sseg_hooks.py fim         Stop          — lembra de commit quando há mudança parada
+    python3 sseg_hooks.py pre-commit  git pre-commit — as mesmas travas em QUALQUER commit (programa, PowerShell)
+    python3 sseg_hooks.py instalar-git               — instala o pre-commit (o "inicio" e o programa SSEG chamam)
 
 Só biblioteca padrão. Roda no servidor (Linux) e no PC do quartel (Git Bash). Nunca quebra a
-sessão: erro interno vira silêncio, nunca bloqueio.
+sessão: erro interno vira silêncio, nunca bloqueio — menos no pre-commit, que fecha o commit.
 """
 import json, os, re, subprocess, sys, time, zipfile
 
@@ -20,7 +22,8 @@ CODIGO = re.compile(r"A000\d{5}[A-Z]{2}\d{3}")
 
 def git(*args, timeout=20):
     try:
-        p = subprocess.run(["git", "-C", RAIZ, *args], capture_output=True, text=True, timeout=timeout)
+        p = subprocess.run(["git", "-C", RAIZ, *args], capture_output=True, text=True, timeout=timeout,
+                           encoding="utf-8", errors="replace")
         return p.returncode, p.stdout.rstrip()
     except Exception:
         return 1, ""
@@ -53,6 +56,12 @@ def inicio(_):
                           + ". Para valerem na conta, rodar a skill sseg-sincronizar-skills (ou instalar o .zip).")
         if "sseg/workflow/instrucoes-projeto-espelho.md" in mud:
             linhas.append("O espelho das Instruções mudou: o campo Instruções do projeto no claude.ai precisa receber o texto novo.")
+    try:
+        mudou, msg = instalar_gancho()
+        if mudou:
+            linhas.append(msg)
+    except Exception:
+        pass
     pend = [l for l in git("status", "--porcelain")[1].splitlines() if l and not l.startswith("??")]
     if pend:
         linhas.append(f"{len(pend)} arquivo(s) alterado(s) sem commit: " + ", ".join(l[3:] for l in pend[:6]))
@@ -86,6 +95,8 @@ def commit(evento):
         sys.exit(0)
     if re.search(git_cmd + r"add\b[^|;&]*(\s-f\b|--force)", cmd):
         negar("CLAUDE.md: nunca `git add -f` — é assim que dado de processo escapa do .gitignore.")
+    if re.search(git_cmd + r"commit\b[^|;&]*(\s-n\b|--no-verify)", cmd):
+        negar("Commit com --no-verify pula as travas do CLAUDE.md (pre-commit do SSEG). Commitar sem ele.")
     candidatos = set(git("diff", "--cached", "--name-only")[1].splitlines())
     if re.search(r"\bcommit\b[^|;&]*\s-(a|am|-all)\b", cmd) or re.search(r"\bgit\s+add\b", cmd):
         candidatos |= {l[3:] for l in git("status", "--porcelain")[1].splitlines() if l}
@@ -93,15 +104,111 @@ def commit(evento):
     if ruins:
         lista = "; ".join(f"{f} ({n})" for f, n in ruins[:8])
         negar("Commit barrado: dado de processo não vai para o GitHub (CLAUDE.md). Tire do stage: " + lista)
+    if gancho_instalado():
+        sys.exit(0)  # o pre-commit do git roda os testes; aqui seria a segunda vez
+    falha = rodar_testes()
+    if falha:
+        negar("Commit barrado: os testes do repositório falharam (python3 sseg/scripts/testar.py). "
+              "Corrija antes de commitar:\n" + falha)
+    sys.exit(0)
+
+
+def rodar_testes():
+    """Saída do testar.py se falhou; '' se passou ou se não há testes neste clone."""
     teste = os.path.join(RAIZ, "sseg", "scripts", "testar.py")
-    if os.path.exists(teste):
-        try:
-            p = subprocess.run([sys.executable, teste, "--rapido"], capture_output=True, text=True, timeout=120, cwd=RAIZ)
-        except Exception as e:
-            sys.exit(0)
-        if p.returncode != 0:
-            negar("Commit barrado: os testes do repositório falharam (python3 sseg/scripts/testar.py). "
-                  "Corrija antes de commitar:\n" + (p.stdout + p.stderr)[-1500:])
+    if not os.path.exists(teste):
+        return ""
+    p = subprocess.run([sys.executable, teste, "--rapido"], capture_output=True, text=True, timeout=180,
+                       cwd=RAIZ, encoding="utf-8", errors="replace")
+    return "" if p.returncode == 0 else (p.stdout + p.stderr)[-1500:]
+
+
+# ------------------------------------------------------------------ git pre-commit: vale para todo commit
+# O hook do Claude Code só dispara quando o Claude commita. O pre-commit do git pega também o
+# botão Sincronizar do programa SSEG e o commit à mão no PowerShell.
+
+MARCA = "# SSEG: travas do CLAUDE.md (sseg_hooks.py pre-commit)"
+GANCHO = MARCA.join(["#!/bin/sh\n", """
+# Instalado pelo programa SSEG ou ao abrir o Claude Code no clone. Vale para todo commit.
+PY=$(command -v python3 || command -v python || command -v py)
+[ -z "$PY" ] && { echo "SSEG: Python não encontrado; commit barrado porque as travas não rodariam." >&2; exit 1; }
+CLAUDE_PROJECT_DIR=$(git rev-parse --show-toplevel)
+export CLAUDE_PROJECT_DIR
+exec "$PY" "$CLAUDE_PROJECT_DIR/.claude/hooks/sseg_hooks.py" pre-commit
+"""])
+
+
+def caminho_gancho():
+    rc, d = git("rev-parse", "--git-path", "hooks")  # respeita core.hooksPath
+    if rc or not d:
+        return None
+    return os.path.join(d if os.path.isabs(d) else os.path.join(RAIZ, d), "pre-commit")
+
+
+def gancho_instalado():
+    alvo = caminho_gancho()
+    try:
+        return bool(alvo) and MARCA in open(alvo, encoding="utf-8", errors="replace").read()
+    except OSError:
+        return False
+
+
+def instalar_gancho():
+    """Instala ou atualiza o pre-commit. Devolve (mudou, mensagem)."""
+    alvo = caminho_gancho()
+    if not alvo:
+        return False, "não é um clone do git"
+    if os.path.exists(alvo):
+        atual = open(alvo, encoding="utf-8", errors="replace").read()
+        if MARCA not in atual:
+            return False, "já existe um pre-commit de outro programa em %s; não mexi (juntar à mão)" % alvo
+        if atual == GANCHO:
+            return False, "travas do commit já instaladas"
+    os.makedirs(os.path.dirname(alvo), exist_ok=True)
+    with open(alvo, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(GANCHO)
+    os.chmod(alvo, 0o755)
+    return True, "travas do commit instaladas no git (pre-commit)"
+
+
+def problemas_do_stage():
+    """{arquivo: motivo} do que está no stage e não pode ir para o GitHub."""
+    staged = [f for f in git("diff", "--cached", "--name-only", "--diff-filter=ACMR")[1].splitlines() if f]
+    ruins = {}
+    if staged:
+        for f in git("check-ignore", "--no-index", "--", *staged)[1].splitlines():
+            if f:
+                ruins[f] = "está no .gitignore — só entra com git add -f"
+    for f in staged:
+        for rx, nome in PROIBIDOS:
+            if rx.search(f):
+                ruins[f] = nome
+    if BANCO in staged and os.environ.get("SSEG_BANCO_LIBERADO") != "1":
+        novo = git("show", ":" + BANCO)[1]
+        sumidas = [l for l in linhas_protegidas(git("show", "HEAD:" + BANCO)[1]) if l not in novo]
+        if sumidas:
+            ruins[BANCO] = 'texto de modelo validado alterado ("%s"); ressalva vai em linha própria' % sumidas[0][:100]
+    return ruins
+
+
+def pre_commit(_):
+    ruins = problemas_do_stage()
+    if ruins:
+        print("SSEG — commit barrado. Dado de processo e texto validado do banco não vão para o GitHub "
+              "(CLAUDE.md):", file=sys.stderr)
+        for f, motivo in list(ruins.items())[:12]:
+            print("  %s  (%s)" % (f, motivo), file=sys.stderr)
+        print("Tirar do commit: git restore --staged \"<arquivo>\". Nada foi apagado.", file=sys.stderr)
+        sys.exit(1)
+    falha = rodar_testes()
+    if falha:
+        print("SSEG — commit barrado: os testes falharam (python3 sseg/scripts/testar.py):\n" + falha, file=sys.stderr)
+        sys.exit(1)
+    sys.exit(0)
+
+
+def instalar_git(_):
+    print(instalar_gancho()[1])
     sys.exit(0)
 
 
@@ -190,8 +297,12 @@ if __name__ == "__main__":
         evento = {}
     acao = sys.argv[1] if len(sys.argv) > 1 else ""
     try:
-        {"inicio": inicio, "commit": commit, "banco": banco, "skill": skill, "fim": fim}.get(acao, lambda e: sys.exit(0))(evento)
+        {"inicio": inicio, "commit": commit, "banco": banco, "skill": skill, "fim": fim,
+         "pre-commit": pre_commit, "instalar-git": instalar_git}.get(acao, lambda e: sys.exit(0))(evento)
     except SystemExit:
         raise
-    except Exception:
+    except Exception as e:
+        if acao == "pre-commit":  # trava que falha fecha: melhor um commit parado que dado vazado
+            print("SSEG — erro interno nas travas do commit (%s). Commit barrado; avise no Claude." % e, file=sys.stderr)
+            sys.exit(1)
         sys.exit(0)
