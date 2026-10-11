@@ -35,6 +35,8 @@ USO
   python3 sseg.py receber   --saida <pasta temporaria>
   python3 sseg.py arquivar  --api api-<ID>.json --trabalho 2.json --pasta "<print ppci>/<processo>"
   python3 sseg.py enviar    --pasta "<print ppci>/<processo>" [--simular]
+  python3 sseg.py sincronizar --pasta "<print ppci>" [--simular] [--json] [--escolhas e.json]
+  python3 sseg.py trazer    --pasta "<print ppci>"
 """
 
 import argparse
@@ -914,7 +916,15 @@ def main():
     import enviar
     enviar.args_parser(sub.add_parser("enviar", help="leva a pasta do processo ao servidor, sem as plantas"))
 
+    import sincronizar
+    sincronizar.args_parser(sub.add_parser("sincronizar", help="processos PC <-> servidor, nos dois sentidos"),
+                            sub.add_parser("trazer", help="desce do servidor o que estiver mais novo lá"))
+
     args = ap.parse_args()
+
+    if args.cmd in ("sincronizar", "trazer"):
+        sincronizar.principal(args, so_descer=args.cmd == "trazer")
+        return
 
     if args.cmd == "enviar":
         enviar.enviar(args.pasta, args.processo, args.servidor, args.simular)

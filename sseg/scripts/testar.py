@@ -144,6 +144,58 @@ def main():
             open(os.path.join(d, "leia.md"), "w").write("ok")
             g("add", "leia.md")
             caso("pre-commit deixa commit normal", g("commit", "-q", "-m", "t4") == 0)
+    # 11. sincronizar processos PC <-> servidor (servidor de mentira numa pasta, sem SSH)
+    import sincronizar as sc
+    with tempfile.TemporaryDirectory() as d:
+        ppci, clone_proc, srv = (os.path.join(d, x) for x in ("ppci", "clone_proc", "srv"))
+        sc.PROC_CLONE, sc.RAIZ_SERVIDOR, sc.BASE = clone_proc, srv, os.path.join(clone_proc, ".sincronizacao.json")
+        for x in (ppci, clone_proc, srv):
+            os.makedirs(x)
+
+        class Falso:
+            def listar(self):
+                return sc.manifesto(srv, srv)
+
+            def receber(self, dados):
+                return sc.desempacotar(dados, sc._no_servidor)
+
+            def entregar(self, chaves):
+                return sc.empacotar({k: sc._no_servidor(k) for k in chaves if os.path.isfile(sc._no_servidor(k))})
+
+        def gravar(caminho, texto):
+            os.makedirs(os.path.dirname(caminho), exist_ok=True)
+            open(caminho, "w", encoding="utf-8").write(texto)
+        cod = "A00012345AA001"
+        gravar(os.path.join(ppci, cod, "1.json"), "pc1")
+        gravar(os.path.join(ppci, cod, "CIA 1.pdf"), "cia")
+        gravar(os.path.join(ppci, cod, "Planta baixa.pdf"), "planta")
+        gravar(os.path.join(srv, cod + ".md"), "registro do servidor")
+        r = sc.aplicar(ppci, Falso())
+        caso("sincronizar: 1ª vez sobe JSON e CIA, desce o registro, planta fica",
+             sorted(r["subiu"]) == [cod + "/1.json", cod + "/CIA 1.pdf"] and r["desceu"] == [cod + ".md"]
+             and not os.path.exists(os.path.join(srv, cod, "Planta baixa.pdf"))
+             and os.path.exists(os.path.join(clone_proc, cod + ".md")), str(r))
+        gravar(os.path.join(srv, cod, "1.json"), "srv2")                  # só o servidor mudou
+        gravar(os.path.join(ppci, cod, "CIA 1.pdf"), "cia pc")            # os dois mudaram
+        gravar(os.path.join(srv, cod, "CIA 1.pdf"), "cia srv")
+        p = sc.comparar(sc.manifesto(ppci, clone_proc), Falso().listar(), sc._ler_base())
+        caso("sincronizar: plano desce o que mudou só no servidor e acusa o conflito",
+             p["desce"] == [cod + "/1.json"] and p["conflito"] == [cod + "/CIA 1.pdf"] and not p["sobe"], str(p))
+        r = sc.aplicar(ppci, Falso())
+        caso("sincronizar: conflito sem escolha não sobrescreve nenhum lado",
+             open(os.path.join(ppci, cod, "CIA 1.pdf")).read() == "cia pc"
+             and open(os.path.join(srv, cod, "CIA 1.pdf")).read() == "cia srv"
+             and open(os.path.join(ppci, cod, "1.json")).read() == "srv2", str(r))
+        r = sc.aplicar(ppci, Falso(), {cod + "/CIA 1.pdf": "servidor"})
+        caso("sincronizar: escolha 'servidor' resolve o conflito",
+             open(os.path.join(ppci, cod, "CIA 1.pdf")).read() == "cia srv" and not r["conflito_pendente"], str(r))
+        os.remove(os.path.join(ppci, cod, "1.json"))
+        p = sc.comparar(sc.manifesto(ppci, clone_proc), Falso().listar(), sc._ler_base())
+        caso("sincronizar: apagado no PC não volta nem some do servidor",
+             p["apagado_pc"] == [cod + "/1.json"] and not p["desce"], str(p))
+        caso("sincronizar: chave fora da lista é barrada",
+             not sc.chave_valida(cod + "/Planta.pdf") and not sc.chave_valida("../x.json")
+             and not sc.chave_valida(cod + "/../../x.json") and sc.chave_valida(cod + "/api-1.json"))
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

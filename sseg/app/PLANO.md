@@ -30,6 +30,12 @@ Decisões do Átila em 11/10/2026. Marcar `[x]` no mesmo commit em que o item fi
   - [x] `pre-commit` que chama as regras do `sseg_hooks.py` (arquivo de processo, `add -f`, `testar.py`)
   - [x] instalado e conferido pelo "Criar / conferir pastas"
   - [x] caso no `testar.py`: commit com arquivo de processo é barrado
+- [x] **2b. Sincronizar processos com o servidor** (1.0.4, 11/10/2026 — pedido vindo do teste no PC)
+  - [x] sobe o que mudou no PC em todos os processos; desce o que está mais novo no servidor (`sseg.py sincronizar` / `sseg.py trazer`)
+  - [x] conflito (mudou dos dois lados) não sobrescreve: tela de conferência, o analista escolhe
+  - [x] planta não vai nem vem; nada pelo GitHub; apagar não se propaga
+  - [x] sem chave SSH ou sem o apelido `sseg-servidor`: diz o que falta
+  - [ ] teste do Átila no PC (precisa da chave SSH autorizada)
 - [ ] **3. Sincronizar com o GitHub**
   - [ ] tela de conferência: arquivos mudados, o que ficaria barrado, campo da mensagem
   - [ ] confere `user.name` e `user.email` e pede se faltar

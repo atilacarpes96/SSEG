@@ -11,6 +11,8 @@ FAZ
   - "Verificar atualizações": compara o clone com o GitHub, mostra o que chegou (commits,
     skills mudadas, última entrada de Atualizações) e oferece o `git pull`; skill mudada sai
     em .zip pronto para subir na conta;
+  - "Sincronizar processos": PC <-> servidor por SSH (sseg.py sincronizar), com tela de
+    conferência e escolha nos conflitos; planta não vai; nada passa pelo GitHub;
   - avisa quando há versão nova do próprio programa;
   - abre o Painel SSEG, que é o manual.
 
@@ -35,7 +37,7 @@ import zipfile
 
 import instalar
 
-VERSAO = "1.0.3"
+VERSAO = "1.0.4"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -300,6 +302,8 @@ def janela():
     acoes_p.pack(fill="x")
     b_pastas = botao(acoes_p, "Criar / conferir pastas", lambda: rodar(criar))
     b_pastas.pack(side="left")
+    b_sinc = botao(acoes_p, "Sincronizar processos", lambda: rodar(planejar_sinc), primario=False)
+    b_sinc.pack(side="left", padx=8)
 
     # Atualizações
     atual = cartao("Atualizações")
@@ -342,7 +346,7 @@ def janela():
 
     def rodar(tarefa):
         """Roda fora da janela (git pode demorar) e devolve o resultado na thread da interface."""
-        for b in (b_pastas, b_verif, b_atual, b_inst, b_login, b_conf):
+        for b in (b_pastas, b_sinc, b_verif, b_atual, b_inst, b_login, b_conf):
             b.ligar(False)
 
         def trabalho():
@@ -350,10 +354,85 @@ def janela():
                 r = tarefa()
             except Exception as e:  # mostra o erro em vez de fechar o programa
                 r = lambda m=str(e): escrever("✗ " + m)  # noqa: E731
-            raiz.after(0, lambda: (r and r(), b_pastas.ligar(True), b_verif.ligar(True), b_conf.ligar(True),
+            raiz.after(0, lambda: (r and r(), b_pastas.ligar(True), b_sinc.ligar(True), b_verif.ligar(True), b_conf.ligar(True),
                                    b_inst.ligar(estado.get("falta", True)), b_login.ligar(True),
                                    b_atual.ligar(bool(estado["dados"] and estado["dados"]["atras"]))))
         threading.Thread(target=trabalho, daemon=True).start()
+
+    # ---- Sincronizar processos com o servidor (SSH; nada pelo GitHub) — sseg.py sincronizar
+    def sseg_py(*args):
+        clone, processos = salvar()
+        py = instalar.localizar().get("python")
+        script = os.path.join(clone, "sseg", "scripts", "sseg.py")
+        if not py or not os.path.exists(script):
+            raise RuntimeError("Falta o Python (cartão Programas) ou o SSEG nesta pasta (\"Criar / conferir pastas\").")
+        p = subprocess.run([py, script, *args, "--pasta", processos], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=900, creationflags=SEM_JANELA,
+                           stdin=subprocess.DEVNULL, env={**os.environ, "PYTHONUTF8": "1"})
+        if p.returncode:
+            raise RuntimeError((p.stderr or p.stdout).strip()[-1500:])
+        return p.stdout
+
+    def planejar_sinc():
+        plano = json.loads(sseg_py("sincronizar", "--json"))
+        if not (plano["sobe"] or plano["desce"] or plano["conflito"]):
+            return lambda: escrever("— Processos — PC e servidor iguais (%d arquivo(s))." % plano["iguais"])
+        return lambda: conferencia_sinc(plano)
+
+    def conferencia_sinc(plano):
+        """Tela de conferência: o que sobe, o que desce e, nos conflitos, o analista escolhe."""
+        jan = tk.Toplevel(raiz)
+        jan.title("Sincronizar processos")
+        jan.configure(bg=CARTAO)
+        jan.transient(raiz)
+        jan.grab_set()
+        tk.Label(jan, text="SINCRONIZAR PROCESSOS COM O SERVIDOR", font=F(9, "bold"), fg=VERMELHO,
+                 bg=CARTAO).pack(anchor="w", padx=16, pady=(12, 2))
+        tk.Label(jan, text="Planta não vai nem vem. Nada passa pelo GitHub.", font=F(9), fg=SUAVE,
+                 bg=CARTAO).pack(anchor="w", padx=16)
+        lista = tk.Frame(jan, bg=CARTAO)
+        lista.pack(fill="both", expand=True, padx=16, pady=8)
+        for titulo, chaves, seta in (("Sobe para o servidor", plano["sobe"], "↑"),
+                                     ("Desce para o PC", plano["desce"], "↓")):
+            if chaves:
+                tk.Label(lista, text="%s (%d)" % (titulo, len(chaves)), font=F(10, "bold"), fg=TEXTO,
+                         bg=CARTAO).pack(anchor="w", pady=(6, 0))
+                for k in chaves[:12]:
+                    tk.Label(lista, text="  %s %s" % (seta, k), font=F(9), fg=TEXTO, bg=CARTAO).pack(anchor="w")
+                if len(chaves) > 12:
+                    tk.Label(lista, text="  … e mais %d" % (len(chaves) - 12), font=F(9), fg=SUAVE, bg=CARTAO).pack(anchor="w")
+        escolhas = {}
+        if plano["conflito"]:
+            tk.Label(lista, text="Mudou dos dois lados (%d) — escolha qual fica:" % len(plano["conflito"]),
+                     font=F(10, "bold"), fg=VERMELHO_ESC, bg=CARTAO).pack(anchor="w", pady=(10, 2))
+            for k in plano["conflito"]:
+                lin = tk.Frame(lista, bg=CARTAO)
+                lin.pack(fill="x", pady=1)
+                tk.Label(lin, text=k, font=F(9), fg=TEXTO, bg=CARTAO).pack(side="left")
+                v = tk.StringVar(value="deixar")
+                for val, rot in (("deixar", "deixar como está"), ("servidor", "do servidor"), ("pc", "do PC")):
+                    tk.Radiobutton(lin, text=rot, variable=v, value=val, font=F(9), bg=CARTAO,
+                                   activebackground=CARTAO).pack(side="right")
+                escolhas[k] = v
+        rod = tk.Frame(jan, bg=CARTAO)
+        rod.pack(fill="x", padx=16, pady=(4, 14))
+
+        def confirmar():
+            esc = {k: v.get() for k, v in escolhas.items()}
+            jan.destroy()
+            rodar(lambda: aplicar_sinc(esc))
+        botao(rod, "Sincronizar", confirmar).pack(side="left")
+        botao(rod, "Cancelar", jan.destroy, primario=False).pack(side="left", padx=8)
+
+    def aplicar_sinc(esc):
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as fh:
+            json.dump(esc, fh)
+        try:
+            saida = sseg_py("sincronizar", "--escolhas", fh.name)
+        finally:
+            os.remove(fh.name)
+        return lambda: escrever("— Processos —", *saida.strip().splitlines())
 
     def criar():
         clone, processos = salvar()
