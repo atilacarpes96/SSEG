@@ -36,13 +36,14 @@ import urllib.request
 import webbrowser
 import zipfile
 
+import busca
 import claude_local
 import gasto
 import git_sinc
 import instalar
 import relato
 
-VERSAO = "1.1.1"
+VERSAO = "1.2.0"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -360,6 +361,18 @@ def janela():
     b_sinc = botao(acoes_p, "Sincronizar processos", lambda: rodar(planejar_sinc), primario=False)
     b_sinc.pack(side="left", padx=8)
 
+    # Busca nas normas e no banco — sem gastar token (o trabalho do localizador-normas)
+    buscac = cartao("Buscar nas normas e no banco")
+    linb = tk.Frame(buscac, bg=CARTAO)
+    linb.pack(fill="x")
+    consulta = tk.StringVar()
+    e_busca = tk.Entry(linb, textvariable=consulta, font=F(11), relief="solid", bd=1)
+    e_busca.pack(side="left", fill="x", expand=True, ipady=5)
+    e_busca.bind("<Return>", lambda _e: buscar_normas())
+    botao(linb, "Buscar", lambda: buscar_normas()).pack(side="left", padx=(8, 0))
+    tk.Label(buscac, text='Ex.: extintor "5 m" · pavimento de descarga · subsidiária 10%. Sem acento ou maiúscula; '
+                          'todos os termos; frase entre aspas.', font=F(8), fg=SUAVE, bg=CARTAO).pack(anchor="w", pady=(6, 0))
+
     # Claude: uma conversa por tipo de demanda (modelo e esforço vêm de sseg/workflow/fluxos.json)
     claudec = cartao("Iniciar conversa")
     grade = tk.Frame(claudec, bg=CARTAO)
@@ -656,6 +669,49 @@ def janela():
         raiz.clipboard_clear()
         raiz.clipboard_append(texto)
 
+    # ---- Busca nas normas e no banco (1.2)
+    def buscar_normas():
+        q = consulta.get().strip()
+        if not q:
+            return
+        clone = campos["clone"].get().strip()
+        res = busca.buscar(busca.carregar(clone), q)
+        jan = estado.get("jan_busca")
+        if jan is None or not jan.winfo_exists():
+            jan, m, r = dialogo("Busca nas normas e no banco", "Localiza; não decide. Antes de usar um modelo do "
+                                "banco, diga por que este caso é o caso daquele modelo. Texto convertido só localiza: "
+                                "conferir o item no PDF antes de citar.")
+            caixa = tk.Text(m, height=26, width=96, font=F(10), bg="#FBF9F8", fg=TEXTO, relief="solid", bd=1, wrap="word")
+            caixa.pack(fill="both", expand=True)
+            caixa.tag_configure("grupo", font=F(10, "bold"), foreground=VERMELHO, spacing1=10, spacing3=4)
+            caixa.tag_configure("onde", font=F(8), foreground=SUAVE, spacing1=8)
+            caixa.tag_configure("copiar", font=F(8, "bold"), foreground=VERMELHO_ESC, underline=True)
+            caixa.tag_bind("copiar", "<Enter>", lambda _e: caixa.configure(cursor="hand2"))
+            caixa.tag_bind("copiar", "<Leave>", lambda _e: caixa.configure(cursor=""))
+            botao(r, "Fechar", jan.destroy, primario=False).pack(side="left")
+            estado["jan_busca"], estado["caixa_busca"] = jan, caixa
+        caixa = estado["caixa_busca"]
+        jan.title("Busca: " + q)
+        caixa.configure(state="normal")
+        caixa.delete("1.0", "end")
+        if not res:
+            caixa.insert("end", "Nada encontrado para: %s\n\nTente menos termos, ou um sinônimo. Ausência aqui não "
+                                "prova ausência na norma: conferir no PDF." % q)
+        grupo_atual = None
+        for n, x in enumerate(res):
+            if x["grupo"] != grupo_atual:
+                grupo_atual = x["grupo"]
+                caixa.insert("end", dict(busca.GRUPOS)[grupo_atual] + "\n", "grupo")
+            caixa.insert("end", "%s — %s:%d   " % (x["secao"] or "(sem seção)", x["arquivo"], x["linha"]), "onde")
+            tag = "c%d" % n
+            caixa.insert("end", "[copiar]", ("copiar", tag))
+            caixa.tag_bind(tag, "<Button-1>", lambda _e, txt=x["copiar"]: (copiar(txt), escrever("Copiado da busca.")))
+            caixa.insert("end", "\n" + x["texto"] + "\n")
+        if len(res) >= 80:
+            caixa.insert("end", "\n(mostrando os 80 primeiros: refine a busca)", "onde")
+        caixa.configure(state="disabled")
+        jan.lift()
+
     # ---- Iniciar conversa (item 5) e Subagentes (item 6)
     def montar_fluxos():
         for w in grade.winfo_children():
@@ -863,7 +919,8 @@ def janela():
         raiz.report_callback_exception = lambda *a: erros.append("".join(traceback.format_exception(*a)))
         git_falso = {"itens": [("M", "sseg/normas/exemplo.md"), ("??", "CIA 1.pdf")],
                      "barrados": {"CIA 1.pdf": "CIA de processo"}, "atras": 1, "frente": 0, "nome": "", "email": ""}
-        passos = [("janela", None), ("subagentes", lambda: ver_subagentes()()), ("gasto", lambda: ver_gasto()()),
+        passos = [("janela", None), ("busca", lambda: (consulta.set('extintor "5 m"'), buscar_normas())),
+                  ("subagentes", lambda: ver_subagentes()()), ("gasto", lambda: ver_gasto()()),
                   ("bug", reportar_bug), ("conversa", lambda: iniciar_fluxo(estado["fluxos"][1])),
                   ("github", lambda: tela_git(git_falso, None))]
 

@@ -248,6 +248,15 @@ def main():
         caso("Sincronizar com o GitHub: envia o que mudou, CIA fica fora e na pasta",
              info["barrados"].get("CIA 1.pdf") and no_github == "2" and "CIA" not in arqs
              and os.path.exists(os.path.join(pc, "CIA 1.pdf")), str(linhas) + arqs)
+    # 14. busca nas normas e no banco (SSEG.exe 1.2): banco primeiro, número não casa no meio de outro
+    import busca
+    r = busca.buscar(busca.carregar(RAIZ), 'extintor "5 m"')
+    caso("busca: banco primeiro e \"5 m\" não acha \"15 m\"",
+         r and r[0]["grupo"] == "banco" and not any("15 m" in x["texto"] and "5 m " not in x["texto"].replace("15 m", "") for x in r)
+         and r[0]["copiar"].startswith("Deverá prever uma unidade extintora"), str([(x["grupo"], x["linha"]) for x in r[:5]]))
+    r = busca.buscar(busca.carregar(RAIZ), "subsidiaria 10%")
+    caso("busca: sem acento acha 5.2.2.1 no banco e na RT 01/2024",
+         {x["grupo"] for x in r} >= {"banco", "comentada"} and any("rt-01-2024" in x["arquivo"] for x in r))
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

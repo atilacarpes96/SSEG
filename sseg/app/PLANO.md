@@ -64,6 +64,20 @@ Decisões do Átila em 11/10/2026. Marcar `[x]` no mesmo commit em que o item fi
   - [x] entrada em `workflow/atualizacoes.md`
   - [ ] teste do Átila no PC (lista abaixo); ajustes
 
+## Versão 1.2 — menos token: o mecânico sai da conversa (decisão de 11/10/2026)
+
+Critério: script onde nenhuma escolha normativa acontece (o mesmo dos subagentes leves).
+Escolher modelo do banco, enquadrar ocupação e decidir se a exigência procede ficam com o
+Claude. Ler o SOL continua no Chrome do analista. Antes de priorizar 2 a 5, medir com o botão
+Gasto em análises reais onde o token vai (início, meio ou fim da conversa).
+
+- [x] **1. Buscar nas normas e no banco** (1.2.0): banco → normas comentadas → texto convertido (marcado "só localiza"), sem acento, todos os termos, número não casa no meio de outro; [copiar] o modelo ou o trecho com arquivo e linha. O trabalho do `localizador-normas` sem token
+- [ ] **2. Pré-análise:** "Analisar processo" roda antes o `sseg.py check` no JSON da pasta do processo e a conversa começa lendo o resumo
+- [ ] **3. Arquivar e enviar por botão:** sem rodadas do Claude no fim da conversa
+- [ ] **4. Pré-revisão da CIA:** "Revisar CIA" roda antes o `sseg.py revisar-cia` e abre a conversa com o resultado
+- [ ] **5. Conferir a caixa do SOL:** colar o texto → 2.000 caracteres, hífen, quebra de linha
+- [ ] **6. Medir:** Gasto antes e depois, em análises reais
+
 ## O que o Átila testa no PC (1.1.1)
 
 Abrir o SSEG.exe 1.0.6 que já está no PC: ele deve oferecer "Atualizar o programa (1.1.1)". É o
