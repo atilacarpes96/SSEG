@@ -928,6 +928,7 @@ SSEG.tour = async passo => {
         pendencias: [{ id: "p1", texto: "Falta ver a fita reflexiva nas rampas", origem: "claude", resposta: "", feita: false }, { id: "p2", texto: "Qual a data de protocolo?", origem: "claude", resposta: "03/02/2025", feita: false }],
         exigencias: [{ id: "e1", medida: "Saída de Emergência", origem: "claude", rascunho: "- Deverá prever largura mínima de 1,10 m na porta da escada, conforme item 5.4.2 da RT 11/2016.", final: "", fundamento: "RT 11/2016, item 5.4.2" }],
         chat: { pct_5h: 0.031 }, alterado: 1 } };
+    $("#detalhes").classList.remove("aberto");
     PR.foto = true;  // foto do build: sem pasta de verdade, a janela não relê o registro
     renderProcesso(fake); ir("processo"); PR.janela = 23; pintarCota();
     $("#pr-chat").replaceChildren();
