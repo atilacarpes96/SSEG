@@ -131,6 +131,80 @@ footer { flex: none; background: var(--cartao); border-top: 1px solid var(--linh
 .conflito code { flex: 1; min-width: 200px; }
 textarea { width: 100%; border: 1px solid var(--linha); border-radius: 6px; padding: 7px 9px; resize: vertical; }
 .aviso { font-size: 11.5px; color: var(--suave); margin-top: 18px; }
+
+/* ---- janela do processo (2.1) */
+main.processo { padding: 0; overflow: hidden; }
+#t-processo { max-width: none; height: 100%; }
+#t-processo.ativa { display: flex; flex-direction: column; }
+.faixa { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 9px 16px; background: var(--cartao);
+         border-bottom: 1px solid var(--linha); }
+.faixa .cod { font: 600 16px Consolas, monospace; }
+.faixa .tag { font-size: 11.5px; }
+.faixa .dir { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.colunas { flex: 1; display: grid; grid-template-columns: minmax(300px, 1.25fr) minmax(260px, 1fr) minmax(280px, 1fr); min-height: 0; }
+.coluna { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--linha); min-width: 0; }
+.coluna:last-child { border-right: 0; }
+.coluna > h2 { margin: 0; padding: 10px 14px 8px; background: var(--fundo); border-bottom: 1px solid var(--linha); display: flex; gap: 8px; align-items: center; }
+.coluna > h2 .bt { margin-left: auto; font-size: 11.5px; letter-spacing: 0; text-transform: none; }
+.rola { flex: 1; overflow-y: auto; padding: 10px 14px; }
+/* chat */
+.msg { margin: 8px 0; max-width: 100%; }
+.msg.eu { background: #FDF1F0; border: 1px solid #F3D3D1; border-radius: 10px 10px 2px 10px; padding: 7px 11px; margin-left: 14%; white-space: pre-wrap; }
+.msg.claude { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px 10px 10px 2px; padding: 8px 12px; }
+.msg.claude p { margin: 0 0 6px; } .msg.claude p:last-child { margin: 0; }
+.msg.claude h4 { margin: 8px 0 4px; font-size: 13.5px; color: var(--verm); }
+.msg.claude ul, .msg.claude ol { margin: 4px 0 6px; padding-left: 20px; }
+.msg.claude code { background: var(--fundo); padding: 0 4px; border-radius: 3px; font-size: 12.5px; }
+.msg.claude pre { background: #FBF9F8; border: 1px solid var(--linha); padding: 6px 8px; border-radius: 6px; white-space: pre-wrap; font: 12px Consolas, monospace; }
+.ativ { font-size: 11.5px; color: var(--suave); margin: 4px 0 4px 2px; }
+.msg.aviso { font-size: 12px; color: var(--verm); }
+.sub-linha { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--suave); margin: 6px 0; }
+.entrada { border-top: 1px solid var(--linha); padding: 8px 10px; display: flex; gap: 8px; align-items: flex-end; background: var(--cartao); }
+.entrada textarea { flex: 1; min-height: 40px; max-height: 160px; }
+.trabalhando { font-size: 12px; color: var(--suave); padding: 0 14px 6px; display: flex; gap: 8px; align-items: center; min-height: 26px; }
+/* checklist */
+.bloco { margin-bottom: 14px; }
+.bloco > b { display: block; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); margin: 4px 0 6px; }
+.ck { display: flex; gap: 8px; align-items: flex-start; padding: 4px 2px; font-size: 13px; }
+.ck input { margin-top: 3px; }
+.ck small { display: block; color: var(--suave); font-size: 11.5px; }
+.ck.feito > span { color: var(--suave); text-decoration: line-through; }
+.marca-tag { font-size: 10.5px; border-radius: 4px; padding: 0 5px; margin-left: 4px; background: #FEF4EA; color: #9A4A0E; }
+.pend { background: #FFFBEA; border: 1px solid #F2E3A0; border-radius: 6px; padding: 7px 9px; margin-bottom: 7px; font-size: 13px; }
+.pend.feita { opacity: .55; }
+.pend input[type=text] { width: 100%; margin-top: 5px; padding: 5px 7px; border: 1px solid var(--linha); border-radius: 5px; }
+.pend .linha-bts { margin-top: 4px; font-size: 12px; }
+details.medida { border: 1px solid var(--linha); border-radius: 6px; margin-bottom: 6px; background: var(--cartao); }
+details.medida summary { padding: 7px 9px; cursor: pointer; font-size: 13px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+details.medida summary .cont { margin-left: auto; font-size: 11px; color: var(--suave); }
+details.medida .itens { padding: 0 9px 8px; }
+.item { display: flex; gap: 6px; align-items: center; font-size: 12.5px; padding: 3px 0; border-top: 1px dashed var(--linha); }
+.item span { flex: 1; }
+.item button { border: 1px solid var(--linha); background: #fff; border-radius: 4px; padding: 0 6px; font-size: 12px; }
+.item button.on.ok { background: var(--ok); color: #fff; border-color: var(--ok); }
+.item button.on.x { background: var(--verm); color: #fff; border-color: var(--verm); }
+/* CIA */
+.exig { border: 1px solid var(--linha); border-radius: 6px; padding: 8px 10px; margin-bottom: 9px; background: var(--cartao); }
+.exig .cab { display: flex; gap: 6px; align-items: baseline; font-size: 12px; color: var(--suave); flex-wrap: wrap; }
+.exig .cab b { color: var(--texto); }
+.exig .rasc { background: #F4F7FD; border: 1px dashed #B9CBEE; border-radius: 5px; padding: 6px 8px; font-size: 12.5px; margin: 6px 0; white-space: pre-wrap; }
+.exig textarea { margin-top: 6px; min-height: 70px; font-size: 13px; }
+.exig .rod { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; }
+.exig .conta { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--suave); }
+.exig .conta.alto { color: var(--verm); font-weight: 700; }
+.exig .salvo { color: var(--ok); }
+.exig input.fund { width: 100%; margin-top: 4px; padding: 4px 7px; border: 1px solid var(--linha); border-radius: 5px; font-size: 12px; }
+/* caranguejo */
+.crab { display: inline-block; vertical-align: middle; animation: anda 1.1s ease-in-out infinite; transform-origin: 50% 80%; }
+.crab .perna { animation: pernas .35s linear infinite alternate; transform-origin: center; }
+.crab.parado { animation: none; filter: grayscale(1); opacity: .6; }
+.crab.tchau { animation: tchau .9s ease forwards; }
+.crab.tchau .garra-d { animation: aceno .3s ease-in-out 3 alternate; transform-origin: 70% 60%; }
+@keyframes anda { 0%,100% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }
+@keyframes pernas { to { transform: translateY(1.5px); } }
+@keyframes aceno { to { transform: rotate(-25deg); } }
+@keyframes tchau { 0%,60% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(14px); } }
+#cota { white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -159,11 +233,39 @@ textarea { width: 100%; border: 1px solid var(--linha); border-radius: 6px; padd
       <p class="sub">Cada demanda abre o Claude Code com o modelo e o esforço da política de modelo.</p>
       <div id="fluxos"></div>
       <h2>Processos em andamento</h2>
-      <p class="sub">Pastas de processo na sua pasta dos processos, a mais mexida primeiro. A janela de análise (chat, checklist e CIA, sem terminal) chega na 2.1.</p>
+      <p class="sub">Pastas de processo na sua pasta dos processos, a mais mexida primeiro. "Abrir" mostra a janela do processo: conversa, checklist e CIA. Abrir não põe o Claude para trabalhar: ele espera o seu pedido.</p>
       <div class="cartao"><table><thead><tr><th>Processo</th><th>Mexido em</th><th></th><th></th></tr></thead>
         <tbody id="processos"><tr><td class="vazio" colspan="4">Carregando…</td></tr></tbody></table></div>
     </section>
 
+
+    <section class="tela" id="t-processo">
+      <div class="faixa">
+        <button class="bt" id="pr-voltar">← Início</button>
+        <span class="cod" id="pr-cod"></span>
+        <span id="pr-tags"></span>
+        <div class="dir">
+          <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
+          <button class="bt link" id="pr-pasta">abrir pasta</button>
+        </div>
+      </div>
+      <div class="colunas">
+        <div class="coluna">
+          <h2>Conversa <span class="sub" style="margin:0;text-transform:none;letter-spacing:0;font-weight:400" id="pr-modelo"></span></h2>
+          <div class="rola" id="pr-chat"></div>
+          <div class="trabalhando" id="pr-trab"></div>
+          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button class="bt p">Enviar</button></form>
+        </div>
+        <div class="coluna">
+          <h2>Checklist</h2>
+          <div class="rola" id="pr-check"></div>
+        </div>
+        <div class="coluna">
+          <h2>CIA em construção <button class="bt link" id="pr-copiar-cia">copiar a CIA</button></h2>
+          <div class="rola" id="pr-cia"></div>
+        </div>
+      </div>
+    </section>
     <section class="tela" id="t-busca">
       <h2>Buscar nas normas e no banco</h2>
       <p class="sub">Localiza; não decide. Antes de usar um modelo do banco, diga por que este caso é o caso daquele
@@ -221,6 +323,7 @@ textarea { width: 100%; border: 1px solid var(--linha); border-radius: 6px; padd
   <span id="versao">SSEG</span>
   <button class="bt link" id="b-detalhes">Detalhes</button>
   <span id="ultima"></span>
+  <span id="cota" title="Uso da janela de 5 h do Claude (estimativa)"></span>
   <div id="caranguejos" title="Subagentes trabalhando"></div>
 </footer>
 
@@ -238,6 +341,7 @@ const el = (tag, attrs = {}, ...filhos) => {
   for (const [k, v] of Object.entries(attrs)) {
     if (k === "on") for (const [ev, fn] of Object.entries(v)) e.addEventListener(ev, fn);
     else if (k === "class") e.className = v;
+    else if (k === "html") continue;
     else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
   }
   for (const f of filhos.flat()) if (f != null) e.append(f.nodeType ? f : document.createTextNode(String(f)));
@@ -280,6 +384,7 @@ async function copiar(texto) {
 
 // ---- navegação
 function ir(tela) {
+  document.querySelector("main").classList.toggle("processo", tela === "processo");
   document.querySelectorAll(".tela").forEach(t => t.classList.toggle("ativa", t.id === "t-" + tela));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
   if (tela === "config") carregarConfig();
@@ -459,7 +564,8 @@ async function carregarProcessos() {
     el("td", {}, new Date(p.quando * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })),
     el("td", {}, el("span", { class: "tag" }, p.arquivos + " arquivo(s)"), p.cia ? el("span", { class: "tag" }, "CIA") : null),
     el("td", { style: "text-align:right" },
-      el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "abrir pasta")))));
+      el("button", { class: "bt link", on: { click: () => abrirProcesso(p.codigo) } }, "abrir"),
+      el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "pasta")))));
 }
 async function carregarInicio() {
   ESTADO.info = await api("inicio");
@@ -556,6 +662,252 @@ $("#b-bug").onclick = async () => {
   atualizar();
 };
 
+
+// ================= janela do processo (2.1) =================
+const PR = { codigo: null, dados: null, reg: null, alterado: 0, sujos: {}, subs: {}, ativ: null };
+const ESFORCO = { low: 14, medium: 18, high: 22, xhigh: 25, max: 28 };
+
+function caranguejo(modelo, esforco, titulo, parado) {
+  const cor = /haiku/i.test(modelo) ? "#3FA34D" : /opus/i.test(modelo) ? "#E8772E" : "#2F6FD6";
+  const tam = ESFORCO[esforco] || 20;
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 40 30"); svg.setAttribute("width", tam * 1.33); svg.setAttribute("height", tam);
+  svg.setAttribute("class", "crab" + (parado ? " parado" : ""));
+  svg.innerHTML = `<title>${titulo.replace(/[<&]/g, "")}</title>
+    <g class="perna" stroke="${cor}" stroke-width="2.2" stroke-linecap="round" fill="none">
+      <path d="M11 20 L5 25"/><path d="M13 21 L9 28"/><path d="M29 20 L35 25"/><path d="M27 21 L31 28"/></g>
+    <path d="M10 13 L6 7" stroke="${cor}" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="5" cy="6" r="3.6" fill="${cor}"/>
+    <g class="garra-d"><path d="M30 13 L34 7" stroke="${cor}" stroke-width="2.4" stroke-linecap="round"/><circle cx="35" cy="6" r="3.6" fill="${cor}"/></g>
+    <ellipse cx="20" cy="17" rx="11" ry="7.5" fill="${cor}"/>
+    <circle cx="16.5" cy="13" r="1.9" fill="#fff"/><circle cx="23.5" cy="13" r="1.9" fill="#fff"/>
+    <circle cx="16.8" cy="13.3" r="0.9" fill="#222"/><circle cx="23.8" cy="13.3" r="0.9" fill="#222"/>`;
+  return svg;
+}
+function nomeModelo(m) { return /haiku/i.test(m) ? "Haiku" : /opus/i.test(m) ? "Opus" : "Sonnet"; }
+
+function md(texto) {
+  const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const inl = t => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|\W)\*([^*\n]+)\*(?=\W|$)/g, "$1<i>$2</i>");
+  const out = []; let lista = null, bloco = null;
+  const fechaLista = () => { if (lista) { out.push(`</${lista}>`); lista = null; } };
+  for (const l of texto.split("\n")) {
+    if (l.startsWith("```")) { if (bloco === null) { fechaLista(); bloco = []; } else { out.push("<pre>" + esc(bloco.join("\n")) + "</pre>"); bloco = null; } continue; }
+    if (bloco !== null) { bloco.push(l); continue; }
+    let m;
+    if ((m = l.match(/^#{1,6}\s+(.*)/))) { fechaLista(); out.push("<h4>" + inl(m[1]) + "</h4>"); }
+    else if ((m = l.match(/^\s*[-*]\s+(.*)/))) { if (lista !== "ul") { fechaLista(); out.push("<ul>"); lista = "ul"; } out.push("<li>" + inl(m[1]) + "</li>"); }
+    else if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { if (lista !== "ol") { fechaLista(); out.push("<ol>"); lista = "ol"; } out.push("<li>" + inl(m[1]) + "</li>"); }
+    else if (!l.trim()) fechaLista();
+    else { fechaLista(); out.push("<p>" + inl(l) + "</p>"); }
+  }
+  fechaLista(); if (bloco) out.push("<pre>" + esc(bloco.join("\n")) + "</pre>");
+  return out.join("");
+}
+
+async function abrirProcesso(codigo) {
+  const d = await api("processo_abrir", [codigo]);
+  if (PR.codigo !== codigo) { $("#pr-chat").replaceChildren(el("p", { class: "vazio" }, "O Claude espera o seu pedido. Exemplos: \"roda o check\", \"lê o laudo\", \"qual a data de protocolo?\"")); PR.subs = {}; }
+  renderProcesso(d);
+  ir("processo");
+}
+function renderProcesso(d) {
+  PR.codigo = d.codigo; PR.dados = d; PR.reg = d.analise; PR.alterado = d.analise.alterado || 0;
+  $("#pr-cod").textContent = d.codigo;
+  const an = (ESTADO.info && ESTADO.info.fluxos || []).find(f => f.id === "analise");
+  PR.fluxo = an || { modelo: "claude-sonnet-5-5", esforco: "high", modelo_texto: "Sonnet 5.5 alto" };
+  $("#pr-modelo").textContent = "· " + PR.fluxo.modelo_texto;
+  $("#pr-tags").replaceChildren(
+    el("span", { class: "tag" }, d.json_sol ? "JSON do SOL: " + d.json_sol : "sem JSON do SOL na pasta"),
+    el("span", { class: "tag" }, d.medidas.length + " medida(s)"),
+    d.cias.length ? el("span", { class: "tag" }, d.cias.length + " CIA anterior(es)") : null);
+  $("#pr-laudo").hidden = !d.laudo;
+  pintarCota();
+  pintarChecklist(); pintarCIA();
+}
+function pintarCota() {
+  const c = PR.reg && PR.reg.chat || {};
+  $("#cota").textContent = PR.codigo && c.pct_5h != null ? PR.codigo + ": ≈" + (c.pct_5h * 100).toFixed(1).replace(".", ",") + "% das 5 h" + (PR.janela != null ? " · janela " + PR.janela + "%" : "") : "";
+}
+
+// ---- checklist
+function pintarChecklist() {
+  const d = PR.dados, r = PR.reg, out = [];
+  // pendências
+  const pend = el("div", { class: "bloco" }, el("b", {}, "Pendências"));
+  const abertas = r.pendencias.filter(p => !p.feita).length;
+  if (!r.pendencias.length) pend.append(el("p", { class: "sub" }, "As perguntas e o que falta ver aparecem aqui."));
+  for (const p of r.pendencias) {
+    const resp = el("input", { type: "text", value: p.resposta || "", placeholder: "sua resposta (vai para o Claude)", "data-id": p.id });
+    resp.addEventListener("input", () => PR.sujos["p" + p.id] = resp.value);
+    resp.addEventListener("change", () => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { resposta: resp.value, enviada: false }]).then(() => delete PR.sujos["p" + p.id]));
+    pend.append(el("div", { class: "pend" + (p.feita ? " feita" : "") },
+      el("div", {}, p.texto, p.origem === "analista" ? el("span", { class: "marca-tag" }, "sua") : null),
+      resp, el("div", { class: "linha-bts" },
+        el("label", {}, el("input", { type: "checkbox", checked: p.feita, on: { change: ev => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { feita: ev.target.checked }]).then(recarregarRegistro) } }), " resolvida"),
+        el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "pendencias", p.id]).then(recarregarRegistro) } }, "tirar"))));
+  }
+  const nova = el("input", { type: "text", placeholder: "+ pendência sua (Enter)", style: "width:100%;padding:5px 7px;border:1px solid var(--linha);border-radius:5px" });
+  nova.addEventListener("keydown", async ev => { if (ev.key === "Enter" && nova.value.trim()) { await api("processo_pendencia", [PR.codigo, nova.value.trim()]); nova.value = ""; recarregarRegistro(); } });
+  pend.append(nova);
+  const comResp = r.pendencias.filter(p => p.resposta && !p.enviada && !p.feita);
+  if (comResp.length) pend.append(el("button", { class: "bt p", style: "margin-top:6px", on: { click: enviarRespostas } }, "Mandar " + comResp.length + " resposta(s) ao Claude"));
+  out.push(pend);
+  // fluxo
+  const fluxo = el("div", { class: "bloco" }, el("b", {}, "Fluxo (" + Object.keys(r.passos).length + " de " + d.passos.length + ")"));
+  let fase = null;
+  for (const p of d.passos) {
+    if (p.fase !== fase) { fase = p.fase; fluxo.append(el("div", { class: "sub", style: "margin:6px 0 2px;font-weight:600" }, fase)); }
+    const feito = !!r.passos[String(p.n)];
+    fluxo.append(el("label", { class: "ck" + (feito ? " feito" : "") },
+      el("input", { type: "checkbox", checked: feito, on: { change: ev => api("processo_marcar", [PR.codigo, "passos", String(p.n), ev.target.checked || null]).then(recarregarRegistro) } }),
+      el("span", {}, p.n + ". " + p.t, p.marca ? el("span", { class: "marca-tag" }, p.marca === "seu" ? "seu" : p.marca === "para" ? "para e pergunta" : "conversa nova") : null, el("small", {}, p.d))));
+  }
+  out.push(fluxo);
+  // medidas
+  const med = el("div", { class: "bloco" }, el("b", {}, "Medidas, na ordem do SOL"));
+  if (!d.medidas.length) med.append(el("p", { class: "sub" }, "Sem o JSON do SOL na pasta do processo, não há medidas para listar."));
+  for (const m of d.medidas) {
+    const chaves = m.itens.map(i => m.nome + "|" + i);
+    const feitos = chaves.filter(k => r.itens[k]).length;
+    const det = el("details", { class: "medida" },
+      el("summary", {}, el("b", {}, m.nome), el("span", { class: "tag" }, m.tabela),
+        m.inviabilidade !== "NAO_POSSUI" ? el("span", { class: "marca-tag" }, m.inviabilidade === "POSSUI_TOTAL" ? "laudo total" : "laudo parcial") : null,
+        el("span", { class: "cont" }, feitos + "/" + chaves.length)),
+      el("div", { class: "itens" },
+        el("div", { class: "sub", style: "margin:2px 0 4px" }, m.norma),
+        m.nota ? el("div", { class: "sub", style: "margin:2px 0 4px" }, m.nota) : null,
+        ...m.itens.map(i => {
+          const k = m.nome + "|" + i, v = r.itens[k];
+          return el("div", { class: "item" }, el("span", {}, i),
+            el("button", { class: "ok" + (v === "ok" ? " on" : ""), title: "conforme", on: { click: () => marcarItem(k, v === "ok" ? null : "ok") } }, "✓"),
+            el("button", { class: "x" + (v === "exigencia" ? " on" : ""), title: "vira exigência na CIA", on: { click: () => itemExigencia(m, i, k, v) } }, "✗"));
+        })));
+    det.dataset.nome = m.nome;
+    if (PR.abertas && PR.abertas.has(m.nome)) det.open = true;
+    det.addEventListener("toggle", () => { PR.abertas = PR.abertas || new Set(); det.open ? PR.abertas.add(m.nome) : PR.abertas.delete(m.nome); });
+    med.append(det);
+  }
+  out.push(med);
+  const alvo = $("#pr-check"), top = alvo.scrollTop;
+  alvo.replaceChildren(...out); alvo.scrollTop = top;
+}
+async function marcarItem(k, v) { await api("processo_marcar", [PR.codigo, "itens", k, v]); recarregarRegistro(); }
+async function itemExigencia(m, item, k, v) {
+  if (v === "exigencia") return marcarItem(k, null);
+  await api("processo_marcar", [PR.codigo, "itens", k, "exigencia"]);
+  await api("processo_exigencia", [PR.codigo, "", m.nome, ""]);
+  await recarregarRegistro();
+  const ult = [...document.querySelectorAll("#pr-cia textarea")].pop();
+  if (ult) { ult.placeholder = "Achado em \"" + item + "\": escreva a exigência ou peça a redação ao Claude no chat"; ult.focus(); }
+}
+async function enviarRespostas() {
+  const r = PR.reg, lst = r.pendencias.filter(p => p.resposta && !p.enviada && !p.feita);
+  const texto = "Respostas às pendências:\n" + lst.map(p => "- " + p.texto + " → " + p.resposta).join("\n");
+  await chatEnviar(texto);
+  for (const p of lst) await api("processo_atualizar", [PR.codigo, "pendencias", p.id, { enviada: true }]);
+  recarregarRegistro();
+}
+
+// ---- CIA
+function pintarCIA() {
+  const r = PR.reg, out = [];
+  if (!r.exigencias.length) out.push(el("p", { class: "sub" }, "Exigências marcadas no checklist (✗) ou redigidas pelo Claude aparecem aqui. Vale o texto que você salvar."));
+  r.exigencias.forEach((e, i) => {
+    const ta = el("textarea", { "data-id": e.id, placeholder: "texto final da exigência (o que vai para a CIA)" });
+    ta.value = PR.sujos["e" + e.id] != null ? PR.sujos["e" + e.id] : (e.final || "");
+    const fund = el("input", { class: "fund", value: e.fundamento || "", placeholder: "fundamento (ex.: RT 11/2016, item 5.4.2)" });
+    const conta = el("span", { class: "conta" });
+    const st = el("span", {});
+    const contar = () => { const n = ta.value.length; conta.textContent = n + " / 2000"; conta.classList.toggle("alto", n > 1950); };
+    ta.addEventListener("input", () => { PR.sujos["e" + e.id] = ta.value; st.textContent = "não salvo"; st.className = ""; contar(); });
+    contar();
+    const salvar = async () => { await api("processo_atualizar", [PR.codigo, "exigencias", e.id, { final: ta.value.trim(), fundamento: fund.value.trim() }]); delete PR.sujos["e" + e.id]; st.textContent = "salvo"; st.className = "salvo"; recarregarRegistro(); };
+    out.push(el("div", { class: "exig" },
+      el("div", { class: "cab" }, el("b", {}, (i + 1) + ". " + (e.medida || "sem medida")), e.origem === "claude" ? el("span", { class: "marca-tag" }, "rascunho do Claude") : null),
+      e.rascunho ? el("div", { class: "rasc" }, e.rascunho) : null,
+      e.rascunho && !e.final ? el("button", { class: "bt link", on: { click: () => { ta.value = e.rascunho; ta.dispatchEvent(new Event("input")); ta.focus(); } } }, "usar o rascunho como base") : null,
+      ta, fund,
+      el("div", { class: "rod" },
+        el("button", { class: "bt p", on: { click: salvar } }, "Salvar"), st,
+        el("button", { class: "bt link", title: "subir", on: { click: () => api("processo_mover", [PR.codigo, e.id, -1]).then(recarregarRegistro) } }, "↑"),
+        el("button", { class: "bt link", title: "descer", on: { click: () => api("processo_mover", [PR.codigo, e.id, 1]).then(recarregarRegistro) } }, "↓"),
+        el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "exigencias", e.id]).then(recarregarRegistro) } }, "excluir"),
+        conta)));
+  });
+  out.push(el("button", { class: "bt", on: { click: async () => { await api("processo_exigencia", [PR.codigo, "", "", ""]); recarregarRegistro(); } } }, "+ exigência"));
+  const alvo = $("#pr-cia"), top = alvo.scrollTop;
+  alvo.replaceChildren(...out); alvo.scrollTop = top;
+}
+$("#pr-copiar-cia").onclick = async () => {
+  const fin = PR.reg.exigencias.filter(e => (e.final || "").trim());
+  await copiar(fin.map(e => e.final.trim()).join("\n\n"));
+  SSEG.log(["CIA copiada: " + fin.length + " exigência(s), só o texto salvo."]);
+};
+
+async function recarregarRegistro() {
+  if (!PR.codigo || PR.foto) return;
+  PR.reg = await api("processo_registro", [PR.codigo]);
+  PR.alterado = PR.reg.alterado || 0;
+  pintarChecklist(); pintarCIA(); pintarCota();
+}
+// O Claude escreve pelo sseg.py: a janela confere o analise.json a cada 2 s (sem mexer no que você digita).
+setInterval(async () => {
+  if (!PR.codigo || PR.foto || !$("#t-processo").classList.contains("ativa") || document.activeElement && /TEXTAREA|INPUT/.test(document.activeElement.tagName)) return;
+  try { const r = await window.pywebview.api.processo_registro(PR.codigo); if ((r.alterado || 0) !== PR.alterado) { PR.reg = r; PR.alterado = r.alterado || 0; pintarChecklist(); pintarCIA(); pintarCota(); } } catch (e) {}
+}, 2000);
+
+// ---- chat
+function chatAdd(no) { const c = $("#pr-chat"); if (c.querySelector(".vazio")) c.replaceChildren(); c.append(no); c.scrollTop = c.scrollHeight; return no; }
+function trabalhando(on) {
+  const t = $("#pr-trab");
+  if (!on) return t.replaceChildren();
+  t.replaceChildren(caranguejo(PR.fluxo.modelo, PR.fluxo.esforco, "Claude · " + nomeModelo(PR.fluxo.modelo) + " · conversando"), el("span", { id: "pr-trab-txt" }, "Claude trabalhando…"));
+}
+async function chatEnviar(texto) {
+  chatAdd(el("div", { class: "msg eu" }, texto));
+  PR.ativ = null; trabalhando(true);
+  try { await api("chat_enviar", [PR.codigo, texto]); } catch (e) { trabalhando(false); chatAdd(el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
+}
+$("#pr-form").onsubmit = ev => { ev.preventDefault(); const t = $("#pr-msg").value.trim(); if (!t) return; $("#pr-msg").value = ""; chatEnviar(t); };
+$("#pr-msg").addEventListener("keydown", ev => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) $("#pr-form").requestSubmit(); });
+$("#pr-voltar").onclick = () => ir("inicio");
+$("#pr-pasta").onclick = () => api("abrir_pasta_processo", [PR.codigo]);
+$("#pr-laudo").onclick = () => modal("Laudo de inviabilidade técnica", "Texto do laudo no JSON do SOL. Separar as compensatórias por medida é do analista (ou peça ao Claude no chat).",
+  el("div", { class: "lista", style: "max-height:420px;font-family:inherit" }, PR.dados.laudo), [["Fechar", fechar]]);
+
+SSEG.chat = (codigo, ev) => {
+  if (codigo !== PR.codigo) return;
+  if (ev.t === "texto") { PR.ativ = null; chatAdd(el("div", { class: "msg claude", html: true })).innerHTML = md(ev.texto); }
+  else if (ev.t === "ferramenta") {
+    if (!PR.ativ) PR.ativ = chatAdd(el("div", { class: "ativ" }));
+    PR.ativ.textContent = "↳ " + ev.texto;
+    const t = $("#pr-trab-txt"); if (t) t.textContent = ev.texto;
+  }
+  else if (ev.t === "sub_ini") {
+    const linha = el("div", { class: "sub-linha" }, caranguejo(ev.modelo, "medium", ev.tipo + " · " + nomeModelo(ev.modelo) + " · " + (ev.desc || "")), el("span", {}, ev.tipo + " — " + (ev.desc || "trabalhando")));
+    PR.subs[ev.id] = { linha, inicio: Date.now() };
+    chatAdd(linha); PR.ativ = null;
+  }
+  else if (ev.t === "sub_fim") {
+    const s = PR.subs[ev.id]; if (!s) return;
+    const crab = s.linha.querySelector(".crab"); crab.classList.add("tchau");
+    s.linha.querySelector("span").textContent += " · ✓ " + ev.segundos + " s";
+    setTimeout(() => crab.remove(), 1600);
+  }
+  else if (ev.t === "pronto") recarregarRegistro();
+  else if (ev.t === "cota") { PR.janela = ev.janela; PR.reg.chat.pct_5h = ev.processo / 100; pintarCota(); }
+  else if (ev.t === "fim") {
+    trabalhando(false); PR.ativ = null;
+    if (ev.negados && ev.negados.length) chatAdd(el("div", { class: "msg aviso" }, "Negado pela permissão desta janela (abra no terminal se precisar):\n" + ev.negados.join("\n")));
+    if (ev.erro && ev.texto) chatAdd(el("div", { class: "msg aviso" }, "✗ " + ev.texto));
+    recarregarRegistro();
+  }
+  else if (ev.t === "erro") { trabalhando(false); chatAdd(el("div", { class: "msg aviso" }, "✗ " + ev.texto)); }
+  else if (ev.t === "aviso") SSEG.log(["Claude: " + ev.texto]);
+};
+
 // ---- Fotos do build (SSEG_TESTE_FOTO): cada passo deixa uma tela à mostra
 SSEG.tour = async passo => {
   fechar();
@@ -567,6 +919,25 @@ SSEG.tour = async passo => {
   if (passo === "github") telaGit(null, { atras: 1, frente: 0, nome: "", email: "", itens: [{ cod: "M", arquivo: "sseg/normas/exemplo.md" }, { cod: "??", arquivo: "CIA 1.pdf", fora: "CIA de processo" }] });
   if (passo === "servidor") telaServidor({ sobe: ["A00012345AA001/1.json"], desce: ["A00012345AA002/CIA 1.pdf"], conflito: ["A00012345AA003/analise.json"], iguais: 4 });
   if (passo === "bug") $("#b-bug").click();
+  if (passo === "processo") {
+    const fake = { codigo: "A00012345AA001", json_sol: "api-1.json", cias: ["CIA 1.pdf"], laudo: "Laudo de exemplo.",
+      passos: [{ n: 1, fase: "Preparar", t: "Abrir a pasta do processo", d: "N.json e CIA anterior", marca: "" }, { n: 4, fase: "Analisar", t: "sseg.py check", d: "insumo, não conclusão", marca: "" }, { n: 6, fase: "Analisar", t: "Ocupação definidora", d: "RT 01/2024 5.1.2", marca: "para" }, { n: 12, fase: "Analisar", t: "Ler a planta", d: "leitura sua", marca: "seu" }],
+      medidas: [{ nome: "Saída de Emergência", norma: "Resolução Técnica nº 11/2016", inviabilidade: "POSSUI_PARCIAL", tabela: "L.1", nota: "", itens: ["Memorial descritivo", "Planta: a) quantidade de saídas e distâncias máximas a percorrer", "Planta: b) larguras dos acessos, escadas, rampas, descarga e portas", "Compensatórias do laudo representadas em planta"] },
+                { nome: "Sinalização de Emergência", norma: "Resolução Técnica nº 12/2021", inviabilidade: "NAO_POSSUI", tabela: "L.2", nota: "Orientação e salvamento: em planta, na Saída de Emergência, alínea i).", itens: ["Memorial descritivo"] }],
+      analise: { passos: { "1": true, "4": true }, itens: { "Saída de Emergência|Memorial descritivo": "ok", "Saída de Emergência|Planta: b) larguras dos acessos, escadas, rampas, descarga e portas": "exigencia" },
+        pendencias: [{ id: "p1", texto: "Falta ver a fita reflexiva nas rampas", origem: "claude", resposta: "", feita: false }, { id: "p2", texto: "Qual a data de protocolo?", origem: "claude", resposta: "03/02/2025", feita: false }],
+        exigencias: [{ id: "e1", medida: "Saída de Emergência", origem: "claude", rascunho: "- Deverá prever largura mínima de 1,10 m na porta da escada, conforme item 5.4.2 da RT 11/2016.", final: "", fundamento: "RT 11/2016, item 5.4.2" }],
+        chat: { pct_5h: 0.031 }, alterado: 1 } };
+    PR.foto = true;  // foto do build: sem pasta de verdade, a janela não relê o registro
+    renderProcesso(fake); ir("processo"); PR.janela = 23; pintarCota();
+    $("#pr-chat").replaceChildren();
+    chatAdd(el("div", { class: "msg eu" }, "roda o check"));
+    SSEG.chat(fake.codigo, { t: "ferramenta", texto: "Rodando python sseg/scripts/sseg.py check --json api-1.json" });
+    SSEG.chat(fake.codigo, { t: "texto", texto: "**Check rodado.** Definidora: empate no grau de risco — paro aqui e levo a você:\n\n- F-6 e C-2: risco médio\n- Nota 3 da Tabela 6F decide a contagem\n\nRegistrei 2 pendências no checklist." });
+    SSEG.chat(fake.codigo, { t: "sub_ini", id: "x1", tipo: "localizador-normas", desc: "itens da RT 11 sobre largura", modelo: "claude-haiku-5-5" });
+    trabalhando(true);
+    document.querySelector("#t-processo details.medida").open = true;
+  }
   if (passo === "detalhes") { $("#detalhes").classList.add("aberto"); }
 };
 

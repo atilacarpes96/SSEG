@@ -126,12 +126,13 @@ Continuam valendo: Anexo L, laudo/compensatórias (modelo leve só separa), rasc
 - **Rodapé:** ≈% das 5 h por processo (`rate_limits.five_hour`, confirmado)
 
 #### 2.1 — janela de 3 colunas
-- [ ] Chat em stream-json dentro do programa (sessão contínua, respostas formatadas)
-- [ ] Checklist: 16 passos + medidas do SOL (Anexo L) + pendências vindas do chat
-- [ ] CIA marcada à mão (texto final do analista)
-- [ ] `sseg.py` grava pendências/exigências no `analise.json` (vai ao servidor pelo Sincronizar processos, nunca ao GitHub)
-- [ ] Caranguejo da conversa (subagente chamado no chat)
-- [ ] Prévia com fotos para o Átila aprovar
+- [x] Chat em stream-json dentro do programa (`chat.py`): sobe só na 1ª mensagem, sessão no `analise.json` (`--resume`), respostas em markdown, ferramentas numa linha discreta. Permissões sem perguntar: ler, procurar, subagentes e `python sseg/scripts/*`, `pdftotext`/`pdftoppm`, `git status/log/diff`; edição só com `acceptEdits` na pasta do SSEG e na do processo; o resto volta como "negado" no chat. Ler o SOL pelo Chrome não roda nesta janela (ainda)
+- [x] Checklist: 16 passos (`workflow/checklist-analise.json`) + medidas do SOL na ordem do SOL com o Anexo L (`workflow/anexo-l.json`) + pendências do chat com campo de resposta e "Mandar respostas ao Claude"
+- [x] CIA: ✗ no item vira exigência; rascunho do Claude à parte, texto final salvo pelo analista, contador de 2.000, ordem, "copiar a CIA" (só o final)
+- [x] `sseg.py analise --pasta <processo> pendencia|exigencia|passo|ver` grava no `analise.json` (`scripts/analise_registro.py`); a janela relê a cada 2 s
+- [x] Caranguejo da conversa (Task/Agent no stream: cor do modelo do subagente, acena ao terminar) e ≈% das 5 h do processo no rodapé (`rate_limit_event`)
+- [ ] Prévia com fotos para o Átila aprovar (ramo `sseg-2.1`, prerelease `app-v2.1.0-previa`)
+- [ ] Teste no PC com processo real: permissões do `claude -p` no Windows, `python` no PATH, sessão retomada
 
 #### 2.2 — redator na caixa do item
 - [ ] Achado curto → `claude -p` redige (banco, normas comentadas, `ppci-notificacao-cia`) → texto + fundamento; [PDF] pelo programa; contador de 2.000; rascunho × texto final; caranguejo sobre a caixa e fila

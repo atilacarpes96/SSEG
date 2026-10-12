@@ -257,6 +257,46 @@ def main():
     r = busca.buscar(busca.carregar(RAIZ), "subsidiaria 10%")
     caso("busca: sem acento acha 5.2.2.1 no banco e na RT 01/2024",
          {x["grupo"] for x in r} >= {"banco", "comentada"} and any("rt-01-2024" in x["arquivo"] for x in r))
+    # 15. janela do processo (SSEG.exe 2.1): registro, checklist + Anexo L, leitura do stream do chat
+    import analise_registro as reg
+    import processo, chat
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = os.path.join(tmp, "A00012345AA001")
+        reg.pendencia(pasta, "falta ver a fita reflexiva")
+        e = reg.exigencia(pasta, "- Deverá ...", "Saída de Emergência", "RT 11/2016, item 5.4.2")
+        d = reg.ler(pasta)
+        caso("analise.json: exigência do Claude entra só como rascunho",
+             e["rascunho"] and not e["final"] and not reg.texto_cia(d), str(e))
+        reg.atualizar(pasta, "exigencias", e["id"], final="- Deverá (editado)")
+        caso("analise.json: CIA lê só o texto final", [x["final"] for x in reg.texto_cia(reg.ler(pasta))] == ["- Deverá (editado)"])
+        json.dump({"especSeguranca": {"laudo": {"txtClob": "laudo"}, "medidas": [
+            {"tipo": {"nome": "Sinalização de Emergência"}, "norma": {"nome": "RT 12"}, "inviabilidade": "NAO_POSSUI"},
+            {"tipo": {"nome": "Saída de Emergência"}, "norma": {"nome": "RT 11"}, "inviabilidade": "POSSUI_PARCIAL"},
+            {"tipo": {"nome": "Hidrante Urbano"}, "norma": {"nome": "RT 16"}, "inviabilidade": "NAO_POSSUI"}]}},
+            open(os.path.join(pasta, "api-1.json"), "w", encoding="utf-8"))
+        m = processo.montar(RAIZ, pasta)
+        nomes = [x["nome"] for x in m["medidas"]]
+        sai = m["medidas"][1]
+        caso("janela do processo: 16 passos, medidas na ordem do SOL, Anexo L e compensatória",
+             len(m["passos"]) == 16 and nomes == ["Sinalização de Emergência", "Saída de Emergência", "Hidrante Urbano"]
+             and m["medidas"][0]["tabela"] == "L.2" and m["medidas"][0]["nota"] and sai["tabela"] == "L.1"
+             and any(i.startswith("Planta: i)") for i in sai["itens"]) and sai["itens"][-1].startswith("Compensatórias")
+             and m["medidas"][2]["itens"] == ["Memorial descritivo", "Planta: localização"], str([(x["nome"], x["tabela"], len(x["itens"])) for x in m["medidas"]]))
+        evs = []
+        c = chat.Conversa(RAIZ, pasta, "A00012345AA001", {"modelo": "claude-sonnet-5-5", "esforco": "high"}, "claude",
+                          [{"nome": "localizador-normas", "modelo": "claude-haiku-5-5"}], evs.append, reg,
+                          {"ler": lambda: {"u": 0.20, "resets": 9}, "gravar": lambda v: None})
+        for linha in [{"type": "system", "subtype": "init", "session_id": "s1"},
+                      {"type": "assistant", "message": {"content": [{"type": "tool_use", "id": "t1", "name": "Task", "input": {"subagent_type": "localizador-normas", "description": "RT 11"}}]}},
+                      {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "t1"}]}},
+                      {"type": "rate_limit_event", "rate_limit_info": {"unifiedWindows": {"five_hour": {"utilization": 0.23, "resetsAt": 9}}}},
+                      {"type": "assistant", "message": {"content": [{"type": "text", "text": "ok"}]}},
+                      {"type": "result", "usage": {"input_tokens": 5, "output_tokens": 7}}]:
+            c._evento(linha)
+        tipos = [x["t"] for x in evs]
+        caso("chat: subagente vira caranguejo (início e fim), cota por processo e sessão guardada",
+             tipos == ["sub_ini", "sub_fim", "cota", "texto", "fim"] and evs[0]["modelo"] == "claude-haiku-5-5"
+             and abs(evs[2]["processo"] - 3.0) < 0.01 and reg.ler(pasta)["chat"]["sessao"] == "s1", str(evs))
     pdfs = set(os.listdir(os.path.join(RAIZ, "sseg", "normas", "pdf")))
     mapa = set(busca.PDF_RT.values()) | set(busca.PDF_RT5.values()) | {p for _, p in busca.PDF_COMENTADA}
     caso("busca: todo PDF do mapa existe em normas/pdf", mapa <= pdfs, str(sorted(mapa - pdfs)))

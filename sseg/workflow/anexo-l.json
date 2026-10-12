@@ -1,0 +1,77 @@
+{
+ "fonte": "sseg/normas/rt-05-parte01-1-2016-ppci-completo.md (Anexo L, Tabelas L.1 e L.2)",
+ "memorial": "Memorial descritivo",
+ "l1": [
+  {
+   "chave": "extintor",
+   "planta": [
+    "nº de ordem",
+    "tipo de agente extintor",
+    "capacidade extintora",
+    "distribuição das unidades extintoras"
+   ]
+  },
+  {
+   "chave": "alarme",
+   "planta": [
+    "nº de ordem",
+    "distribuição dos acionadores manuais",
+    "representação da central do alarme"
+   ]
+  },
+  {
+   "chave": "saida",
+   "planta": [
+    "a) quantidade de saídas e distâncias máximas a percorrer",
+    "b) larguras dos acessos, escadas, rampas, descarga e portas",
+    "c) rampas nos grupos F e H: largura, inclinação, localização e ligação dos pavimentos",
+    "d) sentido de abertura das portas",
+    "e) barra antipânico, porta corta-fogo e TRRF, quando exigidas",
+    "f) tipo de escada e requisitos mínimos (corrimãos, guarda-corpos, antecâmara, dutos, pressurização, áreas de resgate)",
+    "g) elevador de emergência, quando exigido",
+    "h) áreas de refúgio, quando exigidas",
+    "i) nº de ordem e distribuição da sinalização de orientação e salvamento ou da iluminação de balizamento",
+    "Memorial de Capacidade de Lotação (só predominante do grupo F)"
+   ]
+  },
+  {
+   "chave": "viatura",
+   "planta": [
+    "pórtico: representação e dimensões",
+    "acessos internos, quando obrigatórios",
+    "recalque e tomada de hidrante se a edificação está a mais de 30 m da via",
+    "rede seca no lugar do acesso: nº de ordem, tomadas e abrigos, recalque"
+   ]
+  },
+  {
+   "chave": "hidrantes",
+   "planta": [
+    "nº de ordem",
+    "distribuição das tomadas e abrigos",
+    "quantidade e diâmetro das saídas em cada tomada",
+    "localização do dispositivo de recalque",
+    "localização e capacidade da reserva técnica"
+   ]
+  },
+  {
+   "chave": "isolamento",
+   "planta": [
+    "afastamento entre edificações (planta e corte)",
+    "distância entre aberturas",
+    "abas e marquises corta-fogo, recuos e balanços",
+    "elementos corta-fogo e TRRF"
+   ]
+  },
+  {
+   "chave": "hidrante urbano",
+   "planta": [
+    "localização"
+   ]
+  }
+ ],
+ "notas": {
+  "sinalizacao": "Orientação e salvamento: em planta, na Saída de Emergência, alínea i). As demais: só memorial.",
+  "iluminacao": "Balizamento: em planta, na Saída de Emergência, alínea i). Aclaramento e demais: só memorial."
+ },
+ "compensatoria": "Medida de laudo de inviabilidade deferido: compensatórias representadas em planta, mesmo na L.2 (regra de 02/09/2026)"
+}

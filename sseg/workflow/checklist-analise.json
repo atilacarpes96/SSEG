@@ -1,0 +1,117 @@
+{
+ "fonte": "plugin checklist-ppci do Átila (12/10/2026); mesmo fluxo da skill ppci-analise-processo",
+ "passos": [
+  {
+   "n": 1,
+   "fase": "Preparar",
+   "t": "Abrir a pasta do processo",
+   "d": "N.json e CIA anterior antes de perguntar qualquer coisa",
+   "marca": ""
+  },
+  {
+   "n": 2,
+   "fase": "Preparar",
+   "t": "Data de protocolo",
+   "d": "Consultar licenciamento → Marcos; define a versão de cada RT",
+   "marca": ""
+  },
+  {
+   "n": 3,
+   "fase": "Preparar",
+   "t": "Ler o processo pela API do SOL",
+   "d": "resumo filtrado na página; JSON inteiro antes de contar ocupações",
+   "marca": ""
+  },
+  {
+   "n": 4,
+   "fase": "Analisar",
+   "t": "sseg.py check",
+   "d": "definidora, tabela, normas, travas, laudo — insumo, não conclusão",
+   "marca": ""
+  },
+  {
+   "n": 5,
+   "fase": "Analisar",
+   "t": "Praxe do campo 3",
+   "d": "pav. maior população = 0 em pavimento único; divisão J × carga",
+   "marca": ""
+  },
+  {
+   "n": 6,
+   "fase": "Analisar",
+   "t": "Ocupação definidora",
+   "d": "RT 01/2024 5.1.2; F-6 sempre; as 4 saídas do 5.2.2",
+   "marca": "para"
+  },
+  {
+   "n": 7,
+   "fase": "Analisar",
+   "t": "Tabela de exigências",
+   "d": "RT 05 P07 Anexo A (regularizada) ou Decreto Anexo B; notas",
+   "marca": "para"
+  },
+  {
+   "n": 8,
+   "fase": "Analisar",
+   "t": "Planta × memorial",
+   "d": "Anexo L da RT 05 P1.1 (L.1 e L.2); compensatória em planta",
+   "marca": ""
+  },
+  {
+   "n": 9,
+   "fase": "Analisar",
+   "t": "Normas do campo 4",
+   "d": "contra o índice, pela versão da data de protocolo",
+   "marca": ""
+  },
+  {
+   "n": 10,
+   "fase": "Analisar",
+   "t": "População e laudo",
+   "d": "laudo deferido: representação, planta, campo 4; 5.4/5.5 da RT 05 P07",
+   "marca": ""
+  },
+  {
+   "n": 11,
+   "fase": "Analisar",
+   "t": "Comparar com a análise anterior",
+   "d": "da 2ª em diante: reiterar, complementar ou substituir",
+   "marca": ""
+  },
+  {
+   "n": 12,
+   "fase": "Analisar",
+   "t": "Ler a planta",
+   "d": "leitura sua; o assistente fundamenta e redige",
+   "marca": "seu"
+  },
+  {
+   "n": 13,
+   "fase": "Fechar",
+   "t": "Relatório e textos da CIA",
+   "d": "veredito primeiro; um bloco por caixa, até 1.950 caracteres",
+   "marca": ""
+  },
+  {
+   "n": 14,
+   "fase": "Fechar",
+   "t": "Colar no SOL",
+   "d": "você lança; pelo navegador só com \"lança\"",
+   "marca": "seu"
+  },
+  {
+   "n": 15,
+   "fase": "Fechar",
+   "t": "Atualizar a pasta",
+   "d": "sseg.py arquivar; a conversa acaba aqui",
+   "marca": ""
+  },
+  {
+   "n": 16,
+   "fase": "Fechar",
+   "t": "Revisão final",
+   "d": "\"revisa a CIA do processo …\", em conversa nova",
+   "marca": "nova"
+  }
+ ]
+}
