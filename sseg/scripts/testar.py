@@ -257,6 +257,14 @@ def main():
     r = busca.buscar(busca.carregar(RAIZ), "subsidiaria 10%")
     caso("busca: sem acento acha 5.2.2.1 no banco e na RT 01/2024",
          {x["grupo"] for x in r} >= {"banco", "comentada"} and any("rt-01-2024" in x["arquivo"] for x in r))
+    pdfs = set(os.listdir(os.path.join(RAIZ, "sseg", "normas", "pdf")))
+    mapa = set(busca.PDF_RT.values()) | set(busca.PDF_RT5.values()) | {p for _, p in busca.PDF_COMENTADA}
+    caso("busca: todo PDF do mapa existe em normas/pdf", mapa <= pdfs, str(sorted(mapa - pdfs)))
+    r = busca.buscar(busca.carregar(RAIZ), 'extintor "5 m"')
+    caso("busca: modelo do banco liga ao PDF da RT 14", r[0].get("pdf") == "sseg/normas/pdf/RT14.pdf", str(r[0].get("pdf")))
+    if shutil.which("pdftotext"):
+        pg = busca.pagina(os.path.join(RAIZ, r[0]["pdf"]), 'extintor "5 m"', r[0]["texto"])
+        caso("busca: PDF abre na página do item 5.2.10 da RT 14", pg == 5, str(pg))
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

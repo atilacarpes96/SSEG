@@ -27,6 +27,7 @@ Build: .github/workflows/sseg-app.yml (PyInstaller no Windows do GitHub Actions)
 
 import json
 import os
+import pathlib
 import re
 import shutil
 import subprocess
@@ -43,7 +44,7 @@ import git_sinc
 import instalar
 import relato
 
-VERSAO = "1.2.1"
+VERSAO = "1.2.2"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -243,6 +244,27 @@ def abrir(caminho):
         os.startfile(caminho)  # noqa: pylint (só existe no Windows)
     else:
         webbrowser.open("file://" + caminho)
+
+
+def abrir_pdf(caminho, pagina=1):
+    """Abre o PDF na página: Edge ou Chrome aceitam #page=N; sem eles, o leitor padrão (página 1)."""
+    uri = pathlib.Path(caminho).resolve().as_uri() + "#page=%d" % pagina
+    if os.name == "nt":
+        pf = [os.environ.get(v, "") for v in ("ProgramFiles(x86)", "ProgramFiles", "LOCALAPPDATA")]
+        for nav in [os.path.join(b, "Microsoft", "Edge", "Application", "msedge.exe") for b in pf] + \
+                   [os.path.join(b, "Google", "Chrome", "Application", "chrome.exe") for b in pf]:
+            if os.path.isfile(nav):
+                subprocess.Popen([nav, uri], env=ambiente_limpo())
+                return
+        os.startfile(caminho)  # noqa: pylint (só existe no Windows)
+    else:
+        webbrowser.open(uri)
+
+
+def pdftotext():
+    pop = instalar.localizar().get("poppler")
+    nome = "pdftotext.exe" if os.name == "nt" else "pdftotext"
+    return os.path.join(os.path.dirname(pop), nome) if pop else nome
 
 
 # ------------------------------------------------------------------------------ janela
@@ -679,6 +701,16 @@ def janela():
         raiz.clipboard_append(texto)
 
     # ---- Busca nas normas e no banco (1.2)
+    def ver_pdf(pdf, q, texto):
+        """Abre o PDF oficial na página provável do trecho (o pdftotext roda fora da janela)."""
+        escrever("Abrindo %s…" % os.path.basename(pdf))
+
+        def trabalho():
+            pg = busca.pagina(pdf, q, texto, pdftotext())
+            abrir_pdf(pdf, pg)
+            return lambda: escrever("PDF aberto na página %d — conferir o item ali antes de citar." % pg)
+        rodar(trabalho)
+
     def buscar_normas():
         q = consulta.get().strip()
         if not q:
@@ -715,6 +747,12 @@ def janela():
             tag = "c%d" % n
             caixa.insert("end", "[copiar]", ("copiar", tag))
             caixa.tag_bind(tag, "<Button-1>", lambda _e, txt=x["copiar"]: (copiar(txt), escrever("Copiado da busca.")))
+            pdf = x.get("pdf") and os.path.join(clone, x["pdf"])
+            if pdf and os.path.isfile(pdf):
+                tag = "p%d" % n
+                caixa.insert("end", "   ")
+                caixa.insert("end", "[PDF]", ("copiar", tag))
+                caixa.tag_bind(tag, "<Button-1>", lambda _e, pdf=pdf, x=x: ver_pdf(pdf, q, x["texto"]))
             caixa.insert("end", "\n" + x["texto"] + "\n")
         if len(res) >= 80:
             caixa.insert("end", "\n(mostrando os 80 primeiros: refine a busca)", "onde")
