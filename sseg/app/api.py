@@ -291,6 +291,16 @@ class Api:
     def processo_laudo(self, codigo):
         return processo.montar(self._clone(), self._pasta_proc(codigo))["laudo"]
 
+    def abrir_sol(self, url):
+        """No Chrome do analista (é lá que está o login do SOL); sem Chrome, o navegador padrão."""
+        if not url.startswith(processo.SOL):
+            raise RuntimeError("Endereço fora do SOL.")
+        c = sol_entrar.chrome()
+        if c:
+            subprocess.Popen([c, url], creationflags=base.SEM_JANELA)
+        else:
+            webbrowser.open(url)
+
     def abrir_pasta_processo(self, codigo):
         base.abrir(self._pasta_proc(codigo))
 
@@ -313,10 +323,13 @@ class Api:
             claude = self._claude or instalar.localizar().get("claude")
             if not claude:
                 raise RuntimeError("Falta o Claude Code (Configuração → Programas).")
+            links = None
             if chave.startswith("fluxo:"):
                 fluxo, pasta, codigo = self._fluxo(chave[6:]), None, None
             else:
                 fluxo, pasta, codigo = self._fluxo("analise"), self._pasta_proc(chave), chave
+                _, sol = processo.json_do_sol(pasta)
+                links = processo.links_sol(sol)
             try:
                 subs = claude_local.subagentes(self._clone(), None)
             except Exception:
@@ -334,7 +347,7 @@ class Api:
                     except Exception:
                         pass
             c = chat.Conversa(self._clone(), pasta, codigo, fluxo, claude, subs, aoevento,
-                              self._reg(), {"ler": self._cota_ler, "gravar": self._cota_gravar})
+                              self._reg(), {"ler": self._cota_ler, "gravar": self._cota_gravar}, sol=links)
             self._conversas[chave] = c
         c.enviar(texto)
 

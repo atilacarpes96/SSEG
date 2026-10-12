@@ -51,6 +51,20 @@ def json_do_sol(pasta):
     return None, None
 
 
+SOL = "https://solcbm.rs.gov.br/solcbm/adm/#/"
+
+
+def links_sol(sol):
+    """Rotas das skills: licenciamento pelo id interno do SOL (o "id" do api-<id>.json, não o A000...).
+    A análise técnica tem id próprio: sem ele no JSON, vai para a caixa (#/analise-tecnica)."""
+    lic = sol.get("id") if sol and ("numero" in sol or "envolvidos" in sol) else None
+    an = sol.get("idAnaliseTecnica") if sol else None
+    return {"id": lic,
+            "licenciamento": SOL + ("licenciamento/consulta/%s" % lic if lic else "licenciamento"),
+            "analise": SOL + ("analise-tecnica/%s" % an if an else "analise-tecnica"),
+            "analise_direta": bool(an)}
+
+
 def itens_da_medida(nome, anexo):
     """Memorial sempre; os itens de planta da L.1 (coluna "A") quando a medida é da L.1."""
     n = _norm(nome)
@@ -86,4 +100,4 @@ def montar(clone, pasta):
     arquivos = sorted(os.listdir(pasta)) if os.path.isdir(pasta) else []
     return {"codigo": os.path.basename(os.path.normpath(pasta)), "pasta": pasta, "json_sol": arq and os.path.basename(arq),
             "passos": passos, "medidas": medidas, "laudo": laudo, "compensatoria": anexo.get("compensatoria", ""),
-            "cias": [a for a in arquivos if re.match(r"CIA \d+", a)], "analise": reg.ler(pasta)}
+            "cias": [a for a in arquivos if re.match(r"CIA \d+", a)], "analise": reg.ler(pasta), "sol": links_sol(sol)}

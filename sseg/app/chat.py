@@ -85,10 +85,11 @@ def instrucoes_fluxo(fluxo):
 
 
 class Conversa:
-    def __init__(self, clone, pasta, codigo, fluxo, claude, subagentes, aoevento, registro, cota_global):
+    def __init__(self, clone, pasta, codigo, fluxo, claude, subagentes, aoevento, registro, cota_global, sol=None):
         """pasta/codigo None: conversa de um fluxo sem processo (sessão só na memória, sem analise.json)."""
         self.clone, self.pasta, self.codigo, self.fluxo, self.claude = clone, pasta, codigo, fluxo, claude
         self.sessao = None
+        self.sol = sol
         self.modelos = {a["nome"]: a["modelo"] for a in subagentes}
         self.aoevento, self.registro = aoevento, registro
         self.cota_global = cota_global   # {"ler": fn, "gravar": fn} — última utilização vista neste PC
@@ -103,12 +104,22 @@ class Conversa:
                "--model", self.fluxo["modelo"], "--effort", self.fluxo["esforco"],
                "--permission-mode", "acceptEdits"] + (["--add-dir", self.pasta] if self.pasta else []) + [
                "--allowedTools", *PERMITIDOS,
-               "--append-system-prompt", INSTRUCOES.format(codigo=self.codigo, pasta=self.pasta) + GUIA_VISUAL if self.pasta
+               "--append-system-prompt", INSTRUCOES.format(codigo=self.codigo, pasta=self.pasta) + self._sol_txt() + GUIA_VISUAL if self.pasta
                else instrucoes_fluxo(self.fluxo)]
         sessao = self.registro.ler(self.pasta)["chat"].get("sessao") if self.pasta else self.sessao
         if sessao:
             cmd += ["--resume", sessao]
         return cmd
+
+    def _sol_txt(self):
+        if not self.sol:
+            return ""
+        t = "\n- No SOL: o licenciamento está em %s" % self.sol["licenciamento"]
+        if not self.sol.get("id"):
+            t += " (o id interno ainda não é conhecido: não há api-<id>.json na pasta)"
+        t += "; a análise técnica, em %s%s." % (self.sol["analise"], "" if self.sol.get("analise_direta")
+                                                 else " (a caixa: o analista clica em Analisar na linha do processo)")
+        return t
 
     def _subir(self):
         env = {k: v for k, v in os.environ.items() if not k.upper().startswith(("_PYI_", "_MEIPASS"))}

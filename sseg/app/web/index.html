@@ -282,6 +282,8 @@ details.medida .itens { padding: 0 9px 8px; }
         <span class="cod" id="pr-cod"></span>
         <span id="pr-tags"></span>
         <div class="dir">
+          <button class="bt" id="pr-sol-lic" title="Abre no Chrome (login do SOL)">Licenciamento no SOL</button>
+          <button class="bt" id="pr-sol-an" title="Abre no Chrome (login do SOL)">Análise técnica no SOL</button>
           <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
           <button class="bt link" id="pr-pasta">abrir pasta</button>
           <button class="bt" id="pr-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button>
@@ -1016,6 +1018,10 @@ ligarForm("#cv-form", "#cv-msg", () => CTX[CV.chave]);
 $("#pr-voltar").onclick = () => ir("inicio");
 $("#cv-voltar").onclick = () => ir("inicio");
 $("#pr-pasta").onclick = () => api("abrir_pasta_processo", [PR.codigo]);
+$("#pr-sol-lic").onclick = ev => { const sol = PR.dados.sol; api("abrir_sol", [sol.licenciamento], ev.currentTarget);
+  if (!sol.id) SSEG.log(["O id do SOL deste processo ainda não é conhecido (sem api-<id>.json na pasta): abri a consulta de licenciamentos."]); };
+$("#pr-sol-an").onclick = ev => { const sol = PR.dados.sol; api("abrir_sol", [sol.analise], ev.currentTarget);
+  if (!sol.analise_direta) SSEG.log(["Abri a sua caixa de análise técnica: clique em Analisar na linha do processo."]); };
 $("#pr-mais").onclick = () => maisOpcoes(PR.fluxo, PR.codigo);
 $("#cv-mais").onclick = () => maisOpcoes(CV.fluxo, CV.codigo);
 $("#pr-laudo").onclick = () => modal("Laudo de inviabilidade técnica", "Texto do laudo no JSON do SOL. Separar as compensatórias por medida é do analista (ou peça ao Claude no chat).",
@@ -1087,7 +1093,7 @@ SSEG.tour = async passo => {
   if (passo === "servidor") telaServidor({ sobe: ["A00012345AA001/1.json"], desce: ["A00012345AA002/CIA 1.pdf"], conflito: ["A00012345AA003/analise.json"], iguais: 4 });
   if (passo === "bug") $("#b-bug").click();
   if (passo === "processo") {
-    const fake = { codigo: "A00012345AA001", json_sol: "api-1.json", cias: ["CIA 1.pdf"], laudo: "Laudo de exemplo.",
+    const fake = { codigo: "A00012345AA001", json_sol: "api-1.json", sol: { id: 1, licenciamento: "", analise: "", analise_direta: false }, cias: ["CIA 1.pdf"], laudo: "Laudo de exemplo.",
       passos: [{ n: 1, fase: "Preparar", t: "Abrir a pasta do processo", d: "N.json e CIA anterior", marca: "" }, { n: 4, fase: "Analisar", t: "sseg.py check", d: "insumo, não conclusão", marca: "" }, { n: 6, fase: "Analisar", t: "Ocupação definidora", d: "RT 01/2024 5.1.2", marca: "para" }, { n: 12, fase: "Analisar", t: "Ler a planta", d: "leitura sua", marca: "seu" }],
       medidas: [{ nome: "Saída de Emergência", norma: "Resolução Técnica nº 11/2016", inviabilidade: "POSSUI_PARCIAL", tabela: "L.1", nota: "", itens: ["Memorial descritivo", "Planta: a) quantidade de saídas e distâncias máximas a percorrer", "Planta: b) larguras dos acessos, escadas, rampas, descarga e portas", "Compensatórias do laudo representadas em planta"] },
                 { nome: "Sinalização de Emergência", norma: "Resolução Técnica nº 12/2021", inviabilidade: "NAO_POSSUI", tabela: "L.2", nota: "Orientação e salvamento: em planta, na Saída de Emergência, alínea i).", itens: ["Memorial descritivo"] }],

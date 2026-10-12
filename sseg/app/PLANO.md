@@ -133,6 +133,7 @@ Continuam valendo: Anexo L, laudo/compensatórias (modelo leve só separa), rasc
 - [x] Caranguejo da conversa (Task/Agent no stream: cor do modelo do subagente, acena ao terminar) e ≈% das 5 h do processo no rodapé (`rate_limit_event`)
 - [x] **Nenhum fluxo abre terminal** (pedido do Átila, 12/10/2026 — o programa vai para a seção e muita gente não usa terminal): "Analisar processo" da grade pede o código e abre a janela de 3 colunas; os outros fluxos abrem uma janela de conversa do programa (mesma identidade), com a mensagem sugerida no campo e nada rodando até o envio. Terminal e "Copiar o prompt" ficam no ⋯ (avançado)
 - [x] **Resposta visual em todas as janelas** (regra do Átila, 12/10/2026): markdown renderizado com tabelas de verdade (tudo escapado; HTML do modelo nunca passa) e blocos ```sseg-*``` com JSON que o programa desenha — `sseg-status` (selo), `sseg-dados` (cartões), `sseg-definidora` (hipóteses), `sseg-perguntas` (campos + "Mandar respostas"; viram pendências sem duplicar), `sseg-exigencia` (contador e "Pôr na CIA" como rascunho), `sseg-norma` ([PDF] pelo programa). Bloco inválido vira texto. Ensinado no prompt de sistema da janela (`chat.GUIA_VISUAL`). Claro e escuro
+- [x] **Links do SOL na janela do processo** (2.1.1): "Licenciamento no SOL" (`#/licenciamento/consulta/<id>`, o id interno do `api-<id>.json`; sem ele, a consulta) e "Análise técnica no SOL" (`#/analise-tecnica/<id>` só se o JSON trouxer `idAnaliseTecnica` — o id da análise é outro; sem ele, a caixa). Abrem no Chrome (login do SOL). Os mesmos links vão no prompt de sistema da conversa
 - [ ] Janela própria de cada fluxo (Começar o dia, Revisar CIA, Minuta/despacho, Incorporar norma, Notificação avulsa, Pergunta de norma) — o tipo de cada uma o Átila fecha com a sessão do PC
 - [x] Prévia aprovada: o Átila mandou largar como oficial (2.1.0, 12/10/2026)
 - [ ] Teste no PC com processo real: permissões do `claude -p` no Windows, `python` no PATH, sessão retomada
@@ -142,6 +143,15 @@ Continuam valendo: Anexo L, laudo/compensatórias (modelo leve só separa), rasc
 
 #### 2.3 — esteira Revisar → Lançar → Arquivar
 - [ ] Cada etapa com o seu caranguejo; frase do que faz; feitas com ✓ e tempo; Lançar no SOL só depois do "pode lançar", com a lista do que vai ser colado. Absorve os itens 2 a 5 da 1.2
+
+### Ideia a amadurecer — "Ponte SOL" (pedido do Átila, 12/10/2026; NÃO construir sem confirmar)
+
+O Claude ler o SOL por comando, sem print e sem navegar, gastando menos token:
+- script do Tampermonkey nas páginas do solcbm abre uma ponte com um servidor local do SSEG.exe (localhost), como o `sseg.py receber` já faz; o programa ou o Claude pede ("ler licenciamento 239812", "listar arquivos", "baixar arquivo X") e a **própria aba logada** faz o fetch na API e devolve o JSON para a pasta do processo — o token da sessão nunca sai do navegador
+- comandos `sseg.py sol ler|arquivos|baixar --id <id>`; na conversa entra só o resumo filtrado, não o JSON inteiro
+- **só leitura** no começo; escrita (lançar inconformidade) só depois, com o "lança" do analista e a tela de conferência da esteira 2.3, e as regras da `sol-cbmrs-navegador` (2.000 caracteres, campo "Outros")
+- substitui aos poucos o `sol-leitor` e os prints; medir o ganho pelo Gasto
+- **Antes de construir:** confirmar com o Átila. Pela decisão de 06/10/2026 (consulta ao SOL fora do navegador barrada; acesso automatizado só com autorização expressa e, de preferência, consulta à chefia/PROCERGS), levar a ideia à chefia/PROCERGS antes — mesmo sendo a aba logada do analista que chama a API. Depois, testar só leitura num processo real
 
 ## O que o Átila testa no PC (1.1.1)
 
