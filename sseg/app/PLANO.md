@@ -101,12 +101,12 @@ Testes no PC do trabalho (SSH, Sincronizar processos, Abrir SOL) ficam para quan
 
 ### 2.0 — Interface (pywebview + HTML no WebView2 do Windows; continua um .exe só; a lógica atual fica igual)
 
-- [ ] Casca pywebview com a ponte Python ↔ JS para as funções que já existem; build e fotos no CI como hoje — em andamento no ramo `sseg-2.0` (`web_app.py`, `web/index.html`, `api.py`; `--classico` abre a janela Tk). Build do ramo sai como **prévia** (prerelease `app-v2.0.0-previa`), que o programa nunca oferece como atualização; vai para o main quando o Átila aprovar as fotos
-- [ ] Barra de estado no alto: Programas, Pastas, Servidor, GitHub (com contador). Discreta quando está ok; o clique abre uma janelinha só daquele assunto
-- [ ] Tela principal = trabalho: Iniciar conversa (botões de demanda) + Processos em andamento
-- [ ] Menu lateral que recolhe (☰): Início, Buscar normas, Configuração, Ajuda (Reportar bug, Procurar atualização)
-- [ ] Configuração: Programas, Instalar o que falta, Entrar no Claude Code, Atalho Abrir SOL, Tampermonkey, Pastas. Abre na primeira vez ou quando falta algo
-- [ ] Quadro de log sai da frente e vira "Detalhes"
+- [x] Casca pywebview com a ponte Python ↔ JS (`web_app.py`, `web/index.html`, `api.py`; `--classico` ou falta de WebView2 abre a janela Tk). Prévia aprovada pelo Átila e publicada como 2.0.0 em 12/10/2026
+- [x] Barra de estado no alto: Programas, Pastas, Servidor, GitHub (com contador). Discreta quando está ok; o clique abre uma janelinha só daquele assunto
+- [x] Tela principal = trabalho: Iniciar conversa (botões de demanda) + Processos em andamento
+- [x] Menu lateral que recolhe (☰): Início, Buscar normas, Configuração, Ajuda (Reportar bug, Procurar atualização)
+- [x] Configuração: Programas, Instalar o que falta, Entrar no Claude Code, Atalho Abrir SOL, Tampermonkey, Pastas. Abre na primeira vez ou quando falta algo
+- [x] Quadro de log sai da frente e vira "Detalhes"
 - [ ] Rodapé — gasto por processo em % da janela de 5 h ("A000…: ≈18% das 5 h"), sempre como estimativa (≈): o statusline grava o uso da janela num arquivo e o programa atribui o aumento ao processo aberto; nas chamadas do próprio programa (`claude -p --output-format json`), tokens → % pela proporção medida
   - [x] campo confirmado no PC (12/10/2026, Claude Code 2.1.296): o statusline recebe `rate_limits.five_hour.used_percentage` (inteiro 0–100, degraus de 1%) e `resets_at` (época Unix, s); também `seven_day`, `effort`, `model`, `session_id`, `transcript_path`. **Só no Claude Code de terminal** — o app de desktop não roda statusline. Degrau de 1% zera processo curto: somar tokens do processo e calibrar tokens→% pela variação do %
 - [ ] Rodapé — subagentes como caranguejinhos (desenho próprio): cor = modelo (Haiku verde, Sonnet azul, Opus laranja), tamanho = esforço, animado enquanto trabalha, acena e sai ao terminar; mouse em cima: nome, tarefa, tempo. Substituem os botões Subagentes e Gasto

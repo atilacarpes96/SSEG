@@ -159,7 +159,7 @@ textarea { width: 100%; border: 1px solid var(--linha); border-radius: 6px; padd
       <p class="sub">Cada demanda abre o Claude Code com o modelo e o esforço da política de modelo.</p>
       <div id="fluxos"></div>
       <h2>Processos em andamento</h2>
-      <p class="sub">Pastas de processo na sua pasta dos processos, a mais mexida primeiro.</p>
+      <p class="sub">Pastas de processo na sua pasta dos processos, a mais mexida primeiro. A janela de análise (chat, checklist e CIA, sem terminal) chega na 2.1.</p>
       <div class="cartao"><table><thead><tr><th>Processo</th><th>Mexido em</th><th></th><th></th></tr></thead>
         <tbody id="processos"><tr><td class="vazio" colspan="4">Carregando…</td></tr></tbody></table></div>
     </section>
@@ -454,14 +454,12 @@ async function carregarProcessos() {
   let lst;
   try { lst = await api("processos"); } catch (e) { return; }
   if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 4 }, "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
-  const analise = (ESTADO.info && ESTADO.info.fluxos || []).find(f => f.id === "analise");
   corpo.replaceChildren(...lst.map(p => el("tr", {},
     el("td", { class: "cod" }, p.codigo),
     el("td", {}, new Date(p.quando * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })),
     el("td", {}, el("span", { class: "tag" }, p.arquivos + " arquivo(s)"), p.cia ? el("span", { class: "tag" }, "CIA") : null),
     el("td", { style: "text-align:right" },
-      el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "abrir pasta"),
-      analise ? el("button", { class: "bt link", on: { click: () => iniciarFluxo(analise, p.codigo) } }, "analisar") : null))));
+      el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "abrir pasta")))));
 }
 async function carregarInicio() {
   ESTADO.info = await api("inicio");

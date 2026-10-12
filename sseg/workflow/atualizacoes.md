@@ -12,6 +12,23 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 12/10/2026 — SSEG.exe 2.0: interface nova e ganchos que acham o Python
+
+- **SSEG.exe 2.0:** interface nova (HTML, no componente do Edge do Windows). Barra de estado no alto (Programas, Pastas, Servidor, GitHub com contador, Nova versão), menu ☰ (Início, Buscar normas, Configuração, Ajuda), conversas por demanda e processos em andamento na tela inicial, mensagens em "Detalhes" no rodapé. A lógica é a mesma da 1.3; sem o componente do Edge, abre a janela antiga.
+- **Busca (1.2.2):** cada resultado tem [PDF], que abre a norma oficial na página do trecho.
+- **SOL sem teclado (1.3.0, opcional):** atalho "Abrir SOL" e passos do Tampermonkey, em Configuração.
+- **Ganchos do Claude Code:** passam por `.claude/hooks/rodar.sh`, que pula o `python3` da Microsoft Store e liga o UTF-8 (o gancho Stop dava "Python não foi encontrado" no Windows).
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 12/10/2026 e no fim me diga o que ficou feito e o que depende de mim:
+1. Confira se o clone está em dia com o GitHub (git status e git log -1). Se estiver atrás, me peça para rodar git pull no PowerShell; no Claude Code, rode você.
+2. Confira que .claude/settings.json chama sh "$CLAUDE_PROJECT_DIR/.claude/hooks/rodar.sh" nos 5 ganchos.
+3. Rode python sseg/scripts/testar.py e me diga o resultado.
+4. Me diga para abrir o SSEG.exe e clicar em "Nova versão" (ou baixar em https://github.com/atilacarpes96/SSEG/releases/latest).
+```
+
 ## 11/10/2026 — SSEG.exe 1.1.0 e revisor-cia com nome completo de modelo
 
 - **Subagente `revisor-cia`:** `model: sonnet` passa a `model: claude-sonnet-5-5`. O atalho funcionava, mas a regra é nome completo (o atalho `haiku` ainda aponta para o 4.5) e o `testar.py` agora barra atalho.
