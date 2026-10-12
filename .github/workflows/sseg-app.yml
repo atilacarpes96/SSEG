@@ -102,6 +102,7 @@ jobs:
       # Uma cópia "antiga" (versão 0.0.1) numa pasta com espaço se atualiza para a que acabou de
       # sair: o arquivo tem de ficar igual ao publicado e o programa tem de reabrir.
       - name: Atualização automática do programa
+        if: github.ref_name == 'main'  # baixa a última publicada: na prévia do ramo, não seria esta
         shell: pwsh
         run: |
           New-Item -ItemType Directory velho -Force | Out-Null
