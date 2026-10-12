@@ -111,29 +111,33 @@ Testes no PC do trabalho (SSH, Sincronizar processos, Abrir SOL) ficam para quan
   - [x] campo confirmado no PC (12/10/2026, Claude Code 2.1.296): o statusline recebe `rate_limits.five_hour.used_percentage` (inteiro 0–100, degraus de 1%) e `resets_at` (época Unix, s); também `seven_day`, `effort`, `model`, `session_id`, `transcript_path`. **Só no Claude Code de terminal** — o app de desktop não roda statusline. Degrau de 1% zera processo curto: somar tokens do processo e calibrar tokens→% pela variação do %
 - [ ] Rodapé — subagentes como caranguejinhos (desenho próprio): cor = modelo (Haiku verde, Sonnet azul, Opus laranja), tamanho = esforço, animado enquanto trabalha, acena e sai ao terminar; mouse em cima: nome, tarefa, tempo. Substituem os botões Subagentes e Gasto
 
-### 2.1 — Janela "Análise do processo" (checklist marcado pelo analista)
+### Janela do processo — desenho fechado com o Átila em 12/10/2026 (substitui o 2.1–2.3 anterior nestes pontos)
 
-- [ ] Medidas de `especSeguranca.medidas` do JSON da API, na ordem do SOL
-- [ ] Itens de cada medida pelo Anexo L da RT 05 Parte 1.1 (`normas/rt-05-parte01-1-2016-ppci-completo.md`): todas com "Memorial"; as da L.1 ganham os itens de planta da coluna "A" (Saídas: alíneas a) a i) + lotação no grupo F; sinalização de orientação e iluminação de balizamento na alínea i)); as da L.2 só o Memorial
-- [ ] Laudo de inviabilidade (`especSeguranca.laudo.txtClob`; cada medida NAO_POSSUI / POSSUI_PARCIAL / POSSUI_TOTAL): um caranguejo leve lê o laudo uma vez e **só separa** as compensatórias por medida (extração, sem decidir); elas viram itens a conferir, inclusive em planta. Se a compensatória cobre o déficit é do analista e do principal (política de modelo). Ver `workflow/analise-laudo-inviabilidade-tecnica.md`
-- [ ] Faixa no topo: passos do fluxo (data de protocolo, definidora, tabela, laudo, análise anterior) + link para a pasta do processo
-- [ ] Reanálise: começa da CIA anterior; cada item "atendida" ou "REITERO"
-- [ ] Coluna "CIA em construção" com as exigências aceitas, na ordem
-- [ ] `analise.json` na pasta do processo: vai ao servidor pelo Sincronizar processos, nunca ao GitHub; comando no `sseg.py` para a conversa Local ler e escrever o mesmo arquivo
+Continuam valendo: Anexo L, laudo/compensatórias (modelo leve só separa), rascunho × texto final,
+[PDF] montado pelo programa, skills sem duplicar.
 
-### 2.2 — Caixa do item com o Claude redigindo junto (começar por saídas de emergência e extintores, testar em processo real)
+- **Três colunas, sem terminal:** Chat | Checklist | CIA em construção
+  - **Chat:** a conversa com o Claude dentro do programa, respostas formatadas. Por baixo, `claude -p --input-format stream-json --output-format stream-json` (mesmo login, pasta do SSEG, modelo e esforço de "Analisar processo"), sessão contínua (processo vivo ou `--resume`)
+  - **Checklist:** os 16 passos do fluxo (como o plugin checklist-ppci) + medidas do SOL na ordem do SOL com os itens do Anexo L + compensatórias do laudo. Pendências que surgem no chat entram aqui, cada uma com o campo da resposta (ex.: as perguntas do Claude; "falta ver a fita reflexiva nas rampas")
+  - **CIA:** exigências em construção, editáveis pelo analista (texto final = o que ele salvou)
+  - O Claude escreve nas colunas, não só no chat: comando do `sseg.py` grava pendências e exigências no `analise.json` e a janela atualiza na hora
+- **Abrir o processo não dispara nada:** a janela carrega pasta, JSON da API e checklist e espera; o Claude só trabalha quando o analista pede ("roda o check", "lê o laudo")
+- **Caranguejos = indicador de lugar:** aparecem onde o trabalho acontece — na caixa do item (redator), no botão Revisar CIA, na medida (leitura do laudo), na mensagem do chat (subagente). Fila: o próximo espera cinza no seu botão. Cor = modelo (Haiku verde, Sonnet azul, Opus laranja), tamanho = esforço, mouse: "redigindo item 3 · Sonnet · 12 s"; ao terminar acena e sai. Eventos: `tool_use`/`tool_result` de Task/Agent no stream-json + chamadas do próprio programa. Se ficar confuso, depois um resumo no rodapé
+- **Rodapé:** ≈% das 5 h por processo (`rate_limits.five_hour`, confirmado)
 
-- [ ] Analista escreve o achado curto ("porta da escada 80 cm"); ao parar de digitar ou por botão, `claude -p` (Sonnet, esforço da política) redige pelo caminho normal (banco, normas comentadas, `ppci-notificacao-cia`) e devolve texto + fundamento ("RT 11, item 5.4.2")
-- [ ] O modelo não usa PDF: com o fundamento, o **programa** monta o [PDF] sem token (mecanismo da busca 1.2.2), só para o analista conferir
-- [ ] O que o analista escreveu fica; a redação vem como sugestão. Contador de 2.000 caracteres sempre visível
-- [ ] **Regra:** cada item guarda "rascunho do Claude" e "texto final" (o que o analista salvou). CIA, revisão e lançamento leem **só o texto final**; o revisor que acha problema num texto editado aponta e sugere, não reescreve. Motivo (Átila): ele editava a notificação, o modelo se confundia na revisão e voltava ao texto antigo
-- [ ] Redator como caranguejo azul sobre a caixa; vários itens formam fila visível; o gasto soma no % do processo
+#### 2.1 — janela de 3 colunas
+- [ ] Chat em stream-json dentro do programa (sessão contínua, respostas formatadas)
+- [ ] Checklist: 16 passos + medidas do SOL (Anexo L) + pendências vindas do chat
+- [ ] CIA marcada à mão (texto final do analista)
+- [ ] `sseg.py` grava pendências/exigências no `analise.json` (vai ao servidor pelo Sincronizar processos, nunca ao GitHub)
+- [ ] Caranguejo da conversa (subagente chamado no chat)
+- [ ] Prévia com fotos para o Átila aprovar
 
-### 2.3 — Esteira no fim da análise (absorve os itens 2 a 5 da 1.2)
+#### 2.2 — redator na caixa do item
+- [ ] Achado curto → `claude -p` redige (banco, normas comentadas, `ppci-notificacao-cia`) → texto + fundamento; [PDF] pelo programa; contador de 2.000; rascunho × texto final; caranguejo sobre a caixa e fila
 
-- [ ] Revisar CIA → Lançar no SOL → Arquivar e enviar, cada etapa com o seu caranguejo
-- [ ] Em andamento: animado, com a frase do que faz ("conferindo item 3 de 7 na RT 11"); próximas em cinza; feitas com ✓ e o tempo
-- [ ] Lançar no SOL só depois do "pode lançar" do analista, com a lista do que vai ser colado
+#### 2.3 — esteira Revisar → Lançar → Arquivar
+- [ ] Cada etapa com o seu caranguejo; frase do que faz; feitas com ✓ e tempo; Lançar no SOL só depois do "pode lançar", com a lista do que vai ser colado. Absorve os itens 2 a 5 da 1.2
 
 ## O que o Átila testa no PC (1.1.1)
 
