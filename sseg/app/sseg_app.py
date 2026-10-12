@@ -43,7 +43,7 @@ import git_sinc
 import instalar
 import relato
 
-VERSAO = "1.2.0"
+VERSAO = "1.2.1"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -181,7 +181,16 @@ def atualizar_programa():
               ':abre\r\nstart "" "EXE"\r\ndel "%~f0"\r\n')
     with open(bat, "w", encoding="mbcs" if os.name == "nt" else "utf-8", errors="replace") as fh:
         fh.write(script.replace("NOVO", novo).replace("EXE", exe))
-    subprocess.Popen(["cmd", "/c", bat], creationflags=SEM_JANELA | 0x00000008)  # DETACHED_PROCESS
+    subprocess.Popen(["cmd", "/c", bat], creationflags=SEM_JANELA | 0x00000008,  # DETACHED_PROCESS
+                     env=ambiente_limpo())
+
+
+def ambiente_limpo():
+    """Ambiente sem as variáveis do PyInstaller. Herdadas, fazem o .exe novo procurar a
+    python312.dll na pasta temporária deste, que some ao fechar ("Failed to load Python DLL")."""
+    env = {k: v for k, v in os.environ.items() if not k.upper().startswith(("_PYI_", "_MEIPASS"))}
+    env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+    return env
 
 
 def verificar(clone):
@@ -951,6 +960,9 @@ def janela():
 
 
 if __name__ == "__main__":
+    if os.environ.get("SSEG_TESTE_MARCA"):  # teste do build: prova de que o .exe abriu de verdade
+        with open(os.environ["SSEG_TESTE_MARCA"], "a", encoding="utf-8") as fh:
+            fh.write(VERSAO + "\n")
     if "--atualizar" in sys.argv:  # sem janela: usado no teste do build
         atualizar_programa()
     else:

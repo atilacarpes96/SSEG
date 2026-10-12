@@ -88,6 +88,7 @@ jobs:
           files: |
             dist/SSEG.exe
             dist/previa*.png
+          make_latest: true
       # Uma cópia "antiga" (versão 0.0.1) numa pasta com espaço se atualiza para a que acabou de
       # sair: o arquivo tem de ficar igual ao publicado e o programa tem de reabrir.
       - name: Atualização automática do programa
@@ -100,14 +101,17 @@ jobs:
           New-Item -ItemType Directory "C:\teste sseg" -Force | Out-Null
           Copy-Item dist-velho/SSEG.exe "C:\teste sseg\SSEG.exe"
           $antes = (Get-FileHash "C:\teste sseg\SSEG.exe").Hash
+          # A marca prova que o .exe reaberto subiu de verdade: o processo da janela de erro
+          # ("Failed to load Python DLL", 1.2.0) também contava como reaberto.
+          $env:SSEG_TESTE_MARCA = "$env:RUNNER_TEMP\sseg-abriu.txt"
           Start-Process "C:\teste sseg\SSEG.exe" -ArgumentList "--atualizar"
           $publicado = (Get-FileHash dist/SSEG.exe).Hash
           for ($i = 0; $i -lt 90; $i++) { Start-Sleep 1; if ((Get-FileHash "C:\teste sseg\SSEG.exe" -ErrorAction SilentlyContinue).Hash -eq $publicado) { break } }
           Start-Sleep 5
           $depois = (Get-FileHash "C:\teste sseg\SSEG.exe").Hash
+          $abriu = (Get-Content $env:SSEG_TESTE_MARCA -ErrorAction SilentlyContinue) -contains $env:V
           $reaberto = @(Get-Process SSEG -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "C:\teste sseg\SSEG.exe" }).Count
-          Write-Output "::notice title=autoatualizacao::trocou=$($depois -eq $publicado) mudou=$($antes -ne $depois) reaberto=$reaberto segundos=$i"
+          Write-Output "::notice title=autoatualizacao::trocou=$($depois -eq $publicado) mudou=$($antes -ne $depois) reaberto=$reaberto abriu=$abriu segundos=$i"
           Get-Process SSEG -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-          if ($depois -ne $publicado -or $reaberto -lt 1) { exit 1 }
+          if ($depois -ne $publicado -or $reaberto -lt 1 -or -not $abriu) { exit 1 }
           exit 0
-          make_latest: true
