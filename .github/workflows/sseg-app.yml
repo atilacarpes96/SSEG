@@ -83,8 +83,8 @@ jobs:
       - name: SOL Entrar (atalho na Área de Trabalho)
         shell: bash
         run: |
-          r=$(cd sseg/app && python -c "import sol_entrar as s; print(s.instalar_atalho()); print(len(s.script_js())); print('|'.join(s.conferir()))" 2>&1) || { echo "::error title=sol-entrar::$(echo "$r" | tr '\n' '|')"; exit 1; }
-          echo "::notice title=sol-entrar::$(echo "$r" | tr '\n' '|')"
+          r=$(cd sseg/app && PYTHONUTF8=1 python -c "import sol_entrar as s; print(s.instalar_atalho()); print(len(s.script_js())); print('|'.join(s.conferir()))" 2>&1) || { echo "::error title=sol-entrar::$(echo "$r" | tr -d '\r' | tr '\n' '|')"; exit 1; }
+          echo "::notice title=sol-entrar::$(echo "$r" | tr -d '\r' | tr '\n' '|')"
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: app-v${{ env.V }}
