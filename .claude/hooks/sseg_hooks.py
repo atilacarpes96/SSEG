@@ -120,7 +120,7 @@ def rodar_testes():
     if not os.path.exists(teste):
         return ""
     p = subprocess.run([sys.executable, teste, "--rapido"], capture_output=True, text=True, timeout=180,
-                       cwd=RAIZ, encoding="utf-8", errors="replace")
+                       cwd=RAIZ, encoding="utf-8", errors="replace", env={**os.environ, "PYTHONUTF8": "1"})
     return "" if p.returncode == 0 else (p.stdout + p.stderr)[-1500:]
 
 
@@ -131,10 +131,17 @@ def rodar_testes():
 MARCA = "# SSEG: travas do CLAUDE.md (sseg_hooks.py pre-commit)"
 GANCHO = MARCA.join(["#!/bin/sh\n", """
 # Instalado pelo programa SSEG ou ao abrir o Claude Code no clone. Vale para todo commit.
-PY=$(command -v python3 || command -v python || command -v py)
+# python3 do WindowsApps é o atalho da Microsoft Store, não Python: pula e testa se roda.
+PY=
+for c in python3 python py; do
+  p=$(command -v "$c") || continue
+  case "$p" in *WindowsApps*) continue ;; esac
+  "$p" -c "" >/dev/null 2>&1 && { PY=$p; break; }
+done
 [ -z "$PY" ] && { echo "SSEG: Python não encontrado; commit barrado porque as travas não rodariam." >&2; exit 1; }
 CLAUDE_PROJECT_DIR=$(git rev-parse --show-toplevel)
-export CLAUDE_PROJECT_DIR
+PYTHONUTF8=1
+export CLAUDE_PROJECT_DIR PYTHONUTF8
 exec "$PY" "$CLAUDE_PROJECT_DIR/.claude/hooks/sseg_hooks.py" pre-commit
 """])
 
