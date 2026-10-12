@@ -12,6 +12,24 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 12/10/2026 — SSEG.exe 2.1: janela do processo, conversas sem terminal, respostas visuais
+
+- **Janela do processo:** "Analisar processo" (ou "abrir" em Processos em andamento) mostra três colunas — conversa com o Claude dentro do programa, checklist (pendências, os 16 passos e as medidas do SOL com o Anexo L) e CIA em construção. O Claude só começa quando você manda a primeira mensagem.
+- **Nenhum fluxo abre terminal:** os outros botões abrem uma janela de conversa do programa, com a mensagem sugerida no campo. Terminal e "Copiar o prompt" ficam no ⋯.
+- **Respostas visuais:** tabelas de verdade, selo de status, cartões, tabela da definidora, perguntas com campo de resposta, cartão de exigência com "Pôr na CIA" e [PDF] da norma.
+- **CIA:** vale o texto que você salva; o do Claude fica como rascunho, à parte.
+- **Novo comando:** `sseg.py analise --pasta <processo> pendencia|exigencia|passo|ver` grava no `analise.json` da pasta do processo (fica fora do GitHub; vai ao servidor pelo Sincronizar processos).
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão 2.1 (12/10/2026) e no fim me diga o que ficou feito e o que depende de mim:
+1. Confira se o clone está em dia com o GitHub (git status e git log -1). Se estiver atrás, me peça para rodar git pull no PowerShell; no Claude Code, rode você.
+2. Rode python sseg/scripts/testar.py e me diga o resultado.
+3. Me diga para abrir o SSEG.exe e clicar em "Nova versão" (ou baixar em https://github.com/atilacarpes96/SSEG/releases/latest).
+4. Me explique em três linhas a janela do processo: o Claude só começa quando eu escrevo; o texto que vale na CIA é o que eu salvo; o terminal fica no botão ⋯.
+```
+
 ## 12/10/2026 — SSEG.exe 2.0: interface nova e ganchos que acham o Python
 
 - **SSEG.exe 2.0:** interface nova (HTML, no componente do Edge do Windows). Barra de estado no alto (Programas, Pastas, Servidor, GitHub com contador, Nova versão), menu ☰ (Início, Buscar normas, Configuração, Ajuda), conversas por demanda e processos em andamento na tela inicial, mensagens em "Detalhes" no rodapé. A lógica é a mesma da 1.3; sem o componente do Edge, abre a janela antiga.

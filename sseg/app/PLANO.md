@@ -134,7 +134,7 @@ Continuam valendo: Anexo L, laudo/compensatórias (modelo leve só separa), rasc
 - [x] **Nenhum fluxo abre terminal** (pedido do Átila, 12/10/2026 — o programa vai para a seção e muita gente não usa terminal): "Analisar processo" da grade pede o código e abre a janela de 3 colunas; os outros fluxos abrem uma janela de conversa do programa (mesma identidade), com a mensagem sugerida no campo e nada rodando até o envio. Terminal e "Copiar o prompt" ficam no ⋯ (avançado)
 - [x] **Resposta visual em todas as janelas** (regra do Átila, 12/10/2026): markdown renderizado com tabelas de verdade (tudo escapado; HTML do modelo nunca passa) e blocos ```sseg-*``` com JSON que o programa desenha — `sseg-status` (selo), `sseg-dados` (cartões), `sseg-definidora` (hipóteses), `sseg-perguntas` (campos + "Mandar respostas"; viram pendências sem duplicar), `sseg-exigencia` (contador e "Pôr na CIA" como rascunho), `sseg-norma` ([PDF] pelo programa). Bloco inválido vira texto. Ensinado no prompt de sistema da janela (`chat.GUIA_VISUAL`). Claro e escuro
 - [ ] Janela própria de cada fluxo (Começar o dia, Revisar CIA, Minuta/despacho, Incorporar norma, Notificação avulsa, Pergunta de norma) — o tipo de cada uma o Átila fecha com a sessão do PC
-- [ ] Prévia com fotos para o Átila aprovar (ramo `sseg-2.1`, prerelease `app-v2.1.0-previa`)
+- [x] Prévia aprovada: o Átila mandou largar como oficial (2.1.0, 12/10/2026)
 - [ ] Teste no PC com processo real: permissões do `claude -p` no Windows, `python` no PATH, sessão retomada
 
 #### 2.2 — redator na caixa do item
