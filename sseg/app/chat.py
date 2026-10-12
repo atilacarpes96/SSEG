@@ -34,7 +34,7 @@ INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe 
 Regras desta janela:
 - Abrir a janela não é pedido. Faça só o que o analista pedir em cada mensagem; não rode o fluxo inteiro sozinho.
 - O analista vê três colunas: este chat, o checklist e a CIA em construção. Escreva nelas pelo sseg.py (sempre `python sseg/scripts/sseg.py ...`, a partir da pasta do SSEG):
-  - pendência (algo a ver na planta, pergunta ao analista, dado que falta): `python sseg/scripts/sseg.py analise --pasta "{pasta}" pendencia "texto curto"` — uma por comando; diga também no chat.
+  - pendência que NÃO é pergunta (algo a ver na planta, dado que falta): `python sseg/scripts/sseg.py analise --pasta "{pasta}" pendencia "texto curto"` — uma por comando; diga também no chat.
   - exigência para a CIA: `python sseg/scripts/sseg.py analise --pasta "{pasta}" exigencia "texto no formato da caixa do SOL" --medida "<nome da medida como no SOL>" --fundamento "RT xx/aaaa, item y"`. Entra como rascunho; o texto final é o que o analista salvar, e você nunca o reescreve: se achar problema num texto salvo, aponte e sugira.
   - passo do checklist concluído: `python sseg/scripts/sseg.py analise --pasta "{pasta}" passo N` (os 16 passos estão em sseg/workflow/checklist-analise.json).
   - o que o analista já salvou: `python sseg/scripts/sseg.py analise --pasta "{pasta}" ver`.
@@ -50,10 +50,38 @@ Regras desta janela:
 - Ler o SOL pelo navegador não está disponível nesta janela: se precisar, diga o que falta e o analista traz."""
 
 
+GUIA_VISUAL = """
+Como responder nesta janela (o analista não é do terminal; o programa desenha a resposta):
+- Veredito primeiro. Nada de tabela em caracteres (+---+, │) nem texto de terminal: use tabela markdown (| a | b |) ou um bloco do SSEG.
+- Perguntas ao analista vão SEMPRE num bloco sseg-perguntas (nunca soltas no texto).
+- Blocos do SSEG: cerca ``` com o tipo e, dentro, só JSON válido. O programa desenha; você não escreve HTML. Use quando couber:
+```sseg-status
+{"estado": "parado", "texto": "Parado: preciso de você", "processo": "A00012345AA001", "criterio": "critério (b) do 5.1.2"}
+```
+(estado: parado | concluido | aguardando)
+```sseg-dados
+{"itens": [{"rotulo": "Área", "valor": "3.605,26 m²"}, {"rotulo": "Altura", "valor": "4,85 m"}, {"rotulo": "População", "valor": "470"}, {"rotulo": "Protocolo", "valor": "27/08/2026"}]}
+```
+```sseg-definidora
+{"titulo": "Definidora: empate no (a), I-1 marcada pelo RT", "hipoteses": [{"ocupacao": "I-1", "nota": "risco baixo", "tabela": "6I.1", "medidas": 8, "efeito": "nenhum", "ok": true}], "conclusao": "As 8 medidas são as mesmas nas duas: a definidora não muda o campo 4.", "norma": {"rotulo": "RT 01/2024, item 5.1.2", "consulta": "definidora"}}
+```
+```sseg-perguntas
+{"perguntas": [{"id": "q1", "texto": "Qual a data de protocolo?", "dica": "ex.: 27/08/2026"}]}
+```
+```sseg-exigencia
+{"medida": "Saída de Emergência", "texto": "\\n- Deverá ...", "fundamento": "RT 11/2016, item 5.4.2"}
+```
+```sseg-norma
+{"rotulo": "RT 11/2016, item 5.4.2", "consulta": "largura porta"}
+```
+- O botão "Pôr na CIA" do sseg-exigencia põe o texto como rascunho; o texto final continua sendo o que o analista salvar.
+- O [PDF] do sseg-norma é montado pelo programa: você não precisa abrir PDF para isso."""
+
+
 def instrucoes_fluxo(fluxo):
     skill = ("\n- Quando o pedido for deste tipo de trabalho, siga a skill %s (sseg/skills/%s/SKILL.md)."
              % (fluxo["skill"], fluxo["skill"])) if fluxo.get("skill") else ""
-    return INSTRUCOES_FLUXO.format(titulo=fluxo["titulo"], skill=skill)
+    return INSTRUCOES_FLUXO.format(titulo=fluxo["titulo"], skill=skill) + GUIA_VISUAL
 
 
 class Conversa:
@@ -75,7 +103,7 @@ class Conversa:
                "--model", self.fluxo["modelo"], "--effort", self.fluxo["esforco"],
                "--permission-mode", "acceptEdits"] + (["--add-dir", self.pasta] if self.pasta else []) + [
                "--allowedTools", *PERMITIDOS,
-               "--append-system-prompt", INSTRUCOES.format(codigo=self.codigo, pasta=self.pasta) if self.pasta
+               "--append-system-prompt", INSTRUCOES.format(codigo=self.codigo, pasta=self.pasta) + GUIA_VISUAL if self.pasta
                else instrucoes_fluxo(self.fluxo)]
         sessao = self.registro.ler(self.pasta)["chat"].get("sessao") if self.pasta else self.sessao
         if sessao:

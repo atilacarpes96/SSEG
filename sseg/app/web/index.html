@@ -8,9 +8,18 @@
   --verm: #C32725; --verm-claro: #D93735; --amarelo: #FCD733; --laranja: #F39431;
   --fundo: #F4F1EF; --cartao: #FFFFFF; --texto: #2B2422; --suave: #7A6E6A; --linha: #E6DFDB;
   --ok: #2E7D32; --haiku: #3FA34D; --sonnet: #2F6FD6; --opus: #E8772E;
+  --fundo2: #FBF9F8; --bt: #F7F3F1; --bt-h: #EFE8E5; --rosa: #FDF1F0; --rosa-borda: #F3D3D1; --creme: #FEF4EA;
+  --creme-txt: #9A4A0E; --am-bg: #FFFBEA; --am-borda: #F2E3A0; --az-bg: #F4F7FD; --az-borda: #B9CBEE; --ponto: #C9C0BC;
+  --campo: #FFFFFF; --azul: #2F6FD6; --azul-bg: #E8F0FC;
   --raio: 8px; --sombra: 0 1px 2px rgba(60,30,20,.08), 0 4px 14px rgba(60,30,20,.06);
 }
+@media (prefers-color-scheme: dark) { :root {
+  --verm: #E5534F; --verm-claro: #F06B67; --fundo: #1C1918; --cartao: #262220; --texto: #EDE6E3; --suave: #A99D98; --linha: #3A3431;
+  --ok: #5DBB63; --fundo2: #221E1C; --bt: #302B29; --bt-h: #3A3431; --rosa: #3A2422; --rosa-borda: #5A3330; --creme: #3A2C1E;
+  --creme-txt: #F2B27A; --am-bg: #332D17; --am-borda: #5C5126; --az-bg: #1D2738; --az-borda: #34507F; --ponto: #5A524E;
+  --campo: #1F1B1A; --azul: #6E9CF0; --azul-bg: #1D2738; color-scheme: dark; } }
 * { box-sizing: border-box; }
+input, textarea { background: var(--campo); color: var(--texto); }
 [hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 body { font: 14px/1.45 "Segoe UI", system-ui, sans-serif; color: var(--texto); background: var(--fundo);
@@ -32,13 +41,13 @@ header { background: var(--cartao); border-bottom: 3px solid var(--verm); displa
 #estado { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .chip { border: 1px solid var(--linha); background: var(--cartao); border-radius: 999px; padding: 3px 11px 3px 9px;
         font-size: 12.5px; color: var(--suave); display: inline-flex; align-items: center; gap: 6px; }
-.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #C9C0BC; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ponto); }
 .chip.ok::before { background: var(--ok); }
-.chip.alerta { border-color: var(--verm); color: var(--verm); background: #FDF1F0; font-weight: 600; }
+.chip.alerta { border-color: var(--verm); color: var(--verm); background: var(--rosa); font-weight: 600; }
 .chip.alerta::before { background: var(--verm); }
 .chip.carregando::before { background: var(--amarelo); animation: pisca 1s infinite; }
 .chip .n { background: var(--verm); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; }
-.chip.novo { border-color: var(--laranja); color: #9A4A0E; background: #FEF4EA; font-weight: 600; }
+.chip.novo { border-color: var(--laranja); color: var(--creme-txt); background: var(--creme); font-weight: 600; }
 .chip.novo::before { background: var(--laranja); }
 @keyframes pisca { 50% { opacity: .3; } }
 
@@ -60,8 +69,8 @@ h2:first-child { margin-top: 0; }
 .cartao { background: var(--cartao); border-radius: var(--raio); box-shadow: var(--sombra); padding: 14px 16px; }
 
 /* ---- botões */
-.bt { border: 1px solid var(--linha); background: #F7F3F1; color: var(--texto); border-radius: 6px; padding: 7px 14px; }
-.bt:hover:not(:disabled) { background: #EFE8E5; }
+.bt { border: 1px solid var(--linha); background: var(--bt); color: var(--texto); border-radius: 6px; padding: 7px 14px; }
+.bt:hover:not(:disabled) { background: var(--bt-h); }
 .bt.p { background: var(--verm); color: #fff; border-color: var(--verm); font-weight: 600; }
 .bt.p:hover:not(:disabled) { background: var(--verm-claro); }
 .bt.link { border: 0; background: none; color: var(--verm); padding: 2px 4px; font-size: 12.5px; text-decoration: underline; }
@@ -87,7 +96,7 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 
 /* ---- busca */
 .busca-linha { display: flex; gap: 8px; }
-.busca-linha input { flex: 1; padding: 8px 10px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; }
+.busca-linha input { flex: 1; padding: 8px 10px; border: 1px solid var(--linha); border-radius: 6px; background: var(--campo); }
 .grupo { margin-top: 18px; font-weight: 700; color: var(--verm); }
 .res { background: var(--cartao); border-radius: 6px; padding: 9px 12px; margin-top: 8px; border-left: 3px solid var(--linha); }
 .res.banco { border-left-color: var(--verm); }
@@ -109,7 +118,7 @@ footer { flex: none; background: var(--cartao); border-top: 1px solid var(--linh
          display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--suave); }
 #ultima { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #caranguejos { display: flex; gap: 4px; align-items: flex-end; min-height: 22px; }
-#detalhes { flex: none; height: 0; overflow: hidden; background: #FBF9F8; border-top: 1px solid var(--linha);
+#detalhes { flex: none; height: 0; overflow: hidden; background: var(--fundo2); border-top: 1px solid var(--linha);
             transition: height .18s ease; }
 #detalhes.aberto { height: 170px; }
 #detalhes pre { margin: 0; padding: 8px 14px; height: 100%; overflow-y: auto; font: 12px/1.4 Consolas, monospace; white-space: pre-wrap; }
@@ -125,7 +134,7 @@ footer { flex: none; background: var(--cartao); border-top: 1px solid var(--linh
 .modal header p { margin: 4px 0 0; color: var(--suave); font-size: 12.5px; }
 .modal .meio { padding: 12px 18px; overflow-y: auto; }
 .modal .pe { padding: 10px 18px 14px; display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--linha); }
-.lista { font: 12.5px/1.5 Consolas, monospace; background: #FBF9F8; border: 1px solid var(--linha); border-radius: 6px;
+.lista { font: 12.5px/1.5 Consolas, monospace; background: var(--fundo2); border: 1px solid var(--linha); border-radius: 6px;
          padding: 8px 10px; max-height: 260px; overflow-y: auto; white-space: pre-wrap; }
 .conflito { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 4px 0; font-size: 12.5px; }
 .conflito code { flex: 1; min-width: 200px; }
@@ -149,13 +158,13 @@ main.processo { padding: 0; overflow: hidden; }
 .rola { flex: 1; overflow-y: auto; padding: 10px 14px; }
 /* chat */
 .msg { margin: 8px 0; max-width: 100%; }
-.msg.eu { background: #FDF1F0; border: 1px solid #F3D3D1; border-radius: 10px 10px 2px 10px; padding: 7px 11px; margin-left: 14%; white-space: pre-wrap; }
+.msg.eu { background: var(--rosa); border: 1px solid var(--rosa-borda); border-radius: 10px 10px 2px 10px; padding: 7px 11px; margin-left: 14%; white-space: pre-wrap; }
 .msg.claude { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px 10px 10px 2px; padding: 8px 12px; }
 .msg.claude p { margin: 0 0 6px; } .msg.claude p:last-child { margin: 0; }
 .msg.claude h4 { margin: 8px 0 4px; font-size: 13.5px; color: var(--verm); }
 .msg.claude ul, .msg.claude ol { margin: 4px 0 6px; padding-left: 20px; }
 .msg.claude code { background: var(--fundo); padding: 0 4px; border-radius: 3px; font-size: 12.5px; }
-.msg.claude pre { background: #FBF9F8; border: 1px solid var(--linha); padding: 6px 8px; border-radius: 6px; white-space: pre-wrap; font: 12px Consolas, monospace; }
+.msg.claude pre { background: var(--fundo2); border: 1px solid var(--linha); padding: 6px 8px; border-radius: 6px; white-space: pre-wrap; font: 12px Consolas, monospace; }
 .ativ { font-size: 11.5px; color: var(--suave); margin: 4px 0 4px 2px; }
 .msg.aviso { font-size: 12px; color: var(--verm); }
 .sub-linha { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--suave); margin: 6px 0; }
@@ -169,8 +178,8 @@ main.processo { padding: 0; overflow: hidden; }
 .ck input { margin-top: 3px; }
 .ck small { display: block; color: var(--suave); font-size: 11.5px; }
 .ck.feito > span { color: var(--suave); text-decoration: line-through; }
-.marca-tag { font-size: 10.5px; border-radius: 4px; padding: 0 5px; margin-left: 4px; background: #FEF4EA; color: #9A4A0E; }
-.pend { background: #FFFBEA; border: 1px solid #F2E3A0; border-radius: 6px; padding: 7px 9px; margin-bottom: 7px; font-size: 13px; }
+.marca-tag { font-size: 10.5px; border-radius: 4px; padding: 0 5px; margin-left: 4px; background: var(--creme); color: var(--creme-txt); }
+.pend { background: var(--am-bg); border: 1px solid var(--am-borda); border-radius: 6px; padding: 7px 9px; margin-bottom: 7px; font-size: 13px; }
 .pend.feita { opacity: .55; }
 .pend input[type=text] { width: 100%; margin-top: 5px; padding: 5px 7px; border: 1px solid var(--linha); border-radius: 5px; }
 .pend .linha-bts { margin-top: 4px; font-size: 12px; }
@@ -180,14 +189,14 @@ details.medida summary .cont { margin-left: auto; font-size: 11px; color: var(--
 details.medida .itens { padding: 0 9px 8px; }
 .item { display: flex; gap: 6px; align-items: center; font-size: 12.5px; padding: 3px 0; border-top: 1px dashed var(--linha); }
 .item span { flex: 1; }
-.item button { border: 1px solid var(--linha); background: #fff; border-radius: 4px; padding: 0 6px; font-size: 12px; }
+.item button { border: 1px solid var(--linha); background: var(--campo); border-radius: 4px; padding: 0 6px; font-size: 12px; }
 .item button.on.ok { background: var(--ok); color: #fff; border-color: var(--ok); }
 .item button.on.x { background: var(--verm); color: #fff; border-color: var(--verm); }
 /* CIA */
 .exig { border: 1px solid var(--linha); border-radius: 6px; padding: 8px 10px; margin-bottom: 9px; background: var(--cartao); }
 .exig .cab { display: flex; gap: 6px; align-items: baseline; font-size: 12px; color: var(--suave); flex-wrap: wrap; }
 .exig .cab b { color: var(--texto); }
-.exig .rasc { background: #F4F7FD; border: 1px dashed #B9CBEE; border-radius: 5px; padding: 6px 8px; font-size: 12.5px; margin: 6px 0; white-space: pre-wrap; }
+.exig .rasc { background: var(--az-bg); border: 1px dashed var(--az-borda); border-radius: 5px; padding: 6px 8px; font-size: 12.5px; margin: 6px 0; white-space: pre-wrap; }
 .exig textarea { margin-top: 6px; min-height: 70px; font-size: 13px; }
 .exig .rod { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; }
 .exig .conta { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--suave); }
@@ -209,6 +218,30 @@ details.medida .itens { padding: 0 9px 8px; }
 #t-conversa { max-width: none; height: 100%; }
 #t-conversa.ativa { display: flex; flex-direction: column; }
 .conversa-unica { flex: 1; width: min(900px, 100%); margin: 0 auto; border: 0; }
+
+/* ---- respostas visuais (blocos sseg-*) */
+.msg.claude table { border-collapse: collapse; margin: 6px 0; font-size: 12.5px; width: auto; }
+.msg.claude th, .msg.claude td { border: 1px solid var(--linha); padding: 4px 8px; text-align: left; }
+.msg.claude th { background: var(--fundo2); text-transform: none; letter-spacing: 0; color: var(--texto); font-size: 12px; }
+.blk { margin: 8px 0; }
+.selo { display: inline-flex; gap: 8px; align-items: center; border-radius: 999px; padding: 3px 12px; font-size: 12.5px; font-weight: 600; }
+.selo.parado { background: var(--am-bg); border: 1px solid var(--am-borda); color: var(--creme-txt); }
+.selo.concluido { background: #E7F4E8; border: 1px solid #B9DDBB; color: var(--ok); }
+.selo.aguardando { background: var(--az-bg); border: 1px solid var(--az-borda); color: var(--azul); }
+@media (prefers-color-scheme: dark) { .selo.concluido { background: #1E2E1F; border-color: #2F5532; } }
+.selo-sub { font-size: 12px; color: var(--suave); margin-left: 6px; }
+.metricas { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.metrica { border: 1px solid var(--linha); border-radius: 8px; padding: 7px 10px; background: var(--fundo2); }
+.metrica small { display: block; font-size: 11px; color: var(--suave); text-transform: uppercase; letter-spacing: .05em; }
+.metrica b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.ocup { display: inline-block; background: var(--azul-bg); color: var(--azul); border-radius: 5px; padding: 0 7px; font-weight: 700; font-family: Consolas, monospace; }
+.efeito-ok { color: var(--ok); } .efeito-alerta { color: var(--verm); font-weight: 600; }
+.discreto { font-size: 12px; color: var(--suave); margin-top: 4px; }
+.perguntas { border: 1px solid var(--am-borda); background: var(--am-bg); border-radius: 8px; padding: 8px 10px; }
+.perguntas label { display: block; font-size: 13px; margin: 6px 0 2px; }
+.perguntas input { width: 100%; padding: 5px 8px; border: 1px solid var(--linha); border-radius: 5px; }
+.cartao-exig { border: 1px solid var(--linha); border-left: 3px solid var(--verm); border-radius: 8px; padding: 8px 10px; background: var(--cartao); }
+.cartao-exig .txt { white-space: pre-wrap; font-size: 13px; margin: 4px 0; }
 </style>
 </head>
 <body>
@@ -715,24 +748,94 @@ function caranguejo(modelo, esforco, titulo, parado) {
 }
 function nomeModelo(m) { return /haiku/i.test(m) ? "Haiku" : /opus/i.test(m) ? "Opus" : "Sonnet"; }
 
-function md(texto) {
-  const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// Markdown → HTML sem passar HTML do modelo: tudo é escapado antes; só as marcas conhecidas viram tag.
+function mdHtml(texto) {
+  const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const inl = t => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|\W)\*([^*\n]+)\*(?=\W|$)/g, "$1<i>$2</i>");
-  const out = []; let lista = null, bloco = null;
+  const linhas = texto.split("\n"), out = []; let lista = null;
   const fechaLista = () => { if (lista) { out.push(`</${lista}>`); lista = null; } };
-  for (const l of texto.split("\n")) {
-    if (l.startsWith("```")) { if (bloco === null) { fechaLista(); bloco = []; } else { out.push("<pre>" + esc(bloco.join("\n")) + "</pre>"); bloco = null; } continue; }
-    if (bloco !== null) { bloco.push(l); continue; }
-    let m;
-    if ((m = l.match(/^#{1,6}\s+(.*)/))) { fechaLista(); out.push("<h4>" + inl(m[1]) + "</h4>"); }
+  const celulas = l => l.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+  for (let k = 0; k < linhas.length; k++) {
+    const l = linhas[k]; let m;
+    if (/^\s*\|.*\|\s*$/.test(l) && k + 1 < linhas.length && /^\s*\|?[\s:-]+(\|[\s:-]+)+\|?\s*$/.test(linhas[k + 1])) {
+      fechaLista();
+      const cab = celulas(l); k += 2; const corpo = [];
+      while (k < linhas.length && /^\s*\|.*\|\s*$/.test(linhas[k])) corpo.push(celulas(linhas[k++]));
+      k--;
+      out.push("<table><thead><tr>" + cab.map(c => "<th>" + inl(c) + "</th>").join("") + "</tr></thead><tbody>" +
+        corpo.map(r => "<tr>" + r.map(c => "<td>" + inl(c) + "</td>").join("") + "</tr>").join("") + "</tbody></table>");
+    }
+    else if ((m = l.match(/^#{1,6}\s+(.*)/))) { fechaLista(); out.push("<h4>" + inl(m[1]) + "</h4>"); }
     else if ((m = l.match(/^\s*[-*]\s+(.*)/))) { if (lista !== "ul") { fechaLista(); out.push("<ul>"); lista = "ul"; } out.push("<li>" + inl(m[1]) + "</li>"); }
     else if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { if (lista !== "ol") { fechaLista(); out.push("<ol>"); lista = "ol"; } out.push("<li>" + inl(m[1]) + "</li>"); }
+    else if (/^\s*([-*_])\1{2,}\s*$/.test(l)) { fechaLista(); out.push("<hr>"); }
     else if (!l.trim()) fechaLista();
     else { fechaLista(); out.push("<p>" + inl(l) + "</p>"); }
   }
-  fechaLista(); if (bloco) out.push("<pre>" + esc(bloco.join("\n")) + "</pre>");
+  fechaLista();
   return out.join("");
 }
+// Resposta inteira: texto em markdown + blocos ```sseg-*``` (dados em JSON) que o PROGRAMA desenha.
+function resposta(texto, ctx) {
+  const raiz = el("div", {});
+  const partes = texto.split(/^```/m);
+  let buffer = "";
+  const despeja = () => { if (buffer.trim()) { const d = el("div", {}); d.innerHTML = mdHtml(buffer); raiz.append(d); } buffer = ""; };
+  for (let i = 0; i < partes.length; i++) {
+    if (i % 2 === 0) { buffer += partes[i]; continue; }
+    const nl = partes[i].indexOf("\n"), tipo = (nl < 0 ? partes[i] : partes[i].slice(0, nl)).trim(), corpo = nl < 0 ? "" : partes[i].slice(nl + 1);
+    let no = null;
+    if (/^sseg-/.test(tipo)) { try { no = BLOCOS[tipo] && BLOCOS[tipo](JSON.parse(corpo), ctx); } catch (e) { no = null; } }
+    if (no) { despeja(); raiz.append(el("div", { class: "blk" }, no)); }
+    else { despeja(); raiz.append(el("pre", {}, corpo.replace(/\n$/, ""))); }
+  }
+  despeja();
+  return raiz;
+}
+function md(texto) { return mdHtml(texto); }
+const BLOCOS = {
+  "sseg-status": d => el("div", {}, el("span", { class: "selo " + ({ parado: "parado", concluido: "concluido", aguardando: "aguardando" }[d.estado] || "aguardando") }, d.texto || d.estado),
+    el("span", { class: "selo-sub" }, [d.processo, d.criterio].filter(Boolean).join(" · "))),
+  "sseg-dados": d => el("div", { class: "metricas" }, ...(d.itens || []).map(x => el("div", { class: "metrica" }, el("small", {}, x.rotulo), el("b", {}, String(x.valor))))),
+  "sseg-definidora": d => el("div", {},
+    d.titulo ? el("b", {}, d.titulo) : null,
+    el("table", { style: "margin-top:6px" }, el("thead", {}, el("tr", {}, ...["Hipótese", "Tabela", "Medidas", "Efeito"].map(h => el("th", {}, h)))),
+      el("tbody", {}, ...(d.hipoteses || []).map(h => el("tr", {},
+        el("td", {}, el("span", { class: "ocup" }, h.ocupacao), " ", h.nota || ""), el("td", {}, h.tabela || ""), el("td", {}, String(h.medidas ?? "")),
+        el("td", { class: h.ok === false ? "efeito-alerta" : "efeito-ok" }, (h.ok === false ? "! " : "✓ ") + (h.efeito || "")))))),
+    d.conclusao ? el("div", { class: "discreto" }, d.conclusao) : null,
+    d.norma ? BLOCOS["sseg-norma"](d.norma) : null),
+  "sseg-norma": d => el("div", { class: "discreto" }, d.rotulo || "",
+    " ", el("button", { class: "bt link", on: { click: ev => api("norma_pdf", [d.rotulo || "", d.consulta || ""], ev.currentTarget) } }, "PDF")),
+  "sseg-exigencia": (d, ctx) => {
+    const n = (d.texto || "").length;
+    return el("div", { class: "cartao-exig" },
+      el("div", { class: "discreto" }, [d.medida, d.fundamento].filter(Boolean).join(" · ")),
+      el("div", { class: "txt" }, d.texto || ""),
+      el("div", { class: "rod", style: "display:flex;gap:8px;align-items:center" },
+        ctx && /^A\d{8}/.test(ctx.chave) ? el("button", { class: "bt p", on: { click: async ev => { await api("processo_exigencia", [ctx.chave, d.texto || "", d.medida || "", d.fundamento || "", "claude"], ev.currentTarget); ev.currentTarget.textContent = "Na CIA (rascunho)"; ev.currentTarget.disabled = true; recarregarRegistro(); } } }, "Pôr na CIA") : null,
+        el("button", { class: "bt", on: { click: () => copiar(d.texto || "") } }, "Copiar"),
+        el("span", { class: "discreto", style: "margin-left:auto;" + (n > 1950 ? "color:var(--verm);font-weight:700" : "") }, n + " / 2000")));
+  },
+  "sseg-perguntas": (d, ctx) => {
+    const qs = (d.perguntas || []).map((q, i) => ({ id: q.id || "q" + (i + 1), texto: q.texto || "", dica: q.dica || "" }));
+    const campos = qs.map(q => el("input", { type: "text", placeholder: q.dica || "sua resposta" }));
+    const processo = ctx && /^A\d{8}/.test(ctx.chave);
+    if (processo) api("processo_perguntas", [ctx.chave, qs]).then(recarregarRegistro).catch(() => {});
+    return el("div", { class: "perguntas" },
+      el("b", {}, processo ? "Perguntas (vão também para o checklist)" : "Perguntas"),
+      ...qs.flatMap((q, i) => [el("label", {}, (i + 1) + ". " + q.texto), campos[i]]),
+      el("div", { class: "linha-bts", style: "margin-top:8px" },
+        el("button", { class: "bt p", on: { click: ev => {
+          const r = qs.map((q, i) => [q, campos[i].value.trim()]).filter(x => x[1]);
+          if (!r.length) return SSEG.log(["✗ Responda ao menos uma pergunta."]);
+          ev.currentTarget.disabled = true;
+          if (processo) api("processo_responder", [ctx.chave, r.map(([q, v]) => [q.texto, v])]).then(recarregarRegistro).catch(() => {});
+          chatEnviar(ctx, "Respostas:\n" + r.map(([q, v]) => "- " + q.texto + " → " + v).join("\n"));
+        } } }, "Mandar respostas"),
+        processo ? el("button", { class: "bt", on: { click: () => api("abrir_pasta_processo", [ctx.chave]) } }, "Abrir a pasta do processo") : null));
+  },
+};
 
 async function abrirProcesso(codigo) {
   const d = await api("processo_abrir", [codigo]);
@@ -746,10 +849,10 @@ function renderProcesso(d) {
   const an = (ESTADO.info && ESTADO.info.fluxos || []).find(f => f.id === "analise");
   PR.fluxo = an || { modelo: "claude-sonnet-5-5", esforco: "high", modelo_texto: "Sonnet 5.5 alto" };
   $("#pr-modelo").textContent = "· " + PR.fluxo.modelo_texto;
-  $("#pr-tags").replaceChildren(
+  $("#pr-tags").replaceChildren(...[
     el("span", { class: "tag" }, d.json_sol ? "JSON do SOL: " + d.json_sol : "sem JSON do SOL na pasta"),
     el("span", { class: "tag" }, d.medidas.length + " medida(s)"),
-    d.cias.length ? el("span", { class: "tag" }, d.cias.length + " CIA anterior(es)") : null);
+    d.cias.length ? el("span", { class: "tag" }, d.cias.length + " CIA anterior(es)") : null].filter(Boolean));
   $("#pr-laudo").hidden = !d.laudo;
   pintarCota();
   pintarChecklist(); pintarCIA();
@@ -924,9 +1027,9 @@ function abrirConversa(f, sugestao) {
   CV.chave = "fluxo:" + f.id; CV.fluxo = f; CV.codigo = (sugestao || "").match(/A\d{8}[A-Z]{2}\d{3}/)?.[0] || "";
   const ctx = ctxDe(CV.chave, f, "O Claude espera o seu pedido. A mensagem abaixo é uma sugestão: ajuste e envie.");
   $("#cv-titulo").textContent = f.titulo;
-  $("#cv-tags").replaceChildren(el("span", { class: "tag" }, el("i", { style: "display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:" + COR(f.modelo) }), f.modelo_texto),
+  $("#cv-tags").replaceChildren(...[el("span", { class: "tag" }, el("i", { style: "display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:" + COR(f.modelo) }), f.modelo_texto),
     f.skill ? el("span", { class: "tag" }, "skill " + f.skill) : null,
-    f.subagentes && f.subagentes.length ? el("span", { class: "tag" }, "subagentes: " + f.subagentes.join(", ")) : null);
+    f.subagentes && f.subagentes.length ? el("span", { class: "tag" }, "subagentes: " + f.subagentes.join(", ")) : null].filter(Boolean));
   mostrarCtx("#cv-slot", ctx);
   if (!ctx.caixa.querySelector(".msg") && sugestao) $("#cv-msg").value = sugestao;
   ir("conversa");
@@ -937,7 +1040,7 @@ SSEG.chat = (chave, ev) => {
   const ctx = CTX[chave];
   if (!ctx) return;
   const doProcesso = chave === PR.codigo;
-  if (ev.t === "texto") { ctx.ativ = null; chatAdd(ctx, el("div", { class: "msg claude" })).innerHTML = md(ev.texto); }
+  if (ev.t === "texto") { ctx.ativ = null; chatAdd(ctx, el("div", { class: "msg claude" }, resposta(ev.texto, ctx))); }
   else if (ev.t === "ferramenta") {
     if (!ctx.ativ) ctx.ativ = chatAdd(ctx, el("div", { class: "ativ" }));
     ctx.ativ.textContent = "↳ " + ev.texto;
@@ -998,7 +1101,11 @@ SSEG.tour = async passo => {
     const ctx = ctxDe(fake.codigo, PR.fluxo, ""); mostrarCtx("#pr-slot", ctx); ctx.caixa.replaceChildren();
     chatAdd(ctx, el("div", { class: "msg eu" }, "roda o check"));
     SSEG.chat(fake.codigo, { t: "ferramenta", texto: "Rodando python sseg/scripts/sseg.py check --json api-1.json" });
-    SSEG.chat(fake.codigo, { t: "texto", texto: "**Check rodado.** Definidora: empate no grau de risco — paro aqui e levo a você:\n\n- F-6 e C-2: risco médio\n- Nota 3 da Tabela 6F decide a contagem\n\nRegistrei 2 pendências no checklist." });
+    SSEG.chat(fake.codigo, { t: "texto", texto: [
+      "```sseg-status", JSON.stringify({ estado: "parado", texto: "Parado: preciso de você", processo: fake.codigo, criterio: "critério (b) do 5.1.2" }), "```",
+      "```sseg-dados", JSON.stringify({ itens: [{ rotulo: "Área", valor: "3.605,26 m²" }, { rotulo: "Altura", valor: "4,85 m" }, { rotulo: "População", valor: "470" }, { rotulo: "Protocolo", valor: "27/08/2026" }] }), "```",
+      "```sseg-definidora", JSON.stringify({ titulo: "Definidora: empate no (a), I-1 marcada pelo RT", hipoteses: [{ ocupacao: "I-1", nota: "risco baixo", tabela: "6I.1", medidas: 8, efeito: "nenhum", ok: true }, { ocupacao: "J-2", nota: "risco baixo", tabela: "6J.1", medidas: 8, efeito: "nenhum", ok: true }], conclusao: "As 8 medidas são as mesmas nas duas: a definidora não muda o campo 4.", norma: { rotulo: "RT 01/2024, item 5.1.2", consulta: "definidora" } }), "```",
+      "```sseg-perguntas", JSON.stringify({ perguntas: [{ id: "q1", texto: "O depósito é da mesma empresa?", dica: "ex.: sim, mesma razão social" }, { id: "q2", texto: "Há atendimento ao público no térreo?", dica: "ex.: não, só funcionários" }] }), "```"].join("\n") });
     SSEG.chat(fake.codigo, { t: "sub_ini", id: "x1", tipo: "localizador-normas", desc: "itens da RT 11 sobre largura", modelo: "claude-haiku-5-5" });
     trabalhando(ctx, true);
     document.querySelector("#t-processo details.medida").open = true;

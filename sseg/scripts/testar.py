@@ -297,6 +297,17 @@ def main():
         caso("chat: subagente vira caranguejo (início e fim), cota por processo e sessão guardada",
              tipos == ["sub_ini", "sub_fim", "cota", "texto", "fim"] and evs[0]["modelo"] == "claude-haiku-5-5"
              and abs(evs[2]["processo"] - 3.0) < 0.01 and reg.ler(pasta)["chat"]["sessao"] == "s1", str(evs))
+    import re as _re
+    blocos = _re.findall(r"```(sseg-[a-z]+)\n(.*?)\n```", chat.GUIA_VISUAL, _re.S)
+    def _json_ok(b):
+        try:
+            json.loads(b)
+            return True
+        except ValueError:
+            return False
+    caso("chat: os 6 blocos visuais ensinados ao Claude são JSON válido",
+         {t for t, _ in blocos} == {"sseg-status", "sseg-dados", "sseg-definidora", "sseg-perguntas", "sseg-exigencia", "sseg-norma"}
+         and all(_json_ok(b) for _, b in blocos), str([t for t, b in blocos if not _json_ok(b)]))
     pdfs = set(os.listdir(os.path.join(RAIZ, "sseg", "normas", "pdf")))
     mapa = set(busca.PDF_RT.values()) | set(busca.PDF_RT5.values()) | {p for _, p in busca.PDF_COMENTADA}
     caso("busca: todo PDF do mapa existe em normas/pdf", mapa <= pdfs, str(sorted(mapa - pdfs)))

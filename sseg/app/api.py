@@ -230,8 +230,42 @@ class Api:
     def processo_pendencia(self, codigo, texto):
         return self._reg().pendencia(self._pasta_proc(codigo), texto, origem="analista")
 
-    def processo_exigencia(self, codigo, texto, medida="", fundamento=""):
-        return self._reg().exigencia(self._pasta_proc(codigo), texto, medida, fundamento, origem="analista")
+    def processo_exigencia(self, codigo, texto, medida="", fundamento="", origem="analista"):
+        """Do analista entra como texto final; "Pôr na CIA" num bloco do Claude entra como rascunho."""
+        origem = "claude" if origem == "claude" else "analista"
+        return self._reg().exigencia(self._pasta_proc(codigo), texto, medida, fundamento, origem=origem)
+
+    def processo_perguntas(self, codigo, perguntas):
+        """Perguntas de um bloco sseg-perguntas viram pendências (a mesma pergunta não duplica)."""
+        reg, pasta = self._reg(), self._pasta_proc(codigo)
+        existentes = {re.sub(r"\s+", " ", p["texto"]).strip().lower() for p in reg.ler(pasta)["pendencias"]}
+        for q in perguntas or []:
+            t = (q.get("texto") or "").strip()
+            if t and re.sub(r"\s+", " ", t).lower() not in existentes:
+                reg.pendencia(pasta, t, origem="claude")
+                existentes.add(re.sub(r"\s+", " ", t).lower())
+
+    def processo_responder(self, codigo, pares):
+        """[[texto da pergunta, resposta]]: grava a resposta na pendência e marca como enviada ao Claude."""
+        reg, pasta = self._reg(), self._pasta_proc(codigo)
+        d = reg.ler(pasta)
+        for texto, resp in pares or []:
+            alvo = re.sub(r"\s+", " ", texto).strip().lower()
+            for p in d["pendencias"]:
+                if re.sub(r"\s+", " ", p["texto"]).strip().lower() == alvo:
+                    p.update(resposta=resp, enviada=True)
+        reg.gravar(pasta, d)
+
+    def norma_pdf(self, rotulo, consulta=""):
+        """Bloco sseg-norma: o programa acha o PDF oficial e a página (mecanismo da busca 1.2.2)."""
+        nome = busca.pdf_citado(rotulo)
+        if not nome:
+            raise RuntimeError("Não achei o PDF de \"%s\" em normas/pdf." % rotulo)
+        caminho = os.path.join(self._clone(), "sseg", "normas", "pdf", nome)
+        pg = busca.pagina(caminho, consulta, rotulo, base.pdftotext())
+        base.abrir_pdf(caminho, pg)
+        self._log("PDF %s aberto na página %d — conferir o item ali antes de citar." % (nome, pg))
+        return pg
 
     def processo_atualizar(self, codigo, colecao, id_, campos):
         """O programa muda resposta/feita da pendência e final/fundamento da exigência. Rascunho não."""
