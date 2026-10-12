@@ -101,7 +101,7 @@ Testes no PC do trabalho (SSH, Sincronizar processos, Abrir SOL) ficam para quan
 
 ### 2.0 — Interface (pywebview + HTML no WebView2 do Windows; continua um .exe só; a lógica atual fica igual)
 
-- [ ] Casca pywebview com a ponte Python ↔ JS para as funções que já existem; build e fotos no CI como hoje
+- [ ] Casca pywebview com a ponte Python ↔ JS para as funções que já existem; build e fotos no CI como hoje — em andamento no ramo `sseg-2.0` (`web_app.py`, `web/index.html`, `api.py`; `--classico` abre a janela Tk). Build do ramo sai como **prévia** (prerelease `app-v2.0.0-previa`), que o programa nunca oferece como atualização; vai para o main quando o Átila aprovar as fotos
 - [ ] Barra de estado no alto: Programas, Pastas, Servidor, GitHub (com contador). Discreta quando está ok; o clique abre uma janelinha só daquele assunto
 - [ ] Tela principal = trabalho: Iniciar conversa (botões de demanda) + Processos em andamento
 - [ ] Menu lateral que recolhe (☰): Início, Buscar normas, Configuração, Ajuda (Reportar bug, Procurar atualização)

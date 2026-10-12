@@ -5,7 +5,7 @@ name: SSEG app (Windows)
 
 on:
   push:
-    branches: [main]
+    branches: [main, "sseg-2.0"]  # sseg-2.0: prévia (prerelease), nunca oferecida como atualização
     paths: ["sseg/app/**", "sseg/ferramentas/**", ".github/workflows/sseg-app.yml"]
   workflow_dispatch:
 
@@ -68,18 +68,21 @@ jobs:
           v=$(tr -d '[:space:]' < sseg/app/VERSION)
           grep -q "VERSAO = \"$v\"" sseg/app/sseg_app.py || { echo "VERSION ($v) diferente da VERSAO do sseg_app.py"; exit 1; }
           echo "V=$v" >> "$GITHUB_ENV"
-      - run: pip install "pyinstaller==6.*"
-      - run: pyinstaller --onefile --windowed --name SSEG --icon sseg/app/brasao.ico --add-data "sseg/app/brasao.png;." --add-data "sseg/app/brasao.ico;." --add-data "sseg/ferramentas/sol-entrar;sol-entrar" sseg/app/sseg_app.py
+      - run: pip install "pyinstaller==6.*" "pywebview==5.*" pillow
+      - run: pyinstaller --onefile --windowed --name SSEG --icon sseg/app/brasao.ico --add-data "sseg/app/brasao.png;." --add-data "sseg/app/brasao.ico;." --add-data "sseg/ferramentas/sol-entrar;sol-entrar" --add-data "sseg/app/web;web" sseg/app/sseg_app.py
       - name: Abrir a janela e fotografar (prova de que monta no Windows)
         shell: bash
         run: |
           pip install pillow
           mkdir -p "$APPDATA/SSEG"
           python -c "import json,os; json.dump({'clone': os.getcwd(), 'processos': os.path.join(os.getcwd(), 'ppci-teste')}, open(os.path.join(os.environ['APPDATA'], 'SSEG', 'config.json'), 'w'))"
-          SSEG_TESTE_FOTO=dist/previa.png timeout 120 python sseg/app/sseg_app.py
+          SSEG_TESTE_FOTO=dist/previa.png timeout 120 python sseg/app/sseg_app.py --classico
           test -s dist/previa.png
-          echo "::notice title=telas::$(ls dist/previa*.png | tr '\n' ' ')"
+          SSEG_TESTE_FOTO=dist/web.png timeout 180 python sseg/app/sseg_app.py || echo "::error title=web::a interface 2.0 não abriu ($?)"
+          test -s dist/web.png
+          echo "::notice title=telas::$(ls dist/previa*.png dist/web*.png | tr '\n' ' ')"
           if [ -s dist/previa-erros.txt ]; then echo "::error title=erro-em-tela::$(tr '\n' '|' < dist/previa-erros.txt | head -c 3000)"; exit 1; fi
+          if [ -s dist/web-erros.txt ]; then echo "::error title=erro-em-tela-web::$(tr '\n' '|' < dist/web-erros.txt | head -c 3000)"; exit 1; fi
       - name: SOL Entrar (atalho na Área de Trabalho)
         shell: bash
         run: |
@@ -87,16 +90,19 @@ jobs:
           echo "::notice title=sol-entrar::$(echo "$r" | tr -d '\r' | tr '\n' '|')"
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: app-v${{ env.V }}
-          name: SSEG ${{ env.V }}
+          tag_name: app-v${{ env.V }}${{ github.ref_name != 'main' && '-previa' || '' }}
+          name: SSEG ${{ env.V }}${{ github.ref_name != 'main' && ' (prévia)' || '' }}
+          prerelease: ${{ github.ref_name != 'main' }}
           body: Baixe o SSEG.exe abaixo. Na primeira vez o Windows pode avisar "Windows protegeu o computador" (programa sem assinatura) — Mais informações > Executar assim mesmo.
           files: |
             dist/SSEG.exe
             dist/previa*.png
-          make_latest: true
+            dist/web*.png
+          make_latest: ${{ github.ref_name == 'main' }}
       # Uma cópia "antiga" (versão 0.0.1) numa pasta com espaço se atualiza para a que acabou de
       # sair: o arquivo tem de ficar igual ao publicado e o programa tem de reabrir.
       - name: Atualização automática do programa
+        if: github.ref_name == 'main'  # baixa a última publicada: na prévia do ramo, não seria esta
         shell: pwsh
         run: |
           New-Item -ItemType Directory velho -Force | Out-Null
