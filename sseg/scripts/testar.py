@@ -332,6 +332,20 @@ def main():
                     os.environ.pop(k, None)
                 else:
                     os.environ[k] = v
+    # 17. a página da interface (web/index.html): funções essenciais presentes e JavaScript válido
+    import re as _re2, shutil as _sh
+    pag = open(os.path.join(RAIZ, "sseg", "app", "web", "index.html"), encoding="utf-8").read()
+    js = _re2.search(r"<script>(.*)</script>", pag, _re2.S).group(1)
+    essenciais = ["abrirProcesso", "renderProcesso", "pintarChecklist", "pintarCIA", "abrirConversa", "chatEnviar",
+                  "resposta", "caranguejo", "iniciarFluxo", "telaGit", "telaServidor"]
+    falta = [f for f in essenciais if not _re2.search(r"function %s\(" % f, js)]
+    caso("interface: funções essenciais presentes na página", not falta, str(falta))
+    if _sh.which("node"):
+        with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as fh:
+            fh.write(js)
+        p_ = subprocess.run(["node", "--check", fh.name], capture_output=True, text=True)
+        os.remove(fh.name)
+        caso("interface: JavaScript da página sem erro de sintaxe (node --check)", p_.returncode == 0, p_.stderr[-400:])
     pdfs = set(os.listdir(os.path.join(RAIZ, "sseg", "normas", "pdf")))
     mapa = set(busca.PDF_RT.values()) | set(busca.PDF_RT5.values()) | {p for _, p in busca.PDF_COMENTADA}
     caso("busca: todo PDF do mapa existe em normas/pdf", mapa <= pdfs, str(sorted(mapa - pdfs)))
