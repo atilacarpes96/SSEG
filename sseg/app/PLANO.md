@@ -92,6 +92,49 @@ Gasto em análises reais onde o token vai (início, meio ou fim da conversa).
   - [ ] opcional: o mesmo recibo por conversa no botão Gasto
 - Laya (Central de Voz) como triagem de demanda: **descartado** em 12/10/2026 — os botões já escolhem fluxo e modelo sem erro, e 15% de erro mandaria análise para modelo leve
 
+## Versão 2.0 a 2.3 — o programa vira a mesa de análise (aprovado pelo Átila em 12/10/2026)
+
+Decisões dele: interface em HTML; checklist preenchido pelos dois (analista e Claude); medidas na
+ordem do SOL. PSPCI fica fora (não cai na caixa do analista). Nenhuma skill nova: cada uma ganha
+uma seção curta "Quando chamada pelo SSEG.exe" (entra/sai em JSON) e as regras ficam num lugar só.
+Testes no PC do trabalho (SSH, Sincronizar processos, Abrir SOL) ficam para quando o Átila tiver acesso.
+
+### 2.0 — Interface (pywebview + HTML no WebView2 do Windows; continua um .exe só; a lógica atual fica igual)
+
+- [ ] Casca pywebview com a ponte Python ↔ JS para as funções que já existem; build e fotos no CI como hoje
+- [ ] Barra de estado no alto: Programas, Pastas, Servidor, GitHub (com contador). Discreta quando está ok; o clique abre uma janelinha só daquele assunto
+- [ ] Tela principal = trabalho: Iniciar conversa (botões de demanda) + Processos em andamento
+- [ ] Menu lateral que recolhe (☰): Início, Buscar normas, Configuração, Ajuda (Reportar bug, Procurar atualização)
+- [ ] Configuração: Programas, Instalar o que falta, Entrar no Claude Code, Atalho Abrir SOL, Tampermonkey, Pastas. Abre na primeira vez ou quando falta algo
+- [ ] Quadro de log sai da frente e vira "Detalhes"
+- [ ] Rodapé — gasto por processo em % da janela de 5 h ("A000…: ≈18% das 5 h"), sempre como estimativa (≈): o statusline grava o uso da janela num arquivo e o programa atribui o aumento ao processo aberto; nas chamadas do próprio programa (`claude -p --output-format json`), tokens → % pela proporção medida
+  - [ ] confirmar no PC o campo do statusline (o Claude Code 2.1.296 tem `rate_limits.five_hour` no código; ver se chega ao statusline e em que unidade)
+- [ ] Rodapé — subagentes como caranguejinhos (desenho próprio): cor = modelo (Haiku verde, Sonnet azul, Opus laranja), tamanho = esforço, animado enquanto trabalha, acena e sai ao terminar; mouse em cima: nome, tarefa, tempo. Substituem os botões Subagentes e Gasto
+
+### 2.1 — Janela "Análise do processo" (checklist marcado pelo analista)
+
+- [ ] Medidas de `especSeguranca.medidas` do JSON da API, na ordem do SOL
+- [ ] Itens de cada medida pelo Anexo L da RT 05 Parte 1.1 (`normas/rt-05-parte01-1-2016-ppci-completo.md`): todas com "Memorial"; as da L.1 ganham os itens de planta da coluna "A" (Saídas: alíneas a) a i) + lotação no grupo F; sinalização de orientação e iluminação de balizamento na alínea i)); as da L.2 só o Memorial
+- [ ] Laudo de inviabilidade (`especSeguranca.laudo.txtClob`; cada medida NAO_POSSUI / POSSUI_PARCIAL / POSSUI_TOTAL): um caranguejo leve lê o laudo uma vez e **só separa** as compensatórias por medida (extração, sem decidir); elas viram itens a conferir, inclusive em planta. Se a compensatória cobre o déficit é do analista e do principal (política de modelo). Ver `workflow/analise-laudo-inviabilidade-tecnica.md`
+- [ ] Faixa no topo: passos do fluxo (data de protocolo, definidora, tabela, laudo, análise anterior) + link para a pasta do processo
+- [ ] Reanálise: começa da CIA anterior; cada item "atendida" ou "REITERO"
+- [ ] Coluna "CIA em construção" com as exigências aceitas, na ordem
+- [ ] `analise.json` na pasta do processo: vai ao servidor pelo Sincronizar processos, nunca ao GitHub; comando no `sseg.py` para a conversa Local ler e escrever o mesmo arquivo
+
+### 2.2 — Caixa do item com o Claude redigindo junto (começar por saídas de emergência e extintores, testar em processo real)
+
+- [ ] Analista escreve o achado curto ("porta da escada 80 cm"); ao parar de digitar ou por botão, `claude -p` (Sonnet, esforço da política) redige pelo caminho normal (banco, normas comentadas, `ppci-notificacao-cia`) e devolve texto + fundamento ("RT 11, item 5.4.2")
+- [ ] O modelo não usa PDF: com o fundamento, o **programa** monta o [PDF] sem token (mecanismo da busca 1.2.2), só para o analista conferir
+- [ ] O que o analista escreveu fica; a redação vem como sugestão. Contador de 2.000 caracteres sempre visível
+- [ ] **Regra:** cada item guarda "rascunho do Claude" e "texto final" (o que o analista salvou). CIA, revisão e lançamento leem **só o texto final**; o revisor que acha problema num texto editado aponta e sugere, não reescreve. Motivo (Átila): ele editava a notificação, o modelo se confundia na revisão e voltava ao texto antigo
+- [ ] Redator como caranguejo azul sobre a caixa; vários itens formam fila visível; o gasto soma no % do processo
+
+### 2.3 — Esteira no fim da análise (absorve os itens 2 a 5 da 1.2)
+
+- [ ] Revisar CIA → Lançar no SOL → Arquivar e enviar, cada etapa com o seu caranguejo
+- [ ] Em andamento: animado, com a frase do que faz ("conferindo item 3 de 7 na RT 11"); próximas em cinza; feitas com ✓ e o tempo
+- [ ] Lançar no SOL só depois do "pode lançar" do analista, com a lista do que vai ser colado
+
 ## O que o Átila testa no PC (1.1.1)
 
 Abrir o SSEG.exe 1.0.6 que já está no PC: ele deve oferecer "Atualizar o programa (1.1.1)". É o
