@@ -48,7 +48,7 @@ def pdf_citado(texto):
     """Primeira norma citada num texto (modelo do banco) → nome do PDF, ou None."""
     t = normalizar(texto)
     achados = []
-    for m in re.finditer(r"\brt\s*(?:cbmrs)?\s*(?:n\.?\s*o?\.?\s*)?0?(\d{1,2})\b(?:\s*parte\s*0?(\d))?", t):
+    for m in re.finditer(r"\b(?:rt|resolucao tecnica)\s*(?:cbmrs)?\s*(?:n\.?\s*o?\.?\s*)?0?(\d{1,2})\b(?:\s*parte\s*0?(\d))?", t):
         pdf = PDF_RT5.get(m.group(2) or "") if m.group(1) == "5" else PDF_RT.get(m.group(1))
         achados.append((m.start(), pdf))
     for rx, pdf in ((r"\bdecreto\s*(?:estadual\s*)?(?:n\.?\s*o?\.?\s*)?51\.?803", "DECRETO51803.pdf"),

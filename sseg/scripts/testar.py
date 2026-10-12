@@ -13,7 +13,7 @@ Cada teste confere um comportamento que já quebrou ou que sustenta uma trava:
 - o painel_pedidos.py casa um trecho quebrado em várias linhas;
 - o hook do banco barra a alteração de um modelo validado.
 """
-import json, os, py_compile, subprocess, sys, tempfile, glob
+import base64, json, os, py_compile, subprocess, sys, tempfile, glob
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.normpath(os.path.join(AQUI, "..", ".."))
@@ -308,6 +308,30 @@ def main():
     caso("chat: os 6 blocos visuais ensinados ao Claude são JSON válido",
          {t for t, _ in blocos} == {"sseg-status", "sseg-dados", "sseg-definidora", "sseg-perguntas", "sseg-exigencia", "sseg-norma"}
          and all(_json_ok(b) for _, b in blocos), str([t for t, b in blocos if not _json_ok(b)]))
+    # 16. Reportar bug com imagem e log: o .zip leva texto e log limpos; imagens só no zip (nunca na issue)
+    import api as _api, sseg_app as _base, zipfile as _zip
+    with tempfile.TemporaryDirectory() as tmp:
+        velho = (_base.ler_config, _base.abrir, os.environ.get("HOME"), os.environ.get("USERPROFILE"))
+        try:
+            _base.ler_config = lambda: {"clone": RAIZ, "processos": os.path.join(tmp, "proc")}
+            _base.abrir = lambda c: None
+            os.environ["HOME"] = os.environ["USERPROFILE"] = tmp
+            a = _api.Api()
+            a._registro = ["abri A00012345AA001 em %s" % os.path.join(tmp, "proc", "A00012345AA001")]
+            a._eventos = ['{"t": "texto", "texto": "processo A00012345AA001"}']
+            r = a.relato_enviar("caiu ao salvar", ["data:image/png;base64," + base64.b64encode(b"\x89PNG fake").decode()])
+            z = _zip.ZipFile(os.path.join(tmp, "Documents", "SSEG-relatos", "relato-%s.zip" % r["id"]))
+            log = z.read("log.txt").decode("utf-8")
+            caso("Reportar bug: zip com relato, log limpo e imagem, salvo no PC sem SSH",
+                 r["onde"] == "pc" and set(z.namelist()) == {"relato.md", "log.txt", "imagens/imagem1.png"}
+                 and "A00012345AA001" not in log and tmp not in log, str(z.namelist()) + log[:200])
+        finally:
+            _base.ler_config, _base.abrir = velho[0], velho[1]
+            for k, v in (("HOME", velho[2]), ("USERPROFILE", velho[3])):
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
     pdfs = set(os.listdir(os.path.join(RAIZ, "sseg", "normas", "pdf")))
     mapa = set(busca.PDF_RT.values()) | set(busca.PDF_RT5.values()) | {p for _, p in busca.PDF_COMENTADA}
     caso("busca: todo PDF do mapa existe em normas/pdf", mapa <= pdfs, str(sorted(mapa - pdfs)))

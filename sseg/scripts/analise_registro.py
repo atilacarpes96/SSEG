@@ -68,11 +68,28 @@ def exigencia(pasta, texto, medida="", fundamento="", origem="claude"):
     """Do Claude, o texto entra como rascunho; do analista, já como final."""
     d = ler(pasta)
     e = {"id": _novo_id(d["exigencias"], "e"), "medida": medida.strip(), "fundamento": fundamento.strip(),
-         "rascunho": texto.strip() if origem == "claude" else "", "final": "" if origem == "claude" else texto.strip(),
+         "rascunho": texto.rstrip() if origem == "claude" else "", "final": "" if origem == "claude" else texto.rstrip(),
          "origem": origem, "quando": time.time()}
     d["exigencias"].append(e)
     gravar(pasta, d)
     return e
+
+
+def rascunho(pasta, id_, texto, medida="", fundamento=""):
+    """O redator devolve o rascunho para um item que JÁ existe (o "Pedir ao Claude" da coluna CIA).
+    Medida e fundamento só entram se o item ainda não tiver. O texto final do analista não é tocado."""
+    d = ler(pasta)
+    for e in d["exigencias"]:
+        if e["id"] == id_:
+            e["rascunho"] = texto.rstrip()
+            e["pedido"] = False
+            if medida.strip() and not e.get("medida"):
+                e["medida"] = medida.strip()
+            if fundamento.strip() and not e.get("fundamento"):
+                e["fundamento"] = fundamento.strip()
+            gravar(pasta, d)
+            return e
+    return None
 
 
 def atualizar(pasta, colecao, id_, **campos):
@@ -114,17 +131,36 @@ def args_parser(sp):
     sp.add_argument("--pasta", required=True, help="pasta do processo (print ppci/<código>)")
     sub = sp.add_subparsers(dest="acao", required=True)
     p = sub.add_parser("pendencia", help="algo que falta ver ou perguntar ao analista")
-    p.add_argument("texto")
-    p = sub.add_parser("exigencia", help="rascunho de exigência para a coluna CIA")
-    p.add_argument("texto")
+    p.add_argument("texto", help='texto, ou "-" para ler da entrada (heredoc)')
+    p = sub.add_parser("exigencia", help="rascunho de exigência para a coluna CIA (item novo)")
+    p.add_argument("texto", help='texto, ou "-" para ler da entrada (heredoc) — o jeito certo para texto com quebra de linha')
     p.add_argument("--medida", default="")
     p.add_argument("--fundamento", default="", help='ex.: "RT 11/2016, item 5.4.2"')
+    p = sub.add_parser("rascunho", help="rascunho para um item que já existe na coluna CIA (pedido pelo analista)")
+    p.add_argument("id", help="id do item (ex.: e3)")
+    p.add_argument("texto", help='texto, ou "-" para ler da entrada (heredoc)')
+    p.add_argument("--medida", default="")
+    p.add_argument("--fundamento", default="")
     p = sub.add_parser("passo", help="marca um passo do checklist (1 a 16)")
     p.add_argument("n", type=int)
     sub.add_parser("ver", help="mostra o registro (pendências e o texto final da CIA)")
 
 
+def _texto(t):
+    """"-" lê da entrada: texto longo, com quebra de linha, aspas e $, sem depender de escape."""
+    if t == "-":
+        import sys
+        return sys.stdin.read()
+    return t.replace("\\n", "\n")
+
+
 def principal(args):
+    if hasattr(args, "texto"):
+        args.texto = _texto(args.texto)
+    if args.acao == "rascunho":
+        e = rascunho(args.pasta, args.id, args.texto, args.medida, args.fundamento)
+        print("rascunho gravado no item %s" % args.id if e else "item %s não existe" % args.id)
+        return
     if args.acao == "pendencia":
         p = pendencia(args.pasta, args.texto)
         print("pendência %s registrada" % p["id"])

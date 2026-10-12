@@ -26,18 +26,33 @@ NOVA_JANELA_NAO = 0x08000000 if os.name == "nt" else 0
 
 # Só o que a análise precisa sem perguntar; o resto volta como "negado" e o analista decide.
 PERMITIDOS = ["Read", "Grep", "Glob", "Task", "Agent", "TodoWrite",
-              "Bash(python sseg/scripts/*)", "Bash(python3 sseg/scripts/*)", "Bash(py sseg/scripts/*)",
+              "Bash(python sseg/scripts/*)", "Bash(python3 sseg/scripts/*)", "Bash(py sseg/scripts/*)", "Bash(cd *)",
+              "PowerShell(python sseg/scripts/*)", "PowerShell(py sseg/scripts/*)", "PowerShell(cd *)",
               "Bash(pdftotext *)", "Bash(pdftoppm *)", "Bash(git status*)", "Bash(git log*)", "Bash(git diff*)"]
 
 INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe (não no terminal). Pasta do processo: {pasta}
 
 Regras desta janela:
 - Abrir a janela não é pedido. Faça só o que o analista pedir em cada mensagem; não rode o fluxo inteiro sozinho.
-- O analista vê três colunas: este chat, o checklist e a CIA em construção. Escreva nelas pelo sseg.py (sempre `python sseg/scripts/sseg.py ...`, a partir da pasta do SSEG):
+- O analista vê três colunas: este chat, o checklist e a CIA em construção. Escreva nelas pelo sseg.py. A pasta atual JÁ é a do SSEG: rode direto `python sseg/scripts/sseg.py ...`, sem `cd ... &&`. Texto com quebra de linha, aspas ou $ vai SEMPRE pela entrada (heredoc com "-"), nunca dentro da linha de comando:
+  - exigência nova para a CIA (o FIM fica sozinho na linha, sem espaço antes):
+```
+python sseg/scripts/sseg.py analise --pasta "{pasta}" exigencia - --medida "<nome da medida como no SOL>" --fundamento "RT xx/aaaa, item y" <<'FIM'
+
+- Deverá ...
+FIM
+```
+  - rascunho para um item que o analista te pediu ("Pedir ao Claude" na coluna CIA, com o id do item, ex.: e3) — grave NO MESMO item, não crie outro:
+```
+python sseg/scripts/sseg.py analise --pasta "{pasta}" rascunho e3 - --medida "<medida, se o item não tiver>" --fundamento "RT xx/aaaa, item y" <<'FIM'
+
+- Deverá ...
+FIM
+```
   - pendência que NÃO é pergunta (algo a ver na planta, dado que falta): `python sseg/scripts/sseg.py analise --pasta "{pasta}" pendencia "texto curto"` — uma por comando; diga também no chat.
-  - exigência para a CIA: `python sseg/scripts/sseg.py analise --pasta "{pasta}" exigencia "texto no formato da caixa do SOL" --medida "<nome da medida como no SOL>" --fundamento "RT xx/aaaa, item y"`. Entra como rascunho; o texto final é o que o analista salvar, e você nunca o reescreve: se achar problema num texto salvo, aponte e sugira.
   - passo do checklist concluído: `python sseg/scripts/sseg.py analise --pasta "{pasta}" passo N` (os 16 passos estão em sseg/workflow/checklist-analise.json).
   - o que o analista já salvou: `python sseg/scripts/sseg.py analise --pasta "{pasta}" ver`.
+  Exigência e rascunho entram como rascunho; o texto final é o que o analista salvar, e você nunca o reescreve: se achar problema num texto salvo, aponte e sugira.
 - Respostas curtas, em markdown simples (títulos, listas, negrito). O analista lê numa janela.
 - Ler o SOL pelo navegador não está disponível nesta janela: se precisar, diga o que falta e o analista traz."""
 
@@ -75,7 +90,7 @@ Como responder nesta janela (o analista não é do terminal; o programa desenha 
 {"rotulo": "RT 11/2016, item 5.4.2", "consulta": "largura porta"}
 ```
 - O botão "Pôr na CIA" do sseg-exigencia põe o texto como rascunho; o texto final continua sendo o que o analista salvar.
-- O [PDF] do sseg-norma é montado pelo programa: você não precisa abrir PDF para isso."""
+- O [PDF] do sseg-norma é montado pelo programa: você não precisa abrir PDF para isso. Um bloco por norma, e o "rotulo" com UMA norma só (o programa abre o PDF da primeira que achar no rótulo)."""
 
 
 def instrucoes_fluxo(fluxo):
@@ -199,7 +214,9 @@ class Conversa:
         elif t == "result":
             self.ocupado = False
             u = d.get("usage") or {}
-            negados = [x.get("tool_name", "") + ": " + json.dumps(x.get("tool_input", {}), ensure_ascii=False)[:160]
+            negados = [{"ferramenta": x.get("tool_name", ""),
+                        "resumo": str((x.get("tool_input") or {}).get("command") or (x.get("tool_input") or {}).get("file_path") or "")[:90],
+                        "detalhe": json.dumps(x.get("tool_input", {}), ensure_ascii=False)[:600]}
                        for x in d.get("permission_denials") or []]
             self.aoevento({"t": "fim", "erro": d.get("is_error", False), "negados": negados,
                            "tokens": sum(u.get(k, 0) or 0 for k in ("input_tokens", "output_tokens",

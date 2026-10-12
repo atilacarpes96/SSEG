@@ -12,9 +12,12 @@ import base64
 import json
 import os
 import re
+import shutil
 import subprocess
 import tempfile
+import time
 import webbrowser
+import zipfile
 
 import busca
 import chat
@@ -38,6 +41,7 @@ class Api:
         self._erros_js = []
         self._claude = None
         self._conversas = {}
+        self._eventos = []   # últimos eventos do chat (stream-json resumido), para o Reportar bug
 
     # ---------------------------------------------------------------- infraestrutura
     def _ligar(self, janela):
@@ -264,12 +268,12 @@ class Api:
         caminho = os.path.join(self._clone(), "sseg", "normas", "pdf", nome)
         pg = busca.pagina(caminho, consulta, rotulo, base.pdftotext())
         base.abrir_pdf(caminho, pg)
-        self._log("PDF %s aberto na página %d — conferir o item ali antes de citar." % (nome, pg))
+        self._log("PDF %s aberto na página %d (pedido: \"%s\") — conferir o item ali antes de citar." % (nome, pg, rotulo[:80]))
         return pg
 
     def processo_atualizar(self, codigo, colecao, id_, campos):
         """O programa muda resposta/feita da pendência e final/fundamento da exigência. Rascunho não."""
-        livres = {"pendencias": {"resposta", "feita", "enviada"}, "exigencias": {"final", "fundamento", "medida"}}[colecao]
+        livres = {"pendencias": {"resposta", "feita", "enviada"}, "exigencias": {"final", "fundamento", "medida", "achado", "pedido"}}[colecao]
         campos = {k: v for k, v in (campos or {}).items() if k in livres}
         return self._reg().atualizar(self._pasta_proc(codigo), colecao, id_, **campos)
 
@@ -336,6 +340,8 @@ class Api:
                 subs = []
 
             def aoevento(ev, chave=chave, pasta=pasta):
+                self._eventos.append("%s %s %s" % (time.strftime("%H:%M:%S"), chave, json.dumps(ev, ensure_ascii=False)[:500]))
+                del self._eventos[:-400]
                 if pasta and ev.get("t") == "fim" and ev.get("tokens"):
                     reg = self._reg()
                     d = reg.ler(pasta)
@@ -459,9 +465,62 @@ class Api:
         cfg = self._cfg()
         return relato.montar(base.VERSAO, descricao, "\n".join(self._registro), [cfg["clone"], cfg["processos"]])
 
-    def abrir_issue(self, descricao):
+    # ---- Reportar bug com imagem e log. Texto limpo vai à issue (repo público); imagens e log
+    # (podem ter dado de processo) vão ao servidor por SSH, fora do git, ou ficam numa pasta do PC.
+    def print_janela(self):
+        from PIL import ImageGrab
+        import io
+        j = self._janela
+        img = ImageGrab.grab(bbox=(j.x, j.y, j.x + j.width, j.y + j.height), all_screens=True)
+        buf = io.BytesIO()
+        img.save(buf, "PNG")
+        return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+    def _log_relato(self):
+        cfg = self._cfg()
+        partes = ["SSEG.exe %s" % base.VERSAO, "", "== Detalhes ==", *self._registro[-300:], "",
+                  "== Conversas (eventos) ==", *self._eventos[-300:], "", "== Erros da tela ==", *self._erros_js[-50:]]
+        return relato.limpar("\n".join(partes), [cfg["clone"], cfg["processos"]])
+
+    def relato_enviar(self, descricao, imagens):
+        """Monta o .zip (relato.md limpo, log.txt limpo, imagens). Com SSH: ao servidor em ~/sseg-relatos/.
+        Sem SSH: numa pasta do PC, que se abre. Devolve {id, onde}."""
+        cfg = self._cfg()
+        ident = time.strftime("%Y%m%d-%H%M%S")
+        tmp = os.path.join(tempfile.gettempdir(), "sseg-relato-%s.zip" % ident)
+        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr("relato.md", self.relato(descricao))
+            z.writestr("log.txt", self._log_relato())
+            for i, url in enumerate(imagens or [], 1):
+                m = re.match(r"data:image/(\w+);base64,(.*)", url or "", re.S)
+                if m:
+                    z.writestr("imagens/imagem%d.%s" % (i, m.group(1).replace("jpeg", "jpg")), base64.b64decode(m.group(2)))
+        if self.estado_servidor()["configurado"]:
+            try:
+                for cmd in (["ssh", "-o", "BatchMode=yes", "sseg-servidor", "mkdir -p sseg-relatos"],
+                            ["scp", "-o", "BatchMode=yes", tmp, "sseg-servidor:sseg-relatos/%s.zip" % ident]):
+                    p = subprocess.run(cmd, capture_output=True, text=True, timeout=120, creationflags=base.SEM_JANELA)
+                    if p.returncode:
+                        raise RuntimeError(p.stderr.strip()[-300:])
+                os.remove(tmp)
+                self._log("Relato %s com anexos enviado ao servidor (sseg-relatos/)." % ident)
+                return {"id": ident, "onde": "servidor"}
+            except (OSError, RuntimeError, subprocess.SubprocessError) as e:
+                self._log("✗ Não consegui mandar ao servidor (%s); salvei no PC." % e)
+        pasta = os.path.join(os.path.expanduser("~"), "Documents", "SSEG-relatos")
+        os.makedirs(pasta, exist_ok=True)
+        destino = os.path.join(pasta, "relato-%s.zip" % ident)
+        shutil.move(tmp, destino)
+        base.abrir(pasta)
+        self._log("Relato %s salvo em %s: mande o .zip por outro meio (tem imagens; não vai ao GitHub)." % (ident, destino))
+        return {"id": ident, "onde": "pc"}
+
+    def abrir_issue(self, descricao, anexo=None):
         cfg = self._cfg()
         corpo = self.relato(descricao)
+        if anexo:
+            corpo += "\n**Anexos (imagens e log):** relato %s, %s — não vão ao GitHub.\n" % (
+                anexo["id"], "no servidor" if anexo["onde"] == "servidor" else "salvos no PC do analista")
         primeira = descricao.strip().splitlines()[0][:80] if descricao.strip() else "Bug no SSEG.exe " + base.VERSAO
         titulo = relato.limpar(primeira, [cfg["clone"], cfg["processos"]])
         webbrowser.open(relato.url_issue(base.REPO, "[SSEG.exe %s] %s" % (base.VERSAO, titulo), corpo))
