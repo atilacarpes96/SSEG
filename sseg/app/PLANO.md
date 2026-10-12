@@ -82,6 +82,9 @@ Gasto em análises reais onde o token vai (início, meio ou fim da conversa).
 
 ## Versão 1.3 — ideias a amadurecer
 
+- [x] **SOL Entrar no programa** (1.3.0, autorizado pelo Átila em 12/10/2026, opcional): Atalhos → "Atalho Abrir SOL" copia `sseg/ferramentas/sol-entrar/` para `%LOCALAPPDATA%\SSEG\sol-entrar` e cria "Abrir SOL" na Área de Trabalho (ícone do Chrome, minimizado); "Tampermonkey" abre a extensão na Chrome Web Store, copia o script e mostra os 3 passos. A senha fica só no Chrome. O build cria o atalho num Windows limpo
+  - [ ] Átila testa no PC do trabalho: atalho → contagem de 5 s → entra
+
 - [ ] **Recibo do turno:** linha discreta no fim de cada resposta do Claude Code com o que foi usado de verdade — modelo, esforço, subagente, norma aberta (`sseg/normas/`, `normas/pdf/`, nome curto: "RT 14", "banco") e script (`sseg.py ...`). Feito por gancho `Stop` no `sseg_hooks.py`, que lê o registro da conversa e mostra a linha só ao analista (`systemMessage`): zero token e sem depender do Claude lembrar. Antes de construir:
   - [ ] testar se o `systemMessage` aparece na conversa Local do app do Claude, além do terminal
   - [ ] conferir se o registro grava o esforço; se não, mostrar o esforço com que o botão abriu a conversa
