@@ -21,7 +21,9 @@ NÃO FAZ
   - não grava nada de processo no repositório, não dá commit nem push, não força pull;
   - não faz o login do Claude Code pelo analista: só abre a janela dele.
 
-Lógica sem tkinter no topo (testável no servidor); a janela só é montada em `janela()`.
+Interface: desde a 2.0, HTML no WebView2 (web_app.py + web/index.html, ponte em api.py);
+`--classico` ou falta de WebView2 abre a janela Tk da 1.x, montada em `janela()`.
+Lógica sem tkinter no topo (testável no servidor).
 Build: .github/workflows/sseg-app.yml (PyInstaller no Windows do GitHub Actions).
 """
 
@@ -45,7 +47,7 @@ import instalar
 import relato
 import sol_entrar
 
-VERSAO = "1.3.0"
+VERSAO = "2.0.0"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -1034,5 +1036,14 @@ if __name__ == "__main__":
             fh.write(VERSAO + "\n")
     if "--atualizar" in sys.argv:  # sem janela: usado no teste do build
         atualizar_programa()
-    else:
+    elif "--classico" in sys.argv:
         janela()
+    else:
+        try:  # 2.0: interface HTML no WebView2; sem ele, a janela clássica
+            import web_app
+            web_app.principal(recurso)
+        except Exception as e:  # noqa: BLE001
+            if os.environ.get("SSEG_TESTE_FOTO"):
+                raise
+            sys.stderr.write("Interface nova indisponível (%s); abrindo a clássica.\n" % e)
+            janela()

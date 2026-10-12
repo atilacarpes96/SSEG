@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>SSEG</title>
+<style>
+:root {
+  --verm: #C32725; --verm-claro: #D93735; --amarelo: #FCD733; --laranja: #F39431;
+  --fundo: #F4F1EF; --cartao: #FFFFFF; --texto: #2B2422; --suave: #7A6E6A; --linha: #E6DFDB;
+  --ok: #2E7D32; --haiku: #3FA34D; --sonnet: #2F6FD6; --opus: #E8772E;
+  --raio: 8px; --sombra: 0 1px 2px rgba(60,30,20,.08), 0 4px 14px rgba(60,30,20,.06);
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { font: 14px/1.45 "Segoe UI", system-ui, sans-serif; color: var(--texto); background: var(--fundo);
+       display: flex; flex-direction: column; overflow: hidden; }
+button { font: inherit; cursor: pointer; }
+button:disabled { opacity: .55; cursor: progress; }
+input, textarea { font: inherit; color: var(--texto); }
+a { color: var(--verm); }
+
+/* ---- topo */
+header { background: var(--cartao); border-bottom: 3px solid var(--verm); display: flex; align-items: center;
+         gap: 12px; padding: 8px 14px; flex: none; }
+#b-menu { border: 0; background: none; font-size: 20px; padding: 4px 8px; border-radius: 6px; color: var(--texto); }
+#b-menu:hover { background: var(--fundo); }
+.marca { display: flex; align-items: center; gap: 10px; }
+.marca img { width: 38px; height: 38px; }
+.marca b { font-size: 20px; letter-spacing: .06em; color: var(--verm); line-height: 1; }
+.marca small { display: block; font-size: 10.5px; color: var(--suave); letter-spacing: .08em; text-transform: uppercase; }
+#estado { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.chip { border: 1px solid var(--linha); background: var(--cartao); border-radius: 999px; padding: 3px 11px 3px 9px;
+        font-size: 12.5px; color: var(--suave); display: inline-flex; align-items: center; gap: 6px; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #C9C0BC; }
+.chip.ok::before { background: var(--ok); }
+.chip.alerta { border-color: var(--verm); color: var(--verm); background: #FDF1F0; font-weight: 600; }
+.chip.alerta::before { background: var(--verm); }
+.chip.carregando::before { background: var(--amarelo); animation: pisca 1s infinite; }
+.chip .n { background: var(--verm); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; }
+.chip.novo { border-color: var(--laranja); color: #9A4A0E; background: #FEF4EA; font-weight: 600; }
+.chip.novo::before { background: var(--laranja); }
+@keyframes pisca { 50% { opacity: .3; } }
+
+/* ---- corpo */
+#corpo { flex: 1; display: flex; min-height: 0; position: relative; }
+nav { width: 0; overflow: hidden; background: var(--cartao); border-right: 1px solid var(--linha);
+      transition: width .18s ease; flex: none; }
+nav.aberto { width: 190px; }
+nav button { display: block; width: 190px; text-align: left; border: 0; background: none; padding: 11px 18px;
+             color: var(--texto); border-left: 3px solid transparent; }
+nav button:hover { background: var(--fundo); }
+nav button.ativo { border-left-color: var(--verm); font-weight: 600; color: var(--verm); }
+main { flex: 1; overflow-y: auto; padding: 18px 22px 24px; min-width: 0; }
+.tela { display: none; max-width: 980px; margin: 0 auto; }
+.tela.ativa { display: block; }
+h2 { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--verm); margin: 22px 0 8px; }
+h2:first-child { margin-top: 0; }
+.sub { color: var(--suave); font-size: 12.5px; margin: -4px 0 10px; }
+.cartao { background: var(--cartao); border-radius: var(--raio); box-shadow: var(--sombra); padding: 14px 16px; }
+
+/* ---- botões */
+.bt { border: 1px solid var(--linha); background: #F7F3F1; color: var(--texto); border-radius: 6px; padding: 7px 14px; }
+.bt:hover:not(:disabled) { background: #EFE8E5; }
+.bt.p { background: var(--verm); color: #fff; border-color: var(--verm); font-weight: 600; }
+.bt.p:hover:not(:disabled) { background: var(--verm-claro); }
+.bt.link { border: 0; background: none; color: var(--verm); padding: 2px 4px; font-size: 12.5px; text-decoration: underline; }
+.linha-bts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ---- conversas */
+#fluxos { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.fluxo { text-align: left; border: 1px solid var(--linha); background: var(--cartao); border-radius: var(--raio);
+         padding: 11px 13px; box-shadow: var(--sombra); display: flex; flex-direction: column; gap: 3px; }
+.fluxo:hover { border-color: var(--verm-claro); }
+.fluxo b { font-size: 14.5px; }
+.fluxo span { font-size: 12px; color: var(--suave); }
+.fluxo .modelo { display: inline-flex; align-items: center; gap: 5px; }
+.fluxo .modelo i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* ---- processos */
+table { width: 100%; border-collapse: collapse; }
+td, th { padding: 8px 6px; border-bottom: 1px solid var(--linha); text-align: left; vertical-align: middle; }
+th { font-size: 11.5px; color: var(--suave); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
+.tag { font-size: 11px; border-radius: 4px; padding: 1px 6px; background: var(--fundo); color: var(--suave); margin-right: 4px; }
+.vazio { color: var(--suave); padding: 14px 4px; }
+
+/* ---- busca */
+.busca-linha { display: flex; gap: 8px; }
+.busca-linha input { flex: 1; padding: 8px 10px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; }
+.grupo { margin-top: 18px; font-weight: 700; color: var(--verm); }
+.res { background: var(--cartao); border-radius: 6px; padding: 9px 12px; margin-top: 8px; border-left: 3px solid var(--linha); }
+.res.banco { border-left-color: var(--verm); }
+.res .onde { font-size: 11.5px; color: var(--suave); display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+.res pre { white-space: pre-wrap; font: 13px/1.45 "Segoe UI", system-ui, sans-serif; margin: 4px 0 0; }
+
+/* ---- configuração */
+.prog { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+.prog span::before { content: "✗ "; color: var(--verm); font-weight: 700; }
+.prog span.ok::before { content: "✓ "; color: var(--ok); }
+label.campo { display: block; font-size: 12px; color: var(--suave); margin: 8px 0 3px; }
+.campo-linha { display: flex; gap: 8px; }
+.campo-linha input { flex: 1; padding: 7px 9px; border: 1px solid var(--linha); border-radius: 6px; }
+.grade2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .grade2 { grid-template-columns: 1fr; } }
+
+/* ---- rodapé e detalhes */
+footer { flex: none; background: var(--cartao); border-top: 1px solid var(--linha); padding: 6px 14px;
+         display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--suave); }
+#ultima { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#caranguejos { display: flex; gap: 4px; align-items: flex-end; min-height: 22px; }
+#detalhes { flex: none; height: 0; overflow: hidden; background: #FBF9F8; border-top: 1px solid var(--linha);
+            transition: height .18s ease; }
+#detalhes.aberto { height: 170px; }
+#detalhes pre { margin: 0; padding: 8px 14px; height: 100%; overflow-y: auto; font: 12px/1.4 Consolas, monospace; white-space: pre-wrap; }
+
+/* ---- janelinha */
+#fundo-modal { position: fixed; inset: 0; background: rgba(40,20,15,.35); display: none; align-items: center;
+               justify-content: center; z-index: 10; padding: 16px; }
+#fundo-modal.aberto { display: flex; }
+.modal { background: var(--cartao); border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.25); width: min(640px, 100%);
+         max-height: 90vh; display: flex; flex-direction: column; }
+.modal header { border: 0; border-bottom: 1px solid var(--linha); display: block; padding: 14px 18px 10px; border-radius: 10px 10px 0 0; }
+.modal header h3 { margin: 0; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--verm); }
+.modal header p { margin: 4px 0 0; color: var(--suave); font-size: 12.5px; }
+.modal .meio { padding: 12px 18px; overflow-y: auto; }
+.modal .pe { padding: 10px 18px 14px; display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--linha); }
+.lista { font: 12.5px/1.5 Consolas, monospace; background: #FBF9F8; border: 1px solid var(--linha); border-radius: 6px;
+         padding: 8px 10px; max-height: 260px; overflow-y: auto; white-space: pre-wrap; }
+.conflito { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 4px 0; font-size: 12.5px; }
+.conflito code { flex: 1; min-width: 200px; }
+textarea { width: 100%; border: 1px solid var(--linha); border-radius: 6px; padding: 7px 9px; resize: vertical; }
+.aviso { font-size: 11.5px; color: var(--suave); margin-top: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <button id="b-menu" title="Menu">☰</button>
+  <div class="marca"><img src="brasao.png" alt=""><div><b>SSEG</b><small>CBMRS · Seção de Segurança</small></div></div>
+  <div id="estado">
+    <button class="chip carregando" id="e-programas" data-ir="config">Programas</button>
+    <button class="chip carregando" id="e-pastas" data-ir="config">Pastas</button>
+    <button class="chip carregando" id="e-servidor">Servidor</button>
+    <button class="chip carregando" id="e-github">GitHub</button>
+    <button class="chip novo" id="e-versao" hidden>Nova versão</button>
+  </div>
+</header>
+
+<div id="corpo">
+  <nav id="menu">
+    <button data-tela="inicio" class="ativo">Início</button>
+    <button data-tela="busca">Buscar normas</button>
+    <button data-tela="config">Configuração</button>
+    <button data-tela="ajuda">Ajuda</button>
+  </nav>
+  <main>
+    <section class="tela ativa" id="t-inicio">
+      <h2>Iniciar conversa</h2>
+      <p class="sub">Cada demanda abre o Claude Code com o modelo e o esforço da política de modelo.</p>
+      <div id="fluxos"></div>
+      <h2>Processos em andamento</h2>
+      <p class="sub">Pastas de processo na sua pasta dos processos, a mais mexida primeiro.</p>
+      <div class="cartao"><table><thead><tr><th>Processo</th><th>Mexido em</th><th></th><th></th></tr></thead>
+        <tbody id="processos"><tr><td class="vazio" colspan="4">Carregando…</td></tr></tbody></table></div>
+    </section>
+
+    <section class="tela" id="t-busca">
+      <h2>Buscar nas normas e no banco</h2>
+      <p class="sub">Localiza; não decide. Antes de usar um modelo do banco, diga por que este caso é o caso daquele
+        modelo. Texto convertido só localiza: conferir o item no PDF antes de citar.</p>
+      <form class="busca-linha" id="f-busca"><input id="q" placeholder='ex.: extintor "5 m"  ·  sem acento  ·  "frase entre aspas"'>
+        <button class="bt p">Buscar</button></form>
+      <div id="resultados"></div>
+    </section>
+
+    <section class="tela" id="t-config">
+      <h2>Programas</h2>
+      <div class="cartao">
+        <div class="prog" id="c-prog"></div>
+        <div class="linha-bts">
+          <button class="bt p" id="b-instalar">Instalar o que falta</button>
+          <button class="bt" id="b-entrar">Entrar no Claude Code</button>
+          <button class="bt" id="b-conf-prog">Conferir</button>
+        </div>
+      </div>
+      <h2>Pastas</h2>
+      <div class="cartao">
+        <label class="campo" for="p-clone">Pasta do SSEG (cópia do GitHub)</label>
+        <div class="campo-linha"><input id="p-clone"><button class="bt" data-escolher="p-clone">Escolher</button></div>
+        <label class="campo" for="p-proc">Pasta dos processos (print ppci)</label>
+        <div class="campo-linha"><input id="p-proc"><button class="bt" data-escolher="p-proc">Escolher</button></div>
+        <div class="linha-bts" style="margin-top:12px">
+          <button class="bt p" id="b-pastas">Criar / conferir pastas</button>
+          <button class="bt" id="b-abrir-proc">Abrir pasta dos processos</button>
+          <button class="bt" id="b-abrir-clone">Abrir pasta do SSEG</button>
+        </div>
+      </div>
+      <h2>SOL sem teclado (opcional)</h2>
+      <div class="cartao">
+        <p class="sub" style="margin:0 0 10px">Atalho "Abrir SOL" e o script do Tampermonkey: entra com a senha que o Chrome já guarda.</p>
+        <div class="linha-bts"><button class="bt" id="b-sol">Atalho Abrir SOL</button><button class="bt" id="b-tamper">Tampermonkey</button></div>
+      </div>
+    </section>
+
+    <section class="tela" id="t-ajuda">
+      <h2>Ajuda</h2>
+      <div class="cartao linha-bts">
+        <button class="bt p" id="b-painel">Painel SSEG · manual</button>
+        <button class="bt" id="b-procurar">Procurar atualização</button>
+        <button class="bt" id="b-bug">Reportar bug</button>
+        <button class="bt" id="b-subs">Subagentes</button>
+        <button class="bt" id="b-gasto">Gasto</button>
+      </div>
+      <p class="aviso">Ferramenta de uso interno da SSeg — não é sistema oficial do CBMRS.</p>
+    </section>
+  </main>
+</div>
+
+<div id="detalhes"><pre id="log"></pre></div>
+<footer>
+  <span id="versao">SSEG</span>
+  <button class="bt link" id="b-detalhes">Detalhes</button>
+  <span id="ultima"></span>
+  <div id="caranguejos" title="Subagentes trabalhando"></div>
+</footer>
+
+<div id="fundo-modal"><div class="modal" role="dialog">
+  <header><h3 id="m-titulo"></h3><p id="m-sub"></p></header>
+  <div class="meio" id="m-meio"></div>
+  <div class="pe" id="m-pe"></div>
+</div></div>
+
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, attrs = {}, ...filhos) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "on") for (const [ev, fn] of Object.entries(v)) e.addEventListener(ev, fn);
+    else if (k === "class") e.className = v;
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const f of filhos.flat()) if (f != null) e.append(f.nodeType ? f : document.createTextNode(String(f)));
+  return e;
+};
+const ESTADO = { info: null, git: null };
+const COR = m => /haiku/i.test(m) ? "var(--haiku)" : /opus/i.test(m) ? "var(--opus)" : "var(--sonnet)";
+
+window.onerror = (msg, src, lin, col, err) => { try { window.pywebview.api.erro_js(msg + " @" + lin + ":" + col); } catch (e) {} };
+window.addEventListener("unhandledrejection", ev => { try { window.pywebview.api.erro_js("promessa: " + (ev.reason && ev.reason.message || ev.reason)); } catch (e) {} });
+
+const SSEG = window.SSEG = {
+  log(linhas) {
+    const pre = $("#log");
+    pre.textContent += linhas.join("\n") + "\n";
+    pre.scrollTop = pre.scrollHeight;
+    const ult = linhas.filter(l => l.trim()).pop();
+    if (ult) $("#ultima").textContent = ult;
+  },
+};
+
+// Chama o Python; o botão fica ocupado enquanto roda; erro vai para Detalhes e para o rodapé.
+async function api(nome, args = [], botao = null) {
+  if (botao) botao.disabled = true;
+  try {
+    return await window.pywebview.api[nome](...args);
+  } catch (e) {
+    const msg = (e && (e.message || e.toString())) || "erro";
+    SSEG.log(["✗ " + msg]);
+    throw e;
+  } finally {
+    if (botao) botao.disabled = false;
+  }
+}
+
+async function copiar(texto) {
+  try { await navigator.clipboard.writeText(texto); }
+  catch (e) { await api("copiar", [texto]); }
+}
+
+// ---- navegação
+function ir(tela) {
+  document.querySelectorAll(".tela").forEach(t => t.classList.toggle("ativa", t.id === "t-" + tela));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
+  if (tela === "config") carregarConfig();
+  if (tela === "inicio") carregarProcessos();
+}
+$("#b-menu").onclick = () => $("#menu").classList.toggle("aberto");
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => ir(b.dataset.tela));
+document.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => ir(b.dataset.ir));
+$("#b-detalhes").onclick = () => $("#detalhes").classList.toggle("aberto");
+
+// ---- janelinha
+function modal(titulo, sub, meio, botoes) {
+  $("#m-titulo").textContent = titulo;
+  $("#m-sub").textContent = sub || "";
+  $("#m-meio").replaceChildren(...[].concat(meio));
+  $("#m-pe").replaceChildren(...botoes.map(([txt, fn, prim]) => el("button", { class: "bt" + (prim ? " p" : ""), on: { click: ev => fn(ev.currentTarget) } }, txt)));
+  $("#fundo-modal").classList.add("aberto");
+}
+const fechar = () => $("#fundo-modal").classList.remove("aberto");
+$("#fundo-modal").addEventListener("click", ev => { if (ev.target.id === "fundo-modal") fechar(); });
+document.addEventListener("keydown", ev => { if (ev.key === "Escape") fechar(); });
+
+// ---- barra de estado
+function chip(id, classe, texto, n) {
+  const c = $(id);
+  c.className = "chip " + classe;
+  c.replaceChildren(texto, ...(n ? [" ", el("span", { class: "n" }, n)] : []));
+}
+async function estadoProgramas() {
+  try {
+    const p = await api("estado_programas");
+    ESTADO.programas = p;
+    chip("#e-programas", p.ok ? "ok" : "alerta", p.ok ? "Programas" : p.falta ? "Programas: falta instalar" : "Programas: falta entrar");
+    pintarProgramas();
+  } catch (e) { chip("#e-programas", "alerta", "Programas: erro"); }
+}
+async function estadoPastas() {
+  try {
+    const p = await api("estado_pastas");
+    chip("#e-pastas", p.ok ? "ok" : "alerta", p.ok ? "Pastas" : "Pastas: conferir");
+    return p;
+  } catch (e) { chip("#e-pastas", "alerta", "Pastas: erro"); }
+}
+async function estadoServidor() {
+  const s = await api("estado_servidor");
+  chip("#e-servidor", s.configurado ? "ok" : "", s.configurado ? "Servidor" : "Servidor: sem SSH");
+  $("#e-servidor").title = s.configurado ? "Sincronizar processos com o servidor" : "Este PC não tem a chave do servidor (opcional)";
+}
+async function estadoGithub() {
+  chip("#e-github", "carregando", "GitHub");
+  try {
+    const g = await api("estado_github");
+    ESTADO.git = g;
+    if (g.erro) return chip("#e-github", "alerta", "GitHub: erro");
+    const n = (g.atras || 0) + (g.frente || 0) + (g.sujos ? g.sujos.length : 0);
+    chip("#e-github", n ? "alerta" : "ok", "GitHub", n || null);
+  } catch (e) { chip("#e-github", "alerta", "GitHub: erro"); }
+}
+async function estadoVersao() {
+  try {
+    const nova = await api("versao_nova");
+    if (nova) { const c = $("#e-versao"); c.hidden = false; c.textContent = "Nova versão " + nova; c.dataset.v = nova; }
+  } catch (e) {}
+}
+
+// ---- GitHub (janelinha do chip)
+$("#e-github").onclick = async ev => {
+  const g = ESTADO.git;
+  const linhas = [];
+  if (g && g.erro) linhas.push(g.erro);
+  if (g && g.atras) { linhas.push("↓ " + g.atras + " atualização(ões) no GitHub:"); g.commits.slice(0, 12).forEach(c => linhas.push("   " + c)); }
+  if (g && g.skills && g.skills.length) linhas.push("Skills que mudaram (saem em .zip para subir na conta): " + g.skills.join(", "));
+  if (g && g.instrucoes) linhas.push("O campo Instruções mudou: prompt na aba Atualizações do Painel SSEG.");
+  if (g && g.frente) linhas.push("↑ " + g.frente + " commit(s) deste PC ainda não enviados.");
+  if (g && g.sujos && g.sujos.length) linhas.push("✎ " + g.sujos.length + " arquivo(s) mudado(s) neste PC sem commit.");
+  if (!linhas.length) linhas.push("Tudo em dia com o GitHub.");
+  modal("GitHub", "Traz o que chegou, faz o commit do que mudou neste PC e envia. Dado de processo fica fora. Nunca força nada.",
+    el("div", { class: "lista" }, linhas.join("\n")), [
+      ...(g && g.atras ? [["Atualizar agora", async b => { await api("git_atualizar", [], b); fechar(); estadoGithub(); carregarInicio(); }, true]] : []),
+      ["Sincronizar (commit e envio)", b => telaGit(b), !(g && g.atras)],
+      ["Conferir de novo", async b => { await estadoGithub(); $("#e-github").click(); }],
+      ["Fechar", fechar],
+    ]);
+};
+async function telaGit(botao, info) {
+  info = info || await api("git_conferir", [], botao);
+  const linhas = [];
+  if (info.atras) linhas.push("↓ " + info.atras + " commit(s) no GitHub a trazer");
+  if (info.frente) linhas.push("↑ " + info.frente + " commit(s) deste PC ainda não enviados");
+  info.itens.slice(0, 40).forEach(i => linhas.push(i.fora ? "  ✗ " + i.arquivo + "  — fica fora: " + i.fora : "  " + i.cod.padEnd(2) + " " + i.arquivo));
+  if (!linhas.length) linhas.push("Nada a fazer: este PC e o GitHub estão iguais.");
+  const campos = [];
+  if (info.itens.length) {
+    campos.push(el("label", { class: "campo" }, "O que mudou (mensagem do commit)"), el("textarea", { id: "g-msg", rows: 2 }));
+    if (!info.nome) campos.push(el("label", { class: "campo" }, "Seu nome (fica no commit)"), el("textarea", { id: "g-nome", rows: 1 }));
+    if (!info.email) campos.push(el("label", { class: "campo" }, "Seu e-mail do GitHub"), el("textarea", { id: "g-email", rows: 1 }));
+  }
+  const algo = info.itens.length || info.atras || info.frente;
+  modal("Sincronizar com o GitHub", "Confira a lista: o que tem ✗ não vai.", [el("div", { class: "lista" }, linhas.join("\n")), ...campos], [
+    ...(algo ? [["Sincronizar", async b => {
+      const v = id => ($(id) ? $(id).value.trim() : "");
+      if (info.itens.length && !v("#g-msg")) return SSEG.log(["✗ Escreva o que mudou (mensagem do commit)."]);
+      await api("git_sincronizar", [v("#g-msg"), v("#g-nome"), v("#g-email")], b);
+      fechar(); estadoGithub();
+    }, true]] : []),
+    ["Fechar", fechar],
+  ]);
+}
+
+// ---- Servidor (janelinha do chip): Sincronizar processos
+$("#e-servidor").onclick = async ev => {
+  const s = await api("estado_servidor");
+  if (!s.configurado) return modal("Servidor", "Opcional: só para quem tem o servidor do SSEG.",
+    el("div", { class: "lista" }, "Este PC não tem o apelido sseg-servidor em ~/.ssh/config.\nSem ele, os processos ficam só neste PC (nada muda na análise)."), [["Fechar", fechar]]);
+  chip("#e-servidor", "carregando", "Servidor");
+  try { telaServidor(await api("servidor_planejar")); } finally { estadoServidor(); }
+};
+function telaServidor(plano) {
+  if (!(plano.sobe.length || plano.desce.length || plano.conflito.length))
+    return modal("Sincronizar processos", "Planta não vai nem vem. Nada passa pelo GitHub.",
+      el("div", { class: "lista" }, "PC e servidor iguais (" + plano.iguais + " arquivo(s))."), [["Fechar", fechar]]);
+  const partes = [];
+  for (const [tit, lst, seta] of [["Sobe para o servidor", plano.sobe, "↑"], ["Desce para o PC", plano.desce, "↓"]])
+    if (lst.length) partes.push(tit + " (" + lst.length + ")\n" + lst.slice(0, 15).map(k => "  " + seta + " " + k).join("\n") + (lst.length > 15 ? "\n  … e mais " + (lst.length - 15) : ""));
+  const meio = [el("div", { class: "lista" }, partes.join("\n\n") || "Só conflitos.")];
+  if (plano.conflito.length) {
+    meio.push(el("p", { class: "sub", style: "margin:12px 0 4px;color:var(--verm)" }, "Mudou dos dois lados — escolha qual fica:"));
+    plano.conflito.forEach((k, i) => meio.push(el("div", { class: "conflito" }, el("code", {}, k),
+      ...[["deixar", "deixar como está"], ["servidor", "do servidor"], ["pc", "do PC"]].map(([v, r]) =>
+        el("label", {}, el("input", { type: "radio", name: "cf" + i, value: v, checked: v === "deixar", "data-k": k }), " " + r)))));
+  }
+  modal("Sincronizar processos", "Planta não vai nem vem. Nada passa pelo GitHub.", meio, [
+    ["Sincronizar", async b => {
+      const esc = {};
+      document.querySelectorAll("#m-meio input[type=radio]:checked").forEach(r => esc[r.dataset.k] = r.value);
+      await api("servidor_aplicar", [esc], b); fechar(); carregarProcessos();
+    }, true],
+    ["Cancelar", fechar],
+  ]);
+}
+
+// ---- Nova versão
+$("#e-versao").onclick = () => modal("Atualizar o programa", "Baixa a versão " + ($("#e-versao").dataset.v || "") + ", fecha e abre de novo sozinho.",
+  el("p", {}, "Se o Windows avisar, clique em Mais informações → Executar assim mesmo."),
+  [["Atualizar o programa", b => api("atualizar_programa", [], b), true], ["Agora não", fechar]]);
+
+// ---- Início: conversas e processos
+function pintarFluxos(fluxos) {
+  const g = $("#fluxos");
+  if (!fluxos.length) return g.replaceChildren(el("p", { class: "vazio" }, "Atualize o SSEG desta pasta para ver os tipos de conversa (chip GitHub)."));
+  g.replaceChildren(...fluxos.map(f => el("button", { class: "fluxo", on: { click: () => iniciarFluxo(f) } },
+    el("b", {}, f.titulo),
+    el("span", { class: "modelo" }, el("i", { style: "background:" + COR(f.modelo) }), f.modelo_texto),
+    el("span", {}, f.skill ? "skill " + f.skill : "sem skill"))));
+}
+function iniciarFluxo(f, codigo = "") {
+  const meio = [];
+  if (f.pede_codigo) meio.push(el("label", { class: "campo" }, "Código do processo"),
+    el("input", { id: "f-cod", value: codigo, placeholder: "A00012345AA001", style: "padding:7px 9px;border:1px solid var(--linha);border-radius:6px;font-family:Consolas,monospace;width:220px" }));
+  meio.push(el("p", { class: "sub", style: "margin-top:12px" }, "Abre o Claude Code numa janela própria, na pasta do SSEG. Para usar o app do Claude: \"Copiar o prompt\" e escolha lá " + f.modelo_texto + "."));
+  if (f.subagentes && f.subagentes.length) meio.push(el("p", { class: "sub" }, "Subagentes desta conversa: " + f.subagentes.join(", ")));
+  const cod = () => ($("#f-cod") ? $("#f-cod").value.trim() : "");
+  modal(f.titulo, f.modelo_texto + " · " + (f.skill ? "skill " + f.skill : "sem skill"), meio, [
+    ["Abrir no terminal", async b => { await api("abrir_conversa", [f.id, cod()], b); fechar(); }, true],
+    ["Copiar o prompt", async b => { const p = await api("prompt", [f.id, cod()], b); await copiar(p); SSEG.log(["— Conversa — prompt copiado. No app do Claude: Novo → Local → pasta do SSEG → " + f.modelo_texto + ", e cole."]); fechar(); }],
+    ["Cancelar", fechar],
+  ]);
+  if ($("#f-cod")) $("#f-cod").focus();
+}
+async function carregarProcessos() {
+  const corpo = $("#processos");
+  let lst;
+  try { lst = await api("processos"); } catch (e) { return; }
+  if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 4 }, "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
+  const analise = (ESTADO.info && ESTADO.info.fluxos || []).find(f => f.id === "analise");
+  corpo.replaceChildren(...lst.map(p => el("tr", {},
+    el("td", { class: "cod" }, p.codigo),
+    el("td", {}, new Date(p.quando * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })),
+    el("td", {}, el("span", { class: "tag" }, p.arquivos + " arquivo(s)"), p.cia ? el("span", { class: "tag" }, "CIA") : null),
+    el("td", { style: "text-align:right" },
+      el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "abrir pasta"),
+      analise ? el("button", { class: "bt link", on: { click: () => iniciarFluxo(analise, p.codigo) } }, "analisar") : null))));
+}
+async function carregarInicio() {
+  ESTADO.info = await api("inicio");
+  $("#versao").textContent = "SSEG v" + ESTADO.info.versao;
+  pintarFluxos(ESTADO.info.fluxos);
+  carregarProcessos();
+  return ESTADO.info;
+}
+
+// ---- Busca
+$("#f-busca").onsubmit = async ev => {
+  ev.preventDefault();
+  const q = $("#q").value.trim();
+  if (!q) return;
+  const r = await api("buscar", [q], ev.submitter);
+  const out = [];
+  if (!r.resultados.length) out.push(el("p", { class: "vazio" }, "Nada encontrado para: " + q + ". Tente menos termos ou um sinônimo. Ausência aqui não prova ausência na norma: conferir no PDF."));
+  let grupo = null;
+  for (const x of r.resultados) {
+    if (x.grupo !== grupo) { grupo = x.grupo; out.push(el("div", { class: "grupo" }, r.grupos[grupo])); }
+    out.push(el("div", { class: "res " + x.grupo },
+      el("div", { class: "onde" }, (x.secao || "(sem seção)") + " — " + x.arquivo + ":" + x.linha,
+        el("button", { class: "bt link", on: { click: async () => { await copiar(x.copiar); SSEG.log(["Copiado da busca."]); } } }, "copiar"),
+        x.tem_pdf ? el("button", { class: "bt link", on: { click: ev => api("ver_pdf", [x.pdf, q, x.texto], ev.currentTarget) } }, "PDF") : null),
+      el("pre", {}, x.texto)));
+  }
+  if (r.resultados.length >= 80) out.push(el("p", { class: "vazio" }, "Mostrando os 80 primeiros: refine a busca."));
+  $("#resultados").replaceChildren(...out);
+};
+
+// ---- Configuração
+function pintarProgramas() {
+  const p = ESTADO.programas;
+  if (!p) return;
+  $("#c-prog").replaceChildren(...p.itens.map(i => el("span", { class: i.ok ? "ok" : "" }, i.nome)));
+  $("#b-instalar").disabled = !p.falta;
+}
+async function carregarConfig() {
+  const p = await estadoPastas();
+  if (p) { $("#p-clone").value = p.clone; $("#p-proc").value = p.processos; }
+  pintarProgramas();
+}
+$("#b-instalar").onclick = async ev => { SSEG.log(["— Instalando —"]); $("#detalhes").classList.add("aberto"); await api("instalar_tudo", [], ev.currentTarget); estadoProgramas(); };
+$("#b-entrar").onclick = ev => api("entrar_claude", [], ev.currentTarget);
+$("#b-conf-prog").onclick = () => { chip("#e-programas", "carregando", "Programas"); estadoProgramas(); };
+document.querySelectorAll("[data-escolher]").forEach(b => b.onclick = async () => {
+  const campo = $("#" + b.dataset.escolher);
+  const r = await api("escolher_pasta", [campo.value], b);
+  if (r) campo.value = r;
+});
+$("#b-pastas").onclick = async ev => {
+  await api("criar_pastas", [$("#p-clone").value, $("#p-proc").value], ev.currentTarget);
+  $("#detalhes").classList.add("aberto");
+  estadoPastas(); estadoGithub(); carregarInicio();
+};
+$("#b-abrir-proc").onclick = () => api("abrir_pasta", ["processos"]);
+$("#b-abrir-clone").onclick = () => api("abrir_pasta", ["clone"]);
+$("#b-sol").onclick = async ev => { const l = await api("sol_atalho", [], ev.currentTarget); modal("Atalho Abrir SOL", "", el("div", { class: "lista" }, l.join("\n")), [["Fechar", fechar]]); };
+$("#b-tamper").onclick = async ev => {
+  const t = await api("sol_tampermonkey", [], ev.currentTarget);
+  await copiar(t.script);
+  modal("Tampermonkey (SOL Entrar)", "O script já está copiado. Só com o mouse, no Chrome:",
+    [el("ol", {}, ...t.passos.map(p => el("li", { style: "margin:6px 0" }, p))),
+     el("p", { class: "sub" }, "Depois: dois cliques em \"Abrir SOL\" na Área de Trabalho. Aparece uma contagem de 5 s no topo da página — clique nela para cancelar.")],
+    [["Copiar o script de novo", async () => { await copiar(t.script); SSEG.log(["Script copiado."]); }], ["Fechar", fechar]]);
+};
+
+// ---- Ajuda
+$("#b-painel").onclick = () => api("abrir_url", [ESTADO.info.painel]);
+$("#b-procurar").onclick = async ev => {
+  const nova = await api("versao_nova", [], ev.currentTarget);
+  if (nova) { await estadoVersao(); $("#e-versao").click(); }
+  else SSEG.log(["Você já está na versão mais nova do programa (" + ESTADO.info.versao + ")."]);
+};
+$("#b-subs").onclick = async ev => {
+  const l = await api("subagentes", [], ev.currentTarget);
+  const txt = l.map(a => a.nome + "  —  " + a.modelo + (a.aviso ? "   ⚠ " + a.aviso : "") + "\n   usado em: " + (a.usado_em.join(", ") || "nenhum tipo de conversa") + "\n   " + a.descricao.slice(0, 150)).join("\n\n");
+  modal("Subagentes", "Quem chama é a conversa principal, quando a skill manda.", el("div", { class: "lista" }, txt || "Nenhum subagente."), [["Fechar", fechar]]);
+};
+$("#b-gasto").onclick = async ev => {
+  const t = await api("gasto", [], ev.currentTarget);
+  modal("Gasto do Claude Code", "Conversas do Claude Code na pasta do SSEG neste PC, em tokens.", el("div", { class: "lista", style: "max-height:380px" }, t), [["Copiar", () => copiar(t)], ["Fechar", fechar]]);
+};
+$("#b-bug").onclick = async () => {
+  const desc = el("textarea", { rows: 4, placeholder: "O que você clicou, o que esperava, o que apareceu" });
+  const prev = el("div", { class: "lista" });
+  const atualizar = async () => { prev.textContent = await api("relato", [desc.value]); };
+  desc.addEventListener("input", () => { clearTimeout(desc._t); desc._t = setTimeout(atualizar, 300); });
+  modal("Reportar bug", "Vai sem código de processo, sem caminho de pasta e sem nome de planta, PDF ou CIA. Confira antes de enviar.",
+    [desc, el("label", { class: "campo" }, "Vai junto (já limpo):"), prev], [
+      ["Abrir issue no GitHub", async b => { await api("abrir_issue", [desc.value], b); fechar(); }, true],
+      ["Copiar para a conversa", async () => { await copiar(await api("relato", [desc.value])); SSEG.log(["Relato copiado: cole na conversa do servidor."]); fechar(); }],
+      ["Cancelar", fechar]]);
+  atualizar();
+};
+
+// ---- Fotos do build (SSEG_TESTE_FOTO): cada passo deixa uma tela à mostra
+SSEG.tour = async passo => {
+  fechar();
+  if (passo === "inicio") ir("inicio");
+  if (passo === "menu") { $("#menu").classList.add("aberto"); ir("inicio"); }
+  if (passo === "busca") { $("#menu").classList.remove("aberto"); ir("busca"); $("#q").value = 'extintor "5 m"'; $("#f-busca").requestSubmit(); }
+  if (passo === "config") ir("config");
+  if (passo === "conversa") { ir("inicio"); iniciarFluxo(ESTADO.info.fluxos[1] || ESTADO.info.fluxos[0], "A00012345AA001"); }
+  if (passo === "github") telaGit(null, { atras: 1, frente: 0, nome: "", email: "", itens: [{ cod: "M", arquivo: "sseg/normas/exemplo.md" }, { cod: "??", arquivo: "CIA 1.pdf", fora: "CIA de processo" }] });
+  if (passo === "servidor") telaServidor({ sobe: ["A00012345AA001/1.json"], desce: ["A00012345AA002/CIA 1.pdf"], conflito: ["A00012345AA003/analise.json"], iguais: 4 });
+  if (passo === "bug") $("#b-bug").click();
+  if (passo === "detalhes") { $("#detalhes").classList.add("aberto"); }
+};
+
+// ---- partida
+window.addEventListener("pywebviewready", async () => {
+  const info = await carregarInicio();
+  SSEG.log(["SSEG " + info.versao + "."]);
+  estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub(); estadoVersao();
+  if (info.primeira_vez) ir("config");
+});
+</script>
+</body>
+</html>
