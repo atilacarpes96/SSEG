@@ -87,7 +87,7 @@ Gasto em análises reais onde o token vai (início, meio ou fim da conversa).
 
 - [ ] **Recibo do turno:** linha discreta no fim de cada resposta do Claude Code com o que foi usado de verdade — modelo, esforço, subagente, norma aberta (`sseg/normas/`, `normas/pdf/`, nome curto: "RT 14", "banco") e script (`sseg.py ...`). Feito por gancho `Stop` no `sseg_hooks.py`, que lê o registro da conversa e mostra a linha só ao analista (`systemMessage`): zero token e sem depender do Claude lembrar. Antes de construir:
   - [ ] testar se o `systemMessage` aparece na conversa Local do app do Claude, além do terminal
-  - [ ] conferir se o registro grava o esforço; se não, mostrar o esforço com que o botão abriu a conversa
+  - [ ] conferir se o registro grava o esforço; se não, mostrar o esforço com que o botão abriu a conversa (o statusline recebe `effort` e `model` — mas só no terminal)
   - [ ] decidir os alertas: fluxo pesado rodando em modelo leve; norma citada sem o PDF aberto
   - [ ] opcional: o mesmo recibo por conversa no botão Gasto
 - Laya (Central de Voz) como triagem de demanda: **descartado** em 12/10/2026 — os botões já escolhem fluxo e modelo sem erro, e 15% de erro mandaria análise para modelo leve
@@ -108,7 +108,7 @@ Testes no PC do trabalho (SSH, Sincronizar processos, Abrir SOL) ficam para quan
 - [ ] Configuração: Programas, Instalar o que falta, Entrar no Claude Code, Atalho Abrir SOL, Tampermonkey, Pastas. Abre na primeira vez ou quando falta algo
 - [ ] Quadro de log sai da frente e vira "Detalhes"
 - [ ] Rodapé — gasto por processo em % da janela de 5 h ("A000…: ≈18% das 5 h"), sempre como estimativa (≈): o statusline grava o uso da janela num arquivo e o programa atribui o aumento ao processo aberto; nas chamadas do próprio programa (`claude -p --output-format json`), tokens → % pela proporção medida
-  - [ ] confirmar no PC o campo do statusline (o Claude Code 2.1.296 tem `rate_limits.five_hour` no código; ver se chega ao statusline e em que unidade)
+  - [x] campo confirmado no PC (12/10/2026, Claude Code 2.1.296): o statusline recebe `rate_limits.five_hour.used_percentage` (inteiro 0–100, degraus de 1%) e `resets_at` (época Unix, s); também `seven_day`, `effort`, `model`, `session_id`, `transcript_path`. **Só no Claude Code de terminal** — o app de desktop não roda statusline. Degrau de 1% zera processo curto: somar tokens do processo e calibrar tokens→% pela variação do %
 - [ ] Rodapé — subagentes como caranguejinhos (desenho próprio): cor = modelo (Haiku verde, Sonnet azul, Opus laranja), tamanho = esforço, animado enquanto trabalha, acena e sai ao terminar; mouse em cima: nome, tarefa, tempo. Substituem os botões Subagentes e Gasto
 
 ### 2.1 — Janela "Análise do processo" (checklist marcado pelo analista)
