@@ -3,7 +3,7 @@
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sseg_hooks.py\" inicio", "timeout": 45, "statusMessage": "SSEG: git pull" }
+          { "type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/rodar.sh\" inicio", "timeout": 45, "statusMessage": "SSEG: git pull" }
         ]
       }
     ],
@@ -11,13 +11,13 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "if": "Bash(git *)", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sseg_hooks.py\" commit", "timeout": 150, "statusMessage": "SSEG: conferindo o commit" }
+          { "type": "command", "if": "Bash(git *)", "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/rodar.sh\" commit", "timeout": 150, "statusMessage": "SSEG: conferindo o commit" }
         ]
       },
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sseg_hooks.py\" banco", "timeout": 20 }
+          { "type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/rodar.sh\" banco", "timeout": 20 }
         ]
       }
     ],
@@ -25,14 +25,14 @@
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sseg_hooks.py\" skill", "timeout": 20 }
+          { "type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/rodar.sh\" skill", "timeout": 20 }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sseg_hooks.py\" fim", "timeout": 20 }
+          { "type": "command", "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/rodar.sh\" fim", "timeout": 20 }
         ]
       }
     ]
