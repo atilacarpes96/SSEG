@@ -118,11 +118,12 @@ jobs:
           Start-Process "C:\teste sseg\SSEG.exe" -ArgumentList "--atualizar"
           $publicado = (Get-FileHash dist/SSEG.exe).Hash
           for ($i = 0; $i -lt 90; $i++) { Start-Sleep 1; if ((Get-FileHash "C:\teste sseg\SSEG.exe" -ErrorAction SilentlyContinue).Hash -eq $publicado) { break } }
-          Start-Sleep 5
+          # o .exe de arquivo único desempacota antes de abrir: espera a marca por até 60 s
+          for ($k = 0; $k -lt 60; $k++) { Start-Sleep 1; if ((Get-Content $env:SSEG_TESTE_MARCA -ErrorAction SilentlyContinue) -contains $env:V) { break } }
           $depois = (Get-FileHash "C:\teste sseg\SSEG.exe").Hash
           $abriu = (Get-Content $env:SSEG_TESTE_MARCA -ErrorAction SilentlyContinue) -contains $env:V
           $reaberto = @(Get-Process SSEG -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "C:\teste sseg\SSEG.exe" }).Count
-          Write-Output "::notice title=autoatualizacao::trocou=$($depois -eq $publicado) mudou=$($antes -ne $depois) reaberto=$reaberto abriu=$abriu segundos=$i"
+          Write-Output "::notice title=autoatualizacao::trocou=$($depois -eq $publicado) mudou=$($antes -ne $depois) reaberto=$reaberto abriu=$abriu segundos=$i espera=$k"
           Get-Process SSEG -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
           if ($depois -ne $publicado -or $reaberto -lt 1 -or -not $abriu) { exit 1 }
           exit 0
