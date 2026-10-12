@@ -9,6 +9,7 @@ sseg/workflow/anexo-l.json (RT 05 Parte 1.1, Anexo L) e o JSON da API do SOL na 
 """
 
 import glob
+import html
 import json
 import os
 import re
@@ -65,6 +66,15 @@ def links_sol(sol):
             "analise_direta": bool(an)}
 
 
+def texto_do_html(t):
+    """O laudo vem do SOL em HTML (<p>, &nbsp;): vira texto corrido, um parágrafo por linha."""
+    t = re.sub(r"(?i)<br\s*/?>|</p\s*>|</div\s*>|</li\s*>", "\n", t or "")
+    t = re.sub(r"(?i)<li[^>]*>", "- ", t)
+    t = html.unescape(re.sub(r"<[^>]+>", "", t)).replace("\xa0", " ")
+    linhas = [re.sub(r"[ \t]+", " ", l).strip() for l in t.splitlines()]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(linhas)).strip()
+
+
 def itens_da_medida(nome, anexo):
     """Memorial sempre; os itens de planta da L.1 (coluna "A") quando a medida é da L.1."""
     n = _norm(nome)
@@ -88,7 +98,7 @@ def montar(clone, pasta):
     medidas, laudo = [], ""
     if sol:
         esp = sol["especSeguranca"]
-        laudo = ((esp.get("laudo") or {}).get("txtClob") or "").strip()
+        laudo = texto_do_html((esp.get("laudo") or {}).get("txtClob") or "")
         for m in esp.get("medidas") or []:  # na ordem do SOL
             nome = ((m.get("tipo") or {}).get("nome") or "").strip() or "(medida sem nome)"
             tabela, itens, nota = itens_da_medida(nome, anexo)

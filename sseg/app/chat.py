@@ -28,6 +28,11 @@ NOVA_JANELA_NAO = 0x08000000 if os.name == "nt" else 0
 PERMITIDOS = ["Read", "Grep", "Glob", "Task", "Agent", "TodoWrite",
               "Bash(python sseg/scripts/*)", "Bash(python3 sseg/scripts/*)", "Bash(py sseg/scripts/*)", "Bash(cd *)",
               "PowerShell(python sseg/scripts/*)", "PowerShell(py sseg/scripts/*)", "PowerShell(cd *)",
+              # Claude in Chrome: abrir e LER o SOL na aba logada do grupo do Claude. Sem clique (computer) e sem
+              # preencher formulário: lançar no SOL não roda nesta janela (esteira 2.3, só com o "lança").
+              "mcp__claude-in-chrome__tabs_context_mcp", "mcp__claude-in-chrome__tabs_create_mcp",
+              "mcp__claude-in-chrome__navigate", "mcp__claude-in-chrome__find", "mcp__claude-in-chrome__get_page_text",
+              "mcp__claude-in-chrome__read_page", "mcp__claude-in-chrome__javascript_tool",
               "Bash(pdftotext *)", "Bash(pdftoppm *)", "Bash(git status*)", "Bash(git log*)", "Bash(git diff*)"]
 
 INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe (não no terminal). Pasta do processo: {pasta}
@@ -54,7 +59,7 @@ FIM
   - o que o analista já salvou: `python sseg/scripts/sseg.py analise --pasta "{pasta}" ver`.
   Exigência e rascunho entram como rascunho; o texto final é o que o analista salvar, e você nunca o reescreve: se achar problema num texto salvo, aponte e sugira.
 - Respostas curtas, em markdown simples (títulos, listas, negrito). O analista lê numa janela.
-- Ler o SOL pelo navegador não está disponível nesta janela: se precisar, diga o que falta e o analista traz."""
+- SOL: pelo Claude in Chrome, SEMPRE na aba do SOL que já está no grupo do Claude (chame tabs_context_mcp e navegue nela com navigate; o login mora nessa aba — aba nova cai na tela de login). Sem aba do SOL no grupo, abra uma com tabs_create_mcp e peça ao analista para entrar (a senha é sempre ele quem digita). Só abrir e ler, seguindo a skill sol-cbmrs-navegador (leitura pela API com javascript_tool, resumo filtrado; leitura pesada ao subagente sol-leitor). Nunca lançar, salvar ou mudar nada no SOL nesta janela."""
 
 INSTRUCOES_FLUXO = """Você está na janela "{titulo}" do programa SSEG.exe (não no terminal). O analista conversa numa janela e pode não estar acostumado com terminal.
 
@@ -62,7 +67,7 @@ Regras desta janela:
 - Faça só o que o analista pedir em cada mensagem.{skill}
 - Respostas curtas, em markdown simples (títulos, listas, negrito); texto de notificação em bloco citável, no formato da caixa do SOL.
 - Use os scripts sempre como `python sseg/scripts/...`, a partir da pasta do SSEG.
-- Ler o SOL pelo navegador não está disponível nesta janela: se precisar, diga o que falta e o analista traz."""
+- SOL: pelo Claude in Chrome, SEMPRE na aba do SOL que já está no grupo do Claude (chame tabs_context_mcp e navegue nela com navigate; o login mora nessa aba — aba nova cai na tela de login). Sem aba do SOL no grupo, abra uma com tabs_create_mcp e peça ao analista para entrar (a senha é sempre ele quem digita). Só abrir e ler, seguindo a skill sol-cbmrs-navegador (leitura pela API com javascript_tool, resumo filtrado; leitura pesada ao subagente sol-leitor). Nunca lançar, salvar ou mudar nada no SOL nesta janela."""
 
 
 GUIA_VISUAL = """
@@ -115,7 +120,7 @@ class Conversa:
 
     # ------------------------------------------------------------ processo do claude
     def _comando(self):
-        cmd = [self.claude, "-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
+        cmd = [self.claude, "-p", "--chrome", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
                "--model", self.fluxo["modelo"], "--effort", self.fluxo["esforco"],
                "--permission-mode", "acceptEdits"] + (["--add-dir", self.pasta] if self.pasta else []) + [
                "--allowedTools", *PERMITIDOS,

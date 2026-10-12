@@ -198,7 +198,8 @@ details.medida .itens { padding: 0 9px 8px; }
 .exig .cab b { color: var(--texto); }
 .exig .rasc { background: var(--az-bg); border: 1px dashed var(--az-borda); border-radius: 5px; padding: 6px 8px; font-size: 12.5px; margin: 6px 0; white-space: pre-wrap; }
 .exig textarea { margin-top: 6px; min-height: 70px; font-size: 13px; }
-.exig .rod { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; }
+.exig .rod { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; flex-wrap: wrap; }
+.exig .rod .bt { white-space: nowrap; padding: 5px 10px; }
 .exig .conta { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--suave); }
 .exig .conta.alto { color: var(--verm); font-weight: 700; }
 .exig .salvo { color: var(--ok); }
@@ -283,8 +284,8 @@ details.medida .itens { padding: 0 9px 8px; }
         <span class="cod" id="pr-cod"></span>
         <span id="pr-tags"></span>
         <div class="dir">
-          <button class="bt" id="pr-sol-lic" title="Abre no Chrome (login do SOL)">Licenciamento no SOL</button>
-          <button class="bt" id="pr-sol-an" title="Abre no Chrome (login do SOL)">Análise técnica no SOL</button>
+          <button class="bt" id="pr-sol-lic" title="O Claude abre na aba do SOL do grupo dele (onde está o login)">Licenciamento no SOL</button>
+          <button class="bt" id="pr-sol-an" title="O Claude abre na aba do SOL do grupo dele (onde está o login)">Análise técnica no SOL</button>
           <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
           <button class="bt link" id="pr-pasta">abrir pasta</button>
           <button class="bt" id="pr-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button>
@@ -1077,14 +1078,18 @@ ligarForm("#cv-form", "#cv-msg", () => CTX[CV.chave]);
 $("#pr-voltar").onclick = () => ir("inicio");
 $("#cv-voltar").onclick = () => ir("inicio");
 $("#pr-pasta").onclick = () => api("abrir_pasta_processo", [PR.codigo]);
-$("#pr-sol-lic").onclick = ev => { const sol = PR.dados.sol; api("abrir_sol", [sol.licenciamento], ev.currentTarget);
-  if (!sol.id) SSEG.log(["O id do SOL deste processo ainda não é conhecido (sem api-<id>.json na pasta): abri a consulta de licenciamentos."]); };
-$("#pr-sol-an").onclick = ev => { const sol = PR.dados.sol; api("abrir_sol", [sol.analise], ev.currentTarget);
-  if (!sol.analise_direta) SSEG.log(["Abri a sua caixa de análise técnica: clique em Analisar na linha do processo."]); };
-$("#pr-mais").onclick = () => maisOpcoes(PR.fluxo, PR.codigo);
-$("#cv-mais").onclick = () => maisOpcoes(CV.fluxo, CV.codigo);
+// Os botões do SOL pedem ao Claude da conversa que abra o endereço NA ABA DO SOL DO GRUPO DO CLAUDE
+// (o login mora nela; aba nova pelo Chrome comum cai na tela de login).
+function abrirNoSol(url, oque) {
+  const ctx = ctxDe(PR.codigo, PR.fluxo, "");
+  chatEnviar(ctx, "Abra no Chrome " + oque + ": " + url + " — na aba do SOL que já está no grupo do Claude (tabs_context_mcp e navigate nela; aba nova só se não houver uma). Só abra a página: não leia nem mude nada.");
+}
+$("#pr-sol-lic").onclick = () => { const sol = PR.dados.sol;
+  abrirNoSol(sol.licenciamento, sol.id ? "o licenciamento deste processo" : "a consulta de licenciamentos (o id deste processo no SOL ainda não é conhecido)"); };
+$("#pr-sol-an").onclick = () => { const sol = PR.dados.sol;
+  abrirNoSol(sol.analise, sol.analise_direta ? "a análise técnica deste processo" : "a caixa de análise técnica (depois eu clico em Analisar na linha do processo)"); };
 $("#pr-laudo").onclick = () => modal("Laudo de inviabilidade técnica", "Texto do laudo no JSON do SOL. Separar as compensatórias por medida é do analista (ou peça ao Claude no chat).",
-  el("div", { class: "lista", style: "max-height:420px;font-family:inherit" }, PR.dados.laudo), [["Fechar", fechar]]);
+  el("div", { class: "lista", style: "max-height:420px;font:13.5px/1.55 'Segoe UI',system-ui,sans-serif" }, PR.dados.laudo), [["Fechar", fechar]]);
 
 // ---- janela de conversa de um fluxo (até cada fluxo ganhar a sua): identidade do programa, sem terminal
 const CV = { chave: null, fluxo: null, codigo: "" };

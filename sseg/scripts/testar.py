@@ -282,6 +282,8 @@ def main():
              and m["medidas"][0]["tabela"] == "L.2" and m["medidas"][0]["nota"] and sai["tabela"] == "L.1"
              and any(i.startswith("Planta: i)") for i in sai["itens"]) and sai["itens"][-1].startswith("Compensatórias")
              and m["medidas"][2]["itens"] == ["Memorial descritivo", "Planta: localização"], str([(x["nome"], x["tabela"], len(x["itens"])) for x in m["medidas"]]))
+        caso("janela do processo: laudo do SOL sai sem HTML (<p>, &nbsp;)",
+             processo.texto_do_html("<p>Rampas:</p><p>&nbsp;</p><p>A edifica&ccedil;&atilde;o</p>") == "Rampas:\n\nA edificação")
         evs = []
         c = chat.Conversa(RAIZ, pasta, "A00012345AA001", {"modelo": "claude-sonnet-5-5", "esforco": "high"}, "claude",
                           [{"nome": "localizador-normas", "modelo": "claude-haiku-5-5"}], evs.append, reg,
