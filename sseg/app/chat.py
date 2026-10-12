@@ -41,10 +41,26 @@ Regras desta janela:
 - Respostas curtas, em markdown simples (títulos, listas, negrito). O analista lê numa janela.
 - Ler o SOL pelo navegador não está disponível nesta janela: se precisar, diga o que falta e o analista traz."""
 
+INSTRUCOES_FLUXO = """Você está na janela "{titulo}" do programa SSEG.exe (não no terminal). O analista conversa numa janela e pode não estar acostumado com terminal.
+
+Regras desta janela:
+- Faça só o que o analista pedir em cada mensagem.{skill}
+- Respostas curtas, em markdown simples (títulos, listas, negrito); texto de notificação em bloco citável, no formato da caixa do SOL.
+- Use os scripts sempre como `python sseg/scripts/...`, a partir da pasta do SSEG.
+- Ler o SOL pelo navegador não está disponível nesta janela: se precisar, diga o que falta e o analista traz."""
+
+
+def instrucoes_fluxo(fluxo):
+    skill = ("\n- Quando o pedido for deste tipo de trabalho, siga a skill %s (sseg/skills/%s/SKILL.md)."
+             % (fluxo["skill"], fluxo["skill"])) if fluxo.get("skill") else ""
+    return INSTRUCOES_FLUXO.format(titulo=fluxo["titulo"], skill=skill)
+
 
 class Conversa:
     def __init__(self, clone, pasta, codigo, fluxo, claude, subagentes, aoevento, registro, cota_global):
+        """pasta/codigo None: conversa de um fluxo sem processo (sessão só na memória, sem analise.json)."""
         self.clone, self.pasta, self.codigo, self.fluxo, self.claude = clone, pasta, codigo, fluxo, claude
+        self.sessao = None
         self.modelos = {a["nome"]: a["modelo"] for a in subagentes}
         self.aoevento, self.registro = aoevento, registro
         self.cota_global = cota_global   # {"ler": fn, "gravar": fn} — última utilização vista neste PC
@@ -57,10 +73,11 @@ class Conversa:
     def _comando(self):
         cmd = [self.claude, "-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
                "--model", self.fluxo["modelo"], "--effort", self.fluxo["esforco"],
-               "--permission-mode", "acceptEdits", "--add-dir", self.pasta,
+               "--permission-mode", "acceptEdits"] + (["--add-dir", self.pasta] if self.pasta else []) + [
                "--allowedTools", *PERMITIDOS,
-               "--append-system-prompt", INSTRUCOES.format(codigo=self.codigo, pasta=self.pasta)]
-        sessao = self.registro.ler(self.pasta)["chat"].get("sessao")
+               "--append-system-prompt", INSTRUCOES.format(codigo=self.codigo, pasta=self.pasta) if self.pasta
+               else instrucoes_fluxo(self.fluxo)]
+        sessao = self.registro.ler(self.pasta)["chat"].get("sessao") if self.pasta else self.sessao
         if sessao:
             cmd += ["--resume", sessao]
         return cmd
@@ -117,6 +134,9 @@ class Conversa:
     def _evento(self, d):
         t = d.get("type")
         if t == "system" and d.get("subtype") == "init" and d.get("session_id"):
+            self.sessao = d["session_id"]
+            if not self.pasta:
+                return
             reg = self.registro.ler(self.pasta)
             if reg["chat"].get("sessao") != d["session_id"]:
                 reg["chat"]["sessao"] = d["session_id"]
@@ -167,6 +187,10 @@ class Conversa:
         if u is None:
             return
         antes = self.cota_global["ler"]() or {}
+        if not self.pasta:
+            self.cota_global["gravar"]({"u": u, "resets": reinicia})
+            self.aoevento({"t": "cota", "janela": round(u * 100), "processo": None, "reinicia": reinicia})
+            return
         reg = self.registro.ler(self.pasta)
         gasto = reg["chat"].get("pct_5h", 0.0)
         if antes.get("resets") == reinicia and u >= antes.get("u", 0):

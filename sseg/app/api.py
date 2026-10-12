@@ -269,36 +269,46 @@ class Api:
         cfg["cota"] = v
         base.gravar_config(cfg)
 
-    def chat_enviar(self, codigo, texto):
+    def chat_enviar(self, chave, texto):
+        """chave = código do processo (janela de 3 colunas) ou "fluxo:<id>" (janela de conversa do fluxo)."""
         texto = (texto or "").strip()
         if not texto:
             return
-        c = self._conversas.get(codigo)
+        c = self._conversas.get(chave)
         if c is None:
             claude = self._claude or instalar.localizar().get("claude")
             if not claude:
                 raise RuntimeError("Falta o Claude Code (Configuração → Programas).")
-            fluxo = self._fluxo("analise")
+            if chave.startswith("fluxo:"):
+                fluxo, pasta, codigo = self._fluxo(chave[6:]), None, None
+            else:
+                fluxo, pasta, codigo = self._fluxo("analise"), self._pasta_proc(chave), chave
             try:
                 subs = claude_local.subagentes(self._clone(), None)
             except Exception:
                 subs = []
 
-            def aoevento(ev, codigo=codigo):
-                if ev.get("t") == "fim" and ev.get("tokens"):
-                    reg, pasta = self._reg(), self._pasta_proc(codigo)
+            def aoevento(ev, chave=chave, pasta=pasta):
+                if pasta and ev.get("t") == "fim" and ev.get("tokens"):
+                    reg = self._reg()
                     d = reg.ler(pasta)
                     d["chat"]["tokens"] = d["chat"].get("tokens", 0) + ev["tokens"]
                     reg.gravar(pasta, d)
                 if self._janela:
                     try:
-                        self._janela.evaluate_js("SSEG.chat(%s, %s)" % (json.dumps(codigo), json.dumps(ev, ensure_ascii=False)))
+                        self._janela.evaluate_js("SSEG.chat(%s, %s)" % (json.dumps(chave), json.dumps(ev, ensure_ascii=False)))
                     except Exception:
                         pass
-            c = chat.Conversa(self._clone(), self._pasta_proc(codigo), codigo, fluxo, claude, subs, aoevento,
+            c = chat.Conversa(self._clone(), pasta, codigo, fluxo, claude, subs, aoevento,
                               self._reg(), {"ler": self._cota_ler, "gravar": self._cota_gravar})
-            self._conversas[codigo] = c
+            self._conversas[chave] = c
         c.enviar(texto)
+
+    def processo_criar(self, codigo):
+        """Pasta do processo na pasta dos processos (para abrir a janela de um processo novo)."""
+        pasta = self._pasta_proc(codigo.strip().upper())
+        os.makedirs(pasta, exist_ok=True)
+        return codigo.strip().upper()
 
     def chat_parar(self, codigo):
         c = self._conversas.pop(codigo, None)

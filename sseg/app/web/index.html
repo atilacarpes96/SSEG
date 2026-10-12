@@ -205,6 +205,10 @@ details.medida .itens { padding: 0 9px 8px; }
 @keyframes aceno { to { transform: rotate(-25deg); } }
 @keyframes tchau { 0%,60% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(14px); } }
 #cota { white-space: nowrap; }
+.slot { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#t-conversa { max-width: none; height: 100%; }
+#t-conversa.ativa { display: flex; flex-direction: column; }
+.conversa-unica { flex: 1; width: min(900px, 100%); margin: 0 auto; border: 0; }
 </style>
 </head>
 <body>
@@ -247,13 +251,13 @@ details.medida .itens { padding: 0 9px 8px; }
         <div class="dir">
           <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
           <button class="bt link" id="pr-pasta">abrir pasta</button>
+          <button class="bt" id="pr-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button>
         </div>
       </div>
       <div class="colunas">
         <div class="coluna">
           <h2>Conversa <span class="sub" style="margin:0;text-transform:none;letter-spacing:0;font-weight:400" id="pr-modelo"></span></h2>
-          <div class="rola" id="pr-chat"></div>
-          <div class="trabalhando" id="pr-trab"></div>
+          <div class="slot" id="pr-slot"></div>
           <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button class="bt p">Enviar</button></form>
         </div>
         <div class="coluna">
@@ -264,6 +268,18 @@ details.medida .itens { padding: 0 9px 8px; }
           <h2>CIA em construção <button class="bt link" id="pr-copiar-cia">copiar a CIA</button></h2>
           <div class="rola" id="pr-cia"></div>
         </div>
+      </div>
+    </section>
+    <section class="tela" id="t-conversa">
+      <div class="faixa">
+        <button class="bt" id="cv-voltar">← Início</button>
+        <b id="cv-titulo" style="font-size:15px"></b>
+        <span id="cv-tags"></span>
+        <div class="dir"><button class="bt" id="cv-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button></div>
+      </div>
+      <div class="coluna conversa-unica">
+        <div class="slot" id="cv-slot"></div>
+        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="3" placeholder="Escreva ao Claude — Ctrl+Enter envia"></textarea><button class="bt p">Enviar</button></form>
       </div>
     </section>
     <section class="tela" id="t-busca">
@@ -384,7 +400,7 @@ async function copiar(texto) {
 
 // ---- navegação
 function ir(tela) {
-  document.querySelector("main").classList.toggle("processo", tela === "processo");
+  document.querySelector("main").classList.toggle("processo", tela === "processo" || tela === "conversa");
   document.querySelectorAll(".tela").forEach(t => t.classList.toggle("ativa", t.id === "t-" + tela));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
   if (tela === "config") carregarConfig();
@@ -541,18 +557,30 @@ function pintarFluxos(fluxos) {
     el("span", {}, f.skill ? "skill " + f.skill : "sem skill"))));
 }
 function iniciarFluxo(f, codigo = "") {
-  const meio = [];
-  if (f.pede_codigo) meio.push(el("label", { class: "campo" }, "Código do processo"),
-    el("input", { id: "f-cod", value: codigo, placeholder: "A00012345AA001", style: "padding:7px 9px;border:1px solid var(--linha);border-radius:6px;font-family:Consolas,monospace;width:220px" }));
-  meio.push(el("p", { class: "sub", style: "margin-top:12px" }, "Abre o Claude Code numa janela própria, na pasta do SSEG. Para usar o app do Claude: \"Copiar o prompt\" e escolha lá " + f.modelo_texto + "."));
-  if (f.subagentes && f.subagentes.length) meio.push(el("p", { class: "sub" }, "Subagentes desta conversa: " + f.subagentes.join(", ")));
-  const cod = () => ($("#f-cod") ? $("#f-cod").value.trim() : "");
+  // Nenhum fluxo abre terminal para o analista (decisão do Átila, 12/10/2026): cada um abre uma janela do programa.
+  if (!f.pede_codigo) return abrirConversa(f, f.prompt);
+  const meio = [el("label", { class: "campo" }, "Código do processo"),
+    el("input", { id: "f-cod", value: codigo, placeholder: "A00012345AA001", style: "padding:7px 9px;border:1px solid var(--linha);border-radius:6px;font-family:Consolas,monospace;width:220px" }),
+    el("p", { class: "sub", style: "margin-top:12px" }, f.id === "analise"
+      ? "Abre a janela do processo: conversa, checklist e CIA. O Claude só começa quando você mandar a primeira mensagem."
+      : "Abre a janela desta conversa. O Claude só começa quando você mandar a primeira mensagem.")];
+  const cod = () => ($("#f-cod") ? $("#f-cod").value.trim().toUpperCase() : "");
+  const valido = () => /^A\d{8}[A-Z]{2}\d{3}$/.test(cod()) || (SSEG.log(["✗ Código de processo no formato A00012345AA001."]), false);
   modal(f.titulo, f.modelo_texto + " · " + (f.skill ? "skill " + f.skill : "sem skill"), meio, [
-    ["Abrir no terminal", async b => { await api("abrir_conversa", [f.id, cod()], b); fechar(); }, true],
-    ["Copiar o prompt", async b => { const p = await api("prompt", [f.id, cod()], b); await copiar(p); SSEG.log(["— Conversa — prompt copiado. No app do Claude: Novo → Local → pasta do SSEG → " + f.modelo_texto + ", e cole."]); fechar(); }],
+    ["Abrir", async b => { if (!valido()) return; fechar();
+      if (f.id === "analise") { await api("processo_criar", [cod()], b); abrirProcesso(cod()); }
+      else abrirConversa(f, await api("prompt", [f.id, cod()])); }, true],
     ["Cancelar", fechar],
   ]);
-  if ($("#f-cod")) $("#f-cod").focus();
+  $("#f-cod").focus();
+  $("#f-cod").addEventListener("keydown", ev => { if (ev.key === "Enter") $("#m-pe .bt.p").click(); });
+}
+// ⋯ avançado: terminal e prompt para o app do Claude
+function maisOpcoes(f, codigo) {
+  modal("Outras formas de abrir", f.titulo + " · " + f.modelo_texto, el("p", { class: "sub" }, "Para quem prefere: o Claude Code no terminal, ou o prompt para colar no app do Claude (Novo → Local → pasta do SSEG, " + f.modelo_texto + ")."), [
+    ["Copiar o prompt", async b => { const p = await api("prompt", [f.id, codigo || ""], b); await copiar(p); SSEG.log(["Prompt copiado: no app do Claude, Novo → Local → pasta do SSEG → " + f.modelo_texto + ", e cole."]); fechar(); }],
+    ["Abrir no terminal (avançado)", async b => { await api("abrir_conversa", [f.id, codigo || ""], b); fechar(); }],
+    ["Fechar", fechar]]);
 }
 async function carregarProcessos() {
   const corpo = $("#processos");
@@ -708,8 +736,8 @@ function md(texto) {
 
 async function abrirProcesso(codigo) {
   const d = await api("processo_abrir", [codigo]);
-  if (PR.codigo !== codigo) { $("#pr-chat").replaceChildren(el("p", { class: "vazio" }, "O Claude espera o seu pedido. Exemplos: \"roda o check\", \"lê o laudo\", \"qual a data de protocolo?\"")); PR.subs = {}; }
   renderProcesso(d);
+  mostrarCtx("#pr-slot", ctxDe(codigo, PR.fluxo, "O Claude espera o seu pedido. Exemplos: \"roda o check\", \"lê o laudo\", \"qual a data de protocolo?\""));
   ir("processo");
 }
 function renderProcesso(d) {
@@ -805,7 +833,7 @@ async function itemExigencia(m, item, k, v) {
 async function enviarRespostas() {
   const r = PR.reg, lst = r.pendencias.filter(p => p.resposta && !p.enviada && !p.feita);
   const texto = "Respostas às pendências:\n" + lst.map(p => "- " + p.texto + " → " + p.resposta).join("\n");
-  await chatEnviar(texto);
+  await chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), texto);
   for (const p of lst) await api("processo_atualizar", [PR.codigo, "pendencias", p.id, { enviada: true }]);
   recarregarRegistro();
 }
@@ -858,53 +886,87 @@ setInterval(async () => {
   try { const r = await window.pywebview.api.processo_registro(PR.codigo); if ((r.alterado || 0) !== PR.alterado) { PR.reg = r; PR.alterado = r.alterado || 0; pintarChecklist(); pintarCIA(); pintarCota(); } } catch (e) {}
 }, 2000);
 
-// ---- chat
-function chatAdd(no) { const c = $("#pr-chat"); if (c.querySelector(".vazio")) c.replaceChildren(); c.append(no); c.scrollTop = c.scrollHeight; return no; }
-function trabalhando(on) {
-  const t = $("#pr-trab");
-  if (!on) return t.replaceChildren();
-  t.replaceChildren(caranguejo(PR.fluxo.modelo, PR.fluxo.esforco, "Claude · " + nomeModelo(PR.fluxo.modelo) + " · conversando"), el("span", { id: "pr-trab-txt" }, "Claude trabalhando…"));
+// ---- chat (um contexto por conversa: processo = código; fluxo = "fluxo:<id>"); cada um guarda a sua caixa
+const CTX = {};
+function ctxDe(chave, fluxo, vazio) {
+  if (!CTX[chave]) CTX[chave] = { chave, fluxo, ativ: null, subs: {},
+    caixa: el("div", { class: "rola" }, el("p", { class: "vazio" }, vazio)), trab: el("div", { class: "trabalhando" }) };
+  return CTX[chave];
 }
-async function chatEnviar(texto) {
-  chatAdd(el("div", { class: "msg eu" }, texto));
-  PR.ativ = null; trabalhando(true);
-  try { await api("chat_enviar", [PR.codigo, texto]); } catch (e) { trabalhando(false); chatAdd(el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
+function mostrarCtx(slot, ctx) { $(slot).replaceChildren(ctx.caixa, ctx.trab); ctx.caixa.scrollTop = ctx.caixa.scrollHeight; }
+function chatAdd(ctx, no) { const c = ctx.caixa; if (c.querySelector(".vazio")) c.replaceChildren(); c.append(no); c.scrollTop = c.scrollHeight; return no; }
+function trabalhando(ctx, on) {
+  if (!on) return ctx.trab.replaceChildren();
+  ctx.trab.replaceChildren(caranguejo(ctx.fluxo.modelo, ctx.fluxo.esforco, "Claude · " + nomeModelo(ctx.fluxo.modelo) + " · conversando"), el("span", { class: "trab-txt" }, "Claude trabalhando…"));
 }
-$("#pr-form").onsubmit = ev => { ev.preventDefault(); const t = $("#pr-msg").value.trim(); if (!t) return; $("#pr-msg").value = ""; chatEnviar(t); };
-$("#pr-msg").addEventListener("keydown", ev => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) $("#pr-form").requestSubmit(); });
+async function chatEnviar(ctx, texto) {
+  chatAdd(ctx, el("div", { class: "msg eu" }, texto));
+  ctx.ativ = null; trabalhando(ctx, true);
+  try { await api("chat_enviar", [ctx.chave, texto]); } catch (e) { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
+}
+function ligarForm(form, campo, ctxAtual) {
+  $(form).onsubmit = ev => { ev.preventDefault(); const t = $(campo).value.trim(); if (!t) return; $(campo).value = ""; chatEnviar(ctxAtual(), t); };
+  $(campo).addEventListener("keydown", ev => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) $(form).requestSubmit(); });
+}
+ligarForm("#pr-form", "#pr-msg", () => CTX[PR.codigo]);
+ligarForm("#cv-form", "#cv-msg", () => CTX[CV.chave]);
 $("#pr-voltar").onclick = () => ir("inicio");
+$("#cv-voltar").onclick = () => ir("inicio");
 $("#pr-pasta").onclick = () => api("abrir_pasta_processo", [PR.codigo]);
+$("#pr-mais").onclick = () => maisOpcoes(PR.fluxo, PR.codigo);
+$("#cv-mais").onclick = () => maisOpcoes(CV.fluxo, CV.codigo);
 $("#pr-laudo").onclick = () => modal("Laudo de inviabilidade técnica", "Texto do laudo no JSON do SOL. Separar as compensatórias por medida é do analista (ou peça ao Claude no chat).",
   el("div", { class: "lista", style: "max-height:420px;font-family:inherit" }, PR.dados.laudo), [["Fechar", fechar]]);
 
-SSEG.chat = (codigo, ev) => {
-  if (codigo !== PR.codigo) return;
-  if (ev.t === "texto") { PR.ativ = null; chatAdd(el("div", { class: "msg claude", html: true })).innerHTML = md(ev.texto); }
+// ---- janela de conversa de um fluxo (até cada fluxo ganhar a sua): identidade do programa, sem terminal
+const CV = { chave: null, fluxo: null, codigo: "" };
+function abrirConversa(f, sugestao) {
+  CV.chave = "fluxo:" + f.id; CV.fluxo = f; CV.codigo = (sugestao || "").match(/A\d{8}[A-Z]{2}\d{3}/)?.[0] || "";
+  const ctx = ctxDe(CV.chave, f, "O Claude espera o seu pedido. A mensagem abaixo é uma sugestão: ajuste e envie.");
+  $("#cv-titulo").textContent = f.titulo;
+  $("#cv-tags").replaceChildren(el("span", { class: "tag" }, el("i", { style: "display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:" + COR(f.modelo) }), f.modelo_texto),
+    f.skill ? el("span", { class: "tag" }, "skill " + f.skill) : null,
+    f.subagentes && f.subagentes.length ? el("span", { class: "tag" }, "subagentes: " + f.subagentes.join(", ")) : null);
+  mostrarCtx("#cv-slot", ctx);
+  if (!ctx.caixa.querySelector(".msg") && sugestao) $("#cv-msg").value = sugestao;
+  ir("conversa");
+  $("#cv-msg").focus();
+}
+
+SSEG.chat = (chave, ev) => {
+  const ctx = CTX[chave];
+  if (!ctx) return;
+  const doProcesso = chave === PR.codigo;
+  if (ev.t === "texto") { ctx.ativ = null; chatAdd(ctx, el("div", { class: "msg claude" })).innerHTML = md(ev.texto); }
   else if (ev.t === "ferramenta") {
-    if (!PR.ativ) PR.ativ = chatAdd(el("div", { class: "ativ" }));
-    PR.ativ.textContent = "↳ " + ev.texto;
-    const t = $("#pr-trab-txt"); if (t) t.textContent = ev.texto;
+    if (!ctx.ativ) ctx.ativ = chatAdd(ctx, el("div", { class: "ativ" }));
+    ctx.ativ.textContent = "↳ " + ev.texto;
+    const t = ctx.trab.querySelector(".trab-txt"); if (t) t.textContent = ev.texto;
   }
   else if (ev.t === "sub_ini") {
     const linha = el("div", { class: "sub-linha" }, caranguejo(ev.modelo, "medium", ev.tipo + " · " + nomeModelo(ev.modelo) + " · " + (ev.desc || "")), el("span", {}, ev.tipo + " — " + (ev.desc || "trabalhando")));
-    PR.subs[ev.id] = { linha, inicio: Date.now() };
-    chatAdd(linha); PR.ativ = null;
+    ctx.subs[ev.id] = { linha, inicio: Date.now() };
+    chatAdd(ctx, linha); ctx.ativ = null;
   }
   else if (ev.t === "sub_fim") {
-    const s = PR.subs[ev.id]; if (!s) return;
+    const s = ctx.subs[ev.id]; if (!s) return;
     const crab = s.linha.querySelector(".crab"); crab.classList.add("tchau");
     s.linha.querySelector("span").textContent += " · ✓ " + ev.segundos + " s";
     setTimeout(() => crab.remove(), 1600);
   }
-  else if (ev.t === "pronto") recarregarRegistro();
-  else if (ev.t === "cota") { PR.janela = ev.janela; PR.reg.chat.pct_5h = ev.processo / 100; pintarCota(); }
-  else if (ev.t === "fim") {
-    trabalhando(false); PR.ativ = null;
-    if (ev.negados && ev.negados.length) chatAdd(el("div", { class: "msg aviso" }, "Negado pela permissão desta janela (abra no terminal se precisar):\n" + ev.negados.join("\n")));
-    if (ev.erro && ev.texto) chatAdd(el("div", { class: "msg aviso" }, "✗ " + ev.texto));
-    recarregarRegistro();
+  else if (ev.t === "pronto") { if (doProcesso) recarregarRegistro(); }
+  else if (ev.t === "cota") {
+    PR.janela = ev.janela;
+    if (doProcesso && ev.processo != null && PR.reg) { PR.reg.chat.pct_5h = ev.processo / 100; pintarCota(); }
+    else if (!doProcesso) $("#cota").textContent = "janela de 5 h: " + ev.janela + "%";
   }
-  else if (ev.t === "erro") { trabalhando(false); chatAdd(el("div", { class: "msg aviso" }, "✗ " + ev.texto)); }
+  else if (ev.t === "fim") {
+    trabalhando(ctx, false); ctx.ativ = null;
+    if (ev.negados && ev.negados.length) chatAdd(ctx, el("div", { class: "msg aviso" }, "Negado pela permissão desta janela (⋯ → terminal, se precisar):\n" + ev.negados.join("\n")));
+    if (ev.erro && ev.texto) chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + ev.texto));
+    if (doProcesso) recarregarRegistro();
+  }
+  else if (ev.t === "erro") { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + ev.texto)); }
   else if (ev.t === "aviso") SSEG.log(["Claude: " + ev.texto]);
 };
 
@@ -915,7 +977,9 @@ SSEG.tour = async passo => {
   if (passo === "menu") { $("#menu").classList.add("aberto"); ir("inicio"); }
   if (passo === "busca") { $("#menu").classList.remove("aberto"); ir("busca"); $("#q").value = 'extintor "5 m"'; $("#f-busca").requestSubmit(); }
   if (passo === "config") ir("config");
-  if (passo === "conversa") { ir("inicio"); iniciarFluxo(ESTADO.info.fluxos[1] || ESTADO.info.fluxos[0], "A00012345AA001"); }
+  if (passo === "conversa") { const f = ESTADO.info.fluxos.find(x => x.id === "pergunta") || ESTADO.info.fluxos[0]; abrirConversa(f, f.prompt);
+    const ctx = CTX["fluxo:" + f.id]; chatAdd(ctx, el("div", { class: "msg eu" }, "Porta de saída em F-6 abre para fora?"));
+    SSEG.chat("fluxo:" + f.id, { t: "texto", texto: "**Sim**, no sentido do fluxo de saída.\n\n- RT 11/2016, item 5.5.4 (portas das rotas de saída)\n\nConfira o item no PDF antes de citar." }); }
   if (passo === "github") telaGit(null, { atras: 1, frente: 0, nome: "", email: "", itens: [{ cod: "M", arquivo: "sseg/normas/exemplo.md" }, { cod: "??", arquivo: "CIA 1.pdf", fora: "CIA de processo" }] });
   if (passo === "servidor") telaServidor({ sobe: ["A00012345AA001/1.json"], desce: ["A00012345AA002/CIA 1.pdf"], conflito: ["A00012345AA003/analise.json"], iguais: 4 });
   if (passo === "bug") $("#b-bug").click();
@@ -931,12 +995,12 @@ SSEG.tour = async passo => {
     $("#detalhes").classList.remove("aberto");
     PR.foto = true;  // foto do build: sem pasta de verdade, a janela não relê o registro
     renderProcesso(fake); ir("processo"); PR.janela = 23; pintarCota();
-    $("#pr-chat").replaceChildren();
-    chatAdd(el("div", { class: "msg eu" }, "roda o check"));
+    const ctx = ctxDe(fake.codigo, PR.fluxo, ""); mostrarCtx("#pr-slot", ctx); ctx.caixa.replaceChildren();
+    chatAdd(ctx, el("div", { class: "msg eu" }, "roda o check"));
     SSEG.chat(fake.codigo, { t: "ferramenta", texto: "Rodando python sseg/scripts/sseg.py check --json api-1.json" });
     SSEG.chat(fake.codigo, { t: "texto", texto: "**Check rodado.** Definidora: empate no grau de risco — paro aqui e levo a você:\n\n- F-6 e C-2: risco médio\n- Nota 3 da Tabela 6F decide a contagem\n\nRegistrei 2 pendências no checklist." });
     SSEG.chat(fake.codigo, { t: "sub_ini", id: "x1", tipo: "localizador-normas", desc: "itens da RT 11 sobre largura", modelo: "claude-haiku-5-5" });
-    trabalhando(true);
+    trabalhando(ctx, true);
     document.querySelector("#t-processo details.medida").open = true;
   }
   if (passo === "detalhes") { $("#detalhes").classList.add("aberto"); }

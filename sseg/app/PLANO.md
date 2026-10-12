@@ -131,6 +131,8 @@ Continuam valendo: Anexo L, laudo/compensatórias (modelo leve só separa), rasc
 - [x] CIA: ✗ no item vira exigência; rascunho do Claude à parte, texto final salvo pelo analista, contador de 2.000, ordem, "copiar a CIA" (só o final)
 - [x] `sseg.py analise --pasta <processo> pendencia|exigencia|passo|ver` grava no `analise.json` (`scripts/analise_registro.py`); a janela relê a cada 2 s
 - [x] Caranguejo da conversa (Task/Agent no stream: cor do modelo do subagente, acena ao terminar) e ≈% das 5 h do processo no rodapé (`rate_limit_event`)
+- [x] **Nenhum fluxo abre terminal** (pedido do Átila, 12/10/2026 — o programa vai para a seção e muita gente não usa terminal): "Analisar processo" da grade pede o código e abre a janela de 3 colunas; os outros fluxos abrem uma janela de conversa do programa (mesma identidade), com a mensagem sugerida no campo e nada rodando até o envio. Terminal e "Copiar o prompt" ficam no ⋯ (avançado)
+- [ ] Janela própria de cada fluxo (Começar o dia, Revisar CIA, Minuta/despacho, Incorporar norma, Notificação avulsa, Pergunta de norma) — o tipo de cada uma o Átila fecha com a sessão do PC
 - [ ] Prévia com fotos para o Átila aprovar (ramo `sseg-2.1`, prerelease `app-v2.1.0-previa`)
 - [ ] Teste no PC com processo real: permissões do `claude -p` no Windows, `python` no PATH, sessão retomada
 
