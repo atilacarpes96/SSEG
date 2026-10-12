@@ -126,12 +126,16 @@ Continuam valendo: Anexo L, laudo/compensatórias (modelo leve só separa), rasc
 - **Rodapé:** ≈% das 5 h por processo (`rate_limits.five_hour`, confirmado)
 
 #### 2.1 — janela de 3 colunas
-- [ ] Chat em stream-json dentro do programa (sessão contínua, respostas formatadas)
-- [ ] Checklist: 16 passos + medidas do SOL (Anexo L) + pendências vindas do chat
-- [ ] CIA marcada à mão (texto final do analista)
-- [ ] `sseg.py` grava pendências/exigências no `analise.json` (vai ao servidor pelo Sincronizar processos, nunca ao GitHub)
-- [ ] Caranguejo da conversa (subagente chamado no chat)
-- [ ] Prévia com fotos para o Átila aprovar
+- [x] Chat em stream-json dentro do programa (`chat.py`): sobe só na 1ª mensagem, sessão no `analise.json` (`--resume`), respostas em markdown, ferramentas numa linha discreta. Permissões sem perguntar: ler, procurar, subagentes e `python sseg/scripts/*`, `pdftotext`/`pdftoppm`, `git status/log/diff`; edição só com `acceptEdits` na pasta do SSEG e na do processo; o resto volta como "negado" no chat. Ler o SOL pelo Chrome não roda nesta janela (ainda)
+- [x] Checklist: 16 passos (`workflow/checklist-analise.json`) + medidas do SOL na ordem do SOL com o Anexo L (`workflow/anexo-l.json`) + pendências do chat com campo de resposta e "Mandar respostas ao Claude"
+- [x] CIA: ✗ no item vira exigência; rascunho do Claude à parte, texto final salvo pelo analista, contador de 2.000, ordem, "copiar a CIA" (só o final)
+- [x] `sseg.py analise --pasta <processo> pendencia|exigencia|passo|ver` grava no `analise.json` (`scripts/analise_registro.py`); a janela relê a cada 2 s
+- [x] Caranguejo da conversa (Task/Agent no stream: cor do modelo do subagente, acena ao terminar) e ≈% das 5 h do processo no rodapé (`rate_limit_event`)
+- [x] **Nenhum fluxo abre terminal** (pedido do Átila, 12/10/2026 — o programa vai para a seção e muita gente não usa terminal): "Analisar processo" da grade pede o código e abre a janela de 3 colunas; os outros fluxos abrem uma janela de conversa do programa (mesma identidade), com a mensagem sugerida no campo e nada rodando até o envio. Terminal e "Copiar o prompt" ficam no ⋯ (avançado)
+- [x] **Resposta visual em todas as janelas** (regra do Átila, 12/10/2026): markdown renderizado com tabelas de verdade (tudo escapado; HTML do modelo nunca passa) e blocos ```sseg-*``` com JSON que o programa desenha — `sseg-status` (selo), `sseg-dados` (cartões), `sseg-definidora` (hipóteses), `sseg-perguntas` (campos + "Mandar respostas"; viram pendências sem duplicar), `sseg-exigencia` (contador e "Pôr na CIA" como rascunho), `sseg-norma` ([PDF] pelo programa). Bloco inválido vira texto. Ensinado no prompt de sistema da janela (`chat.GUIA_VISUAL`). Claro e escuro
+- [ ] Janela própria de cada fluxo (Começar o dia, Revisar CIA, Minuta/despacho, Incorporar norma, Notificação avulsa, Pergunta de norma) — o tipo de cada uma o Átila fecha com a sessão do PC
+- [ ] Prévia com fotos para o Átila aprovar (ramo `sseg-2.1`, prerelease `app-v2.1.0-previa`)
+- [ ] Teste no PC com processo real: permissões do `claude -p` no Windows, `python` no PATH, sessão retomada
 
 #### 2.2 — redator na caixa do item
 - [ ] Achado curto → `claude -p` redige (banco, normas comentadas, `ppci-notificacao-cia`) → texto + fundamento; [PDF] pelo programa; contador de 2.000; rascunho × texto final; caranguejo sobre a caixa e fila

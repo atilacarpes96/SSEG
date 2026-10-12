@@ -920,7 +920,14 @@ def main():
     sincronizar.args_parser(sub.add_parser("sincronizar", help="processos PC <-> servidor, nos dois sentidos"),
                             sub.add_parser("trazer", help="desce do servidor o que estiver mais novo lá"))
 
+    import analise_registro
+    analise_registro.args_parser(sub.add_parser("analise", help="pendências e rascunhos da janela do processo (analise.json)"))
+
     args = ap.parse_args()
+
+    if args.cmd == "analise":
+        analise_registro.principal(args)
+        return
 
     if args.cmd in ("sincronizar", "trazer"):
         sincronizar.principal(args, so_descer=args.cmd == "trazer")

@@ -17,10 +17,12 @@ import tempfile
 import webbrowser
 
 import busca
+import chat
 import claude_local
 import gasto
 import git_sinc
 import instalar
+import processo
 import relato
 import sol_entrar
 import sseg_app as base
@@ -35,6 +37,7 @@ class Api:
         self._dados_git = None
         self._erros_js = []
         self._claude = None
+        self._conversas = {}
 
     # ---------------------------------------------------------------- infraestrutura
     def _ligar(self, janela):
@@ -196,6 +199,155 @@ class Api:
 
     def abrir_pasta(self, qual):
         base.abrir(self._cfg()[qual])
+
+    # ---------------------------------------------------------------- janela do processo (2.1)
+    def _pasta_proc(self, codigo):
+        if not CODIGO.match(codigo or ""):
+            raise RuntimeError("Código de processo no formato A00012345AA001.")
+        return os.path.join(self._cfg()["processos"], codigo)
+
+    def _reg(self):
+        return processo._registro(self._clone())
+
+    def processo_abrir(self, codigo):
+        """Só lê: pasta, JSON do SOL, checklist e analise.json. Não sobe o Claude."""
+        pasta = self._pasta_proc(codigo)
+        if not os.path.isdir(pasta):
+            raise RuntimeError("Não há pasta %s na pasta dos processos." % codigo)
+        d = processo.montar(self._clone(), pasta)
+        c = self._conversas.get(codigo)
+        d["ocupado"] = bool(c and c.ocupado)
+        return d
+
+    def processo_registro(self, codigo):
+        return self._reg().ler(self._pasta_proc(codigo))
+
+    def processo_marcar(self, codigo, grupo, chave, valor):
+        if grupo not in ("passos", "itens"):
+            raise RuntimeError("grupo inválido")
+        return self._reg().marcar(self._pasta_proc(codigo), grupo, chave, valor)
+
+    def processo_pendencia(self, codigo, texto):
+        return self._reg().pendencia(self._pasta_proc(codigo), texto, origem="analista")
+
+    def processo_exigencia(self, codigo, texto, medida="", fundamento="", origem="analista"):
+        """Do analista entra como texto final; "Pôr na CIA" num bloco do Claude entra como rascunho."""
+        origem = "claude" if origem == "claude" else "analista"
+        return self._reg().exigencia(self._pasta_proc(codigo), texto, medida, fundamento, origem=origem)
+
+    def processo_perguntas(self, codigo, perguntas):
+        """Perguntas de um bloco sseg-perguntas viram pendências (a mesma pergunta não duplica)."""
+        reg, pasta = self._reg(), self._pasta_proc(codigo)
+        existentes = {re.sub(r"\s+", " ", p["texto"]).strip().lower() for p in reg.ler(pasta)["pendencias"]}
+        for q in perguntas or []:
+            t = (q.get("texto") or "").strip()
+            if t and re.sub(r"\s+", " ", t).lower() not in existentes:
+                reg.pendencia(pasta, t, origem="claude")
+                existentes.add(re.sub(r"\s+", " ", t).lower())
+
+    def processo_responder(self, codigo, pares):
+        """[[texto da pergunta, resposta]]: grava a resposta na pendência e marca como enviada ao Claude."""
+        reg, pasta = self._reg(), self._pasta_proc(codigo)
+        d = reg.ler(pasta)
+        for texto, resp in pares or []:
+            alvo = re.sub(r"\s+", " ", texto).strip().lower()
+            for p in d["pendencias"]:
+                if re.sub(r"\s+", " ", p["texto"]).strip().lower() == alvo:
+                    p.update(resposta=resp, enviada=True)
+        reg.gravar(pasta, d)
+
+    def norma_pdf(self, rotulo, consulta=""):
+        """Bloco sseg-norma: o programa acha o PDF oficial e a página (mecanismo da busca 1.2.2)."""
+        nome = busca.pdf_citado(rotulo)
+        if not nome:
+            raise RuntimeError("Não achei o PDF de \"%s\" em normas/pdf." % rotulo)
+        caminho = os.path.join(self._clone(), "sseg", "normas", "pdf", nome)
+        pg = busca.pagina(caminho, consulta, rotulo, base.pdftotext())
+        base.abrir_pdf(caminho, pg)
+        self._log("PDF %s aberto na página %d — conferir o item ali antes de citar." % (nome, pg))
+        return pg
+
+    def processo_atualizar(self, codigo, colecao, id_, campos):
+        """O programa muda resposta/feita da pendência e final/fundamento da exigência. Rascunho não."""
+        livres = {"pendencias": {"resposta", "feita", "enviada"}, "exigencias": {"final", "fundamento", "medida"}}[colecao]
+        campos = {k: v for k, v in (campos or {}).items() if k in livres}
+        return self._reg().atualizar(self._pasta_proc(codigo), colecao, id_, **campos)
+
+    def processo_remover(self, codigo, colecao, id_):
+        self._reg().remover(self._pasta_proc(codigo), colecao, id_)
+
+    def processo_mover(self, codigo, id_, delta):
+        reg = self._reg()
+        pasta = self._pasta_proc(codigo)
+        d = reg.ler(pasta)
+        ex = d["exigencias"]
+        i = next((k for k, e in enumerate(ex) if e["id"] == id_), None)
+        j = None if i is None else i + int(delta)
+        if i is not None and 0 <= j < len(ex):
+            ex[i], ex[j] = ex[j], ex[i]
+            reg.gravar(pasta, d)
+        return d
+
+    def processo_laudo(self, codigo):
+        return processo.montar(self._clone(), self._pasta_proc(codigo))["laudo"]
+
+    def abrir_pasta_processo(self, codigo):
+        base.abrir(self._pasta_proc(codigo))
+
+    # ---------------------------------------------------------------- chat
+    def _cota_ler(self):
+        return self._cfg().get("cota")
+
+    def _cota_gravar(self, v):
+        cfg = base.ler_config()
+        cfg["cota"] = v
+        base.gravar_config(cfg)
+
+    def chat_enviar(self, chave, texto):
+        """chave = código do processo (janela de 3 colunas) ou "fluxo:<id>" (janela de conversa do fluxo)."""
+        texto = (texto or "").strip()
+        if not texto:
+            return
+        c = self._conversas.get(chave)
+        if c is None:
+            claude = self._claude or instalar.localizar().get("claude")
+            if not claude:
+                raise RuntimeError("Falta o Claude Code (Configuração → Programas).")
+            if chave.startswith("fluxo:"):
+                fluxo, pasta, codigo = self._fluxo(chave[6:]), None, None
+            else:
+                fluxo, pasta, codigo = self._fluxo("analise"), self._pasta_proc(chave), chave
+            try:
+                subs = claude_local.subagentes(self._clone(), None)
+            except Exception:
+                subs = []
+
+            def aoevento(ev, chave=chave, pasta=pasta):
+                if pasta and ev.get("t") == "fim" and ev.get("tokens"):
+                    reg = self._reg()
+                    d = reg.ler(pasta)
+                    d["chat"]["tokens"] = d["chat"].get("tokens", 0) + ev["tokens"]
+                    reg.gravar(pasta, d)
+                if self._janela:
+                    try:
+                        self._janela.evaluate_js("SSEG.chat(%s, %s)" % (json.dumps(chave), json.dumps(ev, ensure_ascii=False)))
+                    except Exception:
+                        pass
+            c = chat.Conversa(self._clone(), pasta, codigo, fluxo, claude, subs, aoevento,
+                              self._reg(), {"ler": self._cota_ler, "gravar": self._cota_gravar})
+            self._conversas[chave] = c
+        c.enviar(texto)
+
+    def processo_criar(self, codigo):
+        """Pasta do processo na pasta dos processos (para abrir a janela de um processo novo)."""
+        pasta = self._pasta_proc(codigo.strip().upper())
+        os.makedirs(pasta, exist_ok=True)
+        return codigo.strip().upper()
+
+    def chat_parar(self, codigo):
+        c = self._conversas.pop(codigo, None)
+        if c:
+            c.parar()
 
     # ---------------------------------------------------------------- busca
     def buscar(self, consulta):

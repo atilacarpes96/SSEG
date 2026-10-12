@@ -8,9 +8,18 @@
   --verm: #C32725; --verm-claro: #D93735; --amarelo: #FCD733; --laranja: #F39431;
   --fundo: #F4F1EF; --cartao: #FFFFFF; --texto: #2B2422; --suave: #7A6E6A; --linha: #E6DFDB;
   --ok: #2E7D32; --haiku: #3FA34D; --sonnet: #2F6FD6; --opus: #E8772E;
+  --fundo2: #FBF9F8; --bt: #F7F3F1; --bt-h: #EFE8E5; --rosa: #FDF1F0; --rosa-borda: #F3D3D1; --creme: #FEF4EA;
+  --creme-txt: #9A4A0E; --am-bg: #FFFBEA; --am-borda: #F2E3A0; --az-bg: #F4F7FD; --az-borda: #B9CBEE; --ponto: #C9C0BC;
+  --campo: #FFFFFF; --azul: #2F6FD6; --azul-bg: #E8F0FC;
   --raio: 8px; --sombra: 0 1px 2px rgba(60,30,20,.08), 0 4px 14px rgba(60,30,20,.06);
 }
+@media (prefers-color-scheme: dark) { :root {
+  --verm: #E5534F; --verm-claro: #F06B67; --fundo: #1C1918; --cartao: #262220; --texto: #EDE6E3; --suave: #A99D98; --linha: #3A3431;
+  --ok: #5DBB63; --fundo2: #221E1C; --bt: #302B29; --bt-h: #3A3431; --rosa: #3A2422; --rosa-borda: #5A3330; --creme: #3A2C1E;
+  --creme-txt: #F2B27A; --am-bg: #332D17; --am-borda: #5C5126; --az-bg: #1D2738; --az-borda: #34507F; --ponto: #5A524E;
+  --campo: #1F1B1A; --azul: #6E9CF0; --azul-bg: #1D2738; color-scheme: dark; } }
 * { box-sizing: border-box; }
+input, textarea { background: var(--campo); color: var(--texto); }
 [hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 body { font: 14px/1.45 "Segoe UI", system-ui, sans-serif; color: var(--texto); background: var(--fundo);
@@ -32,13 +41,13 @@ header { background: var(--cartao); border-bottom: 3px solid var(--verm); displa
 #estado { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .chip { border: 1px solid var(--linha); background: var(--cartao); border-radius: 999px; padding: 3px 11px 3px 9px;
         font-size: 12.5px; color: var(--suave); display: inline-flex; align-items: center; gap: 6px; }
-.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #C9C0BC; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ponto); }
 .chip.ok::before { background: var(--ok); }
-.chip.alerta { border-color: var(--verm); color: var(--verm); background: #FDF1F0; font-weight: 600; }
+.chip.alerta { border-color: var(--verm); color: var(--verm); background: var(--rosa); font-weight: 600; }
 .chip.alerta::before { background: var(--verm); }
 .chip.carregando::before { background: var(--amarelo); animation: pisca 1s infinite; }
 .chip .n { background: var(--verm); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; }
-.chip.novo { border-color: var(--laranja); color: #9A4A0E; background: #FEF4EA; font-weight: 600; }
+.chip.novo { border-color: var(--laranja); color: var(--creme-txt); background: var(--creme); font-weight: 600; }
 .chip.novo::before { background: var(--laranja); }
 @keyframes pisca { 50% { opacity: .3; } }
 
@@ -60,8 +69,8 @@ h2:first-child { margin-top: 0; }
 .cartao { background: var(--cartao); border-radius: var(--raio); box-shadow: var(--sombra); padding: 14px 16px; }
 
 /* ---- botões */
-.bt { border: 1px solid var(--linha); background: #F7F3F1; color: var(--texto); border-radius: 6px; padding: 7px 14px; }
-.bt:hover:not(:disabled) { background: #EFE8E5; }
+.bt { border: 1px solid var(--linha); background: var(--bt); color: var(--texto); border-radius: 6px; padding: 7px 14px; }
+.bt:hover:not(:disabled) { background: var(--bt-h); }
 .bt.p { background: var(--verm); color: #fff; border-color: var(--verm); font-weight: 600; }
 .bt.p:hover:not(:disabled) { background: var(--verm-claro); }
 .bt.link { border: 0; background: none; color: var(--verm); padding: 2px 4px; font-size: 12.5px; text-decoration: underline; }
@@ -87,7 +96,7 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 
 /* ---- busca */
 .busca-linha { display: flex; gap: 8px; }
-.busca-linha input { flex: 1; padding: 8px 10px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; }
+.busca-linha input { flex: 1; padding: 8px 10px; border: 1px solid var(--linha); border-radius: 6px; background: var(--campo); }
 .grupo { margin-top: 18px; font-weight: 700; color: var(--verm); }
 .res { background: var(--cartao); border-radius: 6px; padding: 9px 12px; margin-top: 8px; border-left: 3px solid var(--linha); }
 .res.banco { border-left-color: var(--verm); }
@@ -109,7 +118,7 @@ footer { flex: none; background: var(--cartao); border-top: 1px solid var(--linh
          display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--suave); }
 #ultima { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #caranguejos { display: flex; gap: 4px; align-items: flex-end; min-height: 22px; }
-#detalhes { flex: none; height: 0; overflow: hidden; background: #FBF9F8; border-top: 1px solid var(--linha);
+#detalhes { flex: none; height: 0; overflow: hidden; background: var(--fundo2); border-top: 1px solid var(--linha);
             transition: height .18s ease; }
 #detalhes.aberto { height: 170px; }
 #detalhes pre { margin: 0; padding: 8px 14px; height: 100%; overflow-y: auto; font: 12px/1.4 Consolas, monospace; white-space: pre-wrap; }
@@ -125,12 +134,114 @@ footer { flex: none; background: var(--cartao); border-top: 1px solid var(--linh
 .modal header p { margin: 4px 0 0; color: var(--suave); font-size: 12.5px; }
 .modal .meio { padding: 12px 18px; overflow-y: auto; }
 .modal .pe { padding: 10px 18px 14px; display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--linha); }
-.lista { font: 12.5px/1.5 Consolas, monospace; background: #FBF9F8; border: 1px solid var(--linha); border-radius: 6px;
+.lista { font: 12.5px/1.5 Consolas, monospace; background: var(--fundo2); border: 1px solid var(--linha); border-radius: 6px;
          padding: 8px 10px; max-height: 260px; overflow-y: auto; white-space: pre-wrap; }
 .conflito { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 4px 0; font-size: 12.5px; }
 .conflito code { flex: 1; min-width: 200px; }
 textarea { width: 100%; border: 1px solid var(--linha); border-radius: 6px; padding: 7px 9px; resize: vertical; }
 .aviso { font-size: 11.5px; color: var(--suave); margin-top: 18px; }
+
+/* ---- janela do processo (2.1) */
+main.processo { padding: 0; overflow: hidden; }
+#t-processo { max-width: none; height: 100%; }
+#t-processo.ativa { display: flex; flex-direction: column; }
+.faixa { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 9px 16px; background: var(--cartao);
+         border-bottom: 1px solid var(--linha); }
+.faixa .cod { font: 600 16px Consolas, monospace; }
+.faixa .tag { font-size: 11.5px; }
+.faixa .dir { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.colunas { flex: 1; display: grid; grid-template-columns: minmax(300px, 1.25fr) minmax(260px, 1fr) minmax(280px, 1fr); min-height: 0; }
+.coluna { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--linha); min-width: 0; }
+.coluna:last-child { border-right: 0; }
+.coluna > h2 { margin: 0; padding: 10px 14px 8px; background: var(--fundo); border-bottom: 1px solid var(--linha); display: flex; gap: 8px; align-items: center; }
+.coluna > h2 .bt { margin-left: auto; font-size: 11.5px; letter-spacing: 0; text-transform: none; }
+.rola { flex: 1; overflow-y: auto; padding: 10px 14px; }
+/* chat */
+.msg { margin: 8px 0; max-width: 100%; }
+.msg.eu { background: var(--rosa); border: 1px solid var(--rosa-borda); border-radius: 10px 10px 2px 10px; padding: 7px 11px; margin-left: 14%; white-space: pre-wrap; }
+.msg.claude { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px 10px 10px 2px; padding: 8px 12px; }
+.msg.claude p { margin: 0 0 6px; } .msg.claude p:last-child { margin: 0; }
+.msg.claude h4 { margin: 8px 0 4px; font-size: 13.5px; color: var(--verm); }
+.msg.claude ul, .msg.claude ol { margin: 4px 0 6px; padding-left: 20px; }
+.msg.claude code { background: var(--fundo); padding: 0 4px; border-radius: 3px; font-size: 12.5px; }
+.msg.claude pre { background: var(--fundo2); border: 1px solid var(--linha); padding: 6px 8px; border-radius: 6px; white-space: pre-wrap; font: 12px Consolas, monospace; }
+.ativ { font-size: 11.5px; color: var(--suave); margin: 4px 0 4px 2px; }
+.msg.aviso { font-size: 12px; color: var(--verm); }
+.sub-linha { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--suave); margin: 6px 0; }
+.entrada { border-top: 1px solid var(--linha); padding: 8px 10px; display: flex; gap: 8px; align-items: flex-end; background: var(--cartao); }
+.entrada textarea { flex: 1; min-height: 40px; max-height: 160px; }
+.trabalhando { font-size: 12px; color: var(--suave); padding: 0 14px 6px; display: flex; gap: 8px; align-items: center; min-height: 26px; }
+/* checklist */
+.bloco { margin-bottom: 14px; }
+.bloco > b { display: block; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); margin: 4px 0 6px; }
+.ck { display: flex; gap: 8px; align-items: flex-start; padding: 4px 2px; font-size: 13px; }
+.ck input { margin-top: 3px; }
+.ck small { display: block; color: var(--suave); font-size: 11.5px; }
+.ck.feito > span { color: var(--suave); text-decoration: line-through; }
+.marca-tag { font-size: 10.5px; border-radius: 4px; padding: 0 5px; margin-left: 4px; background: var(--creme); color: var(--creme-txt); }
+.pend { background: var(--am-bg); border: 1px solid var(--am-borda); border-radius: 6px; padding: 7px 9px; margin-bottom: 7px; font-size: 13px; }
+.pend.feita { opacity: .55; }
+.pend input[type=text] { width: 100%; margin-top: 5px; padding: 5px 7px; border: 1px solid var(--linha); border-radius: 5px; }
+.pend .linha-bts { margin-top: 4px; font-size: 12px; }
+details.medida { border: 1px solid var(--linha); border-radius: 6px; margin-bottom: 6px; background: var(--cartao); }
+details.medida summary { padding: 7px 9px; cursor: pointer; font-size: 13px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+details.medida summary .cont { margin-left: auto; font-size: 11px; color: var(--suave); }
+details.medida .itens { padding: 0 9px 8px; }
+.item { display: flex; gap: 6px; align-items: center; font-size: 12.5px; padding: 3px 0; border-top: 1px dashed var(--linha); }
+.item span { flex: 1; }
+.item button { border: 1px solid var(--linha); background: var(--campo); border-radius: 4px; padding: 0 6px; font-size: 12px; }
+.item button.on.ok { background: var(--ok); color: #fff; border-color: var(--ok); }
+.item button.on.x { background: var(--verm); color: #fff; border-color: var(--verm); }
+/* CIA */
+.exig { border: 1px solid var(--linha); border-radius: 6px; padding: 8px 10px; margin-bottom: 9px; background: var(--cartao); }
+.exig .cab { display: flex; gap: 6px; align-items: baseline; font-size: 12px; color: var(--suave); flex-wrap: wrap; }
+.exig .cab b { color: var(--texto); }
+.exig .rasc { background: var(--az-bg); border: 1px dashed var(--az-borda); border-radius: 5px; padding: 6px 8px; font-size: 12.5px; margin: 6px 0; white-space: pre-wrap; }
+.exig textarea { margin-top: 6px; min-height: 70px; font-size: 13px; }
+.exig .rod { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; }
+.exig .conta { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--suave); }
+.exig .conta.alto { color: var(--verm); font-weight: 700; }
+.exig .salvo { color: var(--ok); }
+.exig input.fund { width: 100%; margin-top: 4px; padding: 4px 7px; border: 1px solid var(--linha); border-radius: 5px; font-size: 12px; }
+/* caranguejo */
+.crab { display: inline-block; vertical-align: middle; animation: anda 1.1s ease-in-out infinite; transform-origin: 50% 80%; }
+.crab .perna { animation: pernas .35s linear infinite alternate; transform-origin: center; }
+.crab.parado { animation: none; filter: grayscale(1); opacity: .6; }
+.crab.tchau { animation: tchau .9s ease forwards; }
+.crab.tchau .garra-d { animation: aceno .3s ease-in-out 3 alternate; transform-origin: 70% 60%; }
+@keyframes anda { 0%,100% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }
+@keyframes pernas { to { transform: translateY(1.5px); } }
+@keyframes aceno { to { transform: rotate(-25deg); } }
+@keyframes tchau { 0%,60% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(14px); } }
+#cota { white-space: nowrap; }
+.slot { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#t-conversa { max-width: none; height: 100%; }
+#t-conversa.ativa { display: flex; flex-direction: column; }
+.conversa-unica { flex: 1; width: min(900px, 100%); margin: 0 auto; border: 0; }
+
+/* ---- respostas visuais (blocos sseg-*) */
+.msg.claude table { border-collapse: collapse; margin: 6px 0; font-size: 12.5px; width: auto; }
+.msg.claude th, .msg.claude td { border: 1px solid var(--linha); padding: 4px 8px; text-align: left; }
+.msg.claude th { background: var(--fundo2); text-transform: none; letter-spacing: 0; color: var(--texto); font-size: 12px; }
+.blk { margin: 8px 0; }
+.selo { display: inline-flex; gap: 8px; align-items: center; border-radius: 999px; padding: 3px 12px; font-size: 12.5px; font-weight: 600; }
+.selo.parado { background: var(--am-bg); border: 1px solid var(--am-borda); color: var(--creme-txt); }
+.selo.concluido { background: #E7F4E8; border: 1px solid #B9DDBB; color: var(--ok); }
+.selo.aguardando { background: var(--az-bg); border: 1px solid var(--az-borda); color: var(--azul); }
+@media (prefers-color-scheme: dark) { .selo.concluido { background: #1E2E1F; border-color: #2F5532; } }
+.selo-sub { font-size: 12px; color: var(--suave); margin-left: 6px; }
+.metricas { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.metrica { border: 1px solid var(--linha); border-radius: 8px; padding: 7px 10px; background: var(--fundo2); }
+.metrica small { display: block; font-size: 11px; color: var(--suave); text-transform: uppercase; letter-spacing: .05em; }
+.metrica b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.ocup { display: inline-block; background: var(--azul-bg); color: var(--azul); border-radius: 5px; padding: 0 7px; font-weight: 700; font-family: Consolas, monospace; }
+.efeito-ok { color: var(--ok); } .efeito-alerta { color: var(--verm); font-weight: 600; }
+.discreto { font-size: 12px; color: var(--suave); margin-top: 4px; }
+.perguntas { border: 1px solid var(--am-borda); background: var(--am-bg); border-radius: 8px; padding: 8px 10px; }
+.perguntas label { display: block; font-size: 13px; margin: 6px 0 2px; }
+.perguntas input { width: 100%; padding: 5px 8px; border: 1px solid var(--linha); border-radius: 5px; }
+.cartao-exig { border: 1px solid var(--linha); border-left: 3px solid var(--verm); border-radius: 8px; padding: 8px 10px; background: var(--cartao); }
+.cartao-exig .txt { white-space: pre-wrap; font-size: 13px; margin: 4px 0; }
 </style>
 </head>
 <body>
@@ -159,11 +270,51 @@ textarea { width: 100%; border: 1px solid var(--linha); border-radius: 6px; padd
       <p class="sub">Cada demanda abre o Claude Code com o modelo e o esforço da política de modelo.</p>
       <div id="fluxos"></div>
       <h2>Processos em andamento</h2>
-      <p class="sub">Pastas de processo na sua pasta dos processos, a mais mexida primeiro. A janela de análise (chat, checklist e CIA, sem terminal) chega na 2.1.</p>
+      <p class="sub">Pastas de processo na sua pasta dos processos, a mais mexida primeiro. "Abrir" mostra a janela do processo: conversa, checklist e CIA. Abrir não põe o Claude para trabalhar: ele espera o seu pedido.</p>
       <div class="cartao"><table><thead><tr><th>Processo</th><th>Mexido em</th><th></th><th></th></tr></thead>
         <tbody id="processos"><tr><td class="vazio" colspan="4">Carregando…</td></tr></tbody></table></div>
     </section>
 
+
+    <section class="tela" id="t-processo">
+      <div class="faixa">
+        <button class="bt" id="pr-voltar">← Início</button>
+        <span class="cod" id="pr-cod"></span>
+        <span id="pr-tags"></span>
+        <div class="dir">
+          <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
+          <button class="bt link" id="pr-pasta">abrir pasta</button>
+          <button class="bt" id="pr-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button>
+        </div>
+      </div>
+      <div class="colunas">
+        <div class="coluna">
+          <h2>Conversa <span class="sub" style="margin:0;text-transform:none;letter-spacing:0;font-weight:400" id="pr-modelo"></span></h2>
+          <div class="slot" id="pr-slot"></div>
+          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button class="bt p">Enviar</button></form>
+        </div>
+        <div class="coluna">
+          <h2>Checklist</h2>
+          <div class="rola" id="pr-check"></div>
+        </div>
+        <div class="coluna">
+          <h2>CIA em construção <button class="bt link" id="pr-copiar-cia">copiar a CIA</button></h2>
+          <div class="rola" id="pr-cia"></div>
+        </div>
+      </div>
+    </section>
+    <section class="tela" id="t-conversa">
+      <div class="faixa">
+        <button class="bt" id="cv-voltar">← Início</button>
+        <b id="cv-titulo" style="font-size:15px"></b>
+        <span id="cv-tags"></span>
+        <div class="dir"><button class="bt" id="cv-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button></div>
+      </div>
+      <div class="coluna conversa-unica">
+        <div class="slot" id="cv-slot"></div>
+        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="3" placeholder="Escreva ao Claude — Ctrl+Enter envia"></textarea><button class="bt p">Enviar</button></form>
+      </div>
+    </section>
     <section class="tela" id="t-busca">
       <h2>Buscar nas normas e no banco</h2>
       <p class="sub">Localiza; não decide. Antes de usar um modelo do banco, diga por que este caso é o caso daquele
@@ -221,6 +372,7 @@ textarea { width: 100%; border: 1px solid var(--linha); border-radius: 6px; padd
   <span id="versao">SSEG</span>
   <button class="bt link" id="b-detalhes">Detalhes</button>
   <span id="ultima"></span>
+  <span id="cota" title="Uso da janela de 5 h do Claude (estimativa)"></span>
   <div id="caranguejos" title="Subagentes trabalhando"></div>
 </footer>
 
@@ -238,6 +390,7 @@ const el = (tag, attrs = {}, ...filhos) => {
   for (const [k, v] of Object.entries(attrs)) {
     if (k === "on") for (const [ev, fn] of Object.entries(v)) e.addEventListener(ev, fn);
     else if (k === "class") e.className = v;
+    else if (k === "html") continue;
     else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
   }
   for (const f of filhos.flat()) if (f != null) e.append(f.nodeType ? f : document.createTextNode(String(f)));
@@ -280,6 +433,7 @@ async function copiar(texto) {
 
 // ---- navegação
 function ir(tela) {
+  document.querySelector("main").classList.toggle("processo", tela === "processo" || tela === "conversa");
   document.querySelectorAll(".tela").forEach(t => t.classList.toggle("ativa", t.id === "t-" + tela));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
   if (tela === "config") carregarConfig();
@@ -436,18 +590,30 @@ function pintarFluxos(fluxos) {
     el("span", {}, f.skill ? "skill " + f.skill : "sem skill"))));
 }
 function iniciarFluxo(f, codigo = "") {
-  const meio = [];
-  if (f.pede_codigo) meio.push(el("label", { class: "campo" }, "Código do processo"),
-    el("input", { id: "f-cod", value: codigo, placeholder: "A00012345AA001", style: "padding:7px 9px;border:1px solid var(--linha);border-radius:6px;font-family:Consolas,monospace;width:220px" }));
-  meio.push(el("p", { class: "sub", style: "margin-top:12px" }, "Abre o Claude Code numa janela própria, na pasta do SSEG. Para usar o app do Claude: \"Copiar o prompt\" e escolha lá " + f.modelo_texto + "."));
-  if (f.subagentes && f.subagentes.length) meio.push(el("p", { class: "sub" }, "Subagentes desta conversa: " + f.subagentes.join(", ")));
-  const cod = () => ($("#f-cod") ? $("#f-cod").value.trim() : "");
+  // Nenhum fluxo abre terminal para o analista (decisão do Átila, 12/10/2026): cada um abre uma janela do programa.
+  if (!f.pede_codigo) return abrirConversa(f, f.prompt);
+  const meio = [el("label", { class: "campo" }, "Código do processo"),
+    el("input", { id: "f-cod", value: codigo, placeholder: "A00012345AA001", style: "padding:7px 9px;border:1px solid var(--linha);border-radius:6px;font-family:Consolas,monospace;width:220px" }),
+    el("p", { class: "sub", style: "margin-top:12px" }, f.id === "analise"
+      ? "Abre a janela do processo: conversa, checklist e CIA. O Claude só começa quando você mandar a primeira mensagem."
+      : "Abre a janela desta conversa. O Claude só começa quando você mandar a primeira mensagem.")];
+  const cod = () => ($("#f-cod") ? $("#f-cod").value.trim().toUpperCase() : "");
+  const valido = () => /^A\d{8}[A-Z]{2}\d{3}$/.test(cod()) || (SSEG.log(["✗ Código de processo no formato A00012345AA001."]), false);
   modal(f.titulo, f.modelo_texto + " · " + (f.skill ? "skill " + f.skill : "sem skill"), meio, [
-    ["Abrir no terminal", async b => { await api("abrir_conversa", [f.id, cod()], b); fechar(); }, true],
-    ["Copiar o prompt", async b => { const p = await api("prompt", [f.id, cod()], b); await copiar(p); SSEG.log(["— Conversa — prompt copiado. No app do Claude: Novo → Local → pasta do SSEG → " + f.modelo_texto + ", e cole."]); fechar(); }],
+    ["Abrir", async b => { if (!valido()) return; fechar();
+      if (f.id === "analise") { await api("processo_criar", [cod()], b); abrirProcesso(cod()); }
+      else abrirConversa(f, await api("prompt", [f.id, cod()])); }, true],
     ["Cancelar", fechar],
   ]);
-  if ($("#f-cod")) $("#f-cod").focus();
+  $("#f-cod").focus();
+  $("#f-cod").addEventListener("keydown", ev => { if (ev.key === "Enter") $("#m-pe .bt.p").click(); });
+}
+// ⋯ avançado: terminal e prompt para o app do Claude
+function maisOpcoes(f, codigo) {
+  modal("Outras formas de abrir", f.titulo + " · " + f.modelo_texto, el("p", { class: "sub" }, "Para quem prefere: o Claude Code no terminal, ou o prompt para colar no app do Claude (Novo → Local → pasta do SSEG, " + f.modelo_texto + ")."), [
+    ["Copiar o prompt", async b => { const p = await api("prompt", [f.id, codigo || ""], b); await copiar(p); SSEG.log(["Prompt copiado: no app do Claude, Novo → Local → pasta do SSEG → " + f.modelo_texto + ", e cole."]); fechar(); }],
+    ["Abrir no terminal (avançado)", async b => { await api("abrir_conversa", [f.id, codigo || ""], b); fechar(); }],
+    ["Fechar", fechar]]);
 }
 async function carregarProcessos() {
   const corpo = $("#processos");
@@ -459,7 +625,8 @@ async function carregarProcessos() {
     el("td", {}, new Date(p.quando * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })),
     el("td", {}, el("span", { class: "tag" }, p.arquivos + " arquivo(s)"), p.cia ? el("span", { class: "tag" }, "CIA") : null),
     el("td", { style: "text-align:right" },
-      el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "abrir pasta")))));
+      el("button", { class: "bt link", on: { click: () => abrirProcesso(p.codigo) } }, "abrir"),
+      el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "pasta")))));
 }
 async function carregarInicio() {
   ESTADO.info = await api("inicio");
@@ -556,6 +723,356 @@ $("#b-bug").onclick = async () => {
   atualizar();
 };
 
+
+// ================= janela do processo (2.1) =================
+const PR = { codigo: null, dados: null, reg: null, alterado: 0, sujos: {}, subs: {}, ativ: null };
+const ESFORCO = { low: 14, medium: 18, high: 22, xhigh: 25, max: 28 };
+
+function caranguejo(modelo, esforco, titulo, parado) {
+  const cor = /haiku/i.test(modelo) ? "#3FA34D" : /opus/i.test(modelo) ? "#E8772E" : "#2F6FD6";
+  const tam = ESFORCO[esforco] || 20;
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 40 30"); svg.setAttribute("width", tam * 1.33); svg.setAttribute("height", tam);
+  svg.setAttribute("class", "crab" + (parado ? " parado" : ""));
+  svg.innerHTML = `<title>${titulo.replace(/[<&]/g, "")}</title>
+    <g class="perna" stroke="${cor}" stroke-width="2.2" stroke-linecap="round" fill="none">
+      <path d="M11 20 L5 25"/><path d="M13 21 L9 28"/><path d="M29 20 L35 25"/><path d="M27 21 L31 28"/></g>
+    <path d="M10 13 L6 7" stroke="${cor}" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="5" cy="6" r="3.6" fill="${cor}"/>
+    <g class="garra-d"><path d="M30 13 L34 7" stroke="${cor}" stroke-width="2.4" stroke-linecap="round"/><circle cx="35" cy="6" r="3.6" fill="${cor}"/></g>
+    <ellipse cx="20" cy="17" rx="11" ry="7.5" fill="${cor}"/>
+    <circle cx="16.5" cy="13" r="1.9" fill="#fff"/><circle cx="23.5" cy="13" r="1.9" fill="#fff"/>
+    <circle cx="16.8" cy="13.3" r="0.9" fill="#222"/><circle cx="23.8" cy="13.3" r="0.9" fill="#222"/>`;
+  return svg;
+}
+function nomeModelo(m) { return /haiku/i.test(m) ? "Haiku" : /opus/i.test(m) ? "Opus" : "Sonnet"; }
+
+// Markdown → HTML sem passar HTML do modelo: tudo é escapado antes; só as marcas conhecidas viram tag.
+function mdHtml(texto) {
+  const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const inl = t => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|\W)\*([^*\n]+)\*(?=\W|$)/g, "$1<i>$2</i>");
+  const linhas = texto.split("\n"), out = []; let lista = null;
+  const fechaLista = () => { if (lista) { out.push(`</${lista}>`); lista = null; } };
+  const celulas = l => l.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+  for (let k = 0; k < linhas.length; k++) {
+    const l = linhas[k]; let m;
+    if (/^\s*\|.*\|\s*$/.test(l) && k + 1 < linhas.length && /^\s*\|?[\s:-]+(\|[\s:-]+)+\|?\s*$/.test(linhas[k + 1])) {
+      fechaLista();
+      const cab = celulas(l); k += 2; const corpo = [];
+      while (k < linhas.length && /^\s*\|.*\|\s*$/.test(linhas[k])) corpo.push(celulas(linhas[k++]));
+      k--;
+      out.push("<table><thead><tr>" + cab.map(c => "<th>" + inl(c) + "</th>").join("") + "</tr></thead><tbody>" +
+        corpo.map(r => "<tr>" + r.map(c => "<td>" + inl(c) + "</td>").join("") + "</tr>").join("") + "</tbody></table>");
+    }
+    else if ((m = l.match(/^#{1,6}\s+(.*)/))) { fechaLista(); out.push("<h4>" + inl(m[1]) + "</h4>"); }
+    else if ((m = l.match(/^\s*[-*]\s+(.*)/))) { if (lista !== "ul") { fechaLista(); out.push("<ul>"); lista = "ul"; } out.push("<li>" + inl(m[1]) + "</li>"); }
+    else if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { if (lista !== "ol") { fechaLista(); out.push("<ol>"); lista = "ol"; } out.push("<li>" + inl(m[1]) + "</li>"); }
+    else if (/^\s*([-*_])\1{2,}\s*$/.test(l)) { fechaLista(); out.push("<hr>"); }
+    else if (!l.trim()) fechaLista();
+    else { fechaLista(); out.push("<p>" + inl(l) + "</p>"); }
+  }
+  fechaLista();
+  return out.join("");
+}
+// Resposta inteira: texto em markdown + blocos ```sseg-*``` (dados em JSON) que o PROGRAMA desenha.
+function resposta(texto, ctx) {
+  const raiz = el("div", {});
+  const partes = texto.split(/^```/m);
+  let buffer = "";
+  const despeja = () => { if (buffer.trim()) { const d = el("div", {}); d.innerHTML = mdHtml(buffer); raiz.append(d); } buffer = ""; };
+  for (let i = 0; i < partes.length; i++) {
+    if (i % 2 === 0) { buffer += partes[i]; continue; }
+    const nl = partes[i].indexOf("\n"), tipo = (nl < 0 ? partes[i] : partes[i].slice(0, nl)).trim(), corpo = nl < 0 ? "" : partes[i].slice(nl + 1);
+    let no = null;
+    if (/^sseg-/.test(tipo)) { try { no = BLOCOS[tipo] && BLOCOS[tipo](JSON.parse(corpo), ctx); } catch (e) { no = null; } }
+    if (no) { despeja(); raiz.append(el("div", { class: "blk" }, no)); }
+    else { despeja(); raiz.append(el("pre", {}, corpo.replace(/\n$/, ""))); }
+  }
+  despeja();
+  return raiz;
+}
+function md(texto) { return mdHtml(texto); }
+const BLOCOS = {
+  "sseg-status": d => el("div", {}, el("span", { class: "selo " + ({ parado: "parado", concluido: "concluido", aguardando: "aguardando" }[d.estado] || "aguardando") }, d.texto || d.estado),
+    el("span", { class: "selo-sub" }, [d.processo, d.criterio].filter(Boolean).join(" · "))),
+  "sseg-dados": d => el("div", { class: "metricas" }, ...(d.itens || []).map(x => el("div", { class: "metrica" }, el("small", {}, x.rotulo), el("b", {}, String(x.valor))))),
+  "sseg-definidora": d => el("div", {},
+    d.titulo ? el("b", {}, d.titulo) : null,
+    el("table", { style: "margin-top:6px" }, el("thead", {}, el("tr", {}, ...["Hipótese", "Tabela", "Medidas", "Efeito"].map(h => el("th", {}, h)))),
+      el("tbody", {}, ...(d.hipoteses || []).map(h => el("tr", {},
+        el("td", {}, el("span", { class: "ocup" }, h.ocupacao), " ", h.nota || ""), el("td", {}, h.tabela || ""), el("td", {}, String(h.medidas ?? "")),
+        el("td", { class: h.ok === false ? "efeito-alerta" : "efeito-ok" }, (h.ok === false ? "! " : "✓ ") + (h.efeito || "")))))),
+    d.conclusao ? el("div", { class: "discreto" }, d.conclusao) : null,
+    d.norma ? BLOCOS["sseg-norma"](d.norma) : null),
+  "sseg-norma": d => el("div", { class: "discreto" }, d.rotulo || "",
+    " ", el("button", { class: "bt link", on: { click: ev => api("norma_pdf", [d.rotulo || "", d.consulta || ""], ev.currentTarget) } }, "PDF")),
+  "sseg-exigencia": (d, ctx) => {
+    const n = (d.texto || "").length;
+    return el("div", { class: "cartao-exig" },
+      el("div", { class: "discreto" }, [d.medida, d.fundamento].filter(Boolean).join(" · ")),
+      el("div", { class: "txt" }, d.texto || ""),
+      el("div", { class: "rod", style: "display:flex;gap:8px;align-items:center" },
+        ctx && /^A\d{8}/.test(ctx.chave) ? el("button", { class: "bt p", on: { click: async ev => { await api("processo_exigencia", [ctx.chave, d.texto || "", d.medida || "", d.fundamento || "", "claude"], ev.currentTarget); ev.currentTarget.textContent = "Na CIA (rascunho)"; ev.currentTarget.disabled = true; recarregarRegistro(); } } }, "Pôr na CIA") : null,
+        el("button", { class: "bt", on: { click: () => copiar(d.texto || "") } }, "Copiar"),
+        el("span", { class: "discreto", style: "margin-left:auto;" + (n > 1950 ? "color:var(--verm);font-weight:700" : "") }, n + " / 2000")));
+  },
+  "sseg-perguntas": (d, ctx) => {
+    const qs = (d.perguntas || []).map((q, i) => ({ id: q.id || "q" + (i + 1), texto: q.texto || "", dica: q.dica || "" }));
+    const campos = qs.map(q => el("input", { type: "text", placeholder: q.dica || "sua resposta" }));
+    const processo = ctx && /^A\d{8}/.test(ctx.chave);
+    if (processo) api("processo_perguntas", [ctx.chave, qs]).then(recarregarRegistro).catch(() => {});
+    return el("div", { class: "perguntas" },
+      el("b", {}, processo ? "Perguntas (vão também para o checklist)" : "Perguntas"),
+      ...qs.flatMap((q, i) => [el("label", {}, (i + 1) + ". " + q.texto), campos[i]]),
+      el("div", { class: "linha-bts", style: "margin-top:8px" },
+        el("button", { class: "bt p", on: { click: ev => {
+          const r = qs.map((q, i) => [q, campos[i].value.trim()]).filter(x => x[1]);
+          if (!r.length) return SSEG.log(["✗ Responda ao menos uma pergunta."]);
+          ev.currentTarget.disabled = true;
+          if (processo) api("processo_responder", [ctx.chave, r.map(([q, v]) => [q.texto, v])]).then(recarregarRegistro).catch(() => {});
+          chatEnviar(ctx, "Respostas:\n" + r.map(([q, v]) => "- " + q.texto + " → " + v).join("\n"));
+        } } }, "Mandar respostas"),
+        processo ? el("button", { class: "bt", on: { click: () => api("abrir_pasta_processo", [ctx.chave]) } }, "Abrir a pasta do processo") : null));
+  },
+};
+
+async function abrirProcesso(codigo) {
+  const d = await api("processo_abrir", [codigo]);
+  renderProcesso(d);
+  mostrarCtx("#pr-slot", ctxDe(codigo, PR.fluxo, "O Claude espera o seu pedido. Exemplos: \"roda o check\", \"lê o laudo\", \"qual a data de protocolo?\""));
+  ir("processo");
+}
+function renderProcesso(d) {
+  PR.codigo = d.codigo; PR.dados = d; PR.reg = d.analise; PR.alterado = d.analise.alterado || 0;
+  $("#pr-cod").textContent = d.codigo;
+  const an = (ESTADO.info && ESTADO.info.fluxos || []).find(f => f.id === "analise");
+  PR.fluxo = an || { modelo: "claude-sonnet-5-5", esforco: "high", modelo_texto: "Sonnet 5.5 alto" };
+  $("#pr-modelo").textContent = "· " + PR.fluxo.modelo_texto;
+  $("#pr-tags").replaceChildren(...[
+    el("span", { class: "tag" }, d.json_sol ? "JSON do SOL: " + d.json_sol : "sem JSON do SOL na pasta"),
+    el("span", { class: "tag" }, d.medidas.length + " medida(s)"),
+    d.cias.length ? el("span", { class: "tag" }, d.cias.length + " CIA anterior(es)") : null].filter(Boolean));
+  $("#pr-laudo").hidden = !d.laudo;
+  pintarCota();
+  pintarChecklist(); pintarCIA();
+}
+function pintarCota() {
+  const c = PR.reg && PR.reg.chat || {};
+  $("#cota").textContent = PR.codigo && c.pct_5h != null ? PR.codigo + ": ≈" + (c.pct_5h * 100).toFixed(1).replace(".", ",") + "% das 5 h" + (PR.janela != null ? " · janela " + PR.janela + "%" : "") : "";
+}
+
+// ---- checklist
+function pintarChecklist() {
+  const d = PR.dados, r = PR.reg, out = [];
+  // pendências
+  const pend = el("div", { class: "bloco" }, el("b", {}, "Pendências"));
+  const abertas = r.pendencias.filter(p => !p.feita).length;
+  if (!r.pendencias.length) pend.append(el("p", { class: "sub" }, "As perguntas e o que falta ver aparecem aqui."));
+  for (const p of r.pendencias) {
+    const resp = el("input", { type: "text", value: p.resposta || "", placeholder: "sua resposta (vai para o Claude)", "data-id": p.id });
+    resp.addEventListener("input", () => PR.sujos["p" + p.id] = resp.value);
+    resp.addEventListener("change", () => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { resposta: resp.value, enviada: false }]).then(() => delete PR.sujos["p" + p.id]));
+    pend.append(el("div", { class: "pend" + (p.feita ? " feita" : "") },
+      el("div", {}, p.texto, p.origem === "analista" ? el("span", { class: "marca-tag" }, "sua") : null),
+      resp, el("div", { class: "linha-bts" },
+        el("label", {}, el("input", { type: "checkbox", checked: p.feita, on: { change: ev => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { feita: ev.target.checked }]).then(recarregarRegistro) } }), " resolvida"),
+        el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "pendencias", p.id]).then(recarregarRegistro) } }, "tirar"))));
+  }
+  const nova = el("input", { type: "text", placeholder: "+ pendência sua (Enter)", style: "width:100%;padding:5px 7px;border:1px solid var(--linha);border-radius:5px" });
+  nova.addEventListener("keydown", async ev => { if (ev.key === "Enter" && nova.value.trim()) { await api("processo_pendencia", [PR.codigo, nova.value.trim()]); nova.value = ""; recarregarRegistro(); } });
+  pend.append(nova);
+  const comResp = r.pendencias.filter(p => p.resposta && !p.enviada && !p.feita);
+  if (comResp.length) pend.append(el("button", { class: "bt p", style: "margin-top:6px", on: { click: enviarRespostas } }, "Mandar " + comResp.length + " resposta(s) ao Claude"));
+  out.push(pend);
+  // fluxo
+  const fluxo = el("div", { class: "bloco" }, el("b", {}, "Fluxo (" + Object.keys(r.passos).length + " de " + d.passos.length + ")"));
+  let fase = null;
+  for (const p of d.passos) {
+    if (p.fase !== fase) { fase = p.fase; fluxo.append(el("div", { class: "sub", style: "margin:6px 0 2px;font-weight:600" }, fase)); }
+    const feito = !!r.passos[String(p.n)];
+    fluxo.append(el("label", { class: "ck" + (feito ? " feito" : "") },
+      el("input", { type: "checkbox", checked: feito, on: { change: ev => api("processo_marcar", [PR.codigo, "passos", String(p.n), ev.target.checked || null]).then(recarregarRegistro) } }),
+      el("span", {}, p.n + ". " + p.t, p.marca ? el("span", { class: "marca-tag" }, p.marca === "seu" ? "seu" : p.marca === "para" ? "para e pergunta" : "conversa nova") : null, el("small", {}, p.d))));
+  }
+  out.push(fluxo);
+  // medidas
+  const med = el("div", { class: "bloco" }, el("b", {}, "Medidas, na ordem do SOL"));
+  if (!d.medidas.length) med.append(el("p", { class: "sub" }, "Sem o JSON do SOL na pasta do processo, não há medidas para listar."));
+  for (const m of d.medidas) {
+    const chaves = m.itens.map(i => m.nome + "|" + i);
+    const feitos = chaves.filter(k => r.itens[k]).length;
+    const det = el("details", { class: "medida" },
+      el("summary", {}, el("b", {}, m.nome), el("span", { class: "tag" }, m.tabela),
+        m.inviabilidade !== "NAO_POSSUI" ? el("span", { class: "marca-tag" }, m.inviabilidade === "POSSUI_TOTAL" ? "laudo total" : "laudo parcial") : null,
+        el("span", { class: "cont" }, feitos + "/" + chaves.length)),
+      el("div", { class: "itens" },
+        el("div", { class: "sub", style: "margin:2px 0 4px" }, m.norma),
+        m.nota ? el("div", { class: "sub", style: "margin:2px 0 4px" }, m.nota) : null,
+        ...m.itens.map(i => {
+          const k = m.nome + "|" + i, v = r.itens[k];
+          return el("div", { class: "item" }, el("span", {}, i),
+            el("button", { class: "ok" + (v === "ok" ? " on" : ""), title: "conforme", on: { click: () => marcarItem(k, v === "ok" ? null : "ok") } }, "✓"),
+            el("button", { class: "x" + (v === "exigencia" ? " on" : ""), title: "vira exigência na CIA", on: { click: () => itemExigencia(m, i, k, v) } }, "✗"));
+        })));
+    det.dataset.nome = m.nome;
+    if (PR.abertas && PR.abertas.has(m.nome)) det.open = true;
+    det.addEventListener("toggle", () => { PR.abertas = PR.abertas || new Set(); det.open ? PR.abertas.add(m.nome) : PR.abertas.delete(m.nome); });
+    med.append(det);
+  }
+  out.push(med);
+  const alvo = $("#pr-check"), top = alvo.scrollTop;
+  alvo.replaceChildren(...out); alvo.scrollTop = top;
+}
+async function marcarItem(k, v) { await api("processo_marcar", [PR.codigo, "itens", k, v]); recarregarRegistro(); }
+async function itemExigencia(m, item, k, v) {
+  if (v === "exigencia") return marcarItem(k, null);
+  await api("processo_marcar", [PR.codigo, "itens", k, "exigencia"]);
+  await api("processo_exigencia", [PR.codigo, "", m.nome, ""]);
+  await recarregarRegistro();
+  const ult = [...document.querySelectorAll("#pr-cia textarea")].pop();
+  if (ult) { ult.placeholder = "Achado em \"" + item + "\": escreva a exigência ou peça a redação ao Claude no chat"; ult.focus(); }
+}
+async function enviarRespostas() {
+  const r = PR.reg, lst = r.pendencias.filter(p => p.resposta && !p.enviada && !p.feita);
+  const texto = "Respostas às pendências:\n" + lst.map(p => "- " + p.texto + " → " + p.resposta).join("\n");
+  await chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), texto);
+  for (const p of lst) await api("processo_atualizar", [PR.codigo, "pendencias", p.id, { enviada: true }]);
+  recarregarRegistro();
+}
+
+// ---- CIA
+function pintarCIA() {
+  const r = PR.reg, out = [];
+  if (!r.exigencias.length) out.push(el("p", { class: "sub" }, "Exigências marcadas no checklist (✗) ou redigidas pelo Claude aparecem aqui. Vale o texto que você salvar."));
+  r.exigencias.forEach((e, i) => {
+    const ta = el("textarea", { "data-id": e.id, placeholder: "texto final da exigência (o que vai para a CIA)" });
+    ta.value = PR.sujos["e" + e.id] != null ? PR.sujos["e" + e.id] : (e.final || "");
+    const fund = el("input", { class: "fund", value: e.fundamento || "", placeholder: "fundamento (ex.: RT 11/2016, item 5.4.2)" });
+    const conta = el("span", { class: "conta" });
+    const st = el("span", {});
+    const contar = () => { const n = ta.value.length; conta.textContent = n + " / 2000"; conta.classList.toggle("alto", n > 1950); };
+    ta.addEventListener("input", () => { PR.sujos["e" + e.id] = ta.value; st.textContent = "não salvo"; st.className = ""; contar(); });
+    contar();
+    const salvar = async () => { await api("processo_atualizar", [PR.codigo, "exigencias", e.id, { final: ta.value.trim(), fundamento: fund.value.trim() }]); delete PR.sujos["e" + e.id]; st.textContent = "salvo"; st.className = "salvo"; recarregarRegistro(); };
+    out.push(el("div", { class: "exig" },
+      el("div", { class: "cab" }, el("b", {}, (i + 1) + ". " + (e.medida || "sem medida")), e.origem === "claude" ? el("span", { class: "marca-tag" }, "rascunho do Claude") : null),
+      e.rascunho ? el("div", { class: "rasc" }, e.rascunho) : null,
+      e.rascunho && !e.final ? el("button", { class: "bt link", on: { click: () => { ta.value = e.rascunho; ta.dispatchEvent(new Event("input")); ta.focus(); } } }, "usar o rascunho como base") : null,
+      ta, fund,
+      el("div", { class: "rod" },
+        el("button", { class: "bt p", on: { click: salvar } }, "Salvar"), st,
+        el("button", { class: "bt link", title: "subir", on: { click: () => api("processo_mover", [PR.codigo, e.id, -1]).then(recarregarRegistro) } }, "↑"),
+        el("button", { class: "bt link", title: "descer", on: { click: () => api("processo_mover", [PR.codigo, e.id, 1]).then(recarregarRegistro) } }, "↓"),
+        el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "exigencias", e.id]).then(recarregarRegistro) } }, "excluir"),
+        conta)));
+  });
+  out.push(el("button", { class: "bt", on: { click: async () => { await api("processo_exigencia", [PR.codigo, "", "", ""]); recarregarRegistro(); } } }, "+ exigência"));
+  const alvo = $("#pr-cia"), top = alvo.scrollTop;
+  alvo.replaceChildren(...out); alvo.scrollTop = top;
+}
+$("#pr-copiar-cia").onclick = async () => {
+  const fin = PR.reg.exigencias.filter(e => (e.final || "").trim());
+  await copiar(fin.map(e => e.final.trim()).join("\n\n"));
+  SSEG.log(["CIA copiada: " + fin.length + " exigência(s), só o texto salvo."]);
+};
+
+async function recarregarRegistro() {
+  if (!PR.codigo || PR.foto) return;
+  PR.reg = await api("processo_registro", [PR.codigo]);
+  PR.alterado = PR.reg.alterado || 0;
+  pintarChecklist(); pintarCIA(); pintarCota();
+}
+// O Claude escreve pelo sseg.py: a janela confere o analise.json a cada 2 s (sem mexer no que você digita).
+setInterval(async () => {
+  if (!PR.codigo || PR.foto || !$("#t-processo").classList.contains("ativa") || document.activeElement && /TEXTAREA|INPUT/.test(document.activeElement.tagName)) return;
+  try { const r = await window.pywebview.api.processo_registro(PR.codigo); if ((r.alterado || 0) !== PR.alterado) { PR.reg = r; PR.alterado = r.alterado || 0; pintarChecklist(); pintarCIA(); pintarCota(); } } catch (e) {}
+}, 2000);
+
+// ---- chat (um contexto por conversa: processo = código; fluxo = "fluxo:<id>"); cada um guarda a sua caixa
+const CTX = {};
+function ctxDe(chave, fluxo, vazio) {
+  if (!CTX[chave]) CTX[chave] = { chave, fluxo, ativ: null, subs: {},
+    caixa: el("div", { class: "rola" }, el("p", { class: "vazio" }, vazio)), trab: el("div", { class: "trabalhando" }) };
+  return CTX[chave];
+}
+function mostrarCtx(slot, ctx) { $(slot).replaceChildren(ctx.caixa, ctx.trab); ctx.caixa.scrollTop = ctx.caixa.scrollHeight; }
+function chatAdd(ctx, no) { const c = ctx.caixa; if (c.querySelector(".vazio")) c.replaceChildren(); c.append(no); c.scrollTop = c.scrollHeight; return no; }
+function trabalhando(ctx, on) {
+  if (!on) return ctx.trab.replaceChildren();
+  ctx.trab.replaceChildren(caranguejo(ctx.fluxo.modelo, ctx.fluxo.esforco, "Claude · " + nomeModelo(ctx.fluxo.modelo) + " · conversando"), el("span", { class: "trab-txt" }, "Claude trabalhando…"));
+}
+async function chatEnviar(ctx, texto) {
+  chatAdd(ctx, el("div", { class: "msg eu" }, texto));
+  ctx.ativ = null; trabalhando(ctx, true);
+  try { await api("chat_enviar", [ctx.chave, texto]); } catch (e) { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
+}
+function ligarForm(form, campo, ctxAtual) {
+  $(form).onsubmit = ev => { ev.preventDefault(); const t = $(campo).value.trim(); if (!t) return; $(campo).value = ""; chatEnviar(ctxAtual(), t); };
+  $(campo).addEventListener("keydown", ev => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) $(form).requestSubmit(); });
+}
+ligarForm("#pr-form", "#pr-msg", () => CTX[PR.codigo]);
+ligarForm("#cv-form", "#cv-msg", () => CTX[CV.chave]);
+$("#pr-voltar").onclick = () => ir("inicio");
+$("#cv-voltar").onclick = () => ir("inicio");
+$("#pr-pasta").onclick = () => api("abrir_pasta_processo", [PR.codigo]);
+$("#pr-mais").onclick = () => maisOpcoes(PR.fluxo, PR.codigo);
+$("#cv-mais").onclick = () => maisOpcoes(CV.fluxo, CV.codigo);
+$("#pr-laudo").onclick = () => modal("Laudo de inviabilidade técnica", "Texto do laudo no JSON do SOL. Separar as compensatórias por medida é do analista (ou peça ao Claude no chat).",
+  el("div", { class: "lista", style: "max-height:420px;font-family:inherit" }, PR.dados.laudo), [["Fechar", fechar]]);
+
+// ---- janela de conversa de um fluxo (até cada fluxo ganhar a sua): identidade do programa, sem terminal
+const CV = { chave: null, fluxo: null, codigo: "" };
+function abrirConversa(f, sugestao) {
+  CV.chave = "fluxo:" + f.id; CV.fluxo = f; CV.codigo = (sugestao || "").match(/A\d{8}[A-Z]{2}\d{3}/)?.[0] || "";
+  const ctx = ctxDe(CV.chave, f, "O Claude espera o seu pedido. A mensagem abaixo é uma sugestão: ajuste e envie.");
+  $("#cv-titulo").textContent = f.titulo;
+  $("#cv-tags").replaceChildren(...[el("span", { class: "tag" }, el("i", { style: "display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:" + COR(f.modelo) }), f.modelo_texto),
+    f.skill ? el("span", { class: "tag" }, "skill " + f.skill) : null,
+    f.subagentes && f.subagentes.length ? el("span", { class: "tag" }, "subagentes: " + f.subagentes.join(", ")) : null].filter(Boolean));
+  mostrarCtx("#cv-slot", ctx);
+  if (!ctx.caixa.querySelector(".msg") && sugestao) $("#cv-msg").value = sugestao;
+  ir("conversa");
+  $("#cv-msg").focus();
+}
+
+SSEG.chat = (chave, ev) => {
+  const ctx = CTX[chave];
+  if (!ctx) return;
+  const doProcesso = chave === PR.codigo;
+  if (ev.t === "texto") { ctx.ativ = null; chatAdd(ctx, el("div", { class: "msg claude" }, resposta(ev.texto, ctx))); }
+  else if (ev.t === "ferramenta") {
+    if (!ctx.ativ) ctx.ativ = chatAdd(ctx, el("div", { class: "ativ" }));
+    ctx.ativ.textContent = "↳ " + ev.texto;
+    const t = ctx.trab.querySelector(".trab-txt"); if (t) t.textContent = ev.texto;
+  }
+  else if (ev.t === "sub_ini") {
+    const linha = el("div", { class: "sub-linha" }, caranguejo(ev.modelo, "medium", ev.tipo + " · " + nomeModelo(ev.modelo) + " · " + (ev.desc || "")), el("span", {}, ev.tipo + " — " + (ev.desc || "trabalhando")));
+    ctx.subs[ev.id] = { linha, inicio: Date.now() };
+    chatAdd(ctx, linha); ctx.ativ = null;
+  }
+  else if (ev.t === "sub_fim") {
+    const s = ctx.subs[ev.id]; if (!s) return;
+    const crab = s.linha.querySelector(".crab"); crab.classList.add("tchau");
+    s.linha.querySelector("span").textContent += " · ✓ " + ev.segundos + " s";
+    setTimeout(() => crab.remove(), 1600);
+  }
+  else if (ev.t === "pronto") { if (doProcesso) recarregarRegistro(); }
+  else if (ev.t === "cota") {
+    PR.janela = ev.janela;
+    if (doProcesso && ev.processo != null && PR.reg) { PR.reg.chat.pct_5h = ev.processo / 100; pintarCota(); }
+    else if (!doProcesso) $("#cota").textContent = "janela de 5 h: " + ev.janela + "%";
+  }
+  else if (ev.t === "fim") {
+    trabalhando(ctx, false); ctx.ativ = null;
+    if (ev.negados && ev.negados.length) chatAdd(ctx, el("div", { class: "msg aviso" }, "Negado pela permissão desta janela (⋯ → terminal, se precisar):\n" + ev.negados.join("\n")));
+    if (ev.erro && ev.texto) chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + ev.texto));
+    if (doProcesso) recarregarRegistro();
+  }
+  else if (ev.t === "erro") { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + ev.texto)); }
+  else if (ev.t === "aviso") SSEG.log(["Claude: " + ev.texto]);
+};
+
 // ---- Fotos do build (SSEG_TESTE_FOTO): cada passo deixa uma tela à mostra
 SSEG.tour = async passo => {
   fechar();
@@ -563,10 +1080,36 @@ SSEG.tour = async passo => {
   if (passo === "menu") { $("#menu").classList.add("aberto"); ir("inicio"); }
   if (passo === "busca") { $("#menu").classList.remove("aberto"); ir("busca"); $("#q").value = 'extintor "5 m"'; $("#f-busca").requestSubmit(); }
   if (passo === "config") ir("config");
-  if (passo === "conversa") { ir("inicio"); iniciarFluxo(ESTADO.info.fluxos[1] || ESTADO.info.fluxos[0], "A00012345AA001"); }
+  if (passo === "conversa") { const f = ESTADO.info.fluxos.find(x => x.id === "pergunta") || ESTADO.info.fluxos[0]; abrirConversa(f, f.prompt);
+    const ctx = CTX["fluxo:" + f.id]; chatAdd(ctx, el("div", { class: "msg eu" }, "Porta de saída em F-6 abre para fora?"));
+    SSEG.chat("fluxo:" + f.id, { t: "texto", texto: "**Sim**, no sentido do fluxo de saída.\n\n- RT 11/2016, item 5.5.4 (portas das rotas de saída)\n\nConfira o item no PDF antes de citar." }); }
   if (passo === "github") telaGit(null, { atras: 1, frente: 0, nome: "", email: "", itens: [{ cod: "M", arquivo: "sseg/normas/exemplo.md" }, { cod: "??", arquivo: "CIA 1.pdf", fora: "CIA de processo" }] });
   if (passo === "servidor") telaServidor({ sobe: ["A00012345AA001/1.json"], desce: ["A00012345AA002/CIA 1.pdf"], conflito: ["A00012345AA003/analise.json"], iguais: 4 });
   if (passo === "bug") $("#b-bug").click();
+  if (passo === "processo") {
+    const fake = { codigo: "A00012345AA001", json_sol: "api-1.json", cias: ["CIA 1.pdf"], laudo: "Laudo de exemplo.",
+      passos: [{ n: 1, fase: "Preparar", t: "Abrir a pasta do processo", d: "N.json e CIA anterior", marca: "" }, { n: 4, fase: "Analisar", t: "sseg.py check", d: "insumo, não conclusão", marca: "" }, { n: 6, fase: "Analisar", t: "Ocupação definidora", d: "RT 01/2024 5.1.2", marca: "para" }, { n: 12, fase: "Analisar", t: "Ler a planta", d: "leitura sua", marca: "seu" }],
+      medidas: [{ nome: "Saída de Emergência", norma: "Resolução Técnica nº 11/2016", inviabilidade: "POSSUI_PARCIAL", tabela: "L.1", nota: "", itens: ["Memorial descritivo", "Planta: a) quantidade de saídas e distâncias máximas a percorrer", "Planta: b) larguras dos acessos, escadas, rampas, descarga e portas", "Compensatórias do laudo representadas em planta"] },
+                { nome: "Sinalização de Emergência", norma: "Resolução Técnica nº 12/2021", inviabilidade: "NAO_POSSUI", tabela: "L.2", nota: "Orientação e salvamento: em planta, na Saída de Emergência, alínea i).", itens: ["Memorial descritivo"] }],
+      analise: { passos: { "1": true, "4": true }, itens: { "Saída de Emergência|Memorial descritivo": "ok", "Saída de Emergência|Planta: b) larguras dos acessos, escadas, rampas, descarga e portas": "exigencia" },
+        pendencias: [{ id: "p1", texto: "Falta ver a fita reflexiva nas rampas", origem: "claude", resposta: "", feita: false }, { id: "p2", texto: "Qual a data de protocolo?", origem: "claude", resposta: "03/02/2025", feita: false }],
+        exigencias: [{ id: "e1", medida: "Saída de Emergência", origem: "claude", rascunho: "- Deverá prever largura mínima de 1,10 m na porta da escada, conforme item 5.4.2 da RT 11/2016.", final: "", fundamento: "RT 11/2016, item 5.4.2" }],
+        chat: { pct_5h: 0.031 }, alterado: 1 } };
+    $("#detalhes").classList.remove("aberto");
+    PR.foto = true;  // foto do build: sem pasta de verdade, a janela não relê o registro
+    renderProcesso(fake); ir("processo"); PR.janela = 23; pintarCota();
+    const ctx = ctxDe(fake.codigo, PR.fluxo, ""); mostrarCtx("#pr-slot", ctx); ctx.caixa.replaceChildren();
+    chatAdd(ctx, el("div", { class: "msg eu" }, "roda o check"));
+    SSEG.chat(fake.codigo, { t: "ferramenta", texto: "Rodando python sseg/scripts/sseg.py check --json api-1.json" });
+    SSEG.chat(fake.codigo, { t: "texto", texto: [
+      "```sseg-status", JSON.stringify({ estado: "parado", texto: "Parado: preciso de você", processo: fake.codigo, criterio: "critério (b) do 5.1.2" }), "```",
+      "```sseg-dados", JSON.stringify({ itens: [{ rotulo: "Área", valor: "3.605,26 m²" }, { rotulo: "Altura", valor: "4,85 m" }, { rotulo: "População", valor: "470" }, { rotulo: "Protocolo", valor: "27/08/2026" }] }), "```",
+      "```sseg-definidora", JSON.stringify({ titulo: "Definidora: empate no (a), I-1 marcada pelo RT", hipoteses: [{ ocupacao: "I-1", nota: "risco baixo", tabela: "6I.1", medidas: 8, efeito: "nenhum", ok: true }, { ocupacao: "J-2", nota: "risco baixo", tabela: "6J.1", medidas: 8, efeito: "nenhum", ok: true }], conclusao: "As 8 medidas são as mesmas nas duas: a definidora não muda o campo 4.", norma: { rotulo: "RT 01/2024, item 5.1.2", consulta: "definidora" } }), "```",
+      "```sseg-perguntas", JSON.stringify({ perguntas: [{ id: "q1", texto: "O depósito é da mesma empresa?", dica: "ex.: sim, mesma razão social" }, { id: "q2", texto: "Há atendimento ao público no térreo?", dica: "ex.: não, só funcionários" }] }), "```"].join("\n") });
+    SSEG.chat(fake.codigo, { t: "sub_ini", id: "x1", tipo: "localizador-normas", desc: "itens da RT 11 sobre largura", modelo: "claude-haiku-5-5" });
+    trabalhando(ctx, true);
+    document.querySelector("#t-processo details.medida").open = true;
+  }
   if (passo === "detalhes") { $("#detalhes").classList.add("aberto"); }
 };
 
