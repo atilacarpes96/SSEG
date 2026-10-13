@@ -93,7 +93,7 @@ jobs:
           EDGE="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
           for f in inicio processo; do
             timeout 120 "$EDGE" --headless=new --disable-gpu --hide-scrollbars --window-size=400,860 --virtual-time-budget=10000 \
-              --screenshot="$PWD/dist/celular-$f.png" "http://127.0.0.1:8765/?chave=ci#tour-$f" || true
+              --screenshot="$(cygpath -w "$PWD/dist/celular-$f.png")" "http://127.0.0.1:8765/?chave=ci#tour-$f" || true
             test -s "dist/celular-$f.png" || echo "::error title=espelho::sem foto do celular ($f)"
           done
           echo "::notice title=espelho::$(ls dist/celular*.png | tr '\n' ' ')"
