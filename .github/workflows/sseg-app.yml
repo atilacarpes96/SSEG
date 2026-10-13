@@ -86,16 +86,16 @@ jobs:
       - name: Espelho no celular (a página em largura de celular, pelo navegador)
         shell: bash
         run: |
-          (cd sseg/app && PYTHONUTF8=1 python -c "import api, espelho, time; a = api.Api(); a._pasta_web = 'web'; e = espelho.Espelho(a, 'web', 'ci', porta=8765); a._espelho = e; e.ligar(); time.sleep(120)") &
-          sleep 6
+          (cd sseg/app && PYTHONUTF8=1 python -c "import api, espelho, time; a = api.Api(); a._pasta_web = 'web'; e = espelho.Espelho(a, 'web', 'ci', porta=8765); a._espelho = e; e.ligar(); print('espelho no ar', flush=True); time.sleep(400)" > ../../dist/espelho-log.txt 2>&1) &
+          for i in $(seq 1 60); do curl -s -o /dev/null http://127.0.0.1:8765/ && break; sleep 1; done
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/ || true)
+          if [ "$code" != 403 ]; then echo "::error title=espelho::não subiu ou sem a chave não deu 403 (deu $code): $(tr '\n' '|' < dist/espelho-log.txt | head -c 2000)"; exit 1; fi
           EDGE="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
           for f in inicio processo; do
-            "$EDGE" --headless=new --disable-gpu --hide-scrollbars --window-size=400,860 --virtual-time-budget=10000 \
+            timeout 120 "$EDGE" --headless=new --disable-gpu --hide-scrollbars --window-size=400,860 --virtual-time-budget=10000 \
               --screenshot="$PWD/dist/celular-$f.png" "http://127.0.0.1:8765/?chave=ci#tour-$f" || true
             test -s "dist/celular-$f.png" || echo "::error title=espelho::sem foto do celular ($f)"
           done
-          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/)
-          [ "$code" = 403 ] || echo "::error title=espelho::sem a chave devia dar 403 (deu $code)"
           echo "::notice title=espelho::$(ls dist/celular*.png | tr '\n' ' ')"
       - name: SOL Entrar (atalho na Área de Trabalho)
         shell: bash
