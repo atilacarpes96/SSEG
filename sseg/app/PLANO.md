@@ -150,6 +150,26 @@ Continuam valendo: Anexo L, laudo/compensatórias (modelo leve só separa), rasc
 #### 2.3 — esteira Revisar → Lançar → Arquivar
 - [ ] Cada etapa com o seu caranguejo; frase do que faz; feitas com ✓ e tempo; Lançar no SOL só depois do "pode lançar", com a lista do que vai ser colado. Absorve os itens 2 a 5 da 1.2
 
+#### 2.4 — Espelho no celular (pedido do Átila, 13/10/2026)
+A mesma janela do SSEG.exe do quartel no navegador do celular: o PC faz todo o trabalho (Claude, SOL no Chrome, pastas, plantas), o celular é mais uma tela com toque. Uso: no quartel, ou com o PC do quartel ligado analisando.
+- [x] Fase 1 (2.1.4):
+  - o SSEG.exe serve `web/` em 127.0.0.1 (`espelho.py`), com o mesmo `Api` da janela;
+  - entra só quem abriu o endereço com a chave gerada no PC (cookie), e os POST exigem o cabeçalho `X-SSEG`;
+  - o que o Python empurra para a janela (chat, log) vai também ao navegador por SSE;
+  - o chat que começou numa tela aparece na outra (`chat_historico`, evento `eu`);
+  - abaixo de 700 px: a janela do processo vira abas (Conversa, Checklist, CIA), o menu fica por cima e os campos têm 16 px (sem o zoom do iPhone);
+  - o liga/desliga fica em Configuração → Usar pelo celular, desligado por padrão;
+  - escolher pasta, print da janela e atualizar o programa só funcionam na janela do PC;
+  - o CI fotografa a página a 400 px (`celular-*.png`).
+- [ ] Teste no PC: ligar, "Abrir no navegador deste PC", estreitar a janela do navegador, mandar mensagem por uma tela e ver chegar na outra
+- [ ] Fase 2 — túnel até o celular. O PC do quartel fica na rede do governo e o celular no 4G, então eles não se enxergam direto:
+  - o SSEG.exe abre `ssh -N -R 127.0.0.1:8765:127.0.0.1:8765 sseg-servidor` (conexão de saída, a mesma do sincronizar; nenhuma porta aberta no PC);
+  - o celular chega ao servidor pelo Tailscale (servidor e celular; nada no PC);
+  - o Átila instala o Tailscale no servidor pelo terminal, porque é mudança de rede;
+  - ícone na tela de início do celular e aviso "PC do quartel desligado ou SSEG fechado";
+  - Wi-Fi do quartel na mesma rede do PC: só se a rede deixar, sem contar com isso.
+- [ ] No celular, o [PDF] da busca e "abrir pasta" agem no PC. Avaliar mandar o PDF da norma ao celular (é público) e esconder o "abrir pasta"
+
 ### Ideia a amadurecer — "Ponte SOL" (pedido do Átila, 12/10/2026; NÃO construir sem confirmar)
 
 O Claude ler o SOL por comando, sem print e sem navegar, gastando menos token:

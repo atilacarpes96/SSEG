@@ -83,6 +83,20 @@ jobs:
           echo "::notice title=telas::$(ls dist/previa*.png dist/web*.png | tr '\n' ' ')"
           if [ -s dist/previa-erros.txt ]; then echo "::error title=erro-em-tela::$(tr '\n' '|' < dist/previa-erros.txt | head -c 3000)"; exit 1; fi
           if [ -s dist/web-erros.txt ]; then echo "::error title=erro-em-tela-web::$(tr '\n' '|' < dist/web-erros.txt | head -c 3000)"; exit 1; fi
+      - name: Espelho no celular (a página em largura de celular, pelo navegador)
+        shell: bash
+        run: |
+          (cd sseg/app && PYTHONUTF8=1 python -c "import api, espelho, time; a = api.Api(); a._pasta_web = 'web'; e = espelho.Espelho(a, 'web', 'ci', porta=8765); a._espelho = e; e.ligar(); time.sleep(120)") &
+          sleep 6
+          EDGE="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+          for f in inicio processo; do
+            "$EDGE" --headless=new --disable-gpu --hide-scrollbars --window-size=400,860 --virtual-time-budget=10000 \
+              --screenshot="$PWD/dist/celular-$f.png" "http://127.0.0.1:8765/?chave=ci#tour-$f" || true
+            test -s "dist/celular-$f.png" || echo "::error title=espelho::sem foto do celular ($f)"
+          done
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/)
+          [ "$code" = 403 ] || echo "::error title=espelho::sem a chave devia dar 403 (deu $code)"
+          echo "::notice title=espelho::$(ls dist/celular*.png | tr '\n' ' ')"
       - name: SOL Entrar (atalho na Área de Trabalho)
         shell: bash
         run: |
@@ -98,6 +112,7 @@ jobs:
             dist/SSEG.exe
             dist/previa*.png
             dist/web*.png
+            dist/celular*.png
           make_latest: ${{ github.ref_name == 'main' }}
       # Uma cópia "antiga" (versão 0.0.1) numa pasta com espaço se atualiza para a que acabou de
       # sair: o arquivo tem de ficar igual ao publicado e o programa tem de reabrir.

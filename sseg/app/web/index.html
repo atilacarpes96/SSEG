@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SSEG</title>
 <style>
 :root {
@@ -244,6 +245,49 @@ details.medida .itens { padding: 0 9px 8px; }
 .perguntas input { width: 100%; padding: 5px 8px; border: 1px solid var(--linha); border-radius: 5px; }
 .cartao-exig { border: 1px solid var(--linha); border-left: 3px solid var(--verm); border-radius: 8px; padding: 8px 10px; background: var(--cartao); }
 .cartao-exig .txt { white-space: pre-wrap; font-size: 13px; margin: 4px 0; }
+
+/* ---- espelho no celular (2.4): a mesma página no navegador; o que só existe no PC some */
+.abas-proc { display: none; }
+body.espelho .so-pc { display: none !important; }
+#esp-url { font: 12.5px Consolas, monospace; word-break: break-all; }
+#sem-pc { display: none; background: var(--rosa); color: var(--verm); border-bottom: 1px solid var(--rosa-borda);
+          padding: 7px 14px; font-size: 13px; font-weight: 600; }
+body.sem-pc #sem-pc { display: block; }
+
+/* ---- tela estreita (celular, ou a janela do PC bem fina): uma coluna, a janela do processo em abas */
+@media (max-width: 700px) {
+  body { font-size: 15px; }
+  header { padding: 6px 10px; gap: 8px; flex-wrap: wrap; }
+  .marca small { display: none; }
+  .marca img { width: 30px; height: 30px; }
+  .marca b { font-size: 17px; }
+  #estado { gap: 4px; }
+  .chip { font-size: 11.5px; padding: 2px 8px 2px 7px; }
+  nav { position: absolute; top: 0; bottom: 0; left: 0; z-index: 5; box-shadow: var(--sombra); }
+  main { padding: 12px 12px 18px; }
+  main.processo { padding: 0; }
+  input, textarea { font-size: 16px; }  /* sem o zoom automático do iPhone ao tocar no campo */
+  .bt { padding: 9px 14px; }
+  .bt.link { padding: 6px 6px; }
+  #fluxos { grid-template-columns: 1fr 1fr; }
+  td, th { padding: 8px 4px; }
+  .faixa { padding: 8px 10px; gap: 8px; }
+  .faixa .dir { margin-left: 0; width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+  .faixa .dir .bt { white-space: nowrap; }
+  .abas-proc { display: flex; border-bottom: 1px solid var(--linha); background: var(--cartao); flex: none; }
+  .abas-proc button { flex: 1; border: 0; background: none; padding: 10px 4px; font-weight: 600; color: var(--suave);
+                      border-bottom: 3px solid transparent; }
+  .abas-proc button.ativo { color: var(--verm); border-bottom-color: var(--verm); }
+  .colunas { display: flex; }
+  .coluna { flex: 1; border-right: 0; display: none; }
+  .colunas[data-aba="chat"] [data-col="chat"], .colunas[data-aba="check"] [data-col="check"],
+  .colunas[data-aba="cia"] [data-col="cia"] { display: flex; }
+  .coluna > h2 { display: none; }
+  .msg.eu { margin-left: 8%; }
+  footer { gap: 8px; padding: 6px 10px; }
+  #ultima { display: none; }
+  .modal { max-height: 94vh; }
+}
 </style>
 </head>
 <body>
@@ -259,6 +303,7 @@ details.medida .itens { padding: 0 9px 8px; }
   </div>
 </header>
 
+<div id="sem-pc">Sem conexão com o SSEG.exe do PC (fechado, sem rede ou com o espelho desligado). Tentando de novo…</div>
 <div id="corpo">
   <nav id="menu">
     <button data-tela="inicio" class="ativo">Início</button>
@@ -291,17 +336,20 @@ details.medida .itens { padding: 0 9px 8px; }
           <button class="bt" id="pr-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button>
         </div>
       </div>
-      <div class="colunas">
-        <div class="coluna">
+      <div class="abas-proc" id="pr-abas">
+        <button data-aba="chat" class="ativo">Conversa</button><button data-aba="check">Checklist</button><button data-aba="cia">CIA</button>
+      </div>
+      <div class="colunas" data-aba="chat">
+        <div class="coluna" data-col="chat">
           <h2>Conversa <span class="sub" style="margin:0;text-transform:none;letter-spacing:0;font-weight:400" id="pr-modelo"></span></h2>
           <div class="slot" id="pr-slot"></div>
           <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button class="bt p">Enviar</button></form>
         </div>
-        <div class="coluna">
+        <div class="coluna" data-col="check">
           <h2>Checklist</h2>
           <div class="rola" id="pr-check"></div>
         </div>
-        <div class="coluna">
+        <div class="coluna" data-col="cia">
           <h2>CIA em construção <button class="bt link" id="pr-copiar-cia">copiar a CIA</button></h2>
           <div class="rola" id="pr-cia"></div>
         </div>
@@ -341,13 +389,26 @@ details.medida .itens { padding: 0 9px 8px; }
       <h2>Pastas</h2>
       <div class="cartao">
         <label class="campo" for="p-clone">Pasta do SSEG (cópia do GitHub)</label>
-        <div class="campo-linha"><input id="p-clone"><button class="bt" data-escolher="p-clone">Escolher</button></div>
+        <div class="campo-linha"><input id="p-clone"><button class="bt so-pc" data-escolher="p-clone">Escolher</button></div>
         <label class="campo" for="p-proc">Pasta dos processos (print ppci)</label>
-        <div class="campo-linha"><input id="p-proc"><button class="bt" data-escolher="p-proc">Escolher</button></div>
+        <div class="campo-linha"><input id="p-proc"><button class="bt so-pc" data-escolher="p-proc">Escolher</button></div>
         <div class="linha-bts" style="margin-top:12px">
           <button class="bt p" id="b-pastas">Criar / conferir pastas</button>
           <button class="bt" id="b-abrir-proc">Abrir pasta dos processos</button>
           <button class="bt" id="b-abrir-clone">Abrir pasta do SSEG</button>
+        </div>
+      </div>
+      <h2 class="so-pc">Usar pelo celular</h2>
+      <div class="cartao so-pc">
+        <p class="sub" style="margin:0 0 10px">A mesma janela no navegador do celular, com este PC fazendo o trabalho (Claude, SOL, pastas).
+          Fica só neste PC (127.0.0.1), e só entra quem tiver o endereço com a chave. O caminho até o celular (túnel pelo servidor) vem na próxima versão;
+          por enquanto dá para testar abrindo no navegador deste PC, ao lado da janela.</p>
+        <p id="esp-estado" class="sub" style="margin:0 0 8px">Desligado.</p>
+        <p id="esp-url" hidden></p>
+        <div class="linha-bts">
+          <button class="bt p" id="b-esp">Ligar</button>
+          <button class="bt" id="b-esp-abrir" hidden>Abrir no navegador deste PC</button>
+          <button class="bt" id="b-esp-copiar" hidden>Copiar endereço</button>
         </div>
       </div>
       <h2>SOL sem teclado (opcional)</h2>
@@ -388,6 +449,29 @@ details.medida .itens { padding: 0 9px 8px; }
 
 <script>
 "use strict";
+// 2.4 Espelho: aberta pelo navegador (celular), a página fala por HTTP com o SSEG.exe do PC — o mesmo
+// Api da janela — e recebe por SSE o que o Python empurra para a janela (SSEG.chat, SSEG.log).
+const ESPELHO = !window.pywebview && /^https?:$/.test(location.protocol);
+if (ESPELHO) {
+  const chamar = nome => async (...args) => {
+    const r = await fetch("api/" + nome, { method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-SSEG": "1" }, body: JSON.stringify(args) });
+    let j = {};
+    try { j = await r.json(); } catch (e) {}
+    if (!r.ok || j.erro) throw new Error(j.erro || "sem resposta do PC (" + r.status + ")");
+    return j.r;
+  };
+  window.pywebview = { api: new Proxy({}, { get: (_, nome) => chamar(nome) }) };
+  window.addEventListener("DOMContentLoaded", () => {
+    document.body.classList.add("espelho");
+    const es = new EventSource("eventos");
+    es.onopen = () => document.body.classList.remove("sem-pc");
+    es.onerror = () => document.body.classList.add("sem-pc");
+    es.onmessage = m => { try { const { f, a } = JSON.parse(m.data); if (typeof SSEG[f] === "function") SSEG[f](...a); } catch (e) {} };
+    window.dispatchEvent(new Event("pywebviewready"));
+  });
+}
+const CLIENTE = Math.random().toString(36).slice(2);  // qual tela mandou a mensagem (as outras recebem "eu")
 const $ = (s, r = document) => r.querySelector(s);
 const el = (tag, attrs = {}, ...filhos) => {
   const e = document.createElement(tag);
@@ -432,7 +516,11 @@ async function api(nome, args = [], botao = null) {
 
 async function copiar(texto) {
   try { await navigator.clipboard.writeText(texto); }
-  catch (e) { await api("copiar", [texto]); }
+  catch (e) {
+    if (!ESPELHO) return api("copiar", [texto]);
+    const t = el("textarea", { style: "position:fixed;opacity:0" }); t.value = texto; document.body.append(t);
+    t.select(); try { document.execCommand("copy"); } finally { t.remove(); }
+  }
 }
 
 // ---- navegação
@@ -440,8 +528,9 @@ function ir(tela) {
   document.querySelector("main").classList.toggle("processo", tela === "processo" || tela === "conversa");
   document.querySelectorAll(".tela").forEach(t => t.classList.toggle("ativa", t.id === "t-" + tela));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
-  if (tela === "config") carregarConfig();
+  if (tela === "config") { carregarConfig(); estadoEspelho(); }
   if (tela === "inicio") carregarProcessos();
+  if (matchMedia("(max-width: 700px)").matches) $("#menu").classList.remove("aberto");  // menu por cima, no celular
 }
 $("#b-menu").onclick = () => $("#menu").classList.toggle("aberto");
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => ir(b.dataset.tela));
@@ -1054,9 +1143,21 @@ setInterval(async () => {
 // ---- chat (um contexto por conversa: processo = código; fluxo = "fluxo:<id>"); cada um guarda a sua caixa
 const CTX = {};
 function ctxDe(chave, fluxo, vazio) {
-  if (!CTX[chave]) CTX[chave] = { chave, fluxo, ativ: null, subs: {},
-    caixa: el("div", { class: "rola" }, el("p", { class: "vazio" }, vazio)), trab: el("div", { class: "trabalhando" }) };
+  if (!CTX[chave]) {
+    const ctx = CTX[chave] = { chave, fluxo, ativ: null, subs: {},
+      caixa: el("div", { class: "rola" }, el("p", { class: "vazio" }, vazio)), trab: el("div", { class: "trabalhando" }) };
+    if (!PR.foto) historico(ctx);
+  }
   return CTX[chave];
+}
+// A conversa pode ter começado na outra tela (PC ou celular): refaz o chat com os eventos guardados.
+async function historico(ctx) {
+  let evs = [];
+  try { evs = await window.pywebview.api.chat_historico(ctx.chave); } catch (e) { return; }
+  if (!evs || !evs.length) return;
+  ctx.replay = true;
+  try { for (const ev of evs) SSEG.chat(ctx.chave, ev.t === "eu" ? { ...ev, de: "" } : ev); }
+  finally { ctx.replay = false; }
 }
 function mostrarCtx(slot, ctx) { $(slot).replaceChildren(ctx.caixa, ctx.trab); ctx.caixa.scrollTop = ctx.caixa.scrollHeight; }
 function chatAdd(ctx, no) { const c = ctx.caixa; if (c.querySelector(".vazio")) c.replaceChildren(); c.append(no); c.scrollTop = c.scrollHeight; return no; }
@@ -1067,7 +1168,7 @@ function trabalhando(ctx, on) {
 async function chatEnviar(ctx, texto) {
   chatAdd(ctx, el("div", { class: "msg eu" }, texto));
   ctx.ativ = null; trabalhando(ctx, true);
-  try { await api("chat_enviar", [ctx.chave, texto]); } catch (e) { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
+  try { await api("chat_enviar", [ctx.chave, texto, CLIENTE]); } catch (e) { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
 }
 function ligarForm(form, campo, ctxAtual) {
   $(form).onsubmit = ev => { ev.preventDefault(); const t = $(campo).value.trim(); if (!t) return; $(campo).value = ""; chatEnviar(ctxAtual(), t); };
@@ -1076,6 +1177,11 @@ function ligarForm(form, campo, ctxAtual) {
 ligarForm("#pr-form", "#pr-msg", () => CTX[PR.codigo]);
 ligarForm("#cv-form", "#cv-msg", () => CTX[CV.chave]);
 $("#pr-voltar").onclick = () => ir("inicio");
+for (const b of document.querySelectorAll("#pr-abas button")) b.onclick = () => {
+  for (const x of document.querySelectorAll("#pr-abas button")) x.classList.toggle("ativo", x === b);
+  document.querySelector("#t-processo .colunas").dataset.aba = b.dataset.aba;
+  if (b.dataset.aba === "chat") { const c = CTX[PR.codigo]; if (c) c.caixa.scrollTop = c.caixa.scrollHeight; }
+};
 $("#cv-voltar").onclick = () => ir("inicio");
 $("#pr-pasta").onclick = () => api("abrir_pasta_processo", [PR.codigo]);
 // Os botões do SOL pedem ao Claude da conversa que abra o endereço NA ABA DO SOL DO GRUPO DO CLAUDE
@@ -1109,8 +1215,12 @@ function abrirConversa(f, sugestao) {
 SSEG.chat = (chave, ev) => {
   const ctx = CTX[chave];
   if (!ctx) return;
-  const doProcesso = chave === PR.codigo;
-  if (ev.t === "texto") { ctx.ativ = null; chatAdd(ctx, el("div", { class: "msg claude" }, resposta(ev.texto, ctx))); }
+  const doProcesso = chave === PR.codigo && !ctx.replay;
+  if (ev.t === "eu") {  // mensagem mandada pela outra tela
+    if (ev.de === CLIENTE) return;
+    chatAdd(ctx, el("div", { class: "msg eu" }, ev.texto)); ctx.ativ = null; trabalhando(ctx, true);
+  }
+  else if (ev.t === "texto") { ctx.ativ = null; chatAdd(ctx, el("div", { class: "msg claude" }, resposta(ev.texto, ctx))); }
   else if (ev.t === "ferramenta") {
     if (!ctx.ativ) ctx.ativ = chatAdd(ctx, el("div", { class: "ativ" }));
     ctx.ativ.textContent = "↳ " + ev.texto;
@@ -1135,11 +1245,11 @@ SSEG.chat = (chave, ev) => {
   }
   else if (ev.t === "fim") {
     trabalhando(ctx, false); ctx.ativ = null;
-    if (doProcesso && PR.reg) for (const e of PR.reg.exigencias.filter(x => x.pedido))  // pediu e o rascunho não voltou ao item
+    if (doProcesso && PR.reg && !ctx.replay) for (const e of PR.reg.exigencias.filter(x => x.pedido))  // pediu e o rascunho não voltou ao item
       api("processo_atualizar", [PR.codigo, "exigencias", e.id, { pedido: false }])
         .then(() => chatAdd(ctx, el("div", { class: "msg aviso" }, "O Claude terminou sem gravar o rascunho no item " + e.id + ". Peça de novo ou escreva o texto.")))
         .catch(() => {});
-    if (ev.negados && ev.negados.length) {
+    if (ev.negados && ev.negados.length && !ctx.replay) {
       chatAdd(ctx, el("div", { class: "msg aviso" }, ev.negados.length === 1 ? "Um comando foi bloqueado nesta janela (" + ev.negados[0].ferramenta + "). O Claude costuma tentar de outro jeito; detalhes em Detalhes." : ev.negados.length + " comandos foram bloqueados nesta janela. Detalhes em Detalhes."));
       SSEG.log(ev.negados.map(n => "bloqueado: " + n.ferramenta + " " + n.detalhe));
     }
@@ -1190,12 +1300,27 @@ SSEG.tour = async passo => {
   if (passo === "detalhes") { $("#detalhes").classList.add("aberto"); }
 };
 
+// ---- espelho no celular (Configuração)
+function pintarEspelho(e) {
+  $("#esp-estado").textContent = e.ligado ? "Ligado" + (e.telas ? " · " + e.telas + " tela(s) no navegador agora" : "") + "." : "Desligado.";
+  $("#esp-url").hidden = $("#b-esp-abrir").hidden = $("#b-esp-copiar").hidden = !e.ligado;
+  $("#esp-url").textContent = e.url || "";
+  $("#b-esp").textContent = e.ligado ? "Desligar" : "Ligar";
+  $("#b-esp").classList.toggle("p", !e.ligado);
+  ESTADO.espelho = e;
+}
+async function estadoEspelho() { if (!ESPELHO) try { pintarEspelho(await window.pywebview.api.espelho_estado()); } catch (e) {} }
+$("#b-esp").onclick = async ev => pintarEspelho(await api("espelho_ligar", [!(ESTADO.espelho && ESTADO.espelho.ligado)], ev.currentTarget));
+$("#b-esp-abrir").onclick = () => api("abrir_url", [ESTADO.espelho.url]);
+$("#b-esp-copiar").onclick = () => copiar(ESTADO.espelho.url);
+
 // ---- partida
 window.addEventListener("pywebviewready", async () => {
   const info = await carregarInicio();
   SSEG.log(["SSEG " + info.versao + "."]);
-  estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub(); estadoVersao();
+  estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub(); estadoVersao(); estadoEspelho();
   if (info.primeira_vez) ir("config");
+  if (ESPELHO && /^#tour-\w+$/.test(location.hash)) SSEG.tour(location.hash.slice(6));  // foto do build em largura de celular
 });
 </script>
 </body>

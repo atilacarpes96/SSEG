@@ -44,6 +44,12 @@ def principal(recurso):
                                 width=1120, height=altura, min_size=(720, 520), background_color="#F4F1EF",
                                 text_select=True)
     api._ligar(jan)
+    api._pasta_web = os.path.dirname(recurso(os.path.join("web", "index.html")))
+    if api._cfg().get("espelho") and not os.environ.get("SSEG_TESTE_FOTO"):
+        try:
+            api.espelho_ligar(True)
+        except OSError as e:  # porta ocupada (outro SSEG aberto): a janela segue sem o espelho
+            api._registro.append("✗ Espelho não ligou: %s" % e)
     foto = os.environ.get("SSEG_TESTE_FOTO")
     if foto:
         webview.start(_tour, (jan, api, foto), gui="edgechromium")

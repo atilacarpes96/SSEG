@@ -12,6 +12,7 @@ import base64
 import json
 import os
 import re
+import secrets
 import shutil
 import subprocess
 import tempfile
@@ -22,6 +23,7 @@ import zipfile
 import busca
 import chat
 import claude_local
+import espelho
 import gasto
 import git_sinc
 import instalar
@@ -42,18 +44,27 @@ class Api:
         self._claude = None
         self._conversas = {}
         self._eventos = []   # últimos eventos do chat (stream-json resumido), para o Reportar bug
+        self._hist = {}      # eventos de cada conversa, para a outra tela (celular) montar o chat ao abrir
+        self._espelho = None
+        self._pasta_web = None
 
     # ---------------------------------------------------------------- infraestrutura
     def _ligar(self, janela):
         self._janela = janela
 
-    def _log(self, *linhas):
-        self._registro.extend(linhas)
+    def _emitir(self, funcao, *args):
+        """SSEG.<funcao>(args) na janela do PC e em cada tela aberta pelo navegador (espelho)."""
         if self._janela:
             try:
-                self._janela.evaluate_js("SSEG.log(%s)" % json.dumps(list(linhas)))
+                self._janela.evaluate_js("SSEG.%s(%s)" % (funcao, ", ".join(json.dumps(a, ensure_ascii=False) for a in args)))
             except Exception:  # janela fechando
                 pass
+        if self._espelho:
+            self._espelho.emitir(funcao, args)
+
+    def _log(self, *linhas):
+        self._registro.extend(linhas)
+        self._emitir("log", list(linhas))
 
     def _cfg(self):
         cfg = base.ler_config()
@@ -317,8 +328,18 @@ class Api:
         cfg["cota"] = v
         base.gravar_config(cfg)
 
-    def chat_enviar(self, chave, texto):
-        """chave = código do processo (janela de 3 colunas) ou "fluxo:<id>" (janela de conversa do fluxo)."""
+    def _guardar(self, chave, ev):
+        h = self._hist.setdefault(chave, [])
+        h.append(ev)
+        del h[:-600]
+
+    def chat_historico(self, chave):
+        """Eventos desta conversa desde que o programa abriu (a outra tela monta o chat a partir deles)."""
+        return list(self._hist.get(chave, []))
+
+    def chat_enviar(self, chave, texto, de=""):
+        """chave = código do processo (janela de 3 colunas) ou "fluxo:<id>" (janela de conversa do fluxo).
+        de = qual tela mandou: ela já mostrou a mensagem; as outras recebem o evento "eu"."""
         texto = (texto or "").strip()
         if not texto:
             return
@@ -347,14 +368,14 @@ class Api:
                     d = reg.ler(pasta)
                     d["chat"]["tokens"] = d["chat"].get("tokens", 0) + ev["tokens"]
                     reg.gravar(pasta, d)
-                if self._janela:
-                    try:
-                        self._janela.evaluate_js("SSEG.chat(%s, %s)" % (json.dumps(chave), json.dumps(ev, ensure_ascii=False)))
-                    except Exception:
-                        pass
+                self._guardar(chave, ev)
+                self._emitir("chat", chave, ev)
             c = chat.Conversa(self._clone(), pasta, codigo, fluxo, claude, subs, aoevento,
                               self._reg(), {"ler": self._cota_ler, "gravar": self._cota_gravar}, sol=links)
             self._conversas[chave] = c
+        ev = {"t": "eu", "texto": texto, "de": de}
+        self._guardar(chave, ev)
+        self._emitir("chat", chave, ev)
         c.enviar(texto)
 
     def processo_criar(self, codigo):
@@ -533,8 +554,36 @@ class Api:
             import threading
             threading.Timer(1.2, self._janela.destroy).start()
 
+    # ---------------------------------------------------------------- espelho no celular (2.4)
+    def _espelho_obj(self):
+        if not self._espelho:
+            cfg = base.ler_config()
+            if not cfg.get("espelho_chave"):
+                cfg["espelho_chave"] = secrets.token_urlsafe(18)
+                base.gravar_config(cfg)
+            self._espelho = espelho.Espelho(self, self._pasta_web, cfg["espelho_chave"],
+                                            porta=int(cfg.get("espelho_porta") or espelho.PORTA))
+        return self._espelho
+
+    def espelho_estado(self):
+        e = self._espelho
+        return {"ligado": bool(e and e.ligado), "url": e.url() if e and e.ligado else "", "telas": e.telas if e else 0}
+
+    def espelho_ligar(self, ligar):
+        """Liga ou desliga a página no navegador (127.0.0.1) e guarda a escolha para a próxima abertura."""
+        e = self._espelho_obj()
+        if ligar:
+            e.ligar()
+        else:
+            e.desligar()
+        cfg = base.ler_config()
+        cfg["espelho"] = bool(ligar)
+        base.gravar_config(cfg)
+        self._log("Espelho %s." % ("ligado: " + e.url().split("?")[0] if ligar else "desligado"))
+        return self.espelho_estado()
+
     def abrir_url(self, url):
-        if url.startswith("https://"):
+        if url.startswith("https://") or url.startswith("http://127.0.0.1:"):
             webbrowser.open(url)
 
     def copiar(self, texto):
