@@ -458,7 +458,9 @@ body.sem-pc #sem-pc { display: block; }
 "use strict";
 // 2.4 Espelho: aberta pelo navegador (celular), a página fala por HTTP com o SSEG.exe do PC — o mesmo
 // Api da janela — e recebe por SSE o que o Python empurra para a janela (SSEG.chat, SSEG.log).
-const ESPELHO = !window.pywebview && /^https?:$/.test(location.protocol);
+// Só a página servida pelo espelho.py traz a marca: a janela do PC também abre por http://127.0.0.1
+// (servidor interno do pywebview), então o endereço não diz nada.
+const ESPELHO = !!document.querySelector('meta[name="sseg-espelho"]');
 if (ESPELHO) {
   const chamar = nome => async (...args) => {
     const r = await fetch("api/" + nome, { method: "POST", credentials: "same-origin",

@@ -132,7 +132,10 @@ class _Tratador(BaseHTTPRequestHandler):
         if not caminho.startswith(os.path.normpath(self.espelho.pasta_web) + os.sep) or not os.path.isfile(caminho):
             return self._enviar(404, '{"erro": "não encontrado"}')
         with open(caminho, "rb") as fh:
-            self._enviar(200, fh.read(), TIPOS.get(os.path.splitext(caminho)[1].lower(), "application/octet-stream"))
+            dados = fh.read()
+        if nome == "index.html":  # a marca que põe a página em modo navegador (ver ESPELHO no index.html)
+            dados = dados.replace(b"<head>", b'<head>\n<meta name="sseg-espelho" content="1">', 1)
+        self._enviar(200, dados, TIPOS.get(os.path.splitext(caminho)[1].lower(), "application/octet-stream"))
 
     def _eventos(self):
         q = self.espelho._assinar()

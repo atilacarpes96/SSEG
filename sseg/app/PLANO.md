@@ -152,7 +152,7 @@ Continuam valendo: Anexo L, laudo/compensatórias (modelo leve só separa), rasc
 
 #### 2.4 — Espelho no celular (pedido do Átila, 13/10/2026)
 A mesma janela do SSEG.exe do quartel no navegador do celular: o PC faz todo o trabalho (Claude, SOL no Chrome, pastas, plantas), o celular é mais uma tela com toque. Uso: no quartel, ou com o PC do quartel ligado analisando.
-- [x] Fase 1 (2.1.4):
+- [x] Fase 1 (2.1.4; 2.1.5 corrige a janela do PC, que se achava no celular porque o pywebview também serve por http://127.0.0.1 — a marca agora vem só do espelho.py):
   - o SSEG.exe serve `web/` em 127.0.0.1 (`espelho.py`), com o mesmo `Api` da janela;
   - entra só quem abriu o endereço com a chave gerada no PC (cookie), e os POST exigem o cabeçalho `X-SSEG`;
   - o que o Python empurra para a janela (chat, log) vai também ao navegador por SSE;

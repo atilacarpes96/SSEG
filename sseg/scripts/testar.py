@@ -348,6 +348,8 @@ def main():
         p_ = subprocess.run(["node", "--check", fh.name], capture_output=True, text=True)
         os.remove(fh.name)
         caso("interface: JavaScript da página sem erro de sintaxe (node --check)", p_.returncode == 0, p_.stderr[-400:])
+    caso("interface: a janela do PC não se acha no celular (a marca vem só do espelho, não do endereço)",
+         '<meta name="sseg-espelho"' not in pag and "location.protocol" not in js)
     caso("interface: ponte do espelho (celular) presente na página",
          "const ESPELHO" in js and "chat_historico" in js and 'data-col="cia"' in pag and "max-width: 700px" in pag)
     # 18. espelho no celular (2.4): sem a chave não entra; com ela, chama o mesmo Api e recebe os eventos
@@ -378,7 +380,7 @@ def main():
         cookie = (cab_ok.get("Set-Cookie") or "").split(";")[0]
         st_pag, _, pag_ = _pedir("GET", "/", cab={"Cookie": cookie})
         caso("espelho: sem a chave não entra; com ela vira cookie e abre a página",
-             st_sem == 403 and st_errada == 403 and st_ok == 303 and st_pag == 200 and b"const ESPELHO" in pag_,
+             st_sem == 403 and st_errada == 403 and st_ok == 303 and st_pag == 200 and b'name="sseg-espelho"' in pag_,
              "%s %s %s %s" % (st_sem, st_errada, st_ok, st_pag))
         j = {"Cookie": cookie, "X-SSEG": "1", "Content-Type": "application/json"}
         st_api, _, r_api = _pedir("POST", "/api/soma", "[2, 3]", j)
