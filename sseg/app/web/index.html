@@ -464,7 +464,8 @@ if (ESPELHO) {
   window.pywebview = { api: new Proxy({}, { get: (_, nome) => chamar(nome) }) };
   window.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add("espelho");
-    const es = new EventSource("eventos");
+    // foto do build (#tour-…): sem a conexão de eventos, que fica aberta e o Edge sem janela esperaria para sempre
+    const es = /^#tour-/.test(location.hash) ? {} : new EventSource("eventos");
     es.onopen = () => document.body.classList.remove("sem-pc");
     es.onerror = () => document.body.classList.add("sem-pc");
     es.onmessage = m => { try { const { f, a } = JSON.parse(m.data); if (typeof SSEG[f] === "function") SSEG[f](...a); } catch (e) {} };
