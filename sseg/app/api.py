@@ -46,6 +46,7 @@ class Api:
         self._eventos = []   # últimos eventos do chat (stream-json resumido), para o Reportar bug
         self._hist = {}      # eventos de cada conversa, para a outra tela (celular) montar o chat ao abrir
         self._espelho = None
+        self._tunel = None   # SSH de saída até o servidor: o caminho do celular (fase 2)
         self._pasta_web = None
 
     # ---------------------------------------------------------------- infraestrutura
@@ -565,16 +566,46 @@ class Api:
                                             porta=int(cfg.get("espelho_porta") or espelho.PORTA))
         return self._espelho
 
+    def _endereco_celular(self):
+        """https://<servidor>.<rede>.ts.net, perguntado uma vez ao Tailscale do servidor e guardado."""
+        cfg = base.ler_config()
+        if cfg.get("espelho_celular"):
+            return cfg["espelho_celular"]
+        try:
+            p = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "sseg-servidor",
+                                "tailscale status --json"], capture_output=True, text=True, encoding="utf-8",
+                               errors="replace", timeout=30, creationflags=base.SEM_JANELA, stdin=subprocess.DEVNULL)
+            nome = (json.loads(p.stdout).get("Self") or {}).get("DNSName", "").rstrip(".")
+        except (OSError, ValueError, subprocess.SubprocessError):
+            nome = ""
+        if not nome:
+            return ""
+        cfg["espelho_celular"] = "https://" + nome
+        base.gravar_config(cfg)
+        return cfg["espelho_celular"]
+
     def espelho_estado(self):
-        e = self._espelho
-        return {"ligado": bool(e and e.ligado), "url": e.url() if e and e.ligado else "", "telas": e.telas if e else 0}
+        e, t = self._espelho, self._tunel
+        ligado = bool(e and e.ligado)
+        cel = base.ler_config().get("espelho_celular", "") if ligado else ""
+        return {"ligado": ligado, "url": e.url() if ligado else "", "telas": e.telas if e else 0,
+                "tunel": t.estado if t else "desligado", "tunel_erro": t.erro if t else "",
+                "celular": cel + "/?chave=" + e.chave if cel else ""}
 
     def espelho_ligar(self, ligar):
-        """Liga ou desliga a página no navegador (127.0.0.1) e guarda a escolha para a próxima abertura."""
+        """Liga ou desliga a página no navegador (127.0.0.1) e, com o servidor configurado, o túnel até ele
+        (o caminho do celular). Guarda a escolha para a próxima abertura."""
         e = self._espelho_obj()
         if ligar:
             e.ligar()
+            if self.estado_servidor()["configurado"]:
+                if not self._tunel:
+                    self._tunel = espelho.Tunel(e.porta, aolog=self._log, sem_janela=base.SEM_JANELA)
+                self._tunel.ligar()
+                self._endereco_celular()
         else:
+            if self._tunel:
+                self._tunel.desligar()
             e.desligar()
         cfg = base.ler_config()
         cfg["espelho"] = bool(ligar)

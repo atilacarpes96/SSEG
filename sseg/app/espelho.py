@@ -3,8 +3,8 @@
 espelho.py — a mesma janela do SSEG.exe no navegador do celular (plano 2.4, "Espelho no celular").
 
 O PC do quartel continua fazendo todo o trabalho; o celular é só mais uma tela do mesmo programa.
-O SSEG.exe serve web/ em 127.0.0.1 (nunca na rede do quartel) e o celular chega por um túnel
-(fase 2). Cada chamada do celular roda o mesmo método do Api da janela, e o que o Python empurra
+O SSEG.exe serve web/ em 127.0.0.1 (nunca na rede do quartel) e o celular chega pelo Tunel abaixo
+(SSH de saída até o servidor, que publica só na rede do Tailscale). Cada chamada do celular roda o mesmo método do Api da janela, e o que o Python empurra
 para a janela (SSEG.chat, SSEG.log) vai também, por SSE, para quem estiver aberto no navegador.
 
 Só entra quem abriu o endereço com a chave gerada no PC (vira cookie). Os POST exigem o
@@ -14,7 +14,9 @@ cabeçalho X-SSEG, que um site de fora não consegue mandar sem pré-verificaç�
 import json
 import os
 import queue
+import subprocess
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -81,6 +83,73 @@ class Espelho:
     @property
     def telas(self):
         return len(self._filas)
+
+
+class Tunel:
+    """Fase 2: o caminho até o celular. O PC abre uma conexão SSH de SAÍDA para o servidor (a mesma do
+    sincronizar processos) e pede que a porta 8765 de lá, só em 127.0.0.1, venha para o espelho daqui.
+    No servidor, o `tailscale serve` publica essa porta só na rede privada do Átila (iPhone + servidor).
+    Nenhuma porta se abre no PC nem na rede do quartel. Caiu, tenta de novo a cada 20 s."""
+
+    def __init__(self, porta_local, porta_servidor=PORTA, host="sseg-servidor", aolog=None, sem_janela=0):
+        self.porta_local, self.porta_servidor, self.host = porta_local, porta_servidor, host
+        self.aolog, self.sem_janela = aolog or (lambda *_: None), sem_janela
+        self._proc = None
+        self._parar = threading.Event()
+        self.estado = "desligado"
+        self.erro = ""
+
+    def comando(self):
+        return ["ssh", "-N", "-o", "BatchMode=yes", "-o", "ExitOnForwardFailure=yes", "-o", "ServerAliveInterval=20",
+                "-o", "ServerAliveCountMax=3", "-R", "127.0.0.1:%d:127.0.0.1:%d" % (self.porta_servidor, self.porta_local),
+                self.host]
+
+    def ligar(self):
+        if self.estado != "desligado":
+            return
+        self._parar.clear()
+        self.estado = "conectando"
+        threading.Thread(target=self._manter, daemon=True).start()
+
+    def _manter(self):
+        while not self._parar.is_set():
+            self.estado = "conectando"
+            try:
+                self._proc = subprocess.Popen(self.comando(), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                              stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace",
+                                              creationflags=self.sem_janela)
+            except OSError as e:
+                self.estado, self.erro = "erro", "ssh não encontrado (%s)" % e
+                self.aolog("✗ Túnel do celular: " + self.erro)
+                return
+            # sem erro em 4 s, a porta do servidor está presa a este PC
+            try:
+                self._proc.wait(timeout=4)
+            except subprocess.TimeoutExpired:
+                self.estado, self.erro = "ativo", ""
+                self.aolog("Túnel do celular ativo (servidor → este PC).")
+                self._proc.wait()
+            if self._parar.is_set():
+                break
+            err = (self._proc.stderr.read() if self._proc.stderr else "").strip()
+            self.erro = err.splitlines()[-1][:200] if err else "conexão caiu"
+            if "remote port forwarding failed" in err:
+                self.erro = "a porta %d do servidor está presa a outro PC (outro SSEG.exe com o celular ligado)" % self.porta_servidor
+            self.estado = "caiu"
+            self.aolog("✗ Túnel do celular: %s. Tento de novo em 20 s." % self.erro)
+            self._parar.wait(20)
+        self.estado = "desligado"
+
+    def desligar(self):
+        self._parar.set()
+        p = self._proc
+        if p and p.poll() is None:
+            p.terminate()
+            try:
+                p.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                p.kill()
+        self.estado = "desligado"
 
 
 class _Tratador(BaseHTTPRequestHandler):

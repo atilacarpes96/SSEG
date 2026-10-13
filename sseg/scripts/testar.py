@@ -406,6 +406,10 @@ def main():
              linha[:200])
     finally:
         e_.desligar()
+    cmd_t = _esp.Tunel(8765).comando()
+    caso("espelho: o túnel só prende a porta em 127.0.0.1 do servidor e cai se não conseguir",
+         "127.0.0.1:8765:127.0.0.1:8765" in cmd_t and "ExitOnForwardFailure=yes" in cmd_t and "BatchMode=yes" in cmd_t
+         and cmd_t[-1] == "sseg-servidor", " ".join(cmd_t))
     pdfs = set(os.listdir(os.path.join(RAIZ, "sseg", "normas", "pdf")))
     mapa = set(busca.PDF_RT.values()) | set(busca.PDF_RT5.values()) | {p for _, p in busca.PDF_COMENTADA}
     caso("busca: todo PDF do mapa existe em normas/pdf", mapa <= pdfs, str(sorted(mapa - pdfs)))

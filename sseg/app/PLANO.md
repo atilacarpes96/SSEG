@@ -162,7 +162,13 @@ A mesma janela do SSEG.exe do quartel no navegador do celular: o PC faz todo o t
   - escolher pasta, print da janela e atualizar o programa só funcionam na janela do PC;
   - o CI fotografa a página a 500 px, o mínimo do Edge sem janela (`celular-*.png`); conferido também como iPhone 13 (390 px) no servidor.
 - [ ] Teste no PC: ligar, "Abrir no navegador deste PC", estreitar a janela do navegador, mandar mensagem por uma tela e ver chegar na outra
-- [ ] Fase 2 — túnel até o celular. O PC do quartel fica na rede do governo e o celular no 4G, então eles não se enxergam direto:
+- [x] Fase 2, lado do programa (2.1.6):
+  - "Usar pelo celular" também abre `ssh -N -R 127.0.0.1:8765:127.0.0.1:8765 sseg-servidor` (`espelho.Tunel`); se cair, tenta de novo a cada 20 s, e fecha junto com a janela;
+  - pergunta uma vez ao servidor o endereço `https://….ts.net` (`tailscale status --json`) e mostra o link com a chave e o QR code (qrcode-generator, MIT, em `web/qrcode.js`);
+  - mostra o estado do túnel: ativo, conectando, caiu ou porta presa a outro PC.
+- [ ] Fase 2, lado do servidor e do celular (o Átila, pelo Claude do PC, 13/10/2026): Tailscale no iPhone e no servidor, na mesma conta; `sudo tailscale serve --bg --https=443 http://127.0.0.1:8765`
+- [ ] Teste de ponta a ponta: SSEG.exe do quartel ligado → QR → iPhone no 4G
+- [ ] Notas da fase 2 (o desenho original): O PC do quartel fica na rede do governo e o celular no 4G, então eles não se enxergam direto:
   - o SSEG.exe abre `ssh -N -R 127.0.0.1:8765:127.0.0.1:8765 sseg-servidor` (conexão de saída, a mesma do sincronizar; nenhuma porta aberta no PC);
   - o celular chega ao servidor pelo Tailscale (servidor e celular; nada no PC);
   - o Átila instala o Tailscale no servidor pelo terminal, porque é mudança de rede;

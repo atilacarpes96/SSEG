@@ -249,7 +249,9 @@ details.medida .itens { padding: 0 9px 8px; }
 /* ---- espelho no celular (2.4): a mesma página no navegador; o que só existe no PC some */
 .abas-proc { display: none; }
 body.espelho .so-pc { display: none !important; }
-#esp-url { font: 12.5px Consolas, monospace; word-break: break-all; }
+.esp-link { font: 12.5px Consolas, monospace; word-break: break-all; color: var(--suave); margin: 6px 0; }
+.esp-cel { display: flex; gap: 14px; align-items: center; margin: 0 0 10px; }
+.esp-qr svg { display: block; width: 168px; height: 168px; background: #fff; border-radius: 6px; }
 #sem-pc { display: none; background: var(--rosa); color: var(--verm); border-bottom: 1px solid var(--rosa-borda);
           padding: 7px 14px; font-size: 13px; font-weight: 600; }
 body.sem-pc #sem-pc { display: block; }
@@ -408,14 +410,20 @@ body.sem-pc #sem-pc { display: block; }
       <h2 class="so-pc">Usar pelo celular</h2>
       <div class="cartao so-pc">
         <p class="sub" style="margin:0 0 10px">A mesma janela no navegador do celular, com este PC fazendo o trabalho (Claude, SOL, pastas).
-          Fica só neste PC (127.0.0.1), e só entra quem tiver o endereço com a chave. O caminho até o celular (túnel pelo servidor) vem na próxima versão;
-          por enquanto dá para testar abrindo no navegador deste PC, ao lado da janela.</p>
+          O caminho é um túnel de saída até o servidor, e de lá ao celular pelo Tailscale: nenhuma porta se abre neste PC
+          nem na rede do quartel, e só entra quem tiver o endereço com a chave.</p>
         <p id="esp-estado" class="sub" style="margin:0 0 8px">Desligado.</p>
-        <p id="esp-url" hidden></p>
+        <div id="esp-cel" class="esp-cel" hidden>
+          <div id="esp-qr" class="esp-qr"></div>
+          <div><b>No celular:</b> aponte a câmera para o código, ou abra o endereço abaixo, com o Tailscale ligado.
+            Depois, no Safari, Compartilhar → Adicionar à Tela de Início.
+            <p id="esp-cel-url" class="esp-link"></p></div>
+        </div>
+        <p id="esp-url" class="esp-link" hidden></p>
         <div class="linha-bts">
           <button class="bt p" id="b-esp">Ligar</button>
           <button class="bt" id="b-esp-abrir" hidden>Abrir no navegador deste PC</button>
-          <button class="bt" id="b-esp-copiar" hidden>Copiar endereço</button>
+          <button class="bt" id="b-esp-copiar" hidden>Copiar endereço do celular</button>
         </div>
       </div>
       <h2>SOL sem teclado (opcional)</h2>
@@ -454,6 +462,7 @@ body.sem-pc #sem-pc { display: block; }
   <div class="pe" id="m-pe"></div>
 </div></div>
 
+<script src="qrcode.js"></script>
 <script>
 "use strict";
 // 2.4 Espelho: aberta pelo navegador (celular), a página fala por HTTP com o SSEG.exe do PC — o mesmo
@@ -1311,10 +1320,18 @@ SSEG.tour = async passo => {
 };
 
 // ---- espelho no celular (Configuração)
+const TUNEL = { ativo: "túnel até o servidor ativo", conectando: "conectando ao servidor…", caiu: "túnel caiu, tentando de novo",
+                erro: "túnel com erro", desligado: "sem túnel (servidor não configurado neste PC): só no navegador deste PC" };
 function pintarEspelho(e) {
-  $("#esp-estado").textContent = e.ligado ? "Ligado" + (e.telas ? " · " + e.telas + " tela(s) no navegador agora" : "") + "." : "Desligado.";
-  $("#esp-url").hidden = $("#b-esp-abrir").hidden = $("#b-esp-copiar").hidden = !e.ligado;
-  $("#esp-url").textContent = e.url || "";
+  $("#esp-estado").textContent = e.ligado ? "Ligado · " + (TUNEL[e.tunel] || e.tunel) + (e.tunel_erro ? " (" + e.tunel_erro + ")" : "")
+    + (e.telas ? " · " + e.telas + " tela(s) abertas agora" : "") + "." : "Desligado.";
+  $("#esp-url").hidden = $("#b-esp-abrir").hidden = !e.ligado;
+  $("#esp-url").textContent = e.url ? "Neste PC: " + e.url : "";
+  $("#esp-cel").hidden = $("#b-esp-copiar").hidden = !e.celular;
+  if (e.celular && $("#esp-cel-url").textContent !== e.celular) {
+    $("#esp-cel-url").textContent = e.celular;
+    if (window.qrcode) { const q = qrcode(0, "M"); q.addData(e.celular); q.make(); $("#esp-qr").innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); }
+  }
   $("#b-esp").textContent = e.ligado ? "Desligar" : "Ligar";
   $("#b-esp").classList.toggle("p", !e.ligado);
   ESTADO.espelho = e;
@@ -1322,7 +1339,9 @@ function pintarEspelho(e) {
 async function estadoEspelho() { if (!ESPELHO) try { pintarEspelho(await window.pywebview.api.espelho_estado()); } catch (e) {} }
 $("#b-esp").onclick = async ev => pintarEspelho(await api("espelho_ligar", [!(ESTADO.espelho && ESTADO.espelho.ligado)], ev.currentTarget));
 $("#b-esp-abrir").onclick = () => api("abrir_url", [ESTADO.espelho.url]);
-$("#b-esp-copiar").onclick = () => copiar(ESTADO.espelho.url);
+$("#b-esp-copiar").onclick = () => copiar(ESTADO.espelho.celular);
+// o túnel muda de estado sozinho (conecta, cai, volta): com a Configuração à mostra, confere a cada 3 s
+setInterval(() => { if (!ESPELHO && $("#t-config").classList.contains("ativa")) estadoEspelho(); }, 3000);
 
 // ---- partida
 window.addEventListener("pywebviewready", async () => {

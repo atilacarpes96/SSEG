@@ -51,7 +51,11 @@ def principal(recurso):
         except OSError as e:  # porta ocupada (outro SSEG aberto): a janela segue sem o espelho
             api._registro.append("✗ Espelho não ligou: %s" % e)
     foto = os.environ.get("SSEG_TESTE_FOTO")
-    if foto:
-        webview.start(_tour, (jan, api, foto), gui="edgechromium")
-    else:
-        webview.start(gui="edgechromium")
+    try:
+        if foto:
+            webview.start(_tour, (jan, api, foto), gui="edgechromium")
+        else:
+            webview.start(gui="edgechromium")
+    finally:
+        if api._tunel:  # fechou a janela: o ssh do túnel não fica rodando sozinho
+            api._tunel.desligar()
