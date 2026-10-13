@@ -95,7 +95,7 @@ jobs:
           for f in inicio processo; do
             foto="$(cygpath -w "$PWD/dist/celular-$f.png")"
             timeout 120 "$EDGE" --headless=new --disable-gpu --no-first-run --hide-scrollbars \
-              --user-data-dir="$(cygpath -w "$RUNNER_TEMP/edge-$f")" --window-size=400,860 --virtual-time-budget=10000 \
+              --user-data-dir="$(cygpath -w "$RUNNER_TEMP/edge-$f")" --window-size=500,900 --virtual-time-budget=10000 \
               --screenshot="$foto" "http://127.0.0.1:8765/?chave=ci#tour-$f" > "dist/edge-$f.txt" 2>&1 && rc=0 || rc=$?
             test -s "dist/celular-$f.png" || echo "::error title=espelho::sem foto do celular ($f, saída $rc): $(tr '\n' '|' < "dist/edge-$f.txt" | tail -c 1500)"
           done

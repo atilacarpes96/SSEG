@@ -261,7 +261,9 @@ body.sem-pc #sem-pc { display: block; }
   .marca small { display: none; }
   .marca img { width: 30px; height: 30px; }
   .marca b { font-size: 17px; }
-  #estado { gap: 4px; }
+  #estado { gap: 4px; margin-left: 0; width: 100%; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
+            scrollbar-width: none; }
+  .chip { flex: none; }
   .chip { font-size: 11.5px; padding: 2px 8px 2px 7px; }
   nav { position: absolute; top: 0; bottom: 0; left: 0; z-index: 5; box-shadow: var(--sombra); }
   main { padding: 12px 12px 18px; }
@@ -271,7 +273,10 @@ body.sem-pc #sem-pc { display: block; }
   .bt.link { padding: 6px 6px; }
   #fluxos { grid-template-columns: 1fr 1fr; }
   td, th { padding: 8px 4px; }
-  .faixa { padding: 8px 10px; gap: 8px; }
+  .faixa { padding: 6px 10px; gap: 6px; }
+  .faixa .bt { padding: 6px 10px; }
+  .faixa .cod { font-size: 14px; }
+  #pr-tags, #cv-tags { display: none; }
   .faixa .dir { margin-left: 0; width: 100%; overflow-x: auto; flex-wrap: nowrap; }
   .faixa .dir .bt { white-space: nowrap; }
   .abas-proc { display: flex; border-bottom: 1px solid var(--linha); background: var(--cartao); flex: none; }
@@ -286,6 +291,8 @@ body.sem-pc #sem-pc { display: block; }
   .msg.eu { margin-left: 8%; }
   footer { gap: 8px; padding: 6px 10px; }
   #ultima { display: none; }
+  #versao { white-space: nowrap; }
+  #cota { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .modal { max-height: 94vh; }
 }
 </style>
