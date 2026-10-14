@@ -541,6 +541,19 @@ body.sem-pc #sem-pc { display: block; }
         <p class="sub" style="margin:0 0 10px">Atalho "Abrir SOL" e o script do Tampermonkey: entra com a senha que o Chrome já guarda.</p>
         <div class="linha-bts"><button class="bt" id="b-sol">Atalho Abrir SOL</button><button class="bt" id="b-tamper">Tampermonkey</button></div>
       </div>
+      <h2>Chrome para o Claude (opcional)</h2>
+      <div class="cartao">
+        <p class="sub" style="margin:0 0 10px">Deixa o Claude ler e operar uma página que já está aberta e logada no seu Chrome (SOL, por exemplo) pelo DOM, console e rede, sem print. A senha continua sendo sua.
+          <b>Ligado, o Claude enxerga todas as janelas do perfil do Chrome</b>; desligue a depuração em chrome://inspect quando terminar.</p>
+        <div class="prog" id="c-chrome"></div>
+        <div class="linha-bts">
+          <button class="bt p" id="b-chrome-reg">Registrar no Claude Code</button>
+          <button class="bt" id="b-chrome-insp">Abrir chrome://inspect</button>
+          <button class="bt" id="b-chrome-conf">Conferir</button>
+          <button class="bt" id="b-chrome-teste">Testar conexão</button>
+          <button class="bt link" id="b-chrome-rem">Remover registro</button>
+        </div>
+      </div>
     </section>
 
     <section class="tela" id="t-ajuda">
@@ -678,7 +691,7 @@ function ir(tela) {
   document.querySelector("main").classList.toggle("processo", tela === "processo" || tela === "conversa");
   document.querySelectorAll(".tela").forEach(t => t.classList.toggle("ativa", t.id === "t-" + tela));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
-  if (tela === "config") { carregarConfig(); estadoEspelho(); }
+  if (tela === "config") { carregarConfig(); estadoEspelho(); conferirChrome().catch(() => {}); }
   if (tela === "inicio") carregarProcessos();
   if (tela === "quadro") carregarQuadro();
   if (matchMedia("(max-width: 700px)").matches) $("#menu").classList.remove("aberto");  // menu por cima, no celular
@@ -1171,6 +1184,27 @@ $("#b-tamper").onclick = async ev => {
     [el("ol", {}, ...t.passos.map(p => el("li", { style: "margin:6px 0" }, p))),
      el("p", { class: "sub" }, "Depois: dois cliques em \"Abrir SOL\" na Área de Trabalho. Aparece uma contagem de 5 s no topo da página — clique nela para cancelar.")],
     [["Copiar o script de novo", async () => { await copiar(t.script); SSEG.log(["Script copiado."]); }], ["Fechar", fechar]]);
+};
+
+// ---- Chrome para o Claude (DevTools MCP)
+function pintarChrome(passos) {
+  $("#c-chrome").replaceChildren(...passos.map(p => el("span", { class: p.ok ? "ok" : "", title: p.detalhe || "" }, p.titulo)));
+  const falta = passos.filter(p => !p.ok && p.detalhe);
+  const aviso = $("#c-chrome-aviso") || el("p", { class: "sub", id: "c-chrome-aviso", style: "white-space:pre-line;margin:8px 0 0" });
+  aviso.textContent = falta.map(p => p.detalhe).join("\n");
+  $("#c-chrome").after(aviso);
+  $("#b-chrome-reg").disabled = !!passos.find(p => p.id === "registro" && p.ok);
+  $("#b-chrome-rem").hidden = !passos.find(p => p.id === "registro" && p.ok);
+}
+const conferirChrome = async b => pintarChrome(await api("chrome_conferir", [], b));
+$("#b-chrome-conf").onclick = ev => conferirChrome(ev.currentTarget);
+$("#b-chrome-reg").onclick = async ev => { pintarChrome(await api("chrome_registrar", [], ev.currentTarget)); avisar("✓ Registrado. Abra uma conversa nova do Claude para ele aparecer."); };
+$("#b-chrome-rem").onclick = async ev => pintarChrome(await api("chrome_remover", [], ev.currentTarget));
+$("#b-chrome-insp").onclick = ev => api("chrome_inspect", [], ev.currentTarget);
+$("#b-chrome-teste").onclick = async ev => {
+  avisar("Testando… se o Chrome pedir, clique em Permitir.");
+  const r = await api("chrome_testar", [], ev.currentTarget);
+  pintarChrome(r.passos); avisar((r.ok ? "✓ " : "✗ ") + r.msg, !r.ok);
 };
 
 // ---- Ajuda

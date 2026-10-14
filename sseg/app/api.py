@@ -22,6 +22,7 @@ import webbrowser
 import zipfile
 
 import busca
+import chrome_devtools
 import chat
 import claude_local
 import espelho
@@ -690,6 +691,32 @@ class Api:
 
     def sol_conferir(self):
         return sol_entrar.conferir()
+
+    # ---------------------------------------------------------------- Chrome para o Claude (DevTools MCP)
+    def _claude_exe(self):
+        return self._claude or instalar.localizar().get("claude")
+
+    def chrome_conferir(self):
+        return chrome_devtools.conferir()
+
+    def chrome_registrar(self):
+        chrome_devtools.registrar(self._claude_exe())
+        self._log("✓ Chrome DevTools registrado no Claude Code (vale para as próximas conversas).")
+        return chrome_devtools.conferir()
+
+    def chrome_remover(self):
+        self._log(chrome_devtools.remover(self._claude_exe()))
+        return chrome_devtools.conferir()
+
+    def chrome_inspect(self):
+        chrome_devtools.abrir_inspect()
+        self._log("Abri chrome://inspect no Chrome: ligue a depuração remota e depois clique em Conferir.")
+
+    def chrome_testar(self):
+        self._log("Testando o Chrome DevTools (se o Chrome pedir, clique em Permitir)…")
+        ok, msg = chrome_devtools.testar()
+        self._log(("✓ " if ok else "✗ ") + msg)
+        return {"ok": ok, "msg": msg, "passos": chrome_devtools.conferir()}
 
     # ---------------------------------------------------------------- ajuda
     def subagentes(self):

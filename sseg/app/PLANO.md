@@ -246,6 +246,13 @@ Coluna da CIA com muitas exigências (2.1.16, pedido do Átila em 14/10/2026)
 - [x] Preferência guardada no navegador (PC e celular, cada um a sua)
 - [ ] Teste do Átila numa análise com muitas notificações
 
+Chrome para o Claude (2.1.17, pedido do Átila em 14/10/2026)
+- [x] Config → "Chrome para o Claude (opcional)": registra o Chrome DevTools MCP no Claude Code (`claude mcp add chrome-devtools-live --scope user -- npx -y chrome-devtools-mcp@latest --autoConnect`) e mostra item por item se funciona: Node 20.19+, Chrome 144+, registro em `~/.claude.json`, depuração remota ligada (DevToolsActivePort + porta atendendo)
+- [x] Botões: Registrar, Abrir chrome://inspect (o Chrome não deixa outro programa ligar a depuração), Conferir, Testar conexão (sobe o servidor como o Claude faria e conta as abas; o Chrome pede "Permitir"; não lê título nem endereço) e Remover registro
+- [x] Aviso na tela: ligado, o Claude enxerga todas as janelas do perfil do Chrome. A senha do SOL segue sendo do analista
+- [ ] Teste do Átila: ligar a depuração, Registrar, Testar conexão e ler uma página do SOL pelo DOM
+- [ ] Decidir se a skill sol-cbmrs-navegador passa a preferir o DevTools MCP (rede e console) ao Claude in Chrome
+
 Pendências que sobram das conversas (pedido do Átila, 14/10/2026)
 O checklist do plugin "assuntos" é por conversa. O que fica aberto quando ela acaba é pendência: o Claude sugere trabalho ou pessoal e o Átila confirma antes de enviar.
 - [x] Trabalho vai ao Quadro do SSEG: `python sseg/scripts/quadro.py adicionar "<texto>" --origem "<conversa>"`
