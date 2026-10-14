@@ -233,9 +233,11 @@ Fase B — tela Quadro (2.1.14)
 Pendências que sobram das conversas (pedido do Átila, 14/10/2026)
 O checklist do plugin "assuntos" é por conversa. O que fica aberto quando ela acaba é pendência: o Claude sugere trabalho ou pessoal e o Átila confirma antes de enviar.
 - [x] Trabalho vai ao Quadro do SSEG: `python sseg/scripts/quadro.py adicionar "<texto>" --origem "<conversa>"`
-- [ ] Pessoal vai ao Painel do Dia, num quadro "Pendências" que não some no dia seguinte, com a opção de pôr na agenda ou nas tarefas
+- [x] Pessoal vai ao Painel do Dia (versão 9, 14/10/2026): quadro "Pendências" (coleção `pendencias`) que não some no dia seguinte; "Agenda" cria evento de 30 min pelo conector Google Calendar (só `create_event` liberado à página); "Lembrete", só no iPhone, abre o Atalho "Pendência para Lembrete"; "Feito" tira da lista
+- [ ] Átila cria no iPhone o Atalho "Pendência para Lembrete" (Receber texto da Folha de Compartilhamento/entrada → Adicionar Lembrete com o texto) e testa o botão
+- [ ] Testar o botão "Agenda" (primeira vez pede permissão do Google Agenda à página)
 - [ ] Plugin "assuntos": cada item aberto com trabalho ou pessoal; comando /pendencias mostra a lista para confirmar e o Claude envia (esperar a outra sessão, que mexe no mesmo plugin, terminar)
-- [ ] Regra no CLAUDE.md global: ao encerrar um assunto com item aberto, oferecer o envio das pendências
+- [x] Regra no CLAUDE.md global (~/.claude/CLAUDE.md, fora do Git): sugerir trabalho ou pessoal e enviar só depois da confirmação
 
 Fase C — a decidir depois da B
 - [ ] Cards próprios ("+ Novo card": nome, cor e filtro)
