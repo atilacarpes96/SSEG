@@ -500,6 +500,13 @@ body.sem-pc #sem-pc { display: block; }
           <button class="bt" id="b-abrir-clone">Abrir pasta do SSEG</button>
         </div>
       </div>
+      <h2>Analista</h2>
+      <div class="cartao">
+        <p class="sub" style="margin:0 0 10px">Quem usa este programa. O nome é o da planilha da escala: a meta da semana sai das suas horas
+          (2 PPCI por período de 6 h). Sem a escala neste PC, a meta é a que você digitar no card.</p>
+        <p id="an-estado" class="sub" style="margin:0 0 8px">…</p>
+        <div class="linha-bts"><button class="bt" id="b-analista">Trocar</button></div>
+      </div>
       <h2 class="so-pc">Usar pelo celular</h2>
       <div class="cartao so-pc">
         <p class="sub" style="margin:0 0 10px">A mesma janela no navegador do celular, com este PC fazendo o trabalho (Claude, SOL, pastas).
@@ -683,6 +690,29 @@ function modal(titulo, sub, meio, botoes) {
 const fechar = () => $("#fundo-modal").classList.remove("aberto");
 $("#fundo-modal").addEventListener("click", ev => { if (ev.target.id === "fundo-modal") fechar(); });
 document.addEventListener("keydown", ev => { if (ev.key === "Escape") fechar(); });
+
+// ---- analista (quem usa o programa; a meta sai da linha dele na escala)
+async function estadoAnalista(perguntar) {
+  let a;
+  try { a = await api("analista"); } catch (e) { return; }
+  $("#an-estado").textContent = a.analista ? "Você é " + a.analista + "." + (a.nomes.includes(a.analista) ? " Escala lida em " + dataBR(a.gerado.slice(0, 10)) + "." : a.nomes.length ? " Esse nome não está na escala." : " Escala ainda não chegou a este PC.") : "Ainda não escolhido.";
+  if (perguntar && !a.analista) quemSou(a);
+}
+function quemSou(a) {
+  const sel = el("select", {}, el("option", { value: "" }, "— escolha —"), ...a.nomes.map(n => el("option", { value: n }, n)));
+  sel.value = a.nomes.includes(a.analista) ? a.analista : "";
+  const txt = el("input", { type: "text", maxlength: 60, placeholder: "Ex.: Sd Carpes", value: a.nomes.includes(a.analista) ? "" : a.analista });
+  const campos = a.nomes.length
+    ? [el("label", { class: "campo-card" }, "Nome na escala ", sel), el("label", { class: "campo-card" }, "Não está na lista? ", txt)]
+    : [el("label", { class: "campo-card" }, "Seu nome ", txt)];
+  modal("Quem é você?", a.nomes.length ? "O nome como está na planilha da escala. A meta da semana sai das suas horas. Dá para trocar depois em Configuração."
+    : "A escala não chegou a este PC (ela vem do servidor). Escreva o seu nome como está na escala; até lá, a meta é a que você digitar no card.",
+    campos, [["Salvar", async b => {
+      await api("analista", [txt.value.trim() || sel.value], b);
+      fechar(); avisar("✓ Analista salvo."); estadoAnalista(false); carregarInicio();
+    }, true], ["Depois", fechar]]);
+}
+$("#b-analista").addEventListener("click", async () => { try { quemSou(await api("analista")); } catch (e) {} });
 
 // ---- barra de estado
 function chip(id, classe, texto, n) {
@@ -880,13 +910,19 @@ function subtexto(c, l) {
   if (COM_DIAS.includes(c.regra)) return "últimos " + c.dias + " dias";
   return "";
 }
+function textoMeta() {
+  const i = CARDS.meta_info || {};
+  if (i.fonte !== "escala") return i.sem_escala ? "à mão: " + i.analista + " não está na escala" : "concluídos desde segunda";
+  if (!i.periodos) return "sem turno na escala esta semana";
+  return String(i.horas).replace(".0", "") + " h na escala = " + i.periodos + " período(s) × " + i.por_periodo;
+}
 function pintarCards() {
   const lista = CARDS.cards.map(c => {
     const l = PROCS.filter(regra(c)), meta = c.regra === "meta";
     const editar = el("button", { class: "card-edit", title: "Editar este card", on: { click: ev => { ev.stopPropagation(); editarCard(c); } } }, "✎");
     const corpo = meta
-      ? [el("b", {}, l.length + " / " + CARDS.meta), el("div", { class: "barra" }, el("i", { style: "width:" + Math.min(100, l.length / CARDS.meta * 100) + "%" })),
-         el("small", {}, "concluídos desde segunda")]
+      ? [el("b", {}, l.length + " / " + CARDS.meta), el("div", { class: "barra" }, el("i", { style: "width:" + (CARDS.meta ? Math.min(100, l.length / CARDS.meta * 100) : 0) + "%" })),
+         el("small", {}, textoMeta())]
       : [el("b", {}, l.length), el("small", {}, subtexto(c, l))];
     return el("div", { class: "card-kpi k-" + c.cor + (l.length ? "" : " zero") + (FILTRO === c.id ? " ativo" : ""), role: "button", tabindex: 0,
       title: "Clique para filtrar os processos",
@@ -904,9 +940,19 @@ function editarCard(c) {
   const sel = el("select", {}, ...Object.entries(CARDS.regras).map(([k, t]) => el("option", { value: k }, t)));
   sel.value = c.regra;
   const dias = el("input", { type: "number", min: 1, max: 365, value: c.dias || 7, style: "width:80px" });
-  const meta = el("input", { type: "number", min: 1, max: 200, value: CARDS.meta, style: "width:80px" });
-  const lDias = el("label", { class: "campo-card" }, "N (dias) ", dias), lMeta = el("label", { class: "campo-card" }, "Meta por semana ", meta);
-  const mostra = () => { lDias.hidden = !COM_DIAS.includes(sel.value); lMeta.hidden = sel.value !== "meta"; };
+  const mi = CARDS.meta_info || {};
+  const meta = el("input", { type: "number", min: 1, max: 200, value: mi.manual || CARDS.meta, style: "width:80px" });
+  const auto = el("input", { type: "checkbox" }); auto.checked = mi.auto !== false;
+  const ppp = el("input", { type: "number", min: 1, max: 20, value: mi.por_periodo || 2, style: "width:60px" });
+  const lAuto = el("label", { class: "campo-card" }, auto, " Pela escala" + (mi.analista ? " (" + mi.analista + ")" : " (escolha o analista em Configuração)"));
+  const lPpp = el("label", { class: "campo-card" }, "PPCI por período de 6 h ", ppp);
+  const lDias = el("label", { class: "campo-card" }, "N (dias) ", dias), lMeta = el("label", { class: "campo-card" }, auto.checked ? "Meta quando a escala faltar " : "Meta por semana ", meta);
+  const mostra = () => {
+    lDias.hidden = !COM_DIAS.includes(sel.value);
+    lMeta.hidden = lAuto.hidden = sel.value !== "meta"; lPpp.hidden = sel.value !== "meta" || !auto.checked;
+    lMeta.firstChild.textContent = auto.checked ? "Meta quando a escala faltar " : "Meta por semana ";
+  };
+  auto.addEventListener("change", mostra);
   sel.addEventListener("change", () => { mostra(); if (!nome.value.trim() || novo) nome.value = CARDS.regras[sel.value].split(":")[0].split(",")[0]; });
   mostra();
   const cores = el("div", { class: "cores-card" }, ...CARDS.cores.map(k => {
@@ -917,7 +963,7 @@ function editarCard(c) {
   const gravar = async (lista, b) => { CARDS = await api("cards", [lista], b); if (!CARDS.cards.some(x => x.id === FILTRO)) FILTRO = null; fechar(); pintarProcessos(); };
   const i = CARDS.cards.findIndex(x => x.id === c.id);
   const botoes = [["Salvar", async b => {
-    if (sel.value === "meta") await api("meta_semana", [Number(meta.value)]);
+    if (sel.value === "meta") Object.assign(CARDS, await api("meta_semana", [Number(meta.value), auto.checked, Number(ppp.value)]));
     const item = { ...c, nome: nome.value.trim() || CARDS.regras[sel.value], regra: sel.value, dias: Number(dias.value) || 7 };
     const lista = CARDS.cards.slice();
     if (novo) lista.push(item); else lista[i] = item;
@@ -929,7 +975,7 @@ function editarCard(c) {
   } else botoes.push(["Voltar aos cards padrão", b => gravar([], b)]);
   botoes.push(["Cancelar", fechar]);
   modal(novo ? "Novo card" : "Editar card", "O card conta os processos da sua pasta pela regra escolhida. Clique nele para filtrar a tabela.",
-    [el("label", { class: "campo-card" }, "Nome ", nome), el("label", { class: "campo-card" }, "Regra ", sel), lDias, lMeta,
+    [el("label", { class: "campo-card" }, "Nome ", nome), el("label", { class: "campo-card" }, "Regra ", sel), lDias, lAuto, lPpp, lMeta,
      el("div", { class: "campo-card" }, "Cor ", cores)], botoes);
 }
 function tagEstado(p) {
@@ -1706,6 +1752,7 @@ window.addEventListener("pywebviewready", async () => {
   SSEG.log(["SSEG " + info.versao + "."]);
   estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub(); estadoVersao(); estadoEspelho();
   if (info.primeira_vez) ir("config");
+  else if (!ESPELHO) estadoAnalista(true);
   try { const v = sessionStorage.getItem("sseg-atualizou"); if (v) { sessionStorage.removeItem("sseg-atualizou"); avisar("✓ O PC voltou atualizado: versão " + v + "."); } } catch (e) {}
   if (ESPELHO && /^#tour-\w+$/.test(location.hash)) SSEG.tour(location.hash.slice(6));  // foto do build em largura de celular
 });

@@ -390,6 +390,41 @@ def main():
         caso("quadro: adiciona sem duplicar, move, checklist, exclui e desfaz; inválido recusado",
              c["titulo"] == "Conferir o log da rotina" and dup["id"] == c["id"] and vazio and len(d) == 1
              and d[0]["coluna"] == "fazendo" and d[0]["checklist"] == [{"texto": "abrir o log", "feito": True}] and len(recusa) == 3, str(d))
+    # 15d. escala → meta da semana (2.1.15): horas da tabela de cima, 2 PPCI por período de 6 h
+    import escala as esc
+    serie = lambda d: (d - _dt.date(1899, 12, 30)).days
+    dias = [_dt.date(2026, 10, 1) + _dt.timedelta(days=i) for i in range(31)]
+    linhas = [["", "", "", 2026], ["", "", "", "outubro"], ["", "", "", 177],
+              ["", "Sd Fulano", "", *([6, 12, 0, 0, 9] * 6 + [6])], ["", "Sgt Beltrano", ""] + [0] * 31,
+              ["", "", "", *([1] * 31)], ["", "", "", *[serie(d) for d in dias]],
+              ["", "Sd Fulano", "", *(["M", "SV", "F", "F", "9T"] * 6 + ["M"])]]
+    h = esc.horas_da_aba([[str(v) for v in l] for l in linhas])
+    m19 = esc.meta_da_semana(h["Sd Fulano"], _dt.date(2026, 10, 19))  # 19 a 25/10: 0+9+6+12+0+0+9 = 36 h
+    m_meio = esc.meta_da_semana({"2026-10-19": 9}, _dt.date(2026, 10, 19))  # 9 h = 1,5 período → 2
+    caso("escala: horas por dia da tabela de cima (não a de códigos), folga fica fora; 36 h = 6 períodos = 12 PPCI; 9 h arredonda para 2",
+         set(h) == {"Sd Fulano", "Sgt Beltrano"} and h["Sgt Beltrano"] == {} and h["Sd Fulano"]["2026-10-02"] == 12
+         and "2026-10-03" not in h["Sd Fulano"] and (m19["horas"], m19["periodos"], m19["meta"]) == (36, 6, 12)
+         and m_meio["periodos"] == 2, str(h.get("Sd Fulano")) + str(m19))
+    with tempfile.TemporaryDirectory() as tmp:
+        velho = (_base_cfg := __import__("sseg_app")).arquivo_config, _base_cfg.ler_config, _api._tem_servidor
+        try:
+            hoje = _dt.date.today(); seg = hoje - _dt.timedelta(days=hoje.weekday())
+            with open(os.path.join(tmp, "escala.json"), "w", encoding="utf-8") as fh:
+                json.dump({"gerado": "2026-10-14T18:00:00", "horas": {"Sd Fulano": {seg.isoformat(): 12, (seg + _dt.timedelta(days=2)).isoformat(): 6}}}, fh)
+            _base_cfg.arquivo_config = lambda: os.path.join(tmp, "config.json")
+            _api._tem_servidor = lambda: False
+            cfgs = [{"analista": "Sd Fulano"}, {"analista": "Sd Fulano", "meta_auto": False, "meta_semana": 7},
+                    {"analista": "Sd Outro", "meta_semana": 5}, {}]
+            res = []
+            for c in cfgs:
+                _base_cfg.ler_config = lambda c=c: dict(c, clone=RAIZ, processos=tmp)
+                res.append(_api.Api().cards())
+            caso("meta: pela escala do analista escolhido; à mão quando desligada, nome fora da escala ou sem analista",
+                 (res[0]["meta"], res[0]["meta_info"]["fonte"], res[0]["meta_info"]["periodos"]) == (6, "escala", 3)
+                 and (res[1]["meta"], res[1]["meta_info"]["fonte"]) == (7, "manual")
+                 and (res[2]["meta"], res[2]["meta_info"].get("sem_escala")) == (5, True) and res[3]["meta"] == 10, str(res))
+        finally:
+            _base_cfg.arquivo_config, _base_cfg.ler_config, _api._tem_servidor = velho
     # 16. Reportar bug com imagem e log: o .zip leva texto e log limpos; imagens só no zip (nunca na issue)
     import api as _api, sseg_app as _base, zipfile as _zip
     with tempfile.TemporaryDirectory() as tmp:

@@ -16,6 +16,7 @@ import secrets
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 import webbrowser
 import zipfile
@@ -59,6 +60,15 @@ CARDS_PADRAO = [
     {"id": "ct", "nome": "CT marcadas", "cor": "roxo", "regra": "ct", "dias": 7},
     {"id": "meta", "nome": "Meta da semana", "cor": "amarelo", "regra": "meta", "dias": 7},
 ]
+
+
+def _tem_servidor():
+    """Este PC tem o apelido sseg-servidor no ~/.ssh/config (o mesmo teste do sincronizar.py, sem conectar)."""
+    try:
+        texto = open(os.path.join(os.path.expanduser("~"), ".ssh", "config"), encoding="utf-8", errors="replace").read()
+    except OSError:
+        return False
+    return bool(re.search(r"^\s*Host\s+(.*\s)?sseg-servidor(\s|$)", texto, re.M | re.I))
 
 
 def _ler(caminho):
@@ -293,7 +303,71 @@ class Api:
                 cfg.pop("cards", None)
             base.gravar_config(cfg)
         return {"cards": cfg.get("cards") or CARDS_PADRAO, "padrao": CARDS_PADRAO, "regras": REGRAS_CARD,
-                "cores": CORES_CARD, "prazo": cfg.get("prazo_caixa", 10), "meta": cfg.get("meta_semana", 10)}
+                "cores": CORES_CARD, "prazo": cfg.get("prazo_caixa", 10), **self._meta(cfg)}
+
+    # ---------------------------------------------------------------- analista e escala (2.1.15)
+    def _escala(self, forcar=False):
+        """escala.json do servidor (horas de cada analista por dia, da planilha Escala Análise), guardado ao
+        lado da config. Velho de 6 h, busca de novo por trás e devolve o que tem; só espera a busca se ainda
+        não há arquivo ou se `forcar`. Sem servidor neste PC, fica com o que tiver (ou nada)."""
+        arq = os.path.join(os.path.dirname(base.arquivo_config()), "escala.json")
+        try:
+            velho = time.time() - os.path.getmtime(arq) > 6 * 3600
+        except OSError:
+            velho = None
+        tentou = getattr(self, "_escala_tentou", 0)
+        if (forcar or (velho is not False and time.time() - tentou > 600)) and _tem_servidor():
+            self._escala_tentou = time.time()
+            if forcar or velho is None:
+                self._buscar_escala(arq)
+            else:
+                threading.Thread(target=self._buscar_escala, args=(arq,), daemon=True).start()
+        return _ler(arq)
+
+    def _buscar_escala(self, arq):
+        try:
+            p = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "sseg-servidor",
+                                "cat sseg-escala/escala.json"], capture_output=True, text=True, encoding="utf-8",
+                               errors="replace", timeout=30, creationflags=base.SEM_JANELA, stdin=subprocess.DEVNULL)
+            d = json.loads(p.stdout)
+            if isinstance(d, dict) and isinstance(d.get("horas"), dict):
+                with open(arq + ".tmp", "w", encoding="utf-8") as fh:
+                    json.dump(d, fh, ensure_ascii=False)
+                os.replace(arq + ".tmp", arq)
+        except (OSError, ValueError, subprocess.SubprocessError):
+            pass
+
+    def _meta(self, cfg):
+        """Meta da semana: pela escala (horas de seg. a dom. ÷ 6, meio arredonda para cima, × PPCI por período)
+        quando há analista escolhido e a linha dele na escala; senão, o número digitado."""
+        import datetime
+        ppp = cfg.get("ppci_por_periodo", 2)
+        info = {"fonte": "manual", "por_periodo": ppp, "auto": cfg.get("meta_auto", True), "analista": cfg.get("analista", ""),
+                "manual": cfg.get("meta_semana", 10)}
+        if info["auto"] and info["analista"]:
+            esc = self._escala()
+            horas = (esc.get("horas") or {}).get(info["analista"])
+            if horas is not None:
+                hoje = datetime.date.today()
+                seg = hoje - datetime.timedelta(days=hoje.weekday())
+                h = sum(float(horas.get((seg + datetime.timedelta(days=i)).isoformat(), 0)) for i in range(7))
+                per = int(h / 6 + 0.5)
+                info.update(fonte="escala", horas=h, periodos=per, gerado=esc.get("gerado", ""))
+                return {"meta": per * ppp, "meta_info": info}
+            info["sem_escala"] = True
+        return {"meta": cfg.get("meta_semana", 10), "meta_info": info}
+
+    def analista(self, nome=None):
+        """Quem usa este PC (o nome como está na escala). Sem argumento, só lê; devolve também os nomes da escala."""
+        cfg = self._cfg()
+        if nome is not None:
+            nome = re.sub(r"\s+", " ", str(nome)).strip()[:60]
+            if not nome:
+                raise RuntimeError("Escolha ou escreva o seu nome.")
+            cfg["analista"] = nome
+            base.gravar_config(cfg)
+        esc = self._escala(forcar=nome is None and not cfg.get("analista"))
+        return {"analista": cfg.get("analista", ""), "nomes": sorted(esc.get("horas") or {}), "gerado": esc.get("gerado", "")}
 
     # ---------------------------------------------------------------- tela Quadro (2.1.14)
     def _quadro(self):
@@ -328,16 +402,25 @@ class Api:
             raise RuntimeError(str(e))
         raise RuntimeError("ação inválida: %s" % acao)
 
-    def meta_semana(self, valor=None):
-        """Meta de processos fechados por semana (card do Início). Sem valor, só lê."""
+    def meta_semana(self, valor=None, auto=None, por_periodo=None):
+        """Meta de processos fechados por semana (card do Início): o número à mão, se vem da escala e
+        quantos PPCI por período de 6 h. Sem argumento, só lê."""
         cfg = self._cfg()
         if valor is not None:
             n = int(valor)
             if not 1 <= n <= 200:
                 raise RuntimeError("Meta entre 1 e 200.")
             cfg["meta_semana"] = n
+        if auto is not None:
+            cfg["meta_auto"] = bool(auto)
+        if por_periodo is not None:
+            n = int(por_periodo)
+            if not 1 <= n <= 20:
+                raise RuntimeError("PPCI por período entre 1 e 20.")
+            cfg["ppci_por_periodo"] = n
+        if (valor, auto, por_periodo) != (None, None, None):
             base.gravar_config(cfg)
-        return cfg.get("meta_semana", 10)
+        return self._meta(cfg)
 
     def abrir_processo(self, codigo):
         if not CODIGO.match(codigo):

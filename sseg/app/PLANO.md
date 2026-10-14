@@ -230,6 +230,16 @@ Fase B — tela Quadro (2.1.14)
 - [x] Mover: arrastar no PC, ← e → no celular; ✎ edita título e checklist; ✕ exclui com "Desfazer" por 8 s
 - [x] Build: `--hidden-import quadro`; o tour fotografa a tela Quadro; `testar.py` cobre o `quadro.py`
 
+Fase B2 — analista e meta pela escala (2.1.15, pedido do Átila em 14/10/2026)
+- [x] `scripts/escala.py`: planilha "Escala Análise" (aba por mês) → horas de cada analista por dia, da tabela de horas (a de códigos não é usada: folga, férias e licença já ficam com 0). Grava `~/sseg-escala/escala.json` no servidor, fora do Git (tem nome de militar)
+- [x] Rotina do Painel do Dia baixa a escala todo dia útil e roda `escala.py` (prompt em `~/rotinas/painel-do-dia/prompt.md`; cópia anterior em `prompt-antes-escala.md`)
+- [x] Analista do PC: "Quem é você?" na primeira abertura (nomes da escala, ou digitado) e seção "Analista" em Configuração. Sem senha: o PC já tem o login do Windows
+- [x] Meta da semana = horas de seg. a dom. ÷ 6 (período), meio arredonda para cima, × 2 PPCI por período (ajustável no ✎ do card). Sem escala, nome fora dela ou "Pela escala" desligado: a meta digitada
+- [x] O app busca o `escala.json` pelo SSH (só se o PC tem o `sseg-servidor`), por trás, a cada 6 h; guarda ao lado da config
+- [x] `testar.py`: horas tiradas da tabela certa, arredondamento, meta pela escala e as três voltas à meta manual
+- [ ] Outros analistas: sem ligação com o servidor, a meta é a digitada. Decidir se eles usam o servidor ou se o app lê a planilha direto
+- [ ] A caixa (distribuicao.py) ainda filtra "CARPES" fixo no servidor; com outro analista no servidor, passar o nome escolhido
+
 Pendências que sobram das conversas (pedido do Átila, 14/10/2026)
 O checklist do plugin "assuntos" é por conversa. O que fica aberto quando ela acaba é pendência: o Claude sugere trabalho ou pessoal e o Átila confirma antes de enviar.
 - [x] Trabalho vai ao Quadro do SSEG: `python sseg/scripts/quadro.py adicionar "<texto>" --origem "<conversa>"`
