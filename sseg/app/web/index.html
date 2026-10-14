@@ -272,6 +272,16 @@ details.medida .itens { padding: 0 9px 8px; }
 .exig .conta { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--suave); }
 .exig .conta.alto { color: var(--verm); font-weight: 700; }
 .exig .salvo { color: var(--ok); }
+.cia-vista { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; font-size: 12px; }
+.cia-vista .bt { padding: 4px 9px; font-size: 12px; }
+.cia-vista .bt.on { border-color: var(--verm); color: var(--verm); }
+.cia-grupo { border-left: 3px solid var(--linha); padding-left: 8px; margin-bottom: 12px; }
+.cia-grupo .cab-grupo { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 12.5px; margin-bottom: 6px; }
+.exig.compacta { display: flex; gap: 8px; align-items: center; padding: 5px 9px; margin-bottom: 5px; cursor: pointer; font-size: 12.5px; }
+.exig.compacta:hover { border-color: var(--verm); }
+.exig.compacta .cx-med { color: var(--suave); white-space: nowrap; max-width: 34%; overflow: hidden; text-overflow: ellipsis; }
+.exig.compacta .cx-res { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exig.compacta .ok-tag { color: var(--ok); font-weight: 700; }
 .exig input.fund { width: 100%; margin-top: 4px; padding: 4px 7px; border: 1px solid var(--linha); border-radius: 5px; font-size: 12px; }
 /* caranguejo */
 .crab { display: inline-block; vertical-align: middle; animation: anda 1.1s ease-in-out infinite; transform-origin: 50% 80%; }
@@ -1474,9 +1484,22 @@ async function enviarRespostas() {
 
 // ---- CIA: uma caixa por item. Com rascunho do Claude e sem texto final, a caixa já vem com o rascunho
 // ("edite e salve"); salvar vira o texto final e o rascunho original fica guardado à parte.
+// Compacto: cada item vira uma linha (clique abre só aquele). Agrupar: itens da mesma medida juntos, na
+// ordem do SOL; o número continua o da CIA (é a ordem do "copiar a CIA"). Preferência guardada neste navegador.
+const CIA_VISTA = (() => { try { return Object.assign({ compacto: false, agrupar: true }, JSON.parse(localStorage.getItem("sseg-cia-vista") || "{}")); } catch (e) { return { compacto: false, agrupar: true }; } })();
+const CIA_ABERTOS = new Set();
+function vistaCIA(k) {
+  CIA_VISTA[k] = !CIA_VISTA[k]; CIA_ABERTOS.clear();
+  try { localStorage.setItem("sseg-cia-vista", JSON.stringify(CIA_VISTA)); } catch (e) {}
+  pintarCIA();
+}
 function pintarCIA() {
-  const r = PR.reg, out = [];
+  const r = PR.reg, out = [], itens = new Map();
   const medidas = (PR.dados && PR.dados.medidas || []).map(m => m.nome);
+  if (r.exigencias.length > 1) out.push(el("div", { class: "cia-vista" },
+    el("button", { class: "bt" + (CIA_VISTA.compacto ? " on" : ""), title: "Uma linha por exigência; clique na linha para abrir", on: { click: () => vistaCIA("compacto") } }, CIA_VISTA.compacto ? "▤ Expandir" : "▤ Compactar"),
+    el("button", { class: "bt" + (CIA_VISTA.agrupar ? " on" : ""), title: "Juntar as exigências da mesma medida, na ordem do SOL", on: { click: () => vistaCIA("agrupar") } }, CIA_VISTA.agrupar ? "Agrupado por medida ✓" : "Agrupar por medida"),
+    el("span", { class: "discreto" }, r.exigencias.filter(e => (e.final || "").trim()).length + " de " + r.exigencias.length + " salvas")));
   if (!r.exigencias.length) out.push(el("p", { class: "sub" }, "Escreva o achado em poucas palavras (\"porta da escada 80 cm\") e clique em \"Pedir ao Claude\": o rascunho volta para o mesmo item. Vale o texto que você salvar."));
   r.exigencias.forEach((e, i) => {
     const temFinal = !!(e.final || "").trim(), deRascunho = !temFinal && !!(e.rascunho || "").trim();
@@ -1502,7 +1525,16 @@ function pintarCIA() {
       recarregarRegistro();
     };
     const rascDiferente = temFinal && e.rascunho && e.rascunho.trim() !== e.final.trim();
-    out.push(el("div", { class: "exig" },
+    if (CIA_VISTA.compacto && !CIA_ABERTOS.has(e.id) && PR.sujos["e" + e.id] == null) {
+      const resumo = (ta.value || "").replace(/^\s*-\s*/, "").replace(/\s+/g, " ").trim();
+      itens.set(e.id, el("div", { class: "exig compacta", role: "button", tabindex: 0, title: "Abrir esta exigência",
+        on: { click: () => { CIA_ABERTOS.add(e.id); pintarCIA(); }, keydown: ev => { if (ev.key === "Enter") ev.currentTarget.click(); } } },
+        el("b", {}, (i + 1) + "."), CIA_VISTA.agrupar ? null : el("span", { class: "cx-med" }, e.medida || "— medida —"),
+        el("span", { class: "cx-res" }, resumo || "(vazia)"),
+        e.pedido ? el("span", { class: "marca-tag" }, "redigindo…") : temFinal ? el("span", { class: "ok-tag" }, "✓") : deRascunho ? el("span", { class: "marca-tag" }, "rascunho") : null));
+      return;
+    }
+    itens.set(e.id, el("div", { class: "exig" },
       el("div", { class: "cab" }, el("b", {}, (i + 1) + ". "), sel,
         deRascunho || rascDiferente ? el("span", { class: "marca-tag" }, "rascunho do Claude") : null,
         e.pedido ? el("span", { class: "marca-tag", style: "display:inline-flex;align-items:center;gap:4px" }, caranguejo(PR.fluxo.modelo, "medium", "Claude redigindo este item"), "redigindo…") : null),
@@ -1513,12 +1545,23 @@ function pintarCIA() {
         el("button", { class: "bt p", on: { click: salvar } }, "Salvar"),
         el("button", { class: "bt", title: "Manda o texto da caixa ao chat como achado; o rascunho volta para este item", on: { click: pedir } }, "Pedir ao Claude"),
         st,
-        el("button", { class: "bt link", title: "subir", on: { click: () => api("processo_mover", [PR.codigo, e.id, -1]).then(recarregarRegistro) } }, "↑"),
-        el("button", { class: "bt link", title: "descer", on: { click: () => api("processo_mover", [PR.codigo, e.id, 1]).then(recarregarRegistro) } }, "↓"),
+        CIA_VISTA.agrupar ? null : el("button", { class: "bt link", title: "subir", on: { click: () => api("processo_mover", [PR.codigo, e.id, -1]).then(recarregarRegistro) } }, "↑"),
+        CIA_VISTA.agrupar ? null : el("button", { class: "bt link", title: "descer", on: { click: () => api("processo_mover", [PR.codigo, e.id, 1]).then(recarregarRegistro) } }, "↓"),
+        CIA_VISTA.compacto ? el("button", { class: "bt link", title: "voltar a uma linha", on: { click: () => { CIA_ABERTOS.delete(e.id); pintarCIA(); } } }, "fechar") : null,
         el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "exigencias", e.id]).then(recarregarRegistro) } }, "excluir"),
         conta),
       temFinal ? el("div", { class: "discreto salvo" }, "✓ texto final salvo") : null));
   });
+  if (CIA_VISTA.agrupar && r.exigencias.length > 1) {
+    const ordem = m => { const k = medidas.indexOf(m); return m ? (k < 0 ? 900 : k) : 999; };
+    const grupos = new Map();
+    for (const e of r.exigencias) { const m = e.medida || ""; if (!grupos.has(m)) grupos.set(m, []); grupos.get(m).push(e); }
+    [...grupos.keys()].sort((a, b) => ordem(a) - ordem(b)).forEach(m => {
+      const l = grupos.get(m), salvas = l.filter(e => (e.final || "").trim()).length;
+      out.push(el("div", { class: "cia-grupo" }, el("div", { class: "cab-grupo" }, el("b", {}, m || "Sem medida escolhida"),
+        el("span", { class: "discreto" }, l.length + " exigência(s)" + (salvas ? " · " + salvas + " salva(s)" : ""))), ...l.map(e => itens.get(e.id))));
+    });
+  } else out.push(...r.exigencias.map(e => itens.get(e.id)));
   out.push(el("button", { class: "bt", on: { click: async () => { await api("processo_exigencia", [PR.codigo, "", "", ""]); await recarregarRegistro(); const u = [...document.querySelectorAll("#pr-cia textarea")].pop(); if (u) u.focus(); } } }, "+ exigência"));
   const alvo = $("#pr-cia"), top = alvo.scrollTop;
   alvo.replaceChildren(...out); alvo.scrollTop = top;

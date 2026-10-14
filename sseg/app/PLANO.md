@@ -240,6 +240,12 @@ Fase B2 — analista e meta pela escala (2.1.15, pedido do Átila em 14/10/2026)
 - [ ] Outros analistas: sem ligação com o servidor, a meta é a digitada. Decidir se eles usam o servidor ou se o app lê a planilha direto
 - [ ] A caixa (distribuicao.py) ainda filtra "CARPES" fixo no servidor; com outro analista no servidor, passar o nome escolhido
 
+Coluna da CIA com muitas exigências (2.1.16, pedido do Átila em 14/10/2026)
+- [x] "▤ Compactar": uma linha por exigência (número, começo do texto, ✓ salva / rascunho / redigindo); clique abre só aquela, "fechar" volta
+- [x] "Agrupar por medida" (ligado por padrão): mesma medida junta, na ordem das medidas do SOL, com contagem e salvas; o número continua o da CIA. Agrupado, some o ↑↓ (a ordem da CIA só muda desagrupado)
+- [x] Preferência guardada no navegador (PC e celular, cada um a sua)
+- [ ] Teste do Átila numa análise com muitas notificações
+
 Pendências que sobram das conversas (pedido do Átila, 14/10/2026)
 O checklist do plugin "assuntos" é por conversa. O que fica aberto quando ela acaba é pendência: o Claude sugere trabalho ou pessoal e o Átila confirma antes de enviar.
 - [x] Trabalho vai ao Quadro do SSEG: `python sseg/scripts/quadro.py adicionar "<texto>" --origem "<conversa>"`
