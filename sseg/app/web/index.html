@@ -488,7 +488,11 @@ if (ESPELHO) {
     $("#pr-sol-lic").textContent = "SOL: licenciamento"; $("#pr-sol-an").textContent = "SOL: análise"; $("#pr-laudo").textContent = "laudo";
     // foto do build (#tour-…): sem a conexão de eventos, que fica aberta e o Edge sem janela esperaria para sempre
     const es = /^#tour-/.test(location.hash) ? {} : new EventSource("eventos");
-    es.onopen = () => document.body.classList.remove("sem-pc");
+    // O PC atualizou o programa (fecha, troca, abre): a conexão cai e volta. Voltou em outra versão → recarrega.
+    es.onopen = async () => {
+      document.body.classList.remove("sem-pc");
+      try { const i = await window.pywebview.api.inicio(); if (ESTADO.info && i.versao !== ESTADO.info.versao) location.reload(); } catch (e) {}
+    };
     es.onerror = () => document.body.classList.add("sem-pc");
     es.onmessage = m => { try { const { f, a } = JSON.parse(m.data); if (typeof SSEG[f] === "function") SSEG[f](...a); } catch (e) {} };
     window.dispatchEvent(new Event("pywebviewready"));

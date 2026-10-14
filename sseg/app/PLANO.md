@@ -178,6 +178,7 @@ A mesma janela do SSEG.exe do quartel no navegador do celular: o PC faz todo o t
   - o texto entra no campo e não vai sozinho, porque nome de norma ditado sai torto;
   - Enviar para de ouvir, e o ditado atrasado não volta ao campo;
   - o botão só aparece onde o navegador tem reconhecimento de voz. O teclado do iPhone já tinha o próprio microfone
+- [x] 2.1.9: o celular recarrega sozinho quando o PC volta numa versão nova, já que atualizar fecha e reabre o SSEG.exe e a conexão de eventos cai e volta. Endereço: https://carpes-24-7.tailb70285.ts.net (a chave só na primeira vez; depois fica o cookie de 1 ano)
 - [ ] Teste de ponta a ponta: SSEG.exe do quartel ligado → QR → iPhone no 4G
 - [ ] Notas da fase 2 (o desenho original): O PC do quartel fica na rede do governo e o celular no 4G, então eles não se enxergam direto:
   - o SSEG.exe abre `ssh -N -R 127.0.0.1:8765:127.0.0.1:8765 sseg-servidor` (conexão de saída, a mesma do sincronizar; nenhuma porta aberta no PC);
