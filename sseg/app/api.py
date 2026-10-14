@@ -35,6 +35,61 @@ import sseg_app as base
 CODIGO = re.compile(r"^A\d{8}[A-Z]{2}\d{3}$")
 
 
+# ---- cards do Início (2.1.13): estado de cada processo na caixa do analista
+REGRAS_CARD = {
+    "fila": "Na fila: atribuído, ainda sem distribuição",
+    "caixa": "Na caixa: distribuído e sem conclusão",
+    "vence": "Na caixa, vence em até N dias (ou já venceu)",
+    "aguardando": "Aguardando: saiu da caixa com CIA ou CA, nos últimos N dias",
+    "cia": "Saiu com CIA, nos últimos N dias",
+    "ca": "Saiu com CA, nos últimos N dias",
+    "no_prazo": "Analisados no prazo, nos últimos N dias",
+    "fora_prazo": "Fora do prazo: passou do prazo na caixa ou concluído depois dele (últimos N dias)",
+    "ct": "CT marcada de hoje em diante",
+    "meta": "Meta da semana: concluídos desde segunda",
+}
+CORES_CARD = ["laranja", "azul", "verde", "vermelho", "roxo", "amarelo", "cinza"]
+CARDS_PADRAO = [
+    {"id": "caixa", "nome": "Na caixa", "cor": "laranja", "regra": "caixa", "dias": 7},
+    {"id": "vence", "nome": "Vencem em 3 dias", "cor": "vermelho", "regra": "vence", "dias": 3},
+    {"id": "fila", "nome": "Na fila", "cor": "cinza", "regra": "fila", "dias": 7},
+    {"id": "aguardando", "nome": "Aguardando", "cor": "azul", "regra": "aguardando", "dias": 30},
+    {"id": "no_prazo", "nome": "Analisados no prazo", "cor": "verde", "regra": "no_prazo", "dias": 30},
+    {"id": "fora_prazo", "nome": "Fora do prazo", "cor": "vermelho", "regra": "fora_prazo", "dias": 30},
+    {"id": "ct", "nome": "CT marcadas", "cor": "roxo", "regra": "ct", "dias": 7},
+    {"id": "meta", "nome": "Meta da semana", "cor": "amarelo", "regra": "meta", "dias": 7},
+]
+
+
+def _ler(caminho):
+    try:
+        with open(caminho, encoding="utf-8") as fh:
+            d = json.load(fh)
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def estado_caixa(dist, reg, prazo=10, hoje=None):
+    """Planilha (distribuicao.json) manda; o marcado à mão (analise.json) só preenche o que ela não tem.
+    estado: fila (atribuído, sem distribuição) · caixa (distribuído, sem conclusão) · concluido · sem
+    (nenhum dado). Prazo = distribuído + `prazo` dias corridos."""
+    import datetime
+    hoje = hoje or datetime.date.today()
+    g = lambda k: (dist.get(k) or reg.get(k) or "")
+    fonte = "planilha" if dist.get("codigo") else ("manual" if any(reg.get(k) for k in ("distribuido", "concluido")) else "")
+    e = {"distribuido": g("distribuido"), "concluido": g("concluido"), "resultado": g("resultado"), "protocolo": dist.get("protocolo", ""),
+         "tipo": dist.get("tipo", ""), "ct": reg.get("ct", ""), "fonte": fonte, "vence": "", "dias": None, "no_prazo": None}
+    if e["distribuido"]:
+        d0 = datetime.date.fromisoformat(e["distribuido"])
+        e["vence"] = (d0 + datetime.timedelta(days=prazo)).isoformat()
+        fim = datetime.date.fromisoformat(e["concluido"]) if e["concluido"] else hoje
+        e["dias"] = (fim - d0).days
+        e["no_prazo"] = e["dias"] <= prazo
+    e["estado"] = "concluido" if e["concluido"] else "caixa" if e["distribuido"] else "fila" if dist.get("codigo") else "sem"
+    return e
+
+
 class Api:
     def __init__(self):
         self._janela = None
@@ -203,31 +258,42 @@ class Api:
             arqs = [os.path.join(p, a) for a in os.listdir(p)]
             quando = max([os.path.getmtime(a) for a in arqs] + [os.path.getmtime(p)])
             reg = os.path.join(p, "analise.json")
-            sit = {}
-            if os.path.exists(reg):
-                try:
-                    with open(reg, encoding="utf-8") as fh:
-                        a = json.load(fh)
-                    sit = {k: a[k] for k in ("situacao", "prazo", "ct", "fechado_em") if a.get(k)}
-                except (OSError, ValueError):
-                    pass
-            out.append({"codigo": n, "quando": quando, "arquivos": len(arqs),
-                        "cia": any(re.match(r"CIA \d+", os.path.basename(a)) for a in arqs),
-                        "analise": os.path.exists(reg),
-                        # sem situação marcada: em análise se mexido nos últimos 30 dias; senão "parado" (fora dos cards)
-                        "situacao": sit.get("situacao") or ("analise" if time.time() - quando < 30 * 86400 else "parado"),
-                        "prazo": sit.get("prazo", ""), "ct": sit.get("ct", ""), "fechado_em": sit.get("fechado_em", 0)})
+            out.append(dict(estado_caixa(_ler(os.path.join(p, "distribuicao.json")), _ler(reg), self._cfg().get("prazo_caixa", 10)),
+                            codigo=n, quando=quando, arquivos=len(arqs), analise=os.path.exists(reg),
+                            cia=any(re.match(r"CIA \d+", os.path.basename(a)) for a in arqs)))
         out.sort(key=lambda x: -x["quando"])
         return out  # todos: os cards contam tudo; a tabela mostra os 30 primeiros sem filtro
 
     def processo_situacao(self, codigo, campos):
-        """Seletor da janela do processo: situacao, prazo, ct (2.1.12)."""
-        livres = {k: v for k, v in (campos or {}).items() if k in ("situacao", "prazo", "ct")}
+        """Janela do processo: distribuído, concluído, resultado e CT à mão (quando a planilha não tem)."""
+        livres = {k: v for k, v in (campos or {}).items() if k in ("distribuido", "concluido", "resultado", "ct")}
+        pasta = self._pasta_proc(codigo)
         try:
-            d = self._reg().situacao(self._pasta_proc(codigo), **livres)
+            d = self._reg().situacao(pasta, **livres)
         except ValueError as e:
             raise RuntimeError(str(e))
-        return {k: d.get(k, "") for k in ("situacao", "prazo", "ct", "fechado_em")}
+        return estado_caixa(_ler(os.path.join(pasta, "distribuicao.json")), d, self._cfg().get("prazo_caixa", 10))
+
+    def cards(self, lista=None):
+        """Cards do Início (2.1.13): sem argumento lê; com a lista, grava. [] volta ao padrão."""
+        cfg = self._cfg()
+        if lista is not None:
+            if not isinstance(lista, list) or len(lista) > 24:
+                raise RuntimeError("Lista de cards inválida.")
+            limpa = []
+            for c in lista:
+                if not isinstance(c, dict) or c.get("regra") not in REGRAS_CARD:
+                    raise RuntimeError("Card com regra desconhecida.")
+                limpa.append({"id": str(c.get("id") or secrets.token_hex(3))[:16], "nome": str(c.get("nome") or "")[:40],
+                              "cor": c.get("cor") if c.get("cor") in CORES_CARD else "cinza", "regra": c["regra"],
+                              "dias": max(1, min(365, int(c.get("dias") or 7)))})
+            if limpa:
+                cfg["cards"] = limpa
+            else:
+                cfg.pop("cards", None)
+            base.gravar_config(cfg)
+        return {"cards": cfg.get("cards") or CARDS_PADRAO, "padrao": CARDS_PADRAO, "regras": REGRAS_CARD,
+                "cores": CORES_CARD, "prazo": cfg.get("prazo_caixa", 10), "meta": cfg.get("meta_semana", 10)}
 
     def meta_semana(self, valor=None):
         """Meta de processos fechados por semana (card do Início). Sem valor, só lê."""
@@ -263,6 +329,7 @@ class Api:
         if not os.path.isdir(pasta):
             raise RuntimeError("Não há pasta %s na pasta dos processos." % codigo)
         d = processo.montar(self._clone(), pasta)
+        d["caixa"] = estado_caixa(_ler(os.path.join(pasta, "distribuicao.json")), d["analise"], self._cfg().get("prazo_caixa", 10))
         c = self._conversas.get(codigo)
         d["ocupado"] = bool(c and c.ocupado)
         return d

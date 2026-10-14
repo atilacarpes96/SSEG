@@ -97,7 +97,7 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 .tag { font-size: 11px; border-radius: 4px; padding: 1px 6px; background: var(--fundo); color: var(--suave); margin-right: 4px; }
 .vazio { color: var(--suave); padding: 14px 4px; }
 
-/* ---- cards da semana (2.1.12, ideia do Kanban) */
+/* ---- cards do Início (2.1.12–2.1.13, ideia do Kanban) */
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 4px; }
 .card-kpi { text-align: left; border: 1px solid var(--linha); border-top: 4px solid var(--c); background: var(--cartao);
             border-radius: var(--raio); box-shadow: var(--sombra); padding: 9px 13px 10px; display: flex; flex-direction: column;
@@ -110,8 +110,23 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 .card-kpi.ativo { outline: 2px solid var(--c); outline-offset: 1px; }
 .card-kpi .barra { height: 5px; background: var(--linha); border-radius: 3px; overflow: hidden; margin-top: 3px; }
 .card-kpi .barra i { display: block; height: 100%; background: var(--c); }
-.k-analise { --c: var(--c-analise); } .k-aguardando { --c: var(--c-aguarda); } .k-prazo { --c: var(--c-prazo); }
-.k-ct { --c: var(--c-ct); } .k-fechado { --c: var(--c-fechado); } .k-meta { --c: var(--c-meta); } .k-parado { --c: var(--c-parado); }
+.k-laranja { --c: var(--c-analise); } .k-azul { --c: var(--c-aguarda); } .k-vermelho { --c: var(--c-prazo); }
+.k-roxo { --c: var(--c-ct); } .k-verde { --c: var(--c-fechado); } .k-amarelo { --c: var(--c-meta); } .k-cinza { --c: var(--c-parado); }
+.card-kpi { position: relative; cursor: pointer; }
+.card-edit { position: absolute; top: 5px; right: 5px; border: 0; background: none; color: var(--suave); font-size: 13px;
+             padding: 2px 6px; border-radius: 5px; opacity: 0; }
+.card-kpi:hover .card-edit, .card-edit:focus-visible { opacity: 1; }
+.card-edit:hover { background: var(--bt-h); color: var(--texto); }
+.card-novo { border: 1px dashed var(--linha); background: none; border-radius: var(--raio); color: var(--suave); font-weight: 600;
+             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; min-height: 78px; }
+.card-novo b { font-size: 22px; line-height: 1; color: var(--verm); }
+.card-novo:hover { border-color: var(--verm-claro); color: var(--texto); }
+.campo-card { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 13px; color: var(--suave); }
+.campo-card input[type=text], .campo-card select { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; font: inherit; color: var(--texto); background: var(--campo); }
+.campo-card input[type=number] { padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; }
+.cores-card { display: flex; gap: 8px; flex-wrap: wrap; }
+.cores-card button { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; background: var(--c); padding: 0; }
+.cores-card button.ativo { border-color: var(--texto); box-shadow: 0 0 0 2px var(--cartao) inset; }
 .tag.sit { color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); font-weight: 600; }
 .tag.vence { color: var(--c-prazo); font-weight: 600; }
 .filtro-chip { display: inline-flex; align-items: center; gap: 4px; font: 600 11.5px "Segoe UI", system-ui, sans-serif; letter-spacing: 0;
@@ -319,6 +334,7 @@ body.sem-pc #sem-pc { display: block; }
   #pr-tags, #cv-tags { display: none; }
   .cards { grid-template-columns: 1fr 1fr; gap: 8px; }
   .card-kpi b { font-size: 22px; }
+  .card-edit { opacity: 1; }
   .pr-sit select, .pr-sit input { font-size: 16px; }
   .faixa .dir { margin-left: 0; width: 100%; flex-wrap: wrap; gap: 6px; }
   .faixa .dir .bt { white-space: nowrap; }
@@ -796,60 +812,118 @@ function maisOpcoes(f, codigo) {
     ["Abrir no terminal (avançado)", async b => { await api("abrir_conversa", [f.id, codigo || ""], b); fechar(); }],
     ["Fechar", fechar]]);
 }
-// ---- cards da semana (2.1.12, ideia do Kanban): contam a lista de processos; o clique filtra a tabela
-const SIT = { analise: "Em análise", aguardando: "Aguardando", fechado: "Fechado", parado: "Parado?" };
-const SIT_COR = { analise: "k-analise", aguardando: "k-aguardando", fechado: "k-fechado", parado: "k-parado" };
-let PROCS = [], FILTRO = null, META = 10;
+// ---- cards do Início (2.1.13): estado na caixa vindo da planilha "Distribuição Análise" (distribuicao.json,
+// trazido pelo Sincronizar processos) ou marcado à mão na janela do processo. Cards editáveis, guardados na configuração.
+let PROCS = [], FILTRO = null, CARDS = null;
 const isoLocal = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 const dataBR = iso => iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) : "";
-function cardsDef() {
-  const hoje = new Date(), h = isoLocal(hoje), d7 = isoLocal(new Date(hoje.getTime() + 7 * 864e5));
-  const seg = new Date(hoje); seg.setHours(0, 0, 0, 0); seg.setDate(seg.getDate() - (seg.getDay() + 6) % 7);
-  const aberto = p => p.situacao === "analise" || p.situacao === "aguardando";
-  return [
-    { id: "analise", nome: "Em análise", cls: "k-analise", f: p => p.situacao === "analise" },
-    { id: "aguardando", nome: "Aguardando", cls: "k-aguardando", f: p => p.situacao === "aguardando", sub: () => "RT, chefia ou SOL" },
-    { id: "prazo", nome: "Prazo em 7 dias", cls: "k-prazo", f: p => aberto(p) && p.prazo && p.prazo <= d7,
-      sub: l => { const v = l.filter(p => p.prazo < h).length; return v ? v + " vencido(s)" : ""; } },
-    { id: "ct", nome: "CT marcadas", cls: "k-ct", f: p => p.ct && p.ct >= h,
-      sub: l => l.length ? "próxima " + dataBR(l.map(p => p.ct).sort()[0]) : "" },
-    { id: "fechado", nome: "Fechados em 7 dias", cls: "k-fechado", f: p => p.situacao === "fechado" && p.fechado_em * 1000 >= Date.now() - 7 * 864e5 },
-    { id: "meta", nome: "Meta da semana", cls: "k-meta", meta: true, f: p => p.situacao === "fechado" && p.fechado_em * 1000 >= seg.getTime() },
-  ];
+const diasAte = iso => Math.round((new Date(iso + "T12:00") - new Date(isoLocal(new Date()) + "T12:00")) / 864e5);
+const COM_DIAS = ["vence", "aguardando", "cia", "ca", "no_prazo", "fora_prazo"];
+function regra(c) {
+  const hoje = new Date(), h = isoLocal(hoje), N = c.dias || 7;
+  const mais = isoLocal(new Date(hoje.getTime() + N * 864e5)), desde = isoLocal(new Date(hoje.getTime() - N * 864e5));
+  const seg = new Date(hoje); seg.setDate(seg.getDate() - (seg.getDay() + 6) % 7);
+  const conc = p => p.estado === "concluido" && p.concluido >= desde;
+  return {
+    fila: p => p.estado === "fila",
+    caixa: p => p.estado === "caixa",
+    vence: p => p.estado === "caixa" && p.vence <= mais,
+    aguardando: conc,
+    cia: p => conc(p) && p.resultado === "CIA",
+    ca: p => conc(p) && p.resultado === "CA",
+    no_prazo: p => conc(p) && p.no_prazo === true,
+    fora_prazo: p => (p.estado === "caixa" && p.no_prazo === false) || (conc(p) && p.no_prazo === false),
+    ct: p => p.ct && p.ct >= h,
+    meta: p => p.estado === "concluido" && p.concluido >= isoLocal(seg),
+  }[c.regra] || (() => false);
+}
+function subtexto(c, l) {
+  const h = isoLocal(new Date());
+  if (c.regra === "caixa") { const v = l.map(p => p.vence).filter(Boolean).sort()[0]; return v ? "o mais antigo vence " + dataBR(v) : "prazo de " + CARDS.prazo + " dias corridos"; }
+  if (c.regra === "vence") { const v = l.filter(p => p.vence < h).length; return v ? v + " vencido(s)" : "em até " + c.dias + " dia(s)"; }
+  if (c.regra === "fila") return "prazo ainda não corre";
+  if (c.regra === "aguardando") return l.filter(p => p.resultado === "CIA").length + " CIA · " + l.filter(p => p.resultado === "CA").length + " CA · " + c.dias + " dias";
+  if (c.regra === "no_prazo") { const t = PROCS.filter(regra({ regra: "aguardando", dias: c.dias })).length; return t ? Math.round(l.length / t * 100) + "% de " + t + " · " + c.dias + " dias" : c.dias + " dias"; }
+  if (c.regra === "ct") return l.length ? "próxima " + dataBR(l.map(p => p.ct).sort()[0]) : "";
+  if (COM_DIAS.includes(c.regra)) return "últimos " + c.dias + " dias";
+  return "";
 }
 function pintarCards() {
-  $("#cards").replaceChildren(...cardsDef().map(c => {
-    const l = PROCS.filter(c.f);
-    const corpo = c.meta
-      ? [el("b", {}, l.length + " / " + META), el("div", { class: "barra" }, el("i", { style: "width:" + Math.min(100, l.length / META * 100) + "%" })),
-         el("small", {}, "fechados desde segunda")]
-      : [el("b", {}, l.length), el("small", {}, c.sub ? c.sub(l) : "")];
-    return el("button", { class: "card-kpi " + c.cls + (l.length ? "" : " zero") + (FILTRO === c.id ? " ativo" : ""),
-      title: c.meta ? "Clique para mudar a meta de processos fechados por semana" : "Clique para filtrar os processos",
-      on: { click: () => { if (c.meta) return mudarMeta(); FILTRO = FILTRO === c.id ? null : c.id; pintarProcessos(); } } },
-      el("span", {}, c.nome), ...corpo);
-  }));
+  const lista = CARDS.cards.map(c => {
+    const l = PROCS.filter(regra(c)), meta = c.regra === "meta";
+    const editar = el("button", { class: "card-edit", title: "Editar este card", on: { click: ev => { ev.stopPropagation(); editarCard(c); } } }, "✎");
+    const corpo = meta
+      ? [el("b", {}, l.length + " / " + CARDS.meta), el("div", { class: "barra" }, el("i", { style: "width:" + Math.min(100, l.length / CARDS.meta * 100) + "%" })),
+         el("small", {}, "concluídos desde segunda")]
+      : [el("b", {}, l.length), el("small", {}, subtexto(c, l))];
+    return el("div", { class: "card-kpi k-" + c.cor + (l.length ? "" : " zero") + (FILTRO === c.id ? " ativo" : ""), role: "button", tabindex: 0,
+      title: "Clique para filtrar os processos",
+      on: { click: () => { FILTRO = FILTRO === c.id ? null : c.id; pintarProcessos(); },
+            keydown: ev => { if (ev.key === "Enter") ev.currentTarget.click(); } } },
+      el("span", {}, c.nome), editar, ...corpo);
+  });
+  lista.push(el("button", { class: "card-novo", title: "Novo card", on: { click: () => editarCard(null) } }, el("b", {}, "+"), "card"));
+  $("#cards").replaceChildren(...lista);
 }
-function mudarMeta() {
-  const inp = el("input", { type: "number", min: 1, max: 200, value: META, style: "width:90px;padding:6px 8px" });
-  modal("Meta da semana", "Quantos processos fechados por semana, de segunda a domingo.", inp, [
-    ["Salvar", async b => { META = await api("meta_semana", [Number(inp.value)], b); fechar(); pintarCards(); }, true],
-    ["Cancelar", fechar]]);
+function editarCard(c) {
+  const novo = !c;
+  c = c ? { ...c } : { id: "", nome: "", cor: "azul", regra: "caixa", dias: 7 };
+  const nome = el("input", { type: "text", value: c.nome, maxlength: 40, placeholder: "Nome do card" });
+  const sel = el("select", {}, ...Object.entries(CARDS.regras).map(([k, t]) => el("option", { value: k }, t)));
+  sel.value = c.regra;
+  const dias = el("input", { type: "number", min: 1, max: 365, value: c.dias || 7, style: "width:80px" });
+  const meta = el("input", { type: "number", min: 1, max: 200, value: CARDS.meta, style: "width:80px" });
+  const lDias = el("label", { class: "campo-card" }, "N (dias) ", dias), lMeta = el("label", { class: "campo-card" }, "Meta por semana ", meta);
+  const mostra = () => { lDias.hidden = !COM_DIAS.includes(sel.value); lMeta.hidden = sel.value !== "meta"; };
+  sel.addEventListener("change", () => { mostra(); if (!nome.value.trim() || novo) nome.value = CARDS.regras[sel.value].split(":")[0].split(",")[0]; });
+  mostra();
+  const cores = el("div", { class: "cores-card" }, ...CARDS.cores.map(k => {
+    const b = el("button", { type: "button", class: "k-" + k + (k === c.cor ? " ativo" : ""), title: k, "aria-label": k,
+      on: { click: () => { c.cor = k; for (const x of cores.children) x.classList.toggle("ativo", x === b); } } });
+    return b;
+  }));
+  const gravar = async (lista, b) => { CARDS = await api("cards", [lista], b); if (!CARDS.cards.some(x => x.id === FILTRO)) FILTRO = null; fechar(); pintarProcessos(); };
+  const i = CARDS.cards.findIndex(x => x.id === c.id);
+  const botoes = [["Salvar", async b => {
+    if (sel.value === "meta") await api("meta_semana", [Number(meta.value)]);
+    const item = { ...c, nome: nome.value.trim() || CARDS.regras[sel.value], regra: sel.value, dias: Number(dias.value) || 7 };
+    const lista = CARDS.cards.slice();
+    if (novo) lista.push(item); else lista[i] = item;
+    await gravar(lista, b);
+  }, true]];
+  if (!novo) {
+    if (i > 0) botoes.push(["← Mover", b => { const l = CARDS.cards.slice(); [l[i - 1], l[i]] = [l[i], l[i - 1]]; return gravar(l, b); }]);
+    botoes.push(["Excluir", b => gravar(CARDS.cards.filter(x => x.id !== c.id), b)]);
+  } else botoes.push(["Voltar aos cards padrão", b => gravar([], b)]);
+  botoes.push(["Cancelar", fechar]);
+  modal(novo ? "Novo card" : "Editar card", "O card conta os processos da sua pasta pela regra escolhida. Clique nele para filtrar a tabela.",
+    [el("label", { class: "campo-card" }, "Nome ", nome), el("label", { class: "campo-card" }, "Regra ", sel), lDias, lMeta,
+     el("div", { class: "campo-card" }, "Cor ", cores)], botoes);
+}
+function tagEstado(p) {
+  const h = isoLocal(new Date());
+  if (p.estado === "fila") return el("span", { class: "tag sit k-cinza" }, "Na fila");
+  if (p.estado === "caixa") {
+    const f = diasAte(p.vence);
+    return el("span", { class: "tag sit " + (f < 0 ? "k-vermelho" : f <= 3 ? "k-vermelho" : "k-laranja"), title: "Distribuído em " + dataBR(p.distribuido) + ", vence " + dataBR(p.vence) },
+      f < 0 ? "Vencido há " + -f + " dia(s)" : f === 0 ? "Vence hoje" : "Na caixa · faltam " + f);
+  }
+  if (p.estado === "concluido") return el("span", { class: "tag sit " + (p.no_prazo === false ? "k-vermelho" : "k-azul"),
+    title: p.dias != null ? p.dias + " dia(s) na caixa" : "" }, (p.resultado || "Concluído") + " " + dataBR(p.concluido) + (p.no_prazo === false ? " · fora do prazo" : ""));
+  return el("span", { class: "tag sit k-cinza", title: "Fora da planilha e sem datas marcadas na janela do processo" }, "Sem dados");
 }
 function pintarProcessos() {
   pintarCards();
-  const corpo = $("#processos"), def = FILTRO && cardsDef().find(c => c.id === FILTRO);
-  $("#filtro").replaceChildren(...(def ? [el("span", { class: "filtro-chip " + def.cls }, def.nome,
+  const corpo = $("#processos"), def = FILTRO && CARDS.cards.find(c => c.id === FILTRO);
+  $("#filtro").replaceChildren(...(def ? [el("span", { class: "filtro-chip k-" + def.cor }, def.nome,
     el("button", { title: "Tirar o filtro", on: { click: () => { FILTRO = null; pintarProcessos(); } } }, "✕"))] : []));
-  const lst = def ? PROCS.filter(def.f) : PROCS.slice(0, 30);
+  const lst = def ? PROCS.filter(regra(def)) : PROCS.slice(0, 30);
   if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 5 },
     def ? "Nenhum processo neste card." : "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
   const h = isoLocal(new Date());
   corpo.replaceChildren(...lst.map(p => el("tr", {},
-    el("td", { class: "cod" }, p.codigo),
-    el("td", {}, el("span", { class: "tag sit " + (SIT_COR[p.situacao] || "") }, SIT[p.situacao] || p.situacao),
-      p.prazo && p.situacao !== "fechado" ? el("span", { class: "tag" + (p.prazo < h ? " vence" : "") }, "prazo " + dataBR(p.prazo)) : null,
-      p.ct && p.ct >= h ? el("span", { class: "tag sit k-ct" }, "CT " + dataBR(p.ct)) : null),
+    el("td", { class: "cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null),
+    el("td", {}, tagEstado(p), p.ct && p.ct >= h ? el("span", { class: "tag sit k-roxo" }, "CT " + dataBR(p.ct)) : null),
     el("td", {}, new Date(p.quando * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })),
     el("td", {}, el("span", { class: "tag" }, p.arquivos + " arquivo(s)"), p.cia ? el("span", { class: "tag" }, "CIA") : null),
     el("td", { style: "text-align:right" },
@@ -857,7 +931,7 @@ function pintarProcessos() {
       el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "pasta")))));
 }
 async function carregarProcessos() {
-  try { [PROCS, META] = await Promise.all([api("processos"), api("meta_semana")]); } catch (e) { return; }
+  try { [PROCS, CARDS] = await Promise.all([api("processos"), api("cards")]); } catch (e) { return; }
   pintarProcessos();
 }
 async function carregarInicio() {
@@ -1124,25 +1198,32 @@ function renderProcesso(d) {
     el("span", { class: "tag" }, d.medidas.length + " medida(s)"),
     d.cias.length ? el("span", { class: "tag" }, d.cias.length + " CIA anterior(es)") : null].filter(Boolean));
   $("#pr-laudo").hidden = !d.laudo;
-  pintarSituacao(d.analise);
+  pintarSituacao(d.caixa);
   pintarCota();
   pintarChecklist(); pintarCIA();
 }
-// situação do processo (2.1.12): alimenta os cards do Início
-function pintarSituacao(a) {
-  const cod = PR.codigo;
-  const sel = el("select", { title: "Situação do processo (cards do Início)" },
-    ...["analise", "aguardando", "fechado"].map(k => el("option", { value: k }, SIT[k])));
-  sel.value = a.situacao || "analise";
-  const cor = () => { sel.className = SIT_COR[sel.value]; };
-  cor();
-  sel.addEventListener("change", () => { cor(); api("processo_situacao", [cod, { situacao: sel.value }]); });
+// caixa do analista na janela do processo (2.1.13): da planilha só mostra; sem planilha, marca à mão
+function pintarSituacao(e) {
+  const cod = PR.codigo, h = isoLocal(new Date());
+  const salvar = campos => api("processo_situacao", [cod, campos]).then(n => { PR.dados.caixa = n; pintarSituacao(n); });
   const data = (k, rot, tit) => {
-    const i = el("input", { type: "date", value: a[k] || "", title: tit });
-    i.addEventListener("change", () => api("processo_situacao", [cod, { [k]: i.value }]));
+    const i = el("input", { type: "date", value: e[k] || "", title: tit });
+    i.addEventListener("change", () => salvar({ [k]: i.value }));
     return [rot, i];
   };
-  $("#pr-sit").replaceChildren(sel, ...data("prazo", "prazo", "Seu prazo para este processo"), ...data("ct", "CT", "Data da consulta técnica"));
+  const partes = [tagEstado(e)];
+  if (e.fonte === "planilha") {
+    partes.push(el("span", { class: "tag", title: "Da planilha Distribuição Análise, trazida pelo Sincronizar processos" },
+      (e.distribuido ? "distribuído " + dataBR(e.distribuido) + " · vence " + dataBR(e.vence) : "protocolo " + dataBR(e.protocolo)) + " · planilha"));
+  } else {
+    const res = el("select", { title: "Resultado da análise" }, ...["", "CIA", "CA"].map(k => el("option", { value: k }, k || "resultado")));
+    res.value = e.resultado || "";
+    res.addEventListener("change", () => salvar({ resultado: res.value }));
+    partes.push(...data("distribuido", "distribuído", "Data em que caiu na sua caixa (fora da planilha)"),
+      ...data("concluido", "concluído", "Data em que saiu da caixa"), res);
+  }
+  partes.push(...data("ct", "CT", "Data da consulta técnica"));
+  $("#pr-sit").replaceChildren(...partes);
 }
 function pintarCota() {
   const c = PR.reg && PR.reg.chat || {};

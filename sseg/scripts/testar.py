@@ -269,21 +269,21 @@ def main():
              e["rascunho"] and not e["final"] and not reg.texto_cia(d), str(e))
         reg.atualizar(pasta, "exigencias", e["id"], final="- Deverá (editado)")
         caso("analise.json: CIA lê só o texto final", [x["final"] for x in reg.texto_cia(reg.ler(pasta))] == ["- Deverá (editado)"])
-        # 2.1.12: situação do processo (cards do Início)
-        reg.situacao(pasta, situacao="fechado", prazo="2026-10-20", ct="2026-10-15")
+        # 2.1.13: caixa marcada à mão (quando a planilha não tem o processo)
+        reg.situacao(pasta, distribuido="2026-10-01", concluido="2026-10-09", resultado="cia", ct="2026-10-15")
         d = reg.ler(pasta)
-        fechou = d["situacao"] == "fechado" and d.get("fechado_em") and d["prazo"] == "2026-10-20" and d["ct"] == "2026-10-15"
-        reg.situacao(pasta, situacao="aguardando", ct="")
+        marcou = (d["distribuido"], d["concluido"], d["resultado"], d["ct"]) == ("2026-10-01", "2026-10-09", "CIA", "2026-10-15")
+        reg.situacao(pasta, concluido="", ct="")
         d = reg.ler(pasta)
-        reabriu = d["situacao"] == "aguardando" and "fechado_em" not in d and "ct" not in d and d["prazo"] == "2026-10-20"
+        limpou = "concluido" not in d and "ct" not in d and d["distribuido"] == "2026-10-01"
         recusa = []
-        for ruim in ({"situacao": "arquivado"}, {"prazo": "20/10/2026"}):
+        for ruim in ({"resultado": "aprovado"}, {"distribuido": "01/10/2026"}, {"prazo": "2026-10-20"}):
             try:
                 reg.situacao(pasta, **ruim)
             except ValueError:
                 recusa.append(ruim)
-        caso("analise.json: situação, prazo e CT (fechar grava a data, reabrir apaga, inválido recusado)",
-             fechou and reabriu and len(recusa) == 2 and reg.ler(pasta)["exigencias"], str(d))
+        caso("analise.json: distribuído, concluído, resultado e CT à mão (vazio apaga, inválido recusado)",
+             marcou and limpou and len(recusa) == 3 and reg.ler(pasta)["exigencias"], str(d))
         json.dump({"especSeguranca": {"laudo": {"txtClob": "laudo"}, "medidas": [
             {"tipo": {"nome": "Sinalização de Emergência"}, "norma": {"nome": "RT 12"}, "inviabilidade": "NAO_POSSUI"},
             {"tipo": {"nome": "Saída de Emergência"}, "norma": {"nome": "RT 11"}, "inviabilidade": "POSSUI_PARCIAL"},
@@ -325,6 +325,52 @@ def main():
     caso("chat: os 6 blocos visuais ensinados ao Claude são JSON válido",
          {t for t, _ in blocos} == {"sseg-status", "sseg-dados", "sseg-definidora", "sseg-perguntas", "sseg-exigencia", "sseg-norma"}
          and all(_json_ok(b) for _, b in blocos), str([t for t, b in blocos if not _json_ok(b)]))
+    # 15b. planilha "Distribuição Análise" → <código>/distribuicao.json → estado na caixa (2.1.13)
+    import distribuicao as dist, datetime as _dt, io, zipfile as _zp
+    import api as _api
+    def _xlsx(linhas):
+        def cel(ref, v):
+            return '<c r="%s" t="inlineStr"><is><t>%s</t></is></c>' % (ref, v) if isinstance(v, str) else '<c r="%s"><v>%s</v></c>' % (ref, v)
+        rows = "".join('<row r="%d">%s</row>' % (i + 1, "".join(cel(chr(65 + j) + str(i + 1), v) for j, v in enumerate(r) if v != ""))
+                       for i, r in enumerate(linhas))
+        ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+        b = io.BytesIO()
+        with _zp.ZipFile(b, "w") as z:
+            z.writestr("xl/workbook.xml", '<workbook %s><sheets><sheet name="CARPES" sheetId="1" r:id="rId1"/><sheet name="ANÁLISE" sheetId="2" r:id="rId2"/></sheets></workbook>' % ns)
+            z.writestr("xl/_rels/workbook.xml.rels", '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Target="worksheets/sheet2.xml"/></Relationships>')
+            z.writestr("xl/worksheets/sheet1.xml", '<worksheet %s><sheetData/></worksheet>' % ns)
+            z.writestr("xl/worksheets/sheet2.xml", '<worksheet %s><sheetData>%s</sheetData></worksheet>' % (ns, rows))
+        return b.getvalue()
+    X = _xlsx([["LICENCIAMENTO", "METRAGEM", "OCUPAÇÃO", "ANÁLISE/ REAN", "PROTOCOLO", "DIAS", "DISTRIBUIÇÃO", "ANALISTA", "DIAS EM ANÁLISE", "DATA CONCLUSÃO", "CIA / CA"],
+               ["A00011111AA001", 500, "A-2", "ANÁLISE", 46290, "", 46292, "ÁTILA CARPES", "", 46296, "CIA"],
+               ["A00011111AA001", 500, "A-2", "2º", 46300, "", 46301, "ÁTILA CARPES", "", "", ""],  # reanálise: vale a de baixo
+               ["A00022222AA001", 900, "F-6", "ANÁLISE", 46300, "", "", "ÁTILA CARPES", "", "", ""],  # na fila
+               ["A00033333AA001", 900, "I-1", "ANÁLISE", 46200, "", 46201, "ÁTILA CARPES", "", 46215, "CA"],  # concluída há mais de 30 dias
+               ["A00044444AA001", 900, "D-1", "ANÁLISE", 46300, "", 46301, "OUTRO ANALISTA", "", "", ""]])
+    regs = dist.registros(dist.linhas_da_aba(X), "carpes")
+    por = {r["codigo"]: r for r in regs}
+    caso("distribuicao: aba ANÁLISE (não a do analista), datas do Excel, só o analista, reanálise vale a última",
+         set(por) == {"A00011111AA001", "A00022222AA001", "A00033333AA001"} and por["A00011111AA001"]["tipo"] == "2º"
+         and por["A00011111AA001"]["distribuido"] == "2026-10-06" and por["A00022222AA001"]["distribuido"] == ""
+         and por["A00033333AA001"]["resultado"] == "CA", str(regs))
+    with tempfile.TemporaryDirectory() as tmp:
+        c1 = dist.gravar(tmp, regs, 30, _dt.date(2026, 10, 13))
+        c2 = dist.gravar(tmp, regs, 30, _dt.date(2026, 10, 13))
+        caso("distribuicao: cria pasta do que está na fila ou na caixa, não da conclusão antiga; repetir não regrava",
+             sorted(c1["criadas"]) == ["A00011111AA001", "A00022222AA001"] and not os.path.exists(os.path.join(tmp, "A00033333AA001"))
+             and c2["iguais"] == 2 and not c2["criadas"] and not c2["atualizadas"], str(c1) + str(c2))
+    E = lambda dd, rr, h: _api.estado_caixa(dd, rr, 10, _dt.date(*h))
+    e1 = E({"codigo": "x", "distribuido": "2026-10-06"}, {}, (2026, 10, 13))
+    e2 = E({"codigo": "x", "distribuido": "2026-10-01"}, {}, (2026, 10, 13))
+    e3 = E({"codigo": "x", "distribuido": "2026-10-01", "concluido": "2026-10-09", "resultado": "CIA"}, {"concluido": "2026-10-20"}, (2026, 10, 13))
+    e4 = E({"codigo": "x"}, {}, (2026, 10, 13))
+    e5 = E({}, {"distribuido": "2026-09-20", "concluido": "2026-10-05"}, (2026, 10, 13))
+    e6 = E({}, {}, (2026, 10, 13))
+    caso("caixa: 10 dias corridos da distribuição; planilha manda no manual; fila sem prazo; manual fora do prazo",
+         (e1["estado"], e1["vence"], e1["no_prazo"]) == ("caixa", "2026-10-16", True) and (e2["estado"], e2["no_prazo"]) == ("caixa", False)
+         and (e3["estado"], e3["concluido"], e3["dias"], e3["no_prazo"]) == ("concluido", "2026-10-09", 8, True)
+         and (e4["estado"], e4["vence"]) == ("fila", "") and (e5["fonte"], e5["dias"], e5["no_prazo"]) == ("manual", 15, False)
+         and e6["estado"] == "sem", str([e1, e2, e3, e4, e5, e6]))
     # 16. Reportar bug com imagem e log: o .zip leva texto e log limpos; imagens só no zip (nunca na issue)
     import api as _api, sseg_app as _base, zipfile as _zip
     with tempfile.TemporaryDirectory() as tmp:

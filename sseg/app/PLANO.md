@@ -210,6 +210,18 @@ Fase A — cards no topo do Início (2.1.12)
 - [x] Pasta sem situação marcada e parada há mais de 30 dias aparece como "Parado?" e fica fora dos cards, para as pastas antigas não inflarem o "Em análise"
 - [ ] Teste do Átila no PC e no celular: marcar a situação em 2 ou 3 processos reais e conferir os números
 
+Fase A2 — caixa do analista pela planilha e cards editáveis (2.1.13, pedido do Átila em 13/10/2026)
+- [x] `scripts/distribuicao.py`: aba ANÁLISE da "Distribuição Análise" (xlsx que a rotina já baixa, lido só com a biblioteca padrão) → `<código>/distribuicao.json` com protocolo, distribuição, conclusão, CIA/CA, tipo, ocupação e área. Cria a pasta do que está na fila ou na caixa e do concluído nos últimos 30 dias
+- [x] Estados: **na fila** (atribuído, sem distribuição: o prazo não corre), **na caixa** (prazo de 10 dias corridos da distribuição), **concluído** (CIA ou CA, saiu da caixa). A planilha manda; o marcado à mão na janela do processo só vale para processo fora da planilha
+- [x] Janela do processo: da planilha só mostra (distribuído, vence); fora dela, distribuído, concluído, resultado e CT à mão. Saem o seletor e o prazo manual da 2.1.12
+- [x] Cards padrão: Na caixa, Vencem em 3 dias, Na fila, Aguardando (CA/CIA), Analisados no prazo (verde), Fora do prazo, CT marcadas, Meta da semana
+- [x] "+ card" e ✎ em cada card: nome, cor, regra (10 regras), N dias, meta; mover para a esquerda, excluir, voltar ao padrão. Guardados na configuração do PC (`cards`)
+- [x] `testar.py`: leitura da aba ANÁLISE com xlsx de mentira, pastas criadas, regravação só quando muda, estado na caixa e campos manuais
+- [x] Rotina do Painel do Dia no servidor: baixa a planilha todo dia útil e roda `distribuicao.py` em `~/SSEG/sseg/processos` (prompt em `~/rotinas/painel-do-dia/prompt.md`, fora do Git)
+- [ ] Conferir no dia seguinte: `~/rotinas/logs/painel-do-dia.log` com a linha "distribuicao: …" e as pastas no servidor
+- [ ] Teste do Átila: Sincronizar processos no PC → as pastas da fila e da caixa aparecem e os cards batem com a planilha
+- [ ] Ordenar cards arrastando (hoje só "← Mover")
+
 Fase B — tela Quadro (tarefas da semana)
 - [ ] Tela "Quadro" no menu, com as colunas A fazer, Fazendo, Esperando e Feito
 - [ ] Os processos entram sozinhos pela situação: em análise vai para Fazendo, aguardando para Esperando, fechado na semana para Feito
