@@ -263,10 +263,8 @@ body.sem-pc #sem-pc { display: block; }
   .marca small { display: none; }
   .marca img { width: 30px; height: 30px; }
   .marca b { font-size: 17px; }
-  #estado { gap: 4px; margin-left: 0; width: 100%; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
-            scrollbar-width: none; }
-  .chip { flex: none; }
-  .chip { font-size: 11.5px; padding: 2px 8px 2px 7px; }
+  #estado { gap: 4px; margin-left: 0; width: 100%; justify-content: flex-start; }
+  .chip { font-size: 11px; padding: 1px 7px 1px 6px; gap: 4px; }
   nav { position: absolute; top: 0; bottom: 0; left: 0; z-index: 5; box-shadow: var(--sombra); }
   main { padding: 12px 12px 18px; }
   main.processo { padding: 0; }
@@ -279,8 +277,9 @@ body.sem-pc #sem-pc { display: block; }
   .faixa .bt { padding: 6px 10px; }
   .faixa .cod { font-size: 14px; }
   #pr-tags, #cv-tags { display: none; }
-  .faixa .dir { margin-left: 0; width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+  .faixa .dir { margin-left: 0; width: 100%; flex-wrap: wrap; gap: 6px; }
   .faixa .dir .bt { white-space: nowrap; }
+  .faixa .dir .bt.link { padding: 6px 4px; }
   .abas-proc { display: flex; border-bottom: 1px solid var(--linha); background: var(--cartao); flex: none; }
   .abas-proc button { flex: 1; border: 0; background: none; padding: 10px 4px; font-weight: 600; color: var(--suave);
                       border-bottom: 3px solid transparent; }
@@ -308,7 +307,7 @@ body.sem-pc #sem-pc { display: block; }
     <button class="chip carregando" id="e-pastas" data-ir="config">Pastas</button>
     <button class="chip carregando" id="e-servidor">Servidor</button>
     <button class="chip carregando" id="e-github">GitHub</button>
-    <button class="chip novo" id="e-versao" hidden>Nova versão</button>
+    <button class="chip novo so-pc" id="e-versao" hidden>Nova versão</button>
   </div>
 </header>
 
@@ -341,8 +340,8 @@ body.sem-pc #sem-pc { display: block; }
           <button class="bt" id="pr-sol-lic" title="O Claude abre na aba do SOL do grupo dele (onde está o login)">Licenciamento no SOL</button>
           <button class="bt" id="pr-sol-an" title="O Claude abre na aba do SOL do grupo dele (onde está o login)">Análise técnica no SOL</button>
           <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
-          <button class="bt link" id="pr-pasta">abrir pasta</button>
-          <button class="bt" id="pr-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button>
+          <button class="bt link so-pc" id="pr-pasta">abrir pasta</button>
+          <button class="bt so-pc" id="pr-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button>
         </div>
       </div>
       <div class="abas-proc" id="pr-abas">
@@ -369,7 +368,7 @@ body.sem-pc #sem-pc { display: block; }
         <button class="bt" id="cv-voltar">← Início</button>
         <b id="cv-titulo" style="font-size:15px"></b>
         <span id="cv-tags"></span>
-        <div class="dir"><button class="bt" id="cv-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button></div>
+        <div class="dir"><button class="bt so-pc" id="cv-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button></div>
       </div>
       <div class="coluna conversa-unica">
         <div class="slot" id="cv-slot"></div>
@@ -482,6 +481,9 @@ if (ESPELHO) {
   window.pywebview = { api: new Proxy({}, { get: (_, nome) => chamar(nome) }) };
   window.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add("espelho");
+    $("#pr-msg").placeholder = "Peça ao Claude (ex.: roda o check)";
+    $("#cv-msg").placeholder = "Escreva ao Claude";
+    $("#pr-sol-lic").textContent = "SOL: licenciamento"; $("#pr-sol-an").textContent = "SOL: análise"; $("#pr-laudo").textContent = "laudo";
     // foto do build (#tour-…): sem a conexão de eventos, que fica aberta e o Edge sem janela esperaria para sempre
     const es = /^#tour-/.test(location.hash) ? {} : new EventSource("eventos");
     es.onopen = () => document.body.classList.remove("sem-pc");
@@ -605,6 +607,7 @@ async function estadoGithub() {
   } catch (e) { chip("#e-github", "alerta", "GitHub: erro"); }
 }
 async function estadoVersao() {
+  if (ESPELHO) return;  // atualizar é só na janela do PC
   try {
     const nova = await api("versao_nova");
     if (nova) { const c = $("#e-versao"); c.hidden = false; c.textContent = "Nova versão " + nova; c.dataset.v = nova; }
@@ -809,6 +812,7 @@ $("#b-tamper").onclick = async ev => {
 // ---- Ajuda
 $("#b-painel").onclick = () => api("abrir_url", [ESTADO.info.painel]);
 $("#b-procurar").onclick = async ev => {
+  if (ESPELHO) return modal("Atualizar o programa", "Pelo celular não: atualizar fecha o SSEG.exe do PC, e com ele o túnel até aqui. Atualize na janela do PC.", [], [["Entendi", fechar]]);
   const nova = await api("versao_nova", [], ev.currentTarget);
   if (nova) { await estadoVersao(); $("#e-versao").click(); }
   else SSEG.log(["Você já está na versão mais nova do programa (" + ESTADO.info.versao + ")."]);

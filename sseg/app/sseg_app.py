@@ -47,7 +47,7 @@ import instalar
 import relato
 import sol_entrar
 
-VERSAO = "2.1.6"
+VERSAO = "2.1.7"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO

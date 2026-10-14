@@ -167,6 +167,12 @@ A mesma janela do SSEG.exe do quartel no navegador do celular: o PC faz todo o t
   - pergunta uma vez ao servidor o endereço `https://….ts.net` (`tailscale status --json`) e mostra o link com a chave e o QR code (qrcode-generator, MIT, em `web/qrcode.js`);
   - mostra o estado do túnel: ativo, conectando, caiu ou porta presa a outro PC.
 - [ ] Fase 2, lado do servidor e do celular (o Átila, pelo Claude do PC, 13/10/2026): Tailscale no iPhone e no servidor, na mesma conta; `sudo tailscale serve --bg --https=443 http://127.0.0.1:8765`
+- [x] Lado do servidor pronto (13/10/2026): Tailscale no servidor (`carpes-24-7`) e no iPhone; `tailscale serve` publica a 8765 só na tailnet
+- [x] 2.1.7, correções do primeiro uso no iPhone (relatadas pela sessão do PC):
+  - indicadores quebram em linha e ficam menores;
+  - os botões do processo quebram em linha, com rótulos curtos ("SOL: licenciamento", "SOL: análise", "laudo");
+  - somem no celular a Nova versão, o "abrir pasta" e o ⋯, porque atualizar o programa derruba o próprio túnel e os outros agem só no PC;
+  - o campo de mensagem não fala mais de Ctrl+Enter
 - [ ] Teste de ponta a ponta: SSEG.exe do quartel ligado → QR → iPhone no 4G
 - [ ] Notas da fase 2 (o desenho original): O PC do quartel fica na rede do governo e o celular no 4G, então eles não se enxergam direto:
   - o SSEG.exe abre `ssh -N -R 127.0.0.1:8765:127.0.0.1:8765 sseg-servidor` (conexão de saída, a mesma do sincronizar; nenhuma porta aberta no PC);
