@@ -184,6 +184,7 @@ A mesma janela do SSEG.exe do quartel no navegador do celular: o PC faz todo o t
   - "✓ O PC voltou atualizado" depois de o celular recarregar sozinho;
   - espelho: lê o corpo do POST antes de responder. Recusado sem ler, o corpo sobrava na conexão e o pedido seguinte chegava como "[]GET";
   - o programa só anuncia a versão já publicada (releases/latest), não o VERSION do main, que muda uns 10 min antes de o .exe sair
+- [x] 2.1.11: botão ↻ no topo, só no celular, e "Recarregar" dentro do aviso de sem conexão. No navegador do app no iPhone não dá para puxar para recarregar (pedido do Átila pela sessão do PC)
 - [ ] Teste de ponta a ponta: SSEG.exe do quartel ligado → QR → iPhone no 4G
 - [ ] Notas da fase 2 (o desenho original): O PC do quartel fica na rede do governo e o celular no 4G, então eles não se enxergam direto:
   - o SSEG.exe abre `ssh -N -R 127.0.0.1:8765:127.0.0.1:8765 sseg-servidor` (conexão de saída, a mesma do sincronizar; nenhuma porta aberta no PC);

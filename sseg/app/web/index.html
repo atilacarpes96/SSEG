@@ -258,6 +258,9 @@ details.medida .itens { padding: 0 9px 8px; }
 /* ---- espelho no celular (2.4): a mesma página no navegador; o que só existe no PC some */
 .abas-proc { display: none; }
 body.espelho .so-pc { display: none !important; }
+body:not(.espelho) .so-espelho { display: none !important; }
+#b-recarregar { border: 0; background: none; font-size: 21px; padding: 4px 8px; border-radius: 6px; color: var(--texto); margin-left: auto; }
+#sem-pc .bt { margin-left: 10px; padding: 3px 12px; font-size: 13px; }
 .esp-link { font: 12.5px Consolas, monospace; word-break: break-all; color: var(--suave); margin: 6px 0; }
 .esp-cel { display: flex; gap: 14px; align-items: center; margin: 0 0 10px; }
 .esp-qr svg { display: block; width: 168px; height: 168px; background: #fff; border-radius: 6px; }
@@ -311,6 +314,7 @@ body.sem-pc #sem-pc { display: block; }
 <header>
   <button id="b-menu" title="Menu">☰</button>
   <div class="marca"><img src="brasao.png" alt=""><div><b>SSEG</b><small>CBMRS · Seção de Segurança</small></div></div>
+  <button id="b-recarregar" class="so-espelho" title="Recarregar a página" aria-label="Recarregar a página">↻</button>
   <div id="estado">
     <button class="chip carregando" id="e-programas" data-ir="config">Programas</button>
     <button class="chip carregando" id="e-pastas" data-ir="config">Pastas</button>
@@ -320,7 +324,7 @@ body.sem-pc #sem-pc { display: block; }
   </div>
 </header>
 
-<div id="sem-pc">Sem conexão com o SSEG.exe do PC (fechado, sem rede ou com o espelho desligado). Tentando de novo…</div>
+<div id="sem-pc">Sem conexão com o SSEG.exe do PC (fechado, sem rede ou com o espelho desligado). Tentando de novo…<button class="bt" id="b-recarregar2">Recarregar</button></div>
 <div id="corpo">
   <nav id="menu">
     <button data-tela="inicio" class="ativo">Início</button>
@@ -580,6 +584,7 @@ function ir(tela) {
   if (tela === "inicio") carregarProcessos();
   if (matchMedia("(max-width: 700px)").matches) $("#menu").classList.remove("aberto");  // menu por cima, no celular
 }
+$("#b-recarregar").onclick = $("#b-recarregar2").onclick = () => location.reload();
 $("#b-menu").onclick = () => $("#menu").classList.toggle("aberto");
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => ir(b.dataset.tela));
 document.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => ir(b.dataset.ir));
