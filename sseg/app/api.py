@@ -295,6 +295,39 @@ class Api:
         return {"cards": cfg.get("cards") or CARDS_PADRAO, "padrao": CARDS_PADRAO, "regras": REGRAS_CARD,
                 "cores": CORES_CARD, "prazo": cfg.get("prazo_caixa", 10), "meta": cfg.get("meta_semana", 10)}
 
+    # ---------------------------------------------------------------- tela Quadro (2.1.14)
+    def _quadro(self):
+        """quadro.py mora em sseg/scripts; no .exe vem empacotado (--hidden-import quadro)."""
+        try:
+            import quadro
+        except ImportError:
+            import sys
+            sys.path.insert(0, os.path.join(self._clone(), "sseg", "scripts"))
+            import quadro
+        return quadro, self._cfg()["processos"]
+
+    def quadro(self):
+        """Tarefas soltas (quadro.json). Os processos a tela tira da lista de processos()."""
+        q, raiz = self._quadro()
+        return {"cartoes": q.ler(raiz)["cartoes"], "colunas": q.COLUNAS, "nomes": q.NOMES}
+
+    def quadro_mexer(self, acao, *args):
+        """adicionar(titulo, coluna) · alterar(id, campos) · remover(id) · restaurar(cartao, pos)."""
+        q, raiz = self._quadro()
+        try:
+            if acao == "adicionar":
+                return q.adicionar(raiz, args[0], "", args[1] if len(args) > 1 else "afazer")
+            if acao == "alterar":
+                livres = {k: v for k, v in (args[1] or {}).items() if k in ("coluna", "titulo", "checklist")}
+                return q.alterar(raiz, args[0], **livres)
+            if acao == "remover":
+                return q.remover(raiz, args[0])
+            if acao == "restaurar":
+                return q.restaurar(raiz, args[0], args[1] if len(args) > 1 else None)
+        except ValueError as e:
+            raise RuntimeError(str(e))
+        raise RuntimeError("ação inválida: %s" % acao)
+
     def meta_semana(self, valor=None):
         """Meta de processos fechados por semana (card do Início). Sem valor, só lê."""
         cfg = self._cfg()

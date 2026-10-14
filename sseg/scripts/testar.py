@@ -371,6 +371,25 @@ def main():
          and (e3["estado"], e3["concluido"], e3["dias"], e3["no_prazo"]) == ("concluido", "2026-10-09", 8, True)
          and (e4["estado"], e4["vence"]) == ("fila", "") and (e5["fonte"], e5["dias"], e5["no_prazo"]) == ("manual", 15, False)
          and e6["estado"] == "sem", str([e1, e2, e3, e4, e5, e6]))
+    # 15c. tela Quadro (2.1.14): tarefas soltas em quadro.json
+    import quadro as qd
+    with tempfile.TemporaryDirectory() as tmp:
+        c = qd.adicionar(tmp, "  Conferir   o log da rotina ", "conversa: cards")
+        dup = qd.adicionar(tmp, "conferir o log da rotina", "outra")
+        qd.alterar(tmp, c["id"], coluna="fazendo", checklist=[{"texto": "abrir o log", "feito": True}, {"texto": " "}])
+        r = qd.remover(tmp, c["id"])
+        vazio = qd.ler(tmp)["cartoes"] == []
+        qd.restaurar(tmp, r["cartao"], r["pos"])
+        d = qd.ler(tmp)["cartoes"]
+        recusa = []
+        for f in (lambda: qd.adicionar(tmp, "   "), lambda: qd.alterar(tmp, c["id"], coluna="lixo"), lambda: qd.alterar(tmp, "nao-existe", titulo="x")):
+            try:
+                f()
+            except ValueError:
+                recusa.append(1)
+        caso("quadro: adiciona sem duplicar, move, checklist, exclui e desfaz; inválido recusado",
+             c["titulo"] == "Conferir o log da rotina" and dup["id"] == c["id"] and vazio and len(d) == 1
+             and d[0]["coluna"] == "fazendo" and d[0]["checklist"] == [{"texto": "abrir o log", "feito": True}] and len(recusa) == 3, str(d))
     # 16. Reportar bug com imagem e log: o .zip leva texto e log limpos; imagens só no zip (nunca na issue)
     import api as _api, sseg_app as _base, zipfile as _zip
     with tempfile.TemporaryDirectory() as tmp:

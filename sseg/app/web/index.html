@@ -138,6 +138,29 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
                                 background: var(--campo); color: var(--texto); }
 .pr-sit select { font-weight: 600; color: var(--c); }
 
+/* ---- tela Quadro (2.1.14) */
+#t-quadro { max-width: 1200px; }
+.quadro { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.qcol { background: var(--fundo2); border: 1px solid var(--linha); border-radius: var(--raio); padding: 10px; min-height: 120px; }
+.qcol.alvo { border-color: var(--verm-claro); }
+.qcol h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); display: flex; justify-content: space-between; align-items: center; }
+.qcol-corpo { display: flex; flex-direction: column; gap: 8px; }
+.qc { background: var(--cartao); border: 1px solid var(--linha); border-radius: 7px; padding: 8px 10px; box-shadow: var(--sombra); font-size: 13px; }
+.qc.arrastando { opacity: .5; }
+.qc-proc { cursor: pointer; border-left: 3px solid var(--verm); }
+.qc-proc:hover { border-color: var(--verm-claro); }
+.qc-tit { font-weight: 600; overflow-wrap: anywhere; margin-bottom: 3px; }
+.qc-tit.cod { font: 600 13px Consolas, monospace; }
+.qc-orig { font-size: 11.5px; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qc-check { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; font-size: 12.5px; }
+.qc-check small { color: var(--suave); }
+.qc-bts { display: flex; gap: 2px; justify-content: flex-end; margin-top: 4px; }
+.qc-bts .bt.link { text-decoration: none; font-size: 14px; padding: 2px 7px; color: var(--suave); }
+.qc-bts .bt.link:hover { color: var(--verm); }
+.qc-nova { display: flex; gap: 6px; margin-bottom: 8px; }
+.qc-nova input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; }
+.qc-nova .bt { padding: 4px 10px; }
+
 /* ---- busca */
 .busca-linha { display: flex; gap: 8px; }
 .busca-linha input { flex: 1; padding: 8px 10px; border: 1px solid var(--linha); border-radius: 6px; background: var(--campo); }
@@ -335,6 +358,7 @@ body.sem-pc #sem-pc { display: block; }
   .cards { grid-template-columns: 1fr 1fr; gap: 8px; }
   .card-kpi b { font-size: 22px; }
   .card-edit { opacity: 1; }
+  .quadro { grid-template-columns: 1fr; }
   .pr-sit select, .pr-sit input { font-size: 16px; }
   .faixa .dir { margin-left: 0; width: 100%; flex-wrap: wrap; gap: 6px; }
   .faixa .dir .bt { white-space: nowrap; }
@@ -375,6 +399,7 @@ body.sem-pc #sem-pc { display: block; }
 <div id="corpo">
   <nav id="menu">
     <button data-tela="inicio" class="ativo">Início</button>
+    <button data-tela="quadro">Quadro</button>
     <button data-tela="busca">Buscar normas</button>
     <button data-tela="config">Configuração</button>
     <button data-tela="ajuda">Ajuda</button>
@@ -392,6 +417,12 @@ body.sem-pc #sem-pc { display: block; }
         <tbody id="processos"><tr><td class="vazio" colspan="5">Carregando…</td></tr></tbody></table></div>
     </section>
 
+
+    <section class="tela" id="t-quadro">
+      <h2>Quadro</h2>
+      <p class="sub">Os processos entram sozinhos, pela planilha de distribuição: na fila em A fazer, na caixa em Fazendo, concluídos na semana em Feito. As tarefas soltas (pendências de trabalho das conversas, fiscalização, reunião) você move com as setas ou arrastando.</p>
+      <div class="quadro" id="quadro"></div>
+    </section>
 
     <section class="tela" id="t-processo">
       <div class="faixa">
@@ -632,6 +663,7 @@ function ir(tela) {
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
   if (tela === "config") { carregarConfig(); estadoEspelho(); }
   if (tela === "inicio") carregarProcessos();
+  if (tela === "quadro") carregarQuadro();
   if (matchMedia("(max-width: 700px)").matches) $("#menu").classList.remove("aberto");  // menu por cima, no celular
 }
 $("#b-recarregar").onclick = $("#b-recarregar2").onclick = () => location.reload();
@@ -934,6 +966,91 @@ async function carregarProcessos() {
   try { [PROCS, CARDS] = await Promise.all([api("processos"), api("cards")]); } catch (e) { return; }
   pintarProcessos();
 }
+// ---- tela Quadro (2.1.14): os processos entram sozinhos pela caixa; as tarefas soltas (pendência de trabalho
+// que sobrou de uma conversa, fiscalização, reunião) moram em quadro.json na pasta dos processos.
+let QUADRO = null;
+function colunaDoProcesso(p) {
+  if (p.estado === "fila") return "afazer";
+  if (p.estado === "caixa") return "fazendo";
+  if (p.estado === "concluido" && p.concluido >= isoLocal(new Date(Date.now() - 7 * 864e5))) return "feito";
+  return null;
+}
+async function carregarQuadro() {
+  try { [QUADRO, PROCS] = await Promise.all([api("quadro"), api("processos")]); } catch (e) { return; }
+  pintarQuadro();
+}
+async function mexer(acao, args, botao) {
+  const r = await api("quadro_mexer", [acao, ...args], botao);
+  QUADRO = await api("quadro");
+  pintarQuadro();
+  return r;
+}
+function desfazer(texto, fn) {
+  const a = $("#aviso");
+  a.classList.remove("erro");
+  a.replaceChildren(texto + " ", el("button", { class: "bt link", style: "color:inherit", on: { click: () => { a.classList.remove("mostrar"); fn(); } } }, "Desfazer"));
+  a.classList.add("mostrar");
+  clearTimeout(avisar.t); avisar.t = setTimeout(() => a.classList.remove("mostrar"), 8000);
+}
+function editarCartao(c) {
+  const tit = el("input", { type: "text", value: c.titulo, maxlength: 200 });
+  const lista = el("textarea", { rows: 5, placeholder: "Um item por linha" });
+  lista.value = (c.checklist || []).map(x => x.texto).join("\n");
+  modal("Editar tarefa", c.origem ? "Veio de: " + c.origem : "", [el("label", { class: "campo-card" }, "Título ", tit),
+    el("label", { class: "campo-card", style: "align-items:flex-start" }, "Checklist ", lista)], [
+    ["Salvar", async b => {
+      const feitos = new Set((c.checklist || []).filter(x => x.feito).map(x => x.texto));
+      const itens = lista.value.split("\n").map(t => t.trim()).filter(Boolean).map(t => ({ texto: t, feito: feitos.has(t) }));
+      await mexer("alterar", [c.id, { titulo: tit.value, checklist: itens }], b); fechar();
+    }, true],
+    ["Cancelar", fechar]]);
+}
+function cartaoSolto(c) {
+  const i = QUADRO.colunas.indexOf(c.coluna);
+  const mover = d => mexer("alterar", [c.id, { coluna: QUADRO.colunas[i + d] }]);
+  const feitos = (c.checklist || []).filter(x => x.feito).length;
+  const no = el("div", { class: "qc", draggable: "true", "data-id": c.id },
+    el("div", { class: "qc-tit" }, c.titulo),
+    c.origem ? el("div", { class: "qc-orig", title: c.origem }, c.origem) : null,
+    (c.checklist || []).length ? el("div", { class: "qc-check" }, ...c.checklist.map((x, k) => el("label", {},
+      el("input", { type: "checkbox", checked: x.feito, on: { change: ev => mexer("alterar", [c.id, { checklist: c.checklist.map((y, j) => j === k ? { ...y, feito: ev.target.checked } : y) }]) } }),
+      " " + x.texto)), el("small", {}, feitos + "/" + c.checklist.length)) : null,
+    el("div", { class: "qc-bts" },
+      i > 0 ? el("button", { class: "bt link", title: "Coluna anterior", on: { click: () => mover(-1) } }, "←") : null,
+      i < QUADRO.colunas.length - 1 ? el("button", { class: "bt link", title: "Próxima coluna", on: { click: () => mover(1) } }, "→") : null,
+      el("button", { class: "bt link", title: "Editar", on: { click: () => editarCartao(c) } }, "✎"),
+      el("button", { class: "bt link", title: "Excluir", on: { click: async () => {
+        const r = await mexer("remover", [c.id]);
+        desfazer("Tarefa excluída.", () => mexer("restaurar", [r.cartao, r.pos]));
+      } } }, "✕")));
+  no.addEventListener("dragstart", ev => { ev.dataTransfer.setData("text/plain", c.id); no.classList.add("arrastando"); });
+  no.addEventListener("dragend", () => no.classList.remove("arrastando"));
+  return no;
+}
+function cartaoProcesso(p) {
+  return el("div", { class: "qc qc-proc", title: "Processo: o lugar vem da planilha de distribuição. Clique para abrir.", on: { click: () => abrirProcesso(p.codigo) } },
+    el("div", { class: "qc-tit cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null), tagEstado(p));
+}
+function pintarQuadro() {
+  const cols = QUADRO.colunas.map(k => {
+    const procs = PROCS.filter(p => colunaDoProcesso(p) === k), soltos = QUADRO.cartoes.filter(c => c.coluna === k);
+    const corpo = el("div", { class: "qcol-corpo" }, ...procs.map(cartaoProcesso), ...soltos.map(cartaoSolto));
+    const col = el("div", { class: "qcol", "data-col": k },
+      el("h3", {}, QUADRO.nomes[k], el("span", { class: "tag" }, procs.length + soltos.length)),
+      k === "afazer" ? el("form", { class: "qc-nova", on: { submit: async ev => {
+        ev.preventDefault(); const inp = ev.target.querySelector("input"); if (!inp.value.trim()) return;
+        await mexer("adicionar", [inp.value, "afazer"], ev.submitter); } } },
+        el("input", { type: "text", placeholder: "Nova tarefa…", maxlength: 200 }), el("button", { class: "bt" }, "+")) : null,
+      corpo);
+    col.addEventListener("dragover", ev => { ev.preventDefault(); col.classList.add("alvo"); });
+    col.addEventListener("dragleave", () => col.classList.remove("alvo"));
+    col.addEventListener("drop", ev => { ev.preventDefault(); col.classList.remove("alvo");
+      const id = ev.dataTransfer.getData("text/plain"); const c = QUADRO.cartoes.find(x => x.id === id);
+      if (c && c.coluna !== k) mexer("alterar", [id, { coluna: k }]); });
+    return col;
+  });
+  $("#quadro").replaceChildren(...cols);
+}
 async function carregarInicio() {
   ESTADO.info = await api("inicio");
   $("#versao").textContent = "SSEG v" + ESTADO.info.versao;
@@ -1198,7 +1315,7 @@ function renderProcesso(d) {
     el("span", { class: "tag" }, d.medidas.length + " medida(s)"),
     d.cias.length ? el("span", { class: "tag" }, d.cias.length + " CIA anterior(es)") : null].filter(Boolean));
   $("#pr-laudo").hidden = !d.laudo;
-  pintarSituacao(d.caixa);
+  pintarSituacao(d.caixa || { estado: "sem" });
   pintarCota();
   pintarChecklist(); pintarCIA();
 }
@@ -1525,6 +1642,7 @@ SSEG.tour = async passo => {
   if (passo === "menu") { $("#menu").classList.add("aberto"); ir("inicio"); }
   if (passo === "busca") { $("#menu").classList.remove("aberto"); ir("busca"); $("#q").value = 'extintor "5 m"'; $("#f-busca").requestSubmit(); }
   if (passo === "config") ir("config");
+  if (passo === "quadro") ir("quadro");
   if (passo === "conversa") { const f = ESTADO.info.fluxos.find(x => x.id === "pergunta") || ESTADO.info.fluxos[0]; abrirConversa(f, f.prompt);
     const ctx = CTX["fluxo:" + f.id]; chatAdd(ctx, el("div", { class: "msg eu" }, "Porta de saída em F-6 abre para fora?"));
     SSEG.chat("fluxo:" + f.id, { t: "texto", texto: "**Sim**, no sentido do fluxo de saída.\n\n- RT 11/2016, item 5.5.4 (portas das rotas de saída)\n\nConfira o item no PDF antes de citar." }); }

@@ -222,13 +222,20 @@ Fase A2 — caixa do analista pela planilha e cards editáveis (2.1.13, pedido d
 - [ ] Teste do Átila: Sincronizar processos no PC → as pastas da fila e da caixa aparecem e os cards batem com a planilha
 - [ ] Ordenar cards arrastando (hoje só "← Mover")
 
-Fase B — tela Quadro (tarefas da semana)
-- [ ] Tela "Quadro" no menu, com as colunas A fazer, Fazendo, Esperando e Feito
-- [ ] Os processos entram sozinhos pela situação: em análise vai para Fazendo, aguardando para Esperando, fechado na semana para Feito
-- [ ] Tarefas soltas (fiscalização, reunião, administrativo) com checklist, data e categoria, gravadas em `quadro.json` na pasta dos processos, fora do Git
-- [ ] Decidir se o `quadro.json` vai ao servidor pelo Sincronizar processos, que hoje só leva as pastas A000…
-- [ ] Mover o card entre colunas: arrastar no PC, botões ← e → no celular
-- [ ] Excluir com "Desfazer" por 8 s
+Fase B — tela Quadro (2.1.14)
+- [x] Tela "Quadro" no menu, com as colunas A fazer, Fazendo, Esperando e Feito
+- [x] Os processos entram sozinhos pela caixa: na fila em A fazer, na caixa em Fazendo, concluídos nos últimos 7 dias em Feito; clicar abre o processo
+- [x] Tarefas soltas em `quadro.json` na pasta dos processos, fora do Git (`scripts/quadro.py`): título, origem, checklist; a mesma pendência mandada de novo não duplica
+- [x] `quadro.json` fica só no PC por enquanto (o Sincronizar processos leva só as pastas A000…)
+- [x] Mover: arrastar no PC, ← e → no celular; ✎ edita título e checklist; ✕ exclui com "Desfazer" por 8 s
+- [x] Build: `--hidden-import quadro`; o tour fotografa a tela Quadro; `testar.py` cobre o `quadro.py`
+
+Pendências que sobram das conversas (pedido do Átila, 14/10/2026)
+O checklist do plugin "assuntos" é por conversa. O que fica aberto quando ela acaba é pendência: o Claude sugere trabalho ou pessoal e o Átila confirma antes de enviar.
+- [x] Trabalho vai ao Quadro do SSEG: `python sseg/scripts/quadro.py adicionar "<texto>" --origem "<conversa>"`
+- [ ] Pessoal vai ao Painel do Dia, num quadro "Pendências" que não some no dia seguinte, com a opção de pôr na agenda ou nas tarefas
+- [ ] Plugin "assuntos": cada item aberto com trabalho ou pessoal; comando /pendencias mostra a lista para confirmar e o Claude envia (esperar a outra sessão, que mexe no mesmo plugin, terminar)
+- [ ] Regra no CLAUDE.md global: ao encerrar um assunto com item aberto, oferecer o envio das pendências
 
 Fase C — a decidir depois da B
 - [ ] Cards próprios ("+ Novo card": nome, cor e filtro)
