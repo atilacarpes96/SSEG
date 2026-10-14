@@ -338,3 +338,12 @@ análise, ou se o sistema cair.
   que levam a "Ação não autorizada" — clicar por `ref`, não por coordenada.
 - O PC do usuário não tem ferramenta de exclusão nesta sessão: PDF salvo no lugar errado
   permanece após a cópia — a exclusão é manual.
+
+## Alternativa: Chrome DevTools MCP (opcional, medido em 14/10/2026)
+
+Só existe se o analista ligou em **SSEG.exe → Config → "Chrome para o Claude"** (registro + depuração remota em `chrome://inspect/#remote-debugging` + "Permitir" a cada conexão nova). Sem isso, ficar com o Claude in Chrome: é o caminho padrão e o único que os outros analistas têm.
+
+- **Equivale:** `evaluate_script` roda o mesmo JavaScript da página (token no `localStorage`, `fetch` da API, setter nativo da textarea). As receitas acima valem sem mudança.
+- **Ganha:** `list_network_requests` / `get_network_request` mostram as chamadas da página (útil para descobrir um endpoint novo), `list_console_messages` mostra erros, e `take_snapshot` devolve a página como árvore com uid (clicar por uid, sem screenshot).
+- **Cuidados:** a rede só registra o que acontece **depois** de conectar (recarregar a página antes de olhar). Um snapshot de página de licenciamento custa cerca de 5.400 tokens: preferir a API e resumir dentro da página. Toda ferramenta pede `pageId` (ver `list_pages`; a aba do SOL não é a 1). Com a depuração ligada, o Claude enxerga todas as janelas do perfil: desligar em `chrome://inspect` ao terminar.
+- **A regra do padrão não muda:** o Claude redige, o analista cola; lançar só quando pedir.
