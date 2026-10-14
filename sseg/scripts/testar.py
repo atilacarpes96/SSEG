@@ -387,6 +387,12 @@ def main():
         st_sem_cab, _, _ = _pedir("POST", "/api/soma", "[2, 3]", {"Cookie": cookie})
         st_pc, _, _ = _pedir("POST", "/api/escolher_pasta", "[]", j)
         st_priv, _, _ = _pedir("POST", "/api/__init__", "[]", j)
+        c_ = _hc.HTTPConnection("127.0.0.1", porta, timeout=10)  # recusa e pedido seguinte na MESMA conexão
+        c_.request("POST", "/api/escolher_pasta", body="[1, 2]", headers=j); r_ = c_.getresponse(); r_.read()
+        c_.request("POST", "/api/soma", body="[4, 5]", headers=j); r2_ = c_.getresponse(); seguinte = r2_.status, r2_.read()
+        c_.close()
+        caso("espelho: depois de uma recusa, o pedido seguinte na mesma conexão chega inteiro",
+             r_.status == 404 and seguinte[0] == 200 and json.loads(seguinte[1])["r"] == 9, str(seguinte))
         caso("espelho: chama o Api; sem X-SSEG, método só da janela ou privado, não",
              st_api == 200 and json.loads(r_api)["r"] == 5 and st_sem_cab == 403 and st_pc == 404 and st_priv == 404,
              "%s %s %s %s" % (st_api, st_sem_cab, st_pc, st_priv))

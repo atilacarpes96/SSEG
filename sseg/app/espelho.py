@@ -234,6 +234,12 @@ class _Tratador(BaseHTTPRequestHandler):
     # ------------------------------------------------------------ POST /api/<método>: o mesmo Api da janela
     def do_POST(self):
         u = urlparse(self.path)
+        # lê o corpo ANTES de qualquer resposta: recusado sem ler, ele sobrava na conexão (keep-alive) e o
+        # próximo pedido chegava como "[]GET ..." (13/10/2026)
+        try:
+            corpo = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+        except ValueError:
+            corpo = b""
         if not self._cookie_ok() or self.headers.get("X-SSEG") != "1":
             return self._enviar(403, '{"erro": "sem acesso"}')
         nome = u.path[len("/api/"):] if u.path.startswith("/api/") else ""
@@ -241,8 +247,7 @@ class _Tratador(BaseHTTPRequestHandler):
         if not callable(fn) or nome in SO_NA_JANELA:
             return self._enviar(404, json.dumps({"erro": "Isto só funciona na janela do PC."}, ensure_ascii=False))
         try:
-            tam = int(self.headers.get("Content-Length") or 0)
-            args = json.loads(self.rfile.read(tam) or b"[]") if tam else []
+            args = json.loads(corpo or b"[]")
             r = fn(*args) if isinstance(args, list) else fn(**args)
             self._enviar(200, json.dumps({"r": r}, ensure_ascii=False, default=str))
         except Exception as e:  # o erro volta para a tela, como na janela

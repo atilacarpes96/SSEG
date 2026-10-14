@@ -47,7 +47,7 @@ import instalar
 import relato
 import sol_entrar
 
-VERSAO = "2.1.9"
+VERSAO = "2.1.10"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -146,13 +146,16 @@ def _versao(t):
 
 
 def versao_nova_do_programa():
-    """Versão publicada no GitHub, se for maior que a deste programa; None se não."""
+    """Versão do último SSEG.exe PUBLICADO (releases/latest), se for maior que a deste programa; None se não.
+    Não lê o VERSION do main: ele muda no commit, uns 10 min antes de o build publicar o .exe, e aí o
+    programa baixava o anterior e pedia de novo (13/10/2026)."""
     try:
-        with urllib.request.urlopen(VERSAO_URL, timeout=10) as r:
-            v = r.read().decode("utf-8").strip()
+        with urllib.request.urlopen("https://github.com/%s/releases/latest" % REPO, timeout=10) as r:
+            final = r.geturl()  # .../releases/tag/app-v2.1.9
     except Exception:
         return None
-    return v if _versao(v) > _versao(VERSAO) else None
+    m = re.search(r"/tag/app-v(\d+\.\d+\.\d+)$", final)
+    return m.group(1) if m and _versao(m.group(1)) > _versao(VERSAO) else None
 
 
 EXE_URL = "https://github.com/%s/releases/latest/download/SSEG.exe" % REPO

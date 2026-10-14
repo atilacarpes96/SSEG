@@ -179,6 +179,11 @@ A mesma janela do SSEG.exe do quartel no navegador do celular: o PC faz todo o t
   - Enviar para de ouvir, e o ditado atrasado não volta ao campo;
   - o botão só aparece onde o navegador tem reconhecimento de voz. O teclado do iPhone já tinha o próprio microfone
 - [x] 2.1.9: o celular recarrega sozinho quando o PC volta numa versão nova, já que atualizar fecha e reabre o SSEG.exe e a conexão de eventos cai e volta. Endereço: https://carpes-24-7.tailb70285.ts.net (a chave só na primeira vez; depois fica o cookie de 1 ano)
+- [x] 2.1.10, do primeiro uso real no iPhone (13/10/2026):
+  - aviso que aparece e some, para todo erro e, no celular, para cada mensagem do programa. O rodapé com Detalhes fica escondido no celular e as recusas não davam retorno;
+  - "✓ O PC voltou atualizado" depois de o celular recarregar sozinho;
+  - espelho: lê o corpo do POST antes de responder. Recusado sem ler, o corpo sobrava na conexão e o pedido seguinte chegava como "[]GET";
+  - o programa só anuncia a versão já publicada (releases/latest), não o VERSION do main, que muda uns 10 min antes de o .exe sair
 - [ ] Teste de ponta a ponta: SSEG.exe do quartel ligado → QR → iPhone no 4G
 - [ ] Notas da fase 2 (o desenho original): O PC do quartel fica na rede do governo e o celular no 4G, então eles não se enxergam direto:
   - o SSEG.exe abre `ssh -N -R 127.0.0.1:8765:127.0.0.1:8765 sseg-servidor` (conexão de saída, a mesma do sincronizar; nenhuma porta aberta no PC);

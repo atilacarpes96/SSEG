@@ -248,6 +248,13 @@ details.medida .itens { padding: 0 9px 8px; }
 .cartao-exig { border: 1px solid var(--linha); border-left: 3px solid var(--verm); border-radius: 8px; padding: 8px 10px; background: var(--cartao); }
 .cartao-exig .txt { white-space: pre-wrap; font-size: 13px; margin: 4px 0; }
 
+/* ---- aviso que aparece e some (no celular é a única resposta visível: o rodapé fica escondido) */
+#aviso { position: fixed; left: 50%; bottom: 64px; transform: translate(-50%, 20px); max-width: min(560px, calc(100% - 24px));
+         background: var(--texto); color: var(--fundo); padding: 10px 16px; border-radius: 10px; box-shadow: var(--sombra);
+         font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20; }
+#aviso.mostrar { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+#aviso.erro { background: var(--verm); color: #fff; }
+
 /* ---- espelho no celular (2.4): a mesma página no navegador; o que só existe no PC some */
 .abas-proc { display: none; }
 body.espelho .so-pc { display: none !important; }
@@ -449,6 +456,7 @@ body.sem-pc #sem-pc { display: block; }
 </div>
 
 <div id="detalhes"><pre id="log"></pre></div>
+<div id="aviso" role="status" aria-live="polite"></div>
 <footer>
   <span id="versao">SSEG</span>
   <button class="bt link" id="b-detalhes">Detalhes</button>
@@ -491,7 +499,13 @@ if (ESPELHO) {
     // O PC atualizou o programa (fecha, troca, abre): a conexão cai e volta. Voltou em outra versão → recarrega.
     es.onopen = async () => {
       document.body.classList.remove("sem-pc");
-      try { const i = await window.pywebview.api.inicio(); if (ESTADO.info && i.versao !== ESTADO.info.versao) location.reload(); } catch (e) {}
+      try {
+        const i = await window.pywebview.api.inicio();
+        if (ESTADO.info && i.versao !== ESTADO.info.versao) {
+          try { sessionStorage.setItem("sseg-atualizou", i.versao); } catch (e) {}
+          location.reload();
+        }
+      } catch (e) {}
     };
     es.onerror = () => document.body.classList.add("sem-pc");
     es.onmessage = m => { try { const { f, a } = JSON.parse(m.data); if (typeof SSEG[f] === "function") SSEG[f](...a); } catch (e) {} };
@@ -517,8 +531,14 @@ const COR = m => /haiku/i.test(m) ? "var(--haiku)" : /opus/i.test(m) ? "var(--op
 window.onerror = (msg, src, lin, col, err) => { try { window.pywebview.api.erro_js(msg + " @" + lin + ":" + col); } catch (e) {} };
 window.addEventListener("unhandledrejection", ev => { try { window.pywebview.api.erro_js("promessa: " + (ev.reason && ev.reason.message || ev.reason)); } catch (e) {} });
 
+function avisar(texto, erro) {
+  const a = $("#aviso");
+  a.textContent = texto; a.classList.toggle("erro", !!erro); a.classList.add("mostrar");
+  clearTimeout(avisar.t); avisar.t = setTimeout(() => a.classList.remove("mostrar"), erro ? 6000 : 3500);
+}
 const SSEG = window.SSEG = {
   log(linhas) {
+    if (ESPELHO) { const u = linhas.filter(l => l.trim()).pop(); if (u) avisar(u, /^✗/.test(u)); }
     const pre = $("#log");
     pre.textContent += linhas.join("\n") + "\n";
     pre.scrollTop = pre.scrollHeight;
@@ -535,6 +555,7 @@ async function api(nome, args = [], botao = null) {
   } catch (e) {
     const msg = (e && (e.message || e.toString())) || "erro";
     SSEG.log(["✗ " + msg]);
+    if (!ESPELHO) avisar("✗ " + msg, true);  // no celular o log já avisa
     throw e;
   } finally {
     if (botao) botao.disabled = false;
@@ -1379,6 +1400,7 @@ window.addEventListener("pywebviewready", async () => {
   SSEG.log(["SSEG " + info.versao + "."]);
   estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub(); estadoVersao(); estadoEspelho();
   if (info.primeira_vez) ir("config");
+  try { const v = sessionStorage.getItem("sseg-atualizou"); if (v) { sessionStorage.removeItem("sseg-atualizou"); avisar("✓ O PC voltou atualizado: versão " + v + "."); } } catch (e) {}
   if (ESPELHO && /^#tour-\w+$/.test(location.hash)) SSEG.tour(location.hash.slice(6));  // foto do build em largura de celular
 });
 </script>
