@@ -194,6 +194,36 @@ A mesma janela do SSEG.exe do quartel no navegador do celular: o PC faz todo o t
   - Wi-Fi do quartel na mesma rede do PC: só se a rede deixar, sem contar com isso.
 - [ ] No celular, o [PDF] da busca e "abrir pasta" agem no PC. Avaliar mandar o PDF da norma ao celular (é público) e esconder o "abrir pasta"
 
+#### 2.5 — Quadro da semana (pedido do Átila, 13/10/2026)
+A ideia vem do Kanban do jotaw1 (fork em github.com/atilacarpes96/kanban-teste-compartilhado): cards
+coloridos no topo que contam e filtram, e um quadro de tarefas da semana. Só a ideia vem de lá: o código
+é do SSEG, na mesma página e no mesmo `api.py`, sem um segundo servidor.
+
+Fase A — cards no topo do Início (2.1.12)
+- [x] Situação do processo no `analise.json`: em análise, aguardando ou fechado, mais o prazo e a data da CT (`analise_registro.situacao`). Fechar grava a data; reabrir apaga
+- [x] Seletor na faixa da janela do processo (situação, prazo e CT), que aparece também no celular
+- [x] `processos()` devolve situação, prazo, CT e data de fechamento, lidos do `analise.json`
+- [x] Cards: Em análise (laranja), Aguardando (azul), Prazo em 7 dias (vermelho), CT marcadas (roxo), Fechados em 7 dias (verde) e Meta da semana. O clique filtra a tabela e o ✕ tira o filtro
+- [x] Tabela de processos com a situação na cor do card, o prazo e a CT
+- [x] Meta da semana editável pelo próprio card (`meta_semana` na configuração, padrão 10)
+- [x] `testar.py`: situação grava e lê; fechar grava a data; reabrir apaga; valor inválido é recusado
+- [x] Pasta sem situação marcada e parada há mais de 30 dias aparece como "Parado?" e fica fora dos cards, para as pastas antigas não inflarem o "Em análise"
+- [ ] Teste do Átila no PC e no celular: marcar a situação em 2 ou 3 processos reais e conferir os números
+
+Fase B — tela Quadro (tarefas da semana)
+- [ ] Tela "Quadro" no menu, com as colunas A fazer, Fazendo, Esperando e Feito
+- [ ] Os processos entram sozinhos pela situação: em análise vai para Fazendo, aguardando para Esperando, fechado na semana para Feito
+- [ ] Tarefas soltas (fiscalização, reunião, administrativo) com checklist, data e categoria, gravadas em `quadro.json` na pasta dos processos, fora do Git
+- [ ] Decidir se o `quadro.json` vai ao servidor pelo Sincronizar processos, que hoje só leva as pastas A000…
+- [ ] Mover o card entre colunas: arrastar no PC, botões ← e → no celular
+- [ ] Excluir com "Desfazer" por 8 s
+
+Fase C — a decidir depois da B
+- [ ] Cards próprios ("+ Novo card": nome, cor e filtro)
+- [ ] Tarefa com data vai ao Google Agenda
+- [ ] Uma frase ditada no 🎤 vira tarefa ("sexta 14h fiscalização na escola X"), interpretada por script, sem IA
+- Descartado do Kanban: acesso por Cloudflare com senha (o espelho com Tailscale já faz isso) e as abas E-mails, Reuniões e Log de campanhas (fluxo de agência)
+
 ### Ideia a amadurecer — "Ponte SOL" (pedido do Átila, 12/10/2026; NÃO construir sem confirmar)
 
 O Claude ler o SOL por comando, sem print e sem navegar, gastando menos token:

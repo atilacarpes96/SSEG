@@ -269,6 +269,21 @@ def main():
              e["rascunho"] and not e["final"] and not reg.texto_cia(d), str(e))
         reg.atualizar(pasta, "exigencias", e["id"], final="- Deverá (editado)")
         caso("analise.json: CIA lê só o texto final", [x["final"] for x in reg.texto_cia(reg.ler(pasta))] == ["- Deverá (editado)"])
+        # 2.1.12: situação do processo (cards do Início)
+        reg.situacao(pasta, situacao="fechado", prazo="2026-10-20", ct="2026-10-15")
+        d = reg.ler(pasta)
+        fechou = d["situacao"] == "fechado" and d.get("fechado_em") and d["prazo"] == "2026-10-20" and d["ct"] == "2026-10-15"
+        reg.situacao(pasta, situacao="aguardando", ct="")
+        d = reg.ler(pasta)
+        reabriu = d["situacao"] == "aguardando" and "fechado_em" not in d and "ct" not in d and d["prazo"] == "2026-10-20"
+        recusa = []
+        for ruim in ({"situacao": "arquivado"}, {"prazo": "20/10/2026"}):
+            try:
+                reg.situacao(pasta, **ruim)
+            except ValueError:
+                recusa.append(ruim)
+        caso("analise.json: situação, prazo e CT (fechar grava a data, reabrir apaga, inválido recusado)",
+             fechou and reabriu and len(recusa) == 2 and reg.ler(pasta)["exigencias"], str(d))
         json.dump({"especSeguranca": {"laudo": {"txtClob": "laudo"}, "medidas": [
             {"tipo": {"nome": "Sinalização de Emergência"}, "norma": {"nome": "RT 12"}, "inviabilidade": "NAO_POSSUI"},
             {"tipo": {"nome": "Saída de Emergência"}, "norma": {"nome": "RT 11"}, "inviabilidade": "POSSUI_PARCIAL"},
@@ -323,10 +338,11 @@ def main():
             a._eventos = ['{"t": "texto", "texto": "processo A00012345AA001"}']
             r = a.relato_enviar("caiu ao salvar", ["data:image/png;base64," + base64.b64encode(b"\x89PNG fake").decode()])
             z = _zip.ZipFile(os.path.join(tmp, "Documents", "SSEG-relatos", "relato-%s.zip" % r["id"]))
-            log = z.read("log.txt").decode("utf-8")
+            log, nomes = z.read("log.txt").decode("utf-8"), z.namelist()
+            z.close()  # aberto, o Windows não deixa apagar a pasta temporária
             caso("Reportar bug: zip com relato, log limpo e imagem, salvo no PC sem SSH",
-                 r["onde"] == "pc" and set(z.namelist()) == {"relato.md", "log.txt", "imagens/imagem1.png"}
-                 and "A00012345AA001" not in log and tmp not in log, str(z.namelist()) + log[:200])
+                 r["onde"] == "pc" and set(nomes) == {"relato.md", "log.txt", "imagens/imagem1.png"}
+                 and "A00012345AA001" not in log and tmp not in log, str(nomes) + log[:200])
         finally:
             _base.ler_config, _base.abrir = velho[0], velho[1]
             for k, v in (("HOME", velho[2]), ("USERPROFILE", velho[3])):

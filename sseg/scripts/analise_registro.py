@@ -120,6 +120,35 @@ def marcar(pasta, grupo, chave, valor):
     return d
 
 
+SITUACOES = ("analise", "aguardando", "fechado")
+
+
+def situacao(pasta, **campos):
+    """Situação do processo para os cards do Início (2.1.12): situacao, prazo e ct ("AAAA-MM-DD" ou "").
+    Ir para "fechado" grava a data (fechado_em); sair de "fechado" apaga."""
+    d = ler(pasta)
+    if "situacao" in campos:
+        s = campos["situacao"]
+        if s not in SITUACOES:
+            raise ValueError("situação inválida: %r" % s)
+        if s == "fechado" and d.get("situacao") != "fechado":
+            d["fechado_em"] = time.time()
+        elif s != "fechado":
+            d.pop("fechado_em", None)
+        d["situacao"] = s
+    for k in ("prazo", "ct"):
+        if k in campos:
+            v = (campos[k] or "").strip()
+            if v and not (len(v) == 10 and v[4] == v[7] == "-" and (v[:4] + v[5:7] + v[8:]).isdigit()):
+                raise ValueError("data inválida em %s: %r" % (k, v))
+            if v:
+                d[k] = v
+            else:
+                d.pop(k, None)
+    gravar(pasta, d)
+    return d
+
+
 def texto_cia(d):
     """Só o final, na ordem — o que vai para a CIA, a revisão e o SOL."""
     return [e for e in d["exigencias"] if e.get("final", "").strip()]

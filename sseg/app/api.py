@@ -202,11 +202,43 @@ class Api:
                 continue
             arqs = [os.path.join(p, a) for a in os.listdir(p)]
             quando = max([os.path.getmtime(a) for a in arqs] + [os.path.getmtime(p)])
+            reg = os.path.join(p, "analise.json")
+            sit = {}
+            if os.path.exists(reg):
+                try:
+                    with open(reg, encoding="utf-8") as fh:
+                        a = json.load(fh)
+                    sit = {k: a[k] for k in ("situacao", "prazo", "ct", "fechado_em") if a.get(k)}
+                except (OSError, ValueError):
+                    pass
             out.append({"codigo": n, "quando": quando, "arquivos": len(arqs),
                         "cia": any(re.match(r"CIA \d+", os.path.basename(a)) for a in arqs),
-                        "analise": os.path.exists(os.path.join(p, "analise.json"))})
+                        "analise": os.path.exists(reg),
+                        # sem situação marcada: em análise se mexido nos últimos 30 dias; senão "parado" (fora dos cards)
+                        "situacao": sit.get("situacao") or ("analise" if time.time() - quando < 30 * 86400 else "parado"),
+                        "prazo": sit.get("prazo", ""), "ct": sit.get("ct", ""), "fechado_em": sit.get("fechado_em", 0)})
         out.sort(key=lambda x: -x["quando"])
-        return out[:30]
+        return out  # todos: os cards contam tudo; a tabela mostra os 30 primeiros sem filtro
+
+    def processo_situacao(self, codigo, campos):
+        """Seletor da janela do processo: situacao, prazo, ct (2.1.12)."""
+        livres = {k: v for k, v in (campos or {}).items() if k in ("situacao", "prazo", "ct")}
+        try:
+            d = self._reg().situacao(self._pasta_proc(codigo), **livres)
+        except ValueError as e:
+            raise RuntimeError(str(e))
+        return {k: d.get(k, "") for k in ("situacao", "prazo", "ct", "fechado_em")}
+
+    def meta_semana(self, valor=None):
+        """Meta de processos fechados por semana (card do Início). Sem valor, só lê."""
+        cfg = self._cfg()
+        if valor is not None:
+            n = int(valor)
+            if not 1 <= n <= 200:
+                raise RuntimeError("Meta entre 1 e 200.")
+            cfg["meta_semana"] = n
+            base.gravar_config(cfg)
+        return cfg.get("meta_semana", 10)
 
     def abrir_processo(self, codigo):
         if not CODIGO.match(codigo):

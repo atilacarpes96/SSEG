@@ -12,13 +12,15 @@
   --fundo2: #FBF9F8; --bt: #F7F3F1; --bt-h: #EFE8E5; --rosa: #FDF1F0; --rosa-borda: #F3D3D1; --creme: #FEF4EA;
   --creme-txt: #9A4A0E; --am-bg: #FFFBEA; --am-borda: #F2E3A0; --az-bg: #F4F7FD; --az-borda: #B9CBEE; --ponto: #C9C0BC;
   --campo: #FFFFFF; --azul: #2F6FD6; --azul-bg: #E8F0FC;
+  --c-analise: #C9620F; --c-aguarda: #2F6FD6; --c-prazo: #C32725; --c-ct: #7B4FC4; --c-fechado: #2E7D32; --c-meta: #8A6D00; --c-parado: #7A6E6A;
   --raio: 8px; --sombra: 0 1px 2px rgba(60,30,20,.08), 0 4px 14px rgba(60,30,20,.06);
 }
 @media (prefers-color-scheme: dark) { :root {
   --verm: #E5534F; --verm-claro: #F06B67; --fundo: #1C1918; --cartao: #262220; --texto: #EDE6E3; --suave: #A99D98; --linha: #3A3431;
   --ok: #5DBB63; --fundo2: #221E1C; --bt: #302B29; --bt-h: #3A3431; --rosa: #3A2422; --rosa-borda: #5A3330; --creme: #3A2C1E;
   --creme-txt: #F2B27A; --am-bg: #332D17; --am-borda: #5C5126; --az-bg: #1D2738; --az-borda: #34507F; --ponto: #5A524E;
-  --campo: #1F1B1A; --azul: #6E9CF0; --azul-bg: #1D2738; color-scheme: dark; } }
+  --campo: #1F1B1A; --azul: #6E9CF0; --azul-bg: #1D2738; color-scheme: dark;
+  --c-analise: #F2A65A; --c-aguarda: #6E9CF0; --c-prazo: #F06B67; --c-ct: #B49AF0; --c-fechado: #5DBB63; --c-meta: #E8C547; --c-parado: #A99D98; } }
 * { box-sizing: border-box; }
 input, textarea { background: var(--campo); color: var(--texto); }
 [hidden] { display: none !important; }
@@ -94,6 +96,32 @@ th { font-size: 11.5px; color: var(--suave); font-weight: 600; text-transform: u
 td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 .tag { font-size: 11px; border-radius: 4px; padding: 1px 6px; background: var(--fundo); color: var(--suave); margin-right: 4px; }
 .vazio { color: var(--suave); padding: 14px 4px; }
+
+/* ---- cards da semana (2.1.12, ideia do Kanban) */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 4px; }
+.card-kpi { text-align: left; border: 1px solid var(--linha); border-top: 4px solid var(--c); background: var(--cartao);
+            border-radius: var(--raio); box-shadow: var(--sombra); padding: 9px 13px 10px; display: flex; flex-direction: column;
+            gap: 1px; color: var(--texto); }
+.card-kpi:hover { border-color: var(--c); }
+.card-kpi span { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--suave); font-weight: 600; }
+.card-kpi b { font-size: 26px; line-height: 1.15; font-variant-numeric: tabular-nums; color: var(--c); }
+.card-kpi.zero b { color: var(--suave); }
+.card-kpi small { font-size: 11.5px; color: var(--suave); min-height: 1.3em; }
+.card-kpi.ativo { outline: 2px solid var(--c); outline-offset: 1px; }
+.card-kpi .barra { height: 5px; background: var(--linha); border-radius: 3px; overflow: hidden; margin-top: 3px; }
+.card-kpi .barra i { display: block; height: 100%; background: var(--c); }
+.k-analise { --c: var(--c-analise); } .k-aguardando { --c: var(--c-aguarda); } .k-prazo { --c: var(--c-prazo); }
+.k-ct { --c: var(--c-ct); } .k-fechado { --c: var(--c-fechado); } .k-meta { --c: var(--c-meta); } .k-parado { --c: var(--c-parado); }
+.tag.sit { color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); font-weight: 600; }
+.tag.vence { color: var(--c-prazo); font-weight: 600; }
+.filtro-chip { display: inline-flex; align-items: center; gap: 4px; font: 600 11.5px "Segoe UI", system-ui, sans-serif; letter-spacing: 0;
+               text-transform: none; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent);
+               border-radius: 999px; padding: 1px 4px 1px 10px; margin-left: 8px; vertical-align: middle; }
+.filtro-chip button { border: 0; background: none; color: inherit; font-size: 13px; padding: 0 5px; }
+.pr-sit { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--suave); }
+.pr-sit select, .pr-sit input { font: inherit; font-size: 12.5px; padding: 3px 6px; border: 1px solid var(--linha); border-radius: 6px;
+                                background: var(--campo); color: var(--texto); }
+.pr-sit select { font-weight: 600; color: var(--c); }
 
 /* ---- busca */
 .busca-linha { display: flex; gap: 8px; }
@@ -289,6 +317,9 @@ body.sem-pc #sem-pc { display: block; }
   .faixa .bt { padding: 6px 10px; }
   .faixa .cod { font-size: 14px; }
   #pr-tags, #cv-tags { display: none; }
+  .cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .card-kpi b { font-size: 22px; }
+  .pr-sit select, .pr-sit input { font-size: 16px; }
   .faixa .dir { margin-left: 0; width: 100%; flex-wrap: wrap; gap: 6px; }
   .faixa .dir .bt { white-space: nowrap; }
   .faixa .dir .bt.link { padding: 6px 4px; }
@@ -334,13 +365,15 @@ body.sem-pc #sem-pc { display: block; }
   </nav>
   <main>
     <section class="tela ativa" id="t-inicio">
+      <h2>Semana</h2>
+      <div class="cards" id="cards"></div>
       <h2>Iniciar conversa</h2>
       <p class="sub">Cada demanda abre o Claude Code com o modelo e o esforço da política de modelo.</p>
       <div id="fluxos"></div>
-      <h2>Processos em andamento</h2>
+      <h2>Processos em andamento<span id="filtro"></span></h2>
       <p class="sub">Pastas de processo na sua pasta dos processos, a mais mexida primeiro. "Abrir" mostra a janela do processo: conversa, checklist e CIA. Abrir não põe o Claude para trabalhar: ele espera o seu pedido.</p>
-      <div class="cartao"><table><thead><tr><th>Processo</th><th>Mexido em</th><th></th><th></th></tr></thead>
-        <tbody id="processos"><tr><td class="vazio" colspan="4">Carregando…</td></tr></tbody></table></div>
+      <div class="cartao"><table><thead><tr><th>Processo</th><th>Situação</th><th>Mexido em</th><th></th><th></th></tr></thead>
+        <tbody id="processos"><tr><td class="vazio" colspan="5">Carregando…</td></tr></tbody></table></div>
     </section>
 
 
@@ -349,6 +382,7 @@ body.sem-pc #sem-pc { display: block; }
         <button class="bt" id="pr-voltar">← Início</button>
         <span class="cod" id="pr-cod"></span>
         <span id="pr-tags"></span>
+        <span class="pr-sit" id="pr-sit"></span>
         <div class="dir">
           <button class="bt" id="pr-sol-lic" title="O Claude abre na aba do SOL do grupo dele (onde está o login)">Licenciamento no SOL</button>
           <button class="bt" id="pr-sol-an" title="O Claude abre na aba do SOL do grupo dele (onde está o login)">Análise técnica no SOL</button>
@@ -762,18 +796,69 @@ function maisOpcoes(f, codigo) {
     ["Abrir no terminal (avançado)", async b => { await api("abrir_conversa", [f.id, codigo || ""], b); fechar(); }],
     ["Fechar", fechar]]);
 }
-async function carregarProcessos() {
-  const corpo = $("#processos");
-  let lst;
-  try { lst = await api("processos"); } catch (e) { return; }
-  if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 4 }, "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
+// ---- cards da semana (2.1.12, ideia do Kanban): contam a lista de processos; o clique filtra a tabela
+const SIT = { analise: "Em análise", aguardando: "Aguardando", fechado: "Fechado", parado: "Parado?" };
+const SIT_COR = { analise: "k-analise", aguardando: "k-aguardando", fechado: "k-fechado", parado: "k-parado" };
+let PROCS = [], FILTRO = null, META = 10;
+const isoLocal = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const dataBR = iso => iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) : "";
+function cardsDef() {
+  const hoje = new Date(), h = isoLocal(hoje), d7 = isoLocal(new Date(hoje.getTime() + 7 * 864e5));
+  const seg = new Date(hoje); seg.setHours(0, 0, 0, 0); seg.setDate(seg.getDate() - (seg.getDay() + 6) % 7);
+  const aberto = p => p.situacao === "analise" || p.situacao === "aguardando";
+  return [
+    { id: "analise", nome: "Em análise", cls: "k-analise", f: p => p.situacao === "analise" },
+    { id: "aguardando", nome: "Aguardando", cls: "k-aguardando", f: p => p.situacao === "aguardando", sub: () => "RT, chefia ou SOL" },
+    { id: "prazo", nome: "Prazo em 7 dias", cls: "k-prazo", f: p => aberto(p) && p.prazo && p.prazo <= d7,
+      sub: l => { const v = l.filter(p => p.prazo < h).length; return v ? v + " vencido(s)" : ""; } },
+    { id: "ct", nome: "CT marcadas", cls: "k-ct", f: p => p.ct && p.ct >= h,
+      sub: l => l.length ? "próxima " + dataBR(l.map(p => p.ct).sort()[0]) : "" },
+    { id: "fechado", nome: "Fechados em 7 dias", cls: "k-fechado", f: p => p.situacao === "fechado" && p.fechado_em * 1000 >= Date.now() - 7 * 864e5 },
+    { id: "meta", nome: "Meta da semana", cls: "k-meta", meta: true, f: p => p.situacao === "fechado" && p.fechado_em * 1000 >= seg.getTime() },
+  ];
+}
+function pintarCards() {
+  $("#cards").replaceChildren(...cardsDef().map(c => {
+    const l = PROCS.filter(c.f);
+    const corpo = c.meta
+      ? [el("b", {}, l.length + " / " + META), el("div", { class: "barra" }, el("i", { style: "width:" + Math.min(100, l.length / META * 100) + "%" })),
+         el("small", {}, "fechados desde segunda")]
+      : [el("b", {}, l.length), el("small", {}, c.sub ? c.sub(l) : "")];
+    return el("button", { class: "card-kpi " + c.cls + (l.length ? "" : " zero") + (FILTRO === c.id ? " ativo" : ""),
+      title: c.meta ? "Clique para mudar a meta de processos fechados por semana" : "Clique para filtrar os processos",
+      on: { click: () => { if (c.meta) return mudarMeta(); FILTRO = FILTRO === c.id ? null : c.id; pintarProcessos(); } } },
+      el("span", {}, c.nome), ...corpo);
+  }));
+}
+function mudarMeta() {
+  const inp = el("input", { type: "number", min: 1, max: 200, value: META, style: "width:90px;padding:6px 8px" });
+  modal("Meta da semana", "Quantos processos fechados por semana, de segunda a domingo.", inp, [
+    ["Salvar", async b => { META = await api("meta_semana", [Number(inp.value)], b); fechar(); pintarCards(); }, true],
+    ["Cancelar", fechar]]);
+}
+function pintarProcessos() {
+  pintarCards();
+  const corpo = $("#processos"), def = FILTRO && cardsDef().find(c => c.id === FILTRO);
+  $("#filtro").replaceChildren(...(def ? [el("span", { class: "filtro-chip " + def.cls }, def.nome,
+    el("button", { title: "Tirar o filtro", on: { click: () => { FILTRO = null; pintarProcessos(); } } }, "✕"))] : []));
+  const lst = def ? PROCS.filter(def.f) : PROCS.slice(0, 30);
+  if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 5 },
+    def ? "Nenhum processo neste card." : "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
+  const h = isoLocal(new Date());
   corpo.replaceChildren(...lst.map(p => el("tr", {},
     el("td", { class: "cod" }, p.codigo),
+    el("td", {}, el("span", { class: "tag sit " + (SIT_COR[p.situacao] || "") }, SIT[p.situacao] || p.situacao),
+      p.prazo && p.situacao !== "fechado" ? el("span", { class: "tag" + (p.prazo < h ? " vence" : "") }, "prazo " + dataBR(p.prazo)) : null,
+      p.ct && p.ct >= h ? el("span", { class: "tag sit k-ct" }, "CT " + dataBR(p.ct)) : null),
     el("td", {}, new Date(p.quando * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })),
     el("td", {}, el("span", { class: "tag" }, p.arquivos + " arquivo(s)"), p.cia ? el("span", { class: "tag" }, "CIA") : null),
     el("td", { style: "text-align:right" },
       el("button", { class: "bt link", on: { click: () => abrirProcesso(p.codigo) } }, "abrir"),
       el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "pasta")))));
+}
+async function carregarProcessos() {
+  try { [PROCS, META] = await Promise.all([api("processos"), api("meta_semana")]); } catch (e) { return; }
+  pintarProcessos();
 }
 async function carregarInicio() {
   ESTADO.info = await api("inicio");
@@ -1039,8 +1124,25 @@ function renderProcesso(d) {
     el("span", { class: "tag" }, d.medidas.length + " medida(s)"),
     d.cias.length ? el("span", { class: "tag" }, d.cias.length + " CIA anterior(es)") : null].filter(Boolean));
   $("#pr-laudo").hidden = !d.laudo;
+  pintarSituacao(d.analise);
   pintarCota();
   pintarChecklist(); pintarCIA();
+}
+// situação do processo (2.1.12): alimenta os cards do Início
+function pintarSituacao(a) {
+  const cod = PR.codigo;
+  const sel = el("select", { title: "Situação do processo (cards do Início)" },
+    ...["analise", "aguardando", "fechado"].map(k => el("option", { value: k }, SIT[k])));
+  sel.value = a.situacao || "analise";
+  const cor = () => { sel.className = SIT_COR[sel.value]; };
+  cor();
+  sel.addEventListener("change", () => { cor(); api("processo_situacao", [cod, { situacao: sel.value }]); });
+  const data = (k, rot, tit) => {
+    const i = el("input", { type: "date", value: a[k] || "", title: tit });
+    i.addEventListener("change", () => api("processo_situacao", [cod, { [k]: i.value }]));
+    return [rot, i];
+  };
+  $("#pr-sit").replaceChildren(sel, ...data("prazo", "prazo", "Seu prazo para este processo"), ...data("ct", "CT", "Data da consulta técnica"));
 }
 function pintarCota() {
   const c = PR.reg && PR.reg.chat || {};
