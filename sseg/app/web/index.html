@@ -171,6 +171,8 @@ main.processo { padding: 0; overflow: hidden; }
 .sub-linha { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--suave); margin: 6px 0; }
 .entrada { border-top: 1px solid var(--linha); padding: 8px 10px; display: flex; gap: 8px; align-items: flex-end; background: var(--cartao); }
 .entrada textarea { flex: 1; min-height: 40px; max-height: 160px; }
+.bt.mic { padding: 7px 10px; }
+.bt.mic.ouvindo { background: var(--verm); border-color: var(--verm); animation: pisca 1s infinite; }
 .trabalhando { font-size: 12px; color: var(--suave); padding: 0 14px 6px; display: flex; gap: 8px; align-items: center; min-height: 26px; }
 /* checklist */
 .bloco { margin-bottom: 14px; }
@@ -351,7 +353,7 @@ body.sem-pc #sem-pc { display: block; }
         <div class="coluna" data-col="chat">
           <h2>Conversa <span class="sub" style="margin:0;text-transform:none;letter-spacing:0;font-weight:400" id="pr-modelo"></span></h2>
           <div class="slot" id="pr-slot"></div>
-          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button class="bt p">Enviar</button></form>
+          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
         </div>
         <div class="coluna" data-col="check">
           <h2>Checklist</h2>
@@ -372,7 +374,7 @@ body.sem-pc #sem-pc { display: block; }
       </div>
       <div class="coluna conversa-unica">
         <div class="slot" id="cv-slot"></div>
-        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="3" placeholder="Escreva ao Claude — Ctrl+Enter envia"></textarea><button class="bt p">Enviar</button></form>
+        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="3" placeholder="Escreva ao Claude — Ctrl+Enter envia"></textarea><button type="button" class="bt mic" data-campo="cv-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
       </div>
     </section>
     <section class="tela" id="t-busca">
@@ -1194,10 +1196,30 @@ async function chatEnviar(ctx, texto) {
   try { await api("chat_enviar", [ctx.chave, texto, CLIENTE]); } catch (e) { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
 }
 function ligarForm(form, campo, ctxAtual) {
-  $(form).onsubmit = ev => { ev.preventDefault(); const t = $(campo).value.trim(); if (!t) return; $(campo).value = ""; chatEnviar(ctxAtual(), t); };
+  $(form).onsubmit = ev => { ev.preventDefault(); pararVoz(); const t = $(campo).value.trim(); if (!t) return; $(campo).value = ""; chatEnviar(ctxAtual(), t); };
   $(campo).addEventListener("keydown", ev => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) $(form).requestSubmit(); });
 }
 ligarForm("#pr-form", "#pr-msg", () => CTX[PR.codigo]);
+// Falar em vez de digitar (2.4): reconhecimento de voz do navegador (Safari no iPhone, só em https — o
+// endereço do Tailscale é). O texto entra no campo e NÃO vai sozinho: nome de norma ditado sai torto.
+const Reconhecer = window.SpeechRecognition || window.webkitSpeechRecognition;
+const VOZ = { rec: null, bt: null };
+function pararVoz() { const r = VOZ.rec; VOZ.rec = null; if (r) try { r.stop(); } catch (e) {} }
+for (const bt of document.querySelectorAll(".bt.mic")) {
+  bt.hidden = !Reconhecer || !window.isSecureContext;
+  bt.onclick = () => {
+    if (VOZ.rec) return pararVoz();
+    const campo = $("#" + bt.dataset.campo), antes = campo.value ? campo.value.replace(/\s*$/, " ") : "";
+    const rec = new Reconhecer();
+    rec.lang = "pt-BR"; rec.interimResults = true; rec.continuous = true;
+    rec.onresult = ev => { if (VOZ.rec !== rec) return; let t = ""; for (const r of ev.results) t += r[0].transcript; campo.value = antes + t.trim(); };
+    rec.onerror = ev => SSEG.log(["✗ voz: " + (ev.error === "not-allowed" ? "o navegador não deixou usar o microfone (Ajustes → Safari → Microfone)" : ev.error)]);
+    rec.onend = () => { bt.classList.remove("ouvindo"); bt.textContent = "🎤"; VOZ.rec = null; campo.focus(); };
+    VOZ.rec = rec; VOZ.bt = bt;
+    bt.classList.add("ouvindo"); bt.textContent = "■";
+    try { rec.start(); } catch (e) { rec.onend(); SSEG.log(["✗ voz: " + e.message]); }
+  };
+}
 ligarForm("#cv-form", "#cv-msg", () => CTX[CV.chave]);
 $("#pr-voltar").onclick = () => ir("inicio");
 for (const b of document.querySelectorAll("#pr-abas button")) b.onclick = () => {

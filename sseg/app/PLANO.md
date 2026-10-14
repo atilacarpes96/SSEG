@@ -173,6 +173,11 @@ A mesma janela do SSEG.exe do quartel no navegador do celular: o PC faz todo o t
   - os botões do processo quebram em linha, com rótulos curtos ("SOL: licenciamento", "SOL: análise", "laudo");
   - somem no celular a Nova versão, o "abrir pasta" e o ⋯, porque atualizar o programa derruba o próprio túnel e os outros agem só no PC;
   - o campo de mensagem não fala mais de Ctrl+Enter
+- [x] 2.1.8, falar em vez de digitar (pedido do Átila, 13/10/2026):
+  - 🎤 ao lado do Enviar, com o reconhecimento de voz do navegador (Safari no iPhone, só em https — o endereço do Tailscale é), em pt-BR;
+  - o texto entra no campo e não vai sozinho, porque nome de norma ditado sai torto;
+  - Enviar para de ouvir, e o ditado atrasado não volta ao campo;
+  - o botão só aparece onde o navegador tem reconhecimento de voz. O teclado do iPhone já tinha o próprio microfone
 - [ ] Teste de ponta a ponta: SSEG.exe do quartel ligado → QR → iPhone no 4G
 - [ ] Notas da fase 2 (o desenho original): O PC do quartel fica na rede do governo e o celular no 4G, então eles não se enxergam direto:
   - o SSEG.exe abre `ssh -N -R 127.0.0.1:8765:127.0.0.1:8765 sseg-servidor` (conexão de saída, a mesma do sincronizar; nenhuma porta aberta no PC);
