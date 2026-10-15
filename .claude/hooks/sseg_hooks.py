@@ -31,7 +31,9 @@ def git(*args, timeout=20):
 
 
 def saida(obj):
-    print(json.dumps(obj, ensure_ascii=False))
+    # em bytes UTF-8: no console cp1252 do Windows o "⚠️" da mensagem quebrava o print e a trava passava calada
+    sys.stdout.buffer.write((json.dumps(obj, ensure_ascii=False) + "\n").encode("utf-8"))
+    sys.stdout.flush()
     sys.exit(0)
 
 

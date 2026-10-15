@@ -15,12 +15,14 @@ import re
 import secrets
 import shutil
 import subprocess
+import sys
 import tempfile
 import threading
 import time
 import webbrowser
 import zipfile
 
+import acesso
 import busca
 import chrome_devtools
 import chat
@@ -28,6 +30,7 @@ import claude_local
 import espelho
 import gasto
 import git_sinc
+import instalacao
 import instalar
 import processo
 import relato
@@ -159,7 +162,43 @@ class Api:
         except (OSError, ValueError, KeyError):
             fluxos = []
         return {"versao": base.VERSAO, "painel": base.PAINEL_URL, "config": cfg, "fluxos": fluxos,
-                "primeira_vez": not base.eh_clone(cfg["clone"]) or not os.path.isdir(cfg["processos"])}
+                "primeira_vez": not base.eh_clone(cfg["clone"]) or not os.path.isdir(cfg["processos"]),
+                "instalacao": "--instalacao" in sys.argv or not instalacao.rodando_instalado()}
+
+    # ---------------------------------------------------------------- instalação (2.2.0)
+    def instalacao_passos(self):
+        """Os passos da tela Instalação, na ordem, cada um com ok e o que falta."""
+        cfg, ins, prog, pas = self._cfg(), instalacao.estado(), self.estado_programas(), self.estado_pastas()
+        sem_prog = [i["nome"] for i in prog["itens"] if not i["ok"] and "falta entrar" not in i["nome"]]
+        srv = self.servidor_acesso(False)
+        return [
+            {"id": "programa", "titulo": "SSEG instalado neste PC", "ok": ins["aberto_daqui"] and ins["atalho_mesa"],
+             "detalhe": "Em %s, com atalho na Área de Trabalho e no Menu Iniciar." % ins["pasta"]
+             if ins["frozen"] else "Rodando pelo .py (desenvolvimento).", "acao": "Instalar e reabrir"},
+            {"id": "programas", "titulo": "Git, Python, Poppler e Claude Code", "ok": not sem_prog,
+             "detalhe": "Falta: " + ", ".join(sem_prog) if sem_prog else "Tudo instalado.", "acao": "Instalar o que falta"},
+            {"id": "claude", "titulo": "Entrar no Claude Code", "ok": prog["logado"],
+             "detalhe": "Com a sua conta do Claude, pelo navegador, uma vez." if not prog["logado"] else "Logado.",
+             "acao": "Entrar"},
+            {"id": "pastas", "titulo": "Pasta do SSEG e pasta dos processos", "ok": pas["ok"],
+             "detalhe": "%s e %s" % (pas["clone"], pas["processos"]), "acao": "Criar"},
+            {"id": "analista", "titulo": "Quem é você", "ok": bool(cfg.get("analista")),
+             "detalhe": cfg.get("analista") or "O nome como está na escala.", "acao": "Escolher"},
+            {"id": "servidor", "titulo": "Servidor (opcional)", "ok": bool(srv["quem"]), "opcional": True,
+             "detalhe": ("Conectado como %s." % srv["quem"]["analista"]) if srv["quem"]
+             else "Guarda os seus processos e prepara a caixa. Peça o acesso ao administrador.", "acao": "Pedir acesso"},
+        ]
+
+    def instalacao_programa(self):
+        """Copia o .exe para a pasta de programas, cria os atalhos e reabre de lá (esta janela fecha)."""
+        destino = instalacao.instalar(lambda l: self._log(l))
+        if destino and not instalacao.rodando_instalado():
+            instalacao.reabrir_instalado(base.ambiente_limpo())
+            self._log("Abrindo o SSEG instalado; esta janela fecha. O arquivo baixado pode ir para a lixeira.")
+            if self._janela:
+                threading.Timer(1.5, self._janela.destroy).start()
+            return {"reabrindo": True}
+        return {"reabrindo": False}
 
     # ---------------------------------------------------------------- barra de estado
     def estado_programas(self):
@@ -327,15 +366,12 @@ class Api:
 
     def _buscar_escala(self, arq):
         try:
-            p = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "sseg-servidor",
-                                "cat sseg-escala/escala.json"], capture_output=True, text=True, encoding="utf-8",
-                               errors="replace", timeout=30, creationflags=base.SEM_JANELA, stdin=subprocess.DEVNULL)
-            d = json.loads(p.stdout)
+            d = acesso.chamar_json("escala")  # a porta devolve só a linha do analista (o admin recebe tudo)
             if isinstance(d, dict) and isinstance(d.get("horas"), dict):
                 with open(arq + ".tmp", "w", encoding="utf-8") as fh:
                     json.dump(d, fh, ensure_ascii=False)
                 os.replace(arq + ".tmp", arq)
-        except (OSError, ValueError, subprocess.SubprocessError):
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
             pass
 
     def _meta(self, cfg):
@@ -665,6 +701,50 @@ class Api:
             raise RuntimeError(erro[-1500:])
         return p.stdout
 
+    # ---------------------------------------------------------------- vários analistas no servidor (2.2.0)
+    def servidor_acesso(self, testar=False):
+        """Como este PC está com o servidor: chave, apelido e, com testar, quem o servidor diz que somos."""
+        cfg = self._cfg()
+        r = {"analista": cfg.get("analista", ""), "chave": bool(acesso.chave_publica()), "apelido": acesso.tem_apelido(),
+             "quem": cfg.get("servidor_quem") or None, "erro": ""}
+        if testar and r["apelido"]:
+            try:
+                r["quem"] = acesso.chamar_json("quem-sou")
+                cfg["servidor_quem"] = r["quem"]
+            except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
+                r["quem"], r["erro"] = None, str(e)
+                cfg.pop("servidor_quem", None)
+            base.gravar_config(cfg)
+        return r
+
+    def servidor_pedir_acesso(self):
+        """Cria chave e apelido se faltarem e devolve o código de acesso para mandar ao administrador."""
+        cfg = self._cfg()
+        if not cfg.get("analista"):
+            raise RuntimeError("Escolha antes quem você é (Configuração → Analista): o código leva o seu nome.")
+        for f in acesso.preparar():
+            self._log("Servidor: " + f)
+        return {"codigo": acesso.codigo_acesso(cfg["analista"])}
+
+    def servidor_analistas(self):
+        return acesso.chamar_json("analistas")
+
+    def servidor_ler_codigo(self, texto):
+        return acesso.ler_codigo(texto)
+
+    def servidor_autorizar(self, texto, nome=None):
+        pedido = acesso.ler_codigo(texto)
+        if nome:
+            pedido["analista"] = re.sub(r"\s+", " ", nome).strip()
+        r = acesso.chamar_json("autorizar", entrada=json.dumps(pedido, ensure_ascii=False).encode("utf-8"))
+        self._log("Servidor: acesso liberado para %s." % r.get("analista"))
+        return self.servidor_analistas()
+
+    def servidor_revogar(self, nome):
+        acesso.chamar_json("revogar", nome)
+        self._log("Servidor: acesso de %s retirado." % nome)
+        return self.servidor_analistas()
+
     def servidor_planejar(self):
         return json.loads(self._sseg_py("sincronizar", "--json"))
 
@@ -761,11 +841,8 @@ class Api:
                     z.writestr("imagens/imagem%d.%s" % (i, m.group(1).replace("jpeg", "jpg")), base64.b64decode(m.group(2)))
         if self.estado_servidor()["configurado"]:
             try:
-                for cmd in (["ssh", "-o", "BatchMode=yes", "sseg-servidor", "mkdir -p sseg-relatos"],
-                            ["scp", "-o", "BatchMode=yes", tmp, "sseg-servidor:sseg-relatos/%s.zip" % ident]):
-                    p = subprocess.run(cmd, capture_output=True, text=True, timeout=120, creationflags=base.SEM_JANELA)
-                    if p.returncode:
-                        raise RuntimeError(p.stderr.strip()[-300:])
+                with open(tmp, "rb") as fh:
+                    acesso.chamar("relato", ident, entrada=fh.read(), timeout=120)
                 os.remove(tmp)
                 self._log("Relato %s com anexos enviado ao servidor (sseg-relatos/)." % ident)
                 return {"id": ident, "onde": "servidor"}

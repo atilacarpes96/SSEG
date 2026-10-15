@@ -15,7 +15,11 @@ O "Sincronizar processos" do SSEG.exe desce a pasta e o distribuicao.json para o
 Só biblioteca padrão (o xlsx é um zip de XML), para rodar no servidor e no testar.py.
 
 USO
-  python3 distribuicao.py --pasta ~/SSEG/sseg/processos [--analista CARPES] [--dias 30] [arquivo ...]
+  python3 distribuicao.py --pasta ~/SSEG/sseg/processos [--analista "Sd Carpes" ...] [--dias 30] [arquivo ...]
+  (sem --analista: TODOS os processos da planilha, de todos os analistas, numa pasta só por código.
+  O distribuicao.json de cada um diz o "analista" responsável — com o nome da escala quando dá para
+  casar — e guarda em "analistas_anteriores" por quem o processo já passou. A porta.py mostra a
+  pasta só ao responsável; o servidor, que vê todas, pode cruzar as notificações de todo mundo.)
   (sem arquivo, procura os downloads da planilha nos últimos 90 min, como o planilhas.py)
 """
 
@@ -100,8 +104,10 @@ def data_iso(v):
     return ""
 
 
-def registros(linhas, analista="CARPES"):
-    """Linhas do analista na aba ANÁLISE → [{codigo, protocolo, distribuido, concluido, resultado, tipo, ocupacao, area}].
+def registros(linhas, analista=None, conhecidos=()):
+    """Linhas da aba ANÁLISE → [{codigo, analista, analista_planilha, protocolo, distribuido, concluido, resultado, tipo, ocupacao, area}].
+    analista=None: todas as linhas. Com nome ("Sgt Magalhães"), só as dele (casa pela última palavra).
+    "analista" é o nome da escala/cadastro quando um dos `conhecidos` casa; senão, o da planilha.
     Atribuído sem DISTRIBUIÇÃO = na fila (o prazo de 10 dias ainda não corre)."""
     cab_i = next((i for i, r in enumerate(linhas[:10]) if "LICENCIAMENTO" in [_norm(c) for c in r]), None)
     if cab_i is None:
@@ -119,17 +125,25 @@ def registros(linhas, analista="CARPES"):
     falta = [k for k in ("codigo", "distribuido", "analista", "concluido") if I[k] is None]
     if falta:
         raise ValueError("colunas não encontradas: " + ", ".join(falta))
-    alvo = _norm(analista)
+    alvo = (_norm(analista).split() or [""])[-1] if analista else None
     out = {}
     for r in linhas[cab_i + 1:]:
         g = lambda k: r[I[k]].strip() if I[k] is not None and I[k] < len(r) else ""
         cod = g("codigo").upper()
-        if not CODIGO.match(cod) or alvo not in _norm(g("analista")):
+        if not CODIGO.match(cod) or (alvo is not None and alvo not in _norm(g("analista"))):
             continue
+        quem = analista or nome_conhecido(g("analista"), conhecidos)
         res = _norm(g("resultado"))
-        out[cod] = {"codigo": cod, "protocolo": data_iso(g("protocolo")), "distribuido": data_iso(g("distribuido")), "concluido": data_iso(g("concluido")),
+        out[cod] = {"codigo": cod, "analista": quem, "analista_planilha": g("analista"), "protocolo": data_iso(g("protocolo")), "distribuido": data_iso(g("distribuido")), "concluido": data_iso(g("concluido")),
                     "resultado": res if res in ("CIA", "CA") else "", "tipo": g("tipo"), "ocupacao": g("ocupacao"), "area": g("area")}
     return list(out.values())  # a linha mais abaixo vale (reanálise do mesmo código)
+
+
+def nome_conhecido(da_planilha, conhecidos):
+    """"ÁTILA CARPES" → "Sd Carpes" se só um conhecido tem a última palavra entre as palavras da planilha."""
+    palavras = set(_norm(da_planilha).split())
+    achados = [n for n in conhecidos if (_norm(n).split() or [""])[-1] in palavras]
+    return achados[0] if len(achados) == 1 else re.sub(r"\s+", " ", str(da_planilha or "")).strip()
 
 
 def gravar(raiz, regs, dias=30, hoje=None):
@@ -152,6 +166,11 @@ def gravar(raiz, regs, dias=30, hoje=None):
         except (OSError, ValueError):
             velho = {}
         novo = dict(r, fonte=TITULO)
+        anteriores = list(velho.get("analistas_anteriores") or [])
+        if velho.get("analista") and _norm(velho["analista"]) != _norm(novo["analista"]) and velho["analista"] not in anteriores:
+            anteriores.append(velho["analista"])  # mudou de mãos: a pasta fica, e fica o registro de quem já passou
+        if anteriores:
+            novo["analistas_anteriores"] = anteriores
         if {k: velho.get(k) for k in novo} == novo:
             cont["iguais"] += 1
             continue
@@ -181,23 +200,39 @@ def xlsx_do_download(arquivo):
     return base64.b64decode(d["content"])
 
 
+def nomes_conhecidos(acesso="~/sseg-acesso/analistas.json", escala="~/sseg-escala/escala.json"):
+    """Nomes "de escala" para trocar o da planilha: o admin, os cadastrados na porta.py e os da escala."""
+    def ler(c):
+        try:
+            with open(os.path.expanduser(c), encoding="utf-8") as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            return {}
+    a, e = ler(acesso), ler(escala)
+    nomes = [a.get("admin") or "Sd Carpes"] + list(a.get("analistas") or {}) + list(e.get("horas") or {})
+    return sorted({_norm(n): n for n in nomes}.values())
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("arquivos", nargs="*")
     ap.add_argument("--pasta", required=True, help="raiz das pastas de processo (no servidor: ~/SSEG/sseg/processos)")
-    ap.add_argument("--analista", default="CARPES")
+    ap.add_argument("--analista", action="append",
+                    help="nome como na escala; repetível (padrão: o admin e os analistas de ~/sseg-acesso/analistas.json)")
     ap.add_argument("--dias", type=int, default=30, help="concluídos há até N dias também criam pasta")
     a = ap.parse_args(argv)
     for f in a.arquivos or achar_arquivos():
         x = xlsx_do_download(f)
         if x is None:
             continue
-        regs = registros(linhas_da_aba(x), a.analista)
-        c = gravar(os.path.expanduser(a.pasta), regs, a.dias)
-        caixa = sum(1 for r in regs if r["distribuido"] and not r["concluido"])
-        fila = sum(1 for r in regs if not r["distribuido"] and not r["concluido"])
-        print("distribuicao: %d linha(s) do analista, %d na fila, %d na caixa; %d pasta(s) criada(s), %d atualizada(s), %d igual(is)"
-              % (len(regs), fila, caixa, len(c["criadas"]), len(c["atualizadas"]), c["iguais"]))
+        linhas, conhecidos = linhas_da_aba(x), nomes_conhecidos()
+        for nome in a.analista or [None]:
+            regs = registros(linhas, nome, conhecidos)
+            c = gravar(os.path.expanduser(a.pasta), regs, a.dias)
+            caixa = sum(1 for r in regs if r["distribuido"] and not r["concluido"])
+            fila = sum(1 for r in regs if not r["distribuido"] and not r["concluido"])
+            print("distribuicao %s: %d linha(s), %d na fila, %d na caixa; %d pasta(s) criada(s), %d atualizada(s), %d igual(is)"
+                  % (nome or "todos", len(regs), fila, caixa, len(c["criadas"]), len(c["atualizadas"]), c["iguais"]))
         return 0
     print("distribuicao: download da planilha \"%s\" (xlsx) não encontrado nos últimos 90 min" % TITULO)
     return 1

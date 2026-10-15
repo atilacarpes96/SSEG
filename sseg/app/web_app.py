@@ -11,7 +11,7 @@ import os
 import time
 import traceback
 
-PASSOS = ["inicio", "menu", "quadro", "busca", "config", "conversa", "github", "servidor", "bug", "detalhes", "processo"]
+PASSOS = ["inicio", "menu", "quadro", "busca", "instalar", "config", "conversa", "github", "servidor", "bug", "detalhes", "processo"]
 
 
 def _tour(jan, api, foto):

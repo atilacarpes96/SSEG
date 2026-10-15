@@ -40,18 +40,12 @@ import enviar  # noqa: E402 — a lista do que pode sair do PC é uma só
 CODIGO = re.compile(r"^A\d{8}[A-Z]{2}\d{3}$")
 PROC_CLONE = os.path.normpath(os.path.join(AQUI, "..", "processos"))  # registro <código>.md e a base
 BASE = os.path.join(PROC_CLONE, ".sincronizacao.json")
-SCRIPT_REMOTO = "SSEG/sseg/scripts/sincronizar.py"
+SCRIPT_REMOTO = "SSEG/sseg/scripts/porta.py"  # a porta filtra pelo analista da chave (2.2.0)
 SEM_JANELA = 0x08000000 if os.name == "nt" else 0
 
-FALTA_SSH = """Falta a ligação SSH com o servidor neste PC ({motivo}). Uma vez só, no PowerShell:
-  1. ssh-keygen -t ed25519 -f $env:USERPROFILE\\.ssh\\sseg_servidor   (na senha, só Enter)
-  2. colar o conteúdo de sseg_servidor.pub na conversa do servidor, para autorizar
-  3. criar $env:USERPROFILE\\.ssh\\config com:
-       Host sseg-servidor
-         HostName 163.176.190.159
-         User ubuntu
-         IdentityFile ~/.ssh/sseg_servidor
-  4. testar: ssh sseg-servidor echo ok"""
+FALTA_SSH = """Falta a ligação com o servidor neste PC ({motivo}).
+No SSEG.exe: Configuração → Servidor → "Pedir acesso", mande o código ao administrador e,
+quando ele liberar, "Testar conexão"."""
 
 
 # --------------------------------------------------------------------- comum aos dois lados
@@ -101,13 +95,15 @@ def empacotar(arquivos):
 
 
 def desempacotar(dados, destino_de):
-    """Grava cada arquivo do tar em destino_de(chave). Chave inválida é ignorada. Devolve as gravadas."""
+    """Grava cada arquivo do tar em destino_de(chave). Chave inválida, ou destino None, é ignorada. Devolve as gravadas."""
     feitas = []
     with tarfile.open(fileobj=io.BytesIO(dados), mode="r") as tar:
         for mb in tar.getmembers():
             if not mb.isfile() or not chave_valida(mb.name):
                 continue
             alvo = destino_de(mb.name)
+            if not alvo:  # a porta do servidor recusa o que não é do analista
+                continue
             os.makedirs(os.path.dirname(alvo), exist_ok=True)
             tmp = alvo + ".sseg-tmp"
             with tar.extractfile(mb) as src, open(tmp, "wb") as dst:
@@ -147,11 +143,21 @@ class Servidor:
 
     def _ssh(self, acao, entrada=b""):
         p = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", self.host,
-                            "python3", SCRIPT_REMOTO, acao], input=entrada, capture_output=True,
+                            "python3 %s %s" % (SCRIPT_REMOTO, acao)], input=entrada, capture_output=True,
                            timeout=600, creationflags=SEM_JANELA)
         if p.returncode == 255:
             raise RuntimeError(FALTA_SSH.format(motivo="o servidor não aceitou a conexão: "
                                                 + p.stderr.decode("utf-8", "replace").strip()[-160:]))
+        if p.returncode and SCRIPT_REMOTO.endswith("porta.py") and b"No such file" in p.stderr:
+            return self._ssh_antigo(acao, entrada)  # servidor ainda sem a porta (antes do git pull de lá)
+        if p.returncode:
+            raise RuntimeError("Erro no servidor: " + p.stderr.decode("utf-8", "replace").strip()[-400:])
+        return p.stdout
+
+    def _ssh_antigo(self, acao, entrada):
+        p = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", self.host,
+                            "python3 SSEG/sseg/scripts/sincronizar.py " + acao], input=entrada, capture_output=True,
+                           timeout=600, creationflags=SEM_JANELA)
         if p.returncode:
             raise RuntimeError("Erro no servidor: " + p.stderr.decode("utf-8", "replace").strip()[-400:])
         return p.stdout

@@ -268,6 +268,30 @@ Fase C — a decidir depois da B
 - [ ] Uma frase ditada no 🎤 vira tarefa ("sexta 14h fiscalização na escola X"), interpretada por script, sem IA
 - Descartado do Kanban: acesso por Cloudflare com senha (o espelho com Tailscale já faz isso) e as abas E-mails, Reuniões e Log de campanhas (fluxo de agência)
 
+### 2.2 — Vários analistas no servidor (pedido do Átila, 15/10/2026; ordem: multiusuário → instalador → GitHub → convite ao Serafim)
+
+Cada analista entra no servidor com a chave do próprio PC e só vê os processos dele. O analista não ganha
+shell: a chave dele só roda a `scripts/porta.py`.
+
+- [x] `scripts/porta.py`: porta única do servidor. Admin (chave sem restrição) = `admin` de `~/sseg-acesso/analistas.json` (fora do Git); analista = linha `command="python3 SSEG/sseg/scripts/porta.py --analista '<nome>'",restrict` no `authorized_keys`, com o pedido do PC em `SSH_ORIGINAL_COMMAND`. Ações: quem-sou, listar/receber/entregar (filtradas), escala (só a linha dele), relato; do admin: analistas, autorizar, revogar, atribuir
+- [x] Responsável pelo processo: `distribuicao.json` → `analista` (a planilha manda); senão `processos/.responsaveis.json` (quem mandou primeiro ou `atribuir`); senão o admin (pastas antigas). `distribuicao.json` nunca sobe do PC
+- [x] `distribuicao.py` grava `analista` e, sem `--analista`, roda para o admin e todos os cadastrados (casa pela última palavra do nome da escala com a coluna ANALISTA). A rotina do Painel do Dia não muda
+- [x] `sincronizar.py` fala com a porta (os nomes `remoto-*` valem nela); servidor ainda sem a porta → cai no `sincronizar.py remoto-*` antigo
+- [x] SSEG.exe, Configuração → Servidor: "Pedir acesso" (cria `~/.ssh/sseg_servidor` e o apelido, copia o código `SSEG-ACESSO|<nome>|<chave pública>`), "Testar conexão" (quem-sou). Admin: lista dos analistas, "Retirar acesso" e "Liberar acesso" colando o código. Escala e Reportar bug passam pela porta (`app/acesso.py`)
+- [x] `testar.py`: chave do analista só roda a porta; cada um lista/recebe/entrega só o seu; processo novo vira de quem mandou; recusas (nome fora do cadastro, ação de admin, chave inválida ou repetida); atribuir e revogar mantêm a linha do admin
+- [x] Teste real no servidor (15/10/2026) com analista de teste: quem-sou, listar vazio, escala só dele, `cat ~/.ssh/authorized_keys` não roda (vira quem-sou), ação de admin recusada, túnel `-R` recusado, envio de processo novo aceito e o do admin recusado; depois revogado e o `authorized_keys` igual ao backup
+- [x] Quem saiu da análise sai da escala: `~/sseg-escala/fora.txt` no servidor (um nome por linha, fora do Git), lido pelo `escala.py`. Em 15/10/2026: Sgt Amaral, Sgt Fernanda e Sd Bruna
+- [x] Hook do banco (`sseg_hooks.py`): a resposta "deny" sai em UTF-8. No console cp1252 do Windows o "⚠️" quebrava o print e a trava deixava a alteração passar calada (era a falha "hook barra alteração de modelo do banco" do `testar.py`)
+- [x] Todos os processos juntos (pedido do Átila, 15/10/2026): sem `--analista`, o `distribuicao.py` cria a pasta de TODOS os processos da planilha, de todos os analistas, uma por código. O `distribuicao.json` leva `analista` (nome da escala quando só um casa pela última palavra; senão, o da planilha), `analista_planilha` e `analistas_anteriores` (quem já passou: o processo troca de mãos e a pasta, com CIA e registro, vai inteira ao novo responsável). Caminho pronto para o entendimento coletivo por notificação: no servidor, um script cruza as CIAs de todas as pastas
+- [x] `porta.py meus`: os códigos do responsável, um por linha. O Painel do Dia usa no lugar do `ls` da pasta, para não mostrar os processos dos outros
+- [ ] Trocar no prompt do Painel do Dia (`~/rotinas/painel-do-dia/prompt.md`, passo 0d) o `ls .../processos/` por `python3 .../porta.py meus` (depois do pull no servidor)
+- [x] **Instalador** (passo 2, 15/10/2026): o mesmo SSEG.exe do release. Aberto de fora da pasta de programas (Downloads), abre na tela **Instalação** (menu ☰): passos na ordem, cada um com ✓/✗ e o seu botão, e "Instalar tudo". 1) copia o .exe para `%LOCALAPPDATA%\Programs\SSEG\`, cria "SSEG" na Área de Trabalho e no Menu Iniciar e reabre de lá (`app/instalacao.py`, sem administrador); 2) Git, Python, Poppler e Claude Code; 3) entrar no Claude Code; 4) pastas; 5) quem é você; 6) servidor (opcional). Os ✗ seguem também nos alertas da barra de cima. A atualização automática troca o .exe onde ele estiver
+- [x] 2.2.0 junta a 2.1.17, que não saiu: o build parou porque `VERSION` (2.1.17) não batia com a `VERSAO` do `sseg_app.py` (2.1.16)
+- [ ] Teste do Átila: baixar o SSEG.exe do release num PC sem SSEG (ou numa conta nova do Windows) e seguir a tela Instalação
+- [ ] Publicar: push → `git pull` no servidor ANTES de soltar o .exe novo (o programa avisa "servidor sem a porta" se faltar)
+- [ ] Espelho no celular para analista: porta própria por analista (`permitlisten`) e `tailscale serve` de cada uma — depois
+- [ ] Quadro (`quadro.json`) e a caixa do SOL (`sol_caixa.py`) por analista — depois
+
 ### Ideia a amadurecer — "Ponte SOL" (pedido do Átila, 12/10/2026; NÃO construir sem confirmar)
 
 O Claude ler o SOL por comando, sem print e sem navegar, gastando menos token:

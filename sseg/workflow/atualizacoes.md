@@ -12,6 +12,24 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 15/10/2026 — SSEG.exe 2.2: instalador e vários analistas no servidor
+
+- **Instalação:** quem baixa o SSEG.exe e abre cai na tela Instalação (menu ☰). Ela põe o programa em `%LOCALAPPDATA%\Programs\SSEG` com atalho na Área de Trabalho e no Menu Iniciar, instala Git, Python, Poppler e Claude Code, faz o login, cria as pastas e pergunta quem é você. Sem administrador e sem PowerShell.
+- **Servidor para todos:** Configuração → Servidor → "Pedir acesso" gera um código; mande ao Átila. Liberado, o Sincronizar processos leva e traz só os SEUS processos (a planilha da distribuição diz de quem é cada um). Sua chave só fala com o SSEG no servidor, sem acesso ao resto.
+- **Processos de todos numa pasta por código:** quando o processo passa de um analista para outro, a pasta vai inteira ao novo responsável, com o registro de quem já passou.
+- **Chrome para o Claude** (Configuração, opcional): o Claude lê a página do SOL já aberta no seu Chrome pelo DOM, sem print.
+- **Trava do banco de notificações:** no Windows ela deixava passar alteração no texto validado (erro de acento na mensagem); corrigida.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão 2.2 (15/10/2026) e no fim me diga o que ficou feito e o que depende de mim:
+1. Confira se o clone está em dia com o GitHub (git status e git log -1). Se estiver atrás, me peça para rodar git pull no PowerShell; no Claude Code, rode você mesmo.
+2. Rode python sseg/scripts/testar.py e me diga o resultado.
+3. Me diga para abrir o SSEG.exe e clicar em "Nova versão" (ou baixar em https://github.com/atilacarpes96/SSEG/releases/latest) e depois abrir o menu ☰ → Instalação e resolver o que estiver com ✗.
+4. Se eu quiser usar o servidor: Configuração → Servidor → "Pedir acesso" e mandar o código ao Átila.
+```
+
 ## 12/10/2026 — SSEG.exe 2.1: janela do processo, conversas sem terminal, respostas visuais
 
 - **Janela do processo:** "Analisar processo" (ou "abrir" em Processos em andamento) mostra três colunas — conversa com o Claude dentro do programa, checklist (pendências, os 16 passos e as medidas do SOL com o Anexo L) e CIA em construção. O Claude só começa quando você manda a primeira mensagem.

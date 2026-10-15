@@ -15,6 +15,8 @@ O SSEG.exe busca esse arquivo pelo SSH.
 
 USO
   python3 escala.py [arquivo do download ...] [--saida ~/sseg-escala/escala.json] [--dias 45]
+  Quem está em ~/sseg-escala/fora.txt (um nome por linha) não entra no escala.json, mesmo que
+  ainda apareça numa aba da planilha.
 """
 
 import argparse
@@ -33,6 +35,7 @@ from distribuicao import M, R, _norm, achar_arquivos, linhas_da_aba  # noqa: E40
 
 TITULO = "Escala Análise"
 SAIDA = "~/sseg-escala/escala.json"
+FORA = "~/sseg-escala/fora.txt"  # quem saiu da análise: um nome por linha, como na escala (fora do Git)
 HORAS_POR_PERIODO = 6
 ABA_MES = re.compile(r"^[A-ZÇ]+\d{2}$")  # OUTUBRO26, MARCO26 (já sem acento)
 
@@ -102,17 +105,27 @@ def xlsx_do_download(arquivo):
     return base64.b64decode(d["content"])
 
 
+def ler_fora(caminho=FORA):
+    try:
+        with open(os.path.expanduser(caminho), encoding="utf-8") as fh:
+            return {_norm(l) for l in fh if l.strip() and not l.lstrip().startswith("#")}
+    except OSError:
+        return set()
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("arquivos", nargs="*", help="JSON do download_file_content ou .xlsx")
     ap.add_argument("--saida", default=SAIDA)
     ap.add_argument("--dias", type=int, default=45)
+    ap.add_argument("--fora", default=FORA, help="nomes que não entram (um por linha)")
     a = ap.parse_args(argv)
+    fora = ler_fora(a.fora)
     for f in a.arquivos or achar_arquivos():
         x = open(f, "rb").read() if f.endswith(".xlsx") else xlsx_do_download(f)
         if x is None:
             continue
-        horas = ler(x, dias=a.dias)
+        horas = {n: h for n, h in ler(x, dias=a.dias).items() if _norm(n) not in fora}
         saida = os.path.expanduser(a.saida)
         os.makedirs(os.path.dirname(saida), exist_ok=True)
         tmp = saida + ".tmp"

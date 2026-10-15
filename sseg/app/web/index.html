@@ -174,6 +174,13 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 .prog { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
 .prog span::before { content: "✗ "; color: var(--verm); font-weight: 700; }
 .prog span.ok::before { content: "✓ "; color: var(--ok); }
+.passos { display: grid; gap: 8px; }
+.passo { display: grid; grid-template-columns: 28px 1fr auto; gap: 4px 10px; align-items: center; }
+.passo .marca { font-weight: 700; font-size: 18px; text-align: center; color: var(--verm); }
+.passo.ok .marca { color: var(--ok); }
+.passo.opcional:not(.ok) .marca { color: var(--sub, #999); }
+.passo .sub { margin: 2px 0 0; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .passo { grid-template-columns: 24px 1fr; } .passo .bt { grid-column: 2; justify-self: start; } }
 label.campo { display: block; font-size: 12px; color: var(--suave); margin: 8px 0 3px; }
 .campo-linha { display: flex; gap: 8px; }
 .campo-linha input { flex: 1; padding: 7px 9px; border: 1px solid var(--linha); border-radius: 6px; }
@@ -411,6 +418,7 @@ body.sem-pc #sem-pc { display: block; }
     <button data-tela="inicio" class="ativo">Início</button>
     <button data-tela="quadro">Quadro</button>
     <button data-tela="busca">Buscar normas</button>
+    <button data-tela="instalar">Instalação</button>
     <button data-tela="config">Configuração</button>
     <button data-tela="ajuda">Ajuda</button>
   </nav>
@@ -488,6 +496,19 @@ body.sem-pc #sem-pc { display: block; }
       <div id="resultados"></div>
     </section>
 
+    <section class="tela" id="t-instalar">
+      <h2>Instalação</h2>
+      <p class="sub">Tudo de que o SSEG precisa neste PC, na ordem. Sem administrador e sem PowerShell: o programa faz e confere.
+        O que tem ✗ também aparece em alerta na barra de cima.</p>
+      <div class="cartao">
+        <div class="passos" id="passos"></div>
+        <div class="linha-bts" style="margin-top:14px">
+          <button class="bt p" id="b-inst-tudo">Instalar tudo</button>
+          <button class="bt" id="b-inst-conf">Conferir de novo</button>
+        </div>
+      </div>
+    </section>
+
     <section class="tela" id="t-config">
       <h2>Programas</h2>
       <div class="cartao">
@@ -516,6 +537,23 @@ body.sem-pc #sem-pc { display: block; }
           (2 PPCI por período de 6 h). Sem a escala neste PC, a meta é a que você digitar no card.</p>
         <p id="an-estado" class="sub" style="margin:0 0 8px">…</p>
         <div class="linha-bts"><button class="bt" id="b-analista">Trocar</button></div>
+      </div>
+      <h2>Servidor</h2>
+      <div class="cartao">
+        <p class="sub" style="margin:0 0 10px">O servidor guarda os processos de cada analista e prepara a caixa. Cada um entra com a chave do próprio PC
+          e só vê os processos dele. Para entrar: "Pedir acesso", mande o código ao administrador e, quando ele liberar, "Testar conexão".</p>
+        <p id="srv-estado" class="sub" style="margin:0 0 8px">…</p>
+        <div class="linha-bts">
+          <button class="bt p" id="b-srv-pedir">Pedir acesso</button>
+          <button class="bt" id="b-srv-testar">Testar conexão</button>
+        </div>
+        <div id="srv-admin" hidden style="margin-top:14px">
+          <b>Analistas com acesso</b> <span class="sub">(você é o administrador)</span>
+          <div id="srv-lista" class="lista" style="margin:6px 0 10px"></div>
+          <label class="campo" for="srv-codigo">Código de acesso recebido (SSEG-ACESSO|…)</label>
+          <textarea id="srv-codigo" rows="3" placeholder="Cole aqui o código que o analista mandou"></textarea>
+          <div class="linha-bts" style="margin-top:8px"><button class="bt p" id="b-srv-liberar">Liberar acesso</button></div>
+        </div>
       </div>
       <h2 class="so-pc">Usar pelo celular</h2>
       <div class="cartao so-pc">
@@ -691,9 +729,10 @@ function ir(tela) {
   document.querySelector("main").classList.toggle("processo", tela === "processo" || tela === "conversa");
   document.querySelectorAll(".tela").forEach(t => t.classList.toggle("ativa", t.id === "t-" + tela));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
-  if (tela === "config") { carregarConfig(); estadoEspelho(); conferirChrome().catch(() => {}); }
+  if (tela === "config") { carregarConfig(); estadoEspelho(); conferirChrome().catch(() => {}); carregarAcesso(false); }
   if (tela === "inicio") carregarProcessos();
   if (tela === "quadro") carregarQuadro();
+  if (tela === "instalar") carregarInstalacao();
   if (matchMedia("(max-width: 700px)").matches) $("#menu").classList.remove("aberto");  // menu por cima, no celular
 }
 $("#b-recarregar").onclick = $("#b-recarregar2").onclick = () => location.reload();
@@ -736,6 +775,94 @@ function quemSou(a) {
     }, true], ["Depois", fechar]]);
 }
 $("#b-analista").addEventListener("click", async () => { try { quemSou(await api("analista")); } catch (e) {} });
+
+// ---- Instalação (2.2.0): os passos na ordem, cada um com o seu botão
+async function carregarInstalacao() {
+  let passos;
+  try { passos = await api("instalacao_passos"); } catch (e) { return []; }
+  $("#passos").replaceChildren(...passos.map(p => el("div", { class: "passo" + (p.ok ? " ok" : "") + (p.opcional ? " opcional" : "") },
+    el("span", { class: "marca" }, p.ok ? "✓" : p.opcional ? "○" : "✗"),
+    el("div", {}, el("b", {}, p.titulo), el("p", { class: "sub" }, p.detalhe)),
+    p.ok ? el("span") : el("button", { class: "bt", on: { click: ev => passoInstalacao(p.id, ev.currentTarget) } }, p.acao))));
+  $("#b-inst-tudo").disabled = passos.filter(p => !p.opcional).every(p => p.ok);
+  return passos;
+}
+async function passoInstalacao(id, b) {
+  if (ESPELHO) return avisar("A instalação se faz na janela do PC.", true);
+  if (id === "programa") { const r = await api("instalacao_programa", [], b); if (r.reabrindo) return avisar("Abrindo o SSEG instalado…"); }
+  if (id === "programas") { $("#detalhes").classList.add("aberto"); await api("instalar_tudo", [], b); estadoProgramas(); }
+  if (id === "claude") { await api("entrar_claude", [], b); avisar("Entre pelo navegador e depois clique em Conferir de novo."); }
+  if (id === "pastas") { const p = await api("estado_pastas"); await api("criar_pastas", [p.clone, p.processos], b); estadoPastas(); estadoGithub(); }
+  if (id === "analista") quemSou(await api("analista"));
+  if (id === "servidor") { $("#b-srv-pedir").hidden = false; await $("#b-srv-pedir").onclick({ currentTarget: b }); }
+  return carregarInstalacao();
+}
+$("#b-inst-conf").onclick = async ev => { ev.currentTarget.disabled = true; try { await carregarInstalacao(); estadoProgramas(); estadoPastas(); } finally { ev.currentTarget.disabled = false; } };
+$("#b-inst-tudo").onclick = async ev => {
+  const b = ev.currentTarget;
+  b.disabled = true;
+  try {
+    for (const id of ["programa", "programas", "pastas", "analista", "claude"]) {
+      const p = (await carregarInstalacao()).find(x => x.id === id);
+      if (!p || p.ok) continue;
+      await passoInstalacao(id, b);
+      if (id === "programa" || id === "analista" || id === "claude") break;  // reabre, ou espera o analista responder
+    }
+  } catch (e) {} finally { carregarInstalacao(); }
+};
+
+// ---- servidor com vários analistas (2.2.0)
+function pintarAcesso(r) {
+  const q = r.quem;
+  $("#srv-estado").textContent = q ? "Conectado: o servidor reconhece este PC como " + q.analista + (q.papel === "admin" ? " (administrador)." : ".")
+    : r.erro ? "✗ " + r.erro
+    : r.chave && r.apelido ? "Chave criada. Se já mandou o código ao administrador, clique em Testar conexão."
+    : "Este PC ainda não tem acesso ao servidor.";
+  $("#b-srv-pedir").textContent = r.chave ? "Ver o código de acesso" : "Pedir acesso";
+  $("#srv-admin").hidden = !(q && q.papel === "admin");
+  $("#b-srv-pedir").hidden = !!(q && q.papel === "admin");  // o admin entra com a chave dele
+  if (q && q.papel === "admin") carregarAnalistas();
+}
+function pintarAnalistas(d) {
+  const l = d.analistas || [];
+  $("#srv-lista").replaceChildren(...(l.length ? l.map(a => el("div", { style: "display:flex;gap:8px;align-items:center;justify-content:space-between" },
+    el("span", {}, a.analista + "  ·  desde " + dataBR(a.desde)),
+    el("button", { class: "bt link", on: { click: ev => confirmarRevogar(a.analista, ev.currentTarget) } }, "Retirar acesso")))
+    : ["Só você, por enquanto."]));
+}
+const carregarAnalistas = async () => { try { pintarAnalistas(await api("servidor_analistas")); } catch (e) {} };
+function confirmarRevogar(nome) {
+  modal("Retirar acesso", nome + " deixa de entrar no servidor. As pastas dos processos dele ficam lá.", [],
+    [["Retirar", async b => { pintarAnalistas(await api("servidor_revogar", [nome], b)); fechar(); avisar("✓ Acesso de " + nome + " retirado."); }, true], ["Cancelar", fechar]]);
+}
+async function carregarAcesso(testar) {
+  try { pintarAcesso(await api("servidor_acesso", [!!testar])); } catch (e) {}
+}
+$("#b-srv-testar").onclick = async ev => {
+  const r = await api("servidor_acesso", [true], ev.currentTarget);
+  pintarAcesso(r); estadoServidor();
+  avisar(r.quem ? "✓ Conectado como " + r.quem.analista : "✗ " + (r.erro || "sem acesso"), !r.quem);
+};
+$("#b-srv-pedir").onclick = async ev => {
+  const r = await api("servidor_pedir_acesso", [], ev.currentTarget);
+  await copiar(r.codigo);
+  carregarAcesso(false); estadoServidor();
+  modal("Código de acesso", "Já está copiado. Mande ao administrador do servidor (WhatsApp ou e-mail).",
+    [el("div", { class: "lista", style: "word-break:break-all" }, r.codigo),
+     el("p", { class: "sub" }, "O código leva o seu nome e a chave pública deste PC. A chave secreta não sai daqui. Quando ele avisar que liberou, clique em Testar conexão.")],
+    [["Copiar de novo", () => copiar(r.codigo).then(() => avisar("✓ Copiado."))], ["Fechar", fechar, true]]);
+};
+$("#b-srv-liberar").onclick = async ev => {
+  const texto = $("#srv-codigo").value;
+  const p = await api("servidor_ler_codigo", [texto], ev.currentTarget);
+  const nome = el("input", { type: "text", maxlength: 40, value: p.analista });
+  modal("Liberar acesso", "O nome é o da escala: é por ele que a planilha da distribuição separa os processos.",
+    [el("label", { class: "campo-card" }, "Analista ", nome), el("div", { class: "lista", style: "word-break:break-all" }, p.chave)],
+    [["Liberar", async b => {
+      pintarAnalistas(await api("servidor_autorizar", [texto, nome.value], b));
+      fechar(); $("#srv-codigo").value = ""; avisar("✓ " + nome.value + " já pode testar a conexão.");
+    }, true], ["Cancelar", fechar]]);
+};
 
 // ---- barra de estado
 function chip(id, classe, texto, n) {
@@ -828,8 +955,9 @@ async function telaGit(botao, info) {
 // ---- Servidor (janelinha do chip): Sincronizar processos
 $("#e-servidor").onclick = async ev => {
   const s = await api("estado_servidor");
-  if (!s.configurado) return modal("Servidor", "Opcional: só para quem tem o servidor do SSEG.",
-    el("div", { class: "lista" }, "Este PC não tem o apelido sseg-servidor em ~/.ssh/config.\nSem ele, os processos ficam só neste PC (nada muda na análise)."), [["Fechar", fechar]]);
+  if (!s.configurado) return modal("Servidor", "Opcional: o servidor guarda os seus processos e prepara a caixa.",
+    el("div", { class: "lista" }, "Este PC ainda não tem acesso ao servidor.\nSem ele, os processos ficam só neste PC (nada muda na análise)."),
+    [["Pedir acesso", () => { fechar(); ir("config"); $("#srv-estado").scrollIntoView({ block: "center" }); }, true], ["Fechar", fechar]]);
   chip("#e-servidor", "carregando", "Servidor");
   try { telaServidor(await api("servidor_planejar")); } finally { estadoServidor(); }
 };
@@ -1765,6 +1893,7 @@ SSEG.tour = async passo => {
   if (passo === "menu") { $("#menu").classList.add("aberto"); ir("inicio"); }
   if (passo === "busca") { $("#menu").classList.remove("aberto"); ir("busca"); $("#q").value = 'extintor "5 m"'; $("#f-busca").requestSubmit(); }
   if (passo === "config") ir("config");
+  if (passo === "instalar") ir("instalar");
   if (passo === "quadro") ir("quadro");
   if (passo === "conversa") { const f = ESTADO.info.fluxos.find(x => x.id === "pergunta") || ESTADO.info.fluxos[0]; abrirConversa(f, f.prompt);
     const ctx = CTX["fluxo:" + f.id]; chatAdd(ctx, el("div", { class: "msg eu" }, "Porta de saída em F-6 abre para fora?"));
@@ -1828,7 +1957,7 @@ window.addEventListener("pywebviewready", async () => {
   const info = await carregarInicio();
   SSEG.log(["SSEG " + info.versao + "."]);
   estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub(); estadoVersao(); estadoEspelho();
-  if (info.primeira_vez) ir("config");
+  if (!ESPELHO && (info.instalacao || info.primeira_vez)) ir("instalar");
   else if (!ESPELHO) estadoAnalista(true);
   try { const v = sessionStorage.getItem("sseg-atualizou"); if (v) { sessionStorage.removeItem("sseg-atualizou"); avisar("✓ O PC voltou atualizado: versão " + v + "."); } } catch (e) {}
   if (ESPELHO && /^#tour-\w+$/.test(location.hash)) SSEG.tour(location.hash.slice(6));  // foto do build em largura de celular

@@ -85,7 +85,7 @@ def main():
         alvo = next(l for l in banco.splitlines() if l.startswith("- Deverá prever uma unidade extintora"))
         ev = {"tool_name": "Edit", "tool_input": {"file_path": os.path.join(RAIZ, "sseg/normas/banco-notificacoes-padrao.md"),
                                                     "old_string": alvo, "new_string": alvo.replace("Deverá", "Deve")}}
-        p = subprocess.run([PY, hook, "banco"], input=json.dumps(ev), capture_output=True, text=True, timeout=30, cwd=RAIZ,
+        p = subprocess.run([PY, hook, "banco"], input=json.dumps(ev), capture_output=True, text=True, encoding="utf-8", timeout=30, cwd=RAIZ,
                            env={k: v for k, v in os.environ.items() if k != "SSEG_BANCO_LIBERADO"})
         caso("hook barra alteração de modelo do banco", '"deny"' in p.stdout, p.stdout[-300:])
         ev2 = {"tool_name": "Edit", "tool_input": {"file_path": ev["tool_input"]["file_path"], "old_string": alvo,
@@ -196,6 +196,61 @@ def main():
         caso("sincronizar: chave fora da lista é barrada",
              not sc.chave_valida(cod + "/Planta.pdf") and not sc.chave_valida("../x.json")
              and not sc.chave_valida(cod + "/../../x.json") and sc.chave_valida(cod + "/api-1.json"))
+    # 11b. porta do servidor (SSEG multiusuário, 2.2.0): cada analista só vê os processos dele
+    import porta as pt
+    with tempfile.TemporaryDirectory() as d:
+        raiz, acesso, chaves = os.path.join(d, "proc"), os.path.join(d, "acesso.json"), os.path.join(d, "authorized_keys")
+        os.makedirs(raiz)
+        open(chaves, "w").write("ssh-ed25519 AAAAadmin atila@casa\n")
+        k_fulano = "ssh-ed25519 " + "A" * 68
+        P = lambda nome=None: pt.Porta(nome, raiz=raiz, acesso=acesso, chaves=chaves, escala=os.path.join(d, "esc.json"), relatos=os.path.join(d, "rel"))
+        adm = P()
+        adm.autorizar({"analista": "Sgt Fulano", "chave": k_fulano + " fulano@pc"}, "SSEG/sseg/scripts/porta.py")
+        linhas = open(chaves).read().splitlines()
+        def g(caminho, texto):
+            os.makedirs(os.path.dirname(caminho), exist_ok=True)
+            open(caminho, "w", encoding="utf-8").write(texto)
+        g(os.path.join(raiz, "A00000001AA001", "1.json"), "antigo do admin")
+        g(os.path.join(raiz, "A00000002AA001", "distribuicao.json"), json.dumps({"analista": "Sgt Fulano"}))
+        g(os.path.join(raiz, "A00000002AA001", "1.json"), "do fulano")
+        ful = P("Sgt Fulano")
+        caso("porta: chave do analista só roda a porta, com o nome dele; a do admin fica igual",
+             linhas[0] == "ssh-ed25519 AAAAadmin atila@casa" and len(linhas) == 2 and linhas[1].startswith('command="python3 SSEG/sseg/scripts/porta.py --analista \'Sgt Fulano\'",restrict ssh-ed25519 ')
+             and ful.quem_sou() == {"analista": "Sgt Fulano", "papel": "analista"}, str(linhas))
+        caso("porta: cada um lista só o seu (pasta antiga é do admin; planilha manda)",
+             set(ful.listar()) == {"A00000002AA001/1.json", "A00000002AA001/distribuicao.json"}
+             and ful.meus() == ["A00000002AA001"] and adm.meus() == ["A00000001AA001"]
+             and set(adm.listar()) == {"A00000001AA001/1.json"}, str((ful.listar(), adm.listar())))
+        pacote = sc.empacotar({"A00000001AA001/1.json": os.path.join(d, "acesso.json"),   # de outro: recusa
+                               "A00000002AA001/distribuicao.json": os.path.join(d, "acesso.json"),  # só o servidor grava
+                               "A00000003AA001/CIA 1.pdf": os.path.join(raiz, "A00000002AA001", "1.json")})  # novo: vira dele
+        feitas = ful.receber(pacote)
+        caso("porta: recebe só o que é dele, processo novo passa a ser dele, distribuicao.json não sobe",
+             feitas == ["A00000003AA001/CIA 1.pdf"] and open(os.path.join(raiz, "A00000001AA001", "1.json")).read() == "antigo do admin"
+             and "A00000003AA001/CIA 1.pdf" in P("Sgt Fulano").listar() and "A00000003AA001/CIA 1.pdf" not in adm.listar(), str(feitas))
+        import tarfile as _tf
+        import io as _io
+        nomes = _tf.open(fileobj=_io.BytesIO(ful.entregar(["A00000001AA001/1.json", "A00000002AA001/1.json"]))).getnames()
+        recusas = []
+        for f in (lambda: P("Sgt Estranho"), lambda: ful.analistas(), lambda: ful.autorizar({"analista": "X Y", "chave": k_fulano}, "p"),
+                  lambda: adm.autorizar({"analista": "Sd Outro", "chave": "ssh-ed25519 curta"}, "p"),
+                  lambda: adm.autorizar({"analista": "Sd Outro", "chave": k_fulano}, "p")):
+            try:
+                f()
+            except SystemExit:
+                recusas.append(1)
+        caso("porta: entrega só o dele; recusa nome fora do cadastro, ação de admin, chave inválida ou de outro",
+             nomes == ["A00000002AA001/1.json"] and len(recusas) == 5, str((nomes, recusas)))
+        adm.atribuir("A00000001AA001", "sgt fulano")
+        adm.revogar("Sgt Fulano", "p")
+        caso("porta: admin atribui processo e revoga (a linha do analista sai, a do admin fica)",
+             pt.responsavel(raiz, "A00000001AA001", pt.ler_acesso(acesso)) == "Sgt Fulano"
+             and open(chaves).read().splitlines() == ["ssh-ed25519 AAAAadmin atila@casa"])
+        caso("porta: pedido do analista vem do SSH_ORIGINAL_COMMAND; sem ele, nada; nomes do sincronizar valem",
+             pt.pedido(["--analista", "Sgt Fulano"], "python3 SSEG/sseg/scripts/porta.py relato 2026-1") == ("Sgt Fulano", ["relato", "2026-1"])
+             and pt.pedido(["--analista", "Sgt Fulano"], "bash -i") == ("Sgt Fulano", [])
+             and pt.pedido(["listar"]) == (None, ["listar"])
+             and json.loads(pt.executar(adm, ["remoto-listar"], lambda: b"", "p")) == adm.listar())
     # 12. programa SSEG 1.1: fluxos em dia com a política, relato sem dado de processo, gasto
     import painel, relato, gasto as gasto_m, claude_local
     gravado = json.load(open(os.path.join(RAIZ, "sseg", "workflow", "fluxos.json"), encoding="utf-8"))
@@ -359,6 +414,23 @@ def main():
         caso("distribuicao: cria pasta do que está na fila ou na caixa, não da conclusão antiga; repetir não regrava",
              sorted(c1["criadas"]) == ["A00011111AA001", "A00022222AA001"] and not os.path.exists(os.path.join(tmp, "A00033333AA001"))
              and c2["iguais"] == 2 and not c2["criadas"] and not c2["atualizadas"], str(c1) + str(c2))
+    todos = {r["codigo"]: r for r in dist.registros(dist.linhas_da_aba(X), None, ["Sd Carpes", "Sgt Magalhães", "Sd Fulano"])}
+    caso("distribuicao: sem analista vêm todos; nome da planilha vira o da escala quando um só casa",
+         set(todos) == {"A00011111AA001", "A00022222AA001", "A00033333AA001", "A00044444AA001"}
+         and todos["A00011111AA001"]["analista"] == "Sd Carpes" and todos["A00044444AA001"]["analista"] == "OUTRO ANALISTA"
+         and todos["A00011111AA001"]["analista_planilha"] == "ÁTILA CARPES", str(todos))
+    with tempfile.TemporaryDirectory() as tmp:
+        dist.gravar(tmp, [todos["A00011111AA001"]], 30, _dt.date(2026, 10, 13))
+        open(os.path.join(tmp, "A00011111AA001", "CIA 1.pdf"), "w").write("cia do Carpes")
+        passou = dict(todos["A00011111AA001"], analista="Sgt Magalhães")
+        c = dist.gravar(tmp, [passou], 30, _dt.date(2026, 10, 14))
+        dj = json.load(open(os.path.join(tmp, "A00011111AA001", "distribuicao.json"), encoding="utf-8"))
+        import porta as _pt
+        ac = {"admin": "Sd Carpes", "analistas": {"Sgt Magalhães": {"chave": "x"}}}
+        caso("distribuicao: processo que troca de analista fica na mesma pasta, com quem já passou, e vai ao novo responsável",
+             c["atualizadas"] == ["A00011111AA001"] and dj["analista"] == "Sgt Magalhães" and dj["analistas_anteriores"] == ["Sd Carpes"]
+             and _pt.responsavel(tmp, "A00011111AA001", ac) == "Sgt Magalhães"
+             and os.path.exists(os.path.join(tmp, "A00011111AA001", "CIA 1.pdf")), str(dj))
     E = lambda dd, rr, h: _api.estado_caixa(dd, rr, 10, _dt.date(*h))
     e1 = E({"codigo": "x", "distribuido": "2026-10-06"}, {}, (2026, 10, 13))
     e2 = E({"codigo": "x", "distribuido": "2026-10-01"}, {}, (2026, 10, 13))
