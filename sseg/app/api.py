@@ -724,7 +724,7 @@ class Api:
             raise RuntimeError("Escolha antes quem você é (Configuração → Analista): o código leva o seu nome.")
         for f in acesso.preparar():
             self._log("Servidor: " + f)
-        return {"codigo": acesso.codigo_acesso(cfg["analista"])}
+        return {"codigo": acesso.mensagem_acesso(cfg["analista"])}
 
     def servidor_analistas(self):
         return acesso.chamar_json("analistas")

@@ -251,6 +251,18 @@ def main():
              and pt.pedido(["--analista", "Sgt Fulano"], "bash -i") == ("Sgt Fulano", [])
              and pt.pedido(["listar"]) == (None, ["listar"])
              and json.loads(pt.executar(adm, ["remoto-listar"], lambda: b"", "p")) == adm.listar())
+    # 11c. pedido de acesso (2.2.1): mensagem pronta para o servidor 24/7; o "Liberar acesso" lê a mensagem inteira
+    sys.path.insert(0, os.path.join(AQUI, "..", "app"))
+    import acesso as _ac
+    _pub = _ac.chave_publica
+    _ac.chave_publica = lambda: "ssh-ed25519 " + "B" * 68 + " sseg"
+    try:
+        _m = _ac.mensagem_acesso("Sgt Magalhães")
+        caso("acesso: mensagem traz o comando da porta e o código; ler_codigo acha o código nela",
+             "porta.py autorizar <<'FIM'" in _m and _ac.ler_codigo(_m) == {"analista": "Sgt Magalhães", "chave": "ssh-ed25519 " + "B" * 68}
+             and _ac.ler_codigo(_m.replace(chr(10), " ")) == _ac.ler_codigo(_m), _m[-200:])
+    finally:
+        _ac.chave_publica = _pub
     # 12. programa SSEG 1.1: fluxos em dia com a política, relato sem dado de processo, gasto
     import painel, relato, gasto as gasto_m, claude_local
     gravado = json.load(open(os.path.join(RAIZ, "sseg", "workflow", "fluxos.json"), encoding="utf-8"))

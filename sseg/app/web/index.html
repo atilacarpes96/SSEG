@@ -550,8 +550,8 @@ body.sem-pc #sem-pc { display: block; }
         <div id="srv-admin" hidden style="margin-top:14px">
           <b>Analistas com acesso</b> <span class="sub">(você é o administrador)</span>
           <div id="srv-lista" class="lista" style="margin:6px 0 10px"></div>
-          <label class="campo" for="srv-codigo">Código de acesso recebido (SSEG-ACESSO|…)</label>
-          <textarea id="srv-codigo" rows="3" placeholder="Cole aqui o código que o analista mandou"></textarea>
+          <label class="campo" for="srv-codigo">Pedido de acesso recebido (a mensagem inteira, ou só a linha SSEG-ACESSO|…)</label>
+          <textarea id="srv-codigo" rows="3" placeholder="Cole aqui o que o analista mandou"></textarea>
           <div class="linha-bts" style="margin-top:8px"><button class="bt p" id="b-srv-liberar">Liberar acesso</button></div>
         </div>
       </div>
@@ -847,9 +847,9 @@ $("#b-srv-pedir").onclick = async ev => {
   const r = await api("servidor_pedir_acesso", [], ev.currentTarget);
   await copiar(r.codigo);
   carregarAcesso(false); estadoServidor();
-  modal("Código de acesso", "Já está copiado. Mande ao administrador do servidor (WhatsApp ou e-mail).",
-    [el("div", { class: "lista", style: "word-break:break-all" }, r.codigo),
-     el("p", { class: "sub" }, "O código leva o seu nome e a chave pública deste PC. A chave secreta não sai daqui. Quando ele avisar que liberou, clique em Testar conexão.")],
+  modal("Pedido de acesso", "Já está copiado: é uma mensagem pronta. Mande ao administrador do servidor (WhatsApp ou e-mail), inteira.",
+    [el("div", { class: "lista", style: "word-break:break-all;white-space:pre-wrap;max-height:240px;overflow:auto" }, r.codigo),
+     el("p", { class: "sub" }, "Leva o seu nome e a chave pública deste PC (a secreta não sai daqui) e o comando para o servidor liberar. Quando ele avisar que liberou, clique em Testar conexão.")],
     [["Copiar de novo", () => copiar(r.codigo).then(() => avisar("✓ Copiado."))], ["Fechar", fechar, true]]);
 };
 $("#b-srv-liberar").onclick = async ev => {

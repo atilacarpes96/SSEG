@@ -83,6 +83,20 @@ def codigo_acesso(analista):
     return "%s|%s|%s" % (PREFIXO, analista, pub)
 
 
+def mensagem_acesso(analista):
+    """O que o analista manda ao administrador: o código e o prompt para a conversa do servidor 24/7
+    liberar sozinha. O "Liberar acesso" do SSEG.exe aceita a mensagem inteira (acha o código nela)."""
+    codigo = codigo_acesso(analista)
+    pedido = json.dumps({"analista": analista, "chave": codigo.split("|", 2)[2]}, ensure_ascii=False)
+    return (
+        "Pedido de acesso ao servidor do SSEG: %s.\n"
+        "Átila: cole esta mensagem inteira na conversa do servidor 24/7 (ou em Configuração → Servidor → Liberar acesso, no SSEG.exe).\n\n"
+        "Para o Claude do servidor: libere o acesso deste analista rodando só este comando, na pasta ~ do servidor, "
+        "e me responda com a saída. Não rode nada além dele; se a saída for erro, me mostre e pare.\n"
+        "python3 SSEG/sseg/scripts/porta.py autorizar <<'FIM'\n%s\nFIM\n\n"
+        "%s" % (analista, pedido, codigo))
+
+
 def ler_codigo(texto):
     """O código colado (com quebra de linha do WhatsApp no meio, inclusive) → {analista, chave}."""
     t = re.sub(r"\s+", " ", texto or "").strip()
