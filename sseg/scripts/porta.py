@@ -125,7 +125,15 @@ def responsavel(raiz, cod, acesso, resp=None):
         pass
     if resp is None:
         resp = _ler_resp(raiz)
-    return resp.get(cod) or acesso["admin"]
+    if resp.get(cod):
+        return resp[cod]
+    # pasta criada só por CT/recurso de outro analista (ct_recursos.py, 2.3.0): sem dono, não é do admin;
+    # quem vê é o ME do item (meu() confere os envolvidos)
+    try:
+        so_ct = set(os.listdir(os.path.join(raiz, cod))) <= {"ct.json", "recurso.json"}
+    except OSError:
+        so_ct = False
+    return "" if so_ct else acesso["admin"]
 
 
 def envolvidos(raiz, cod):

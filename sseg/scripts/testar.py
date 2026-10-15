@@ -490,7 +490,8 @@ def main():
         ful = _pt2.Porta("Sgt Fulano", raiz=tmp, acesso=os.path.join(tmp, "acesso.json"))
         caso("ct_recursos: o que foi finalizado vira {itens: []} (desce ao PC); o ME do recurso vê a pasta de outro analista",
              c2 == {"gravados": 0, "zerados": 1, "iguais": 1} and zerado["itens"] == []
-             and "A00044444AA001" in ful.meus() and "A00011111AA001" in ful.meus() and "A00022222AA001" not in ful.meus(), str((c2, ful.meus())))
+             and "A00044444AA001" in ful.meus() and "A00011111AA001" in ful.meus() and "A00022222AA001" not in ful.meus()
+             and "A00011111AA001" not in _pt2.Porta(None, raiz=tmp, acesso=os.path.join(tmp, "acesso.json")).meus(), str((c2, ful.meus())))
     # 15b3. Quadro da seção (2.3.0): todos criam e pegam; mover, editar e excluir só quem criou, pegou ou o admin
     with tempfile.TemporaryDirectory() as tmp:
         ac = os.path.join(tmp, "acesso.json")
