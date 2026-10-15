@@ -46,7 +46,10 @@ REGRAS_CARD = {
     "caixa": "Na caixa: distribuído e sem conclusão",
     "vence": "Na caixa, vence em até N dias (ou já venceu)",
     "fora_prazo": "Fora do prazo: passou do prazo na caixa ou concluído depois dele (últimos N dias)",
-    "ct": "CT marcada de hoje em diante",
+    "ct": "CT marcada ou pendente: a minuta ainda sem Finalizado (planilha de CT)",
+    "ct_chefia": "CT feita, aguardando a chefia finalizar",
+    "recurso": "Recurso para redigir: a minuta ainda sem Finalizado (planilha de recursos)",
+    "recurso_chefia": "Recurso redigido, aguardando a chefia decidir e finalizar",
     "meta": "Meta da semana: concluídos desde segunda",
 }
 CORES_CARD = ["laranja", "azul", "verde", "vermelho", "roxo", "amarelo", "cinza"]
@@ -56,6 +59,9 @@ CARDS_PADRAO = [
     {"id": "fila", "nome": "Na fila", "cor": "cinza", "regra": "fila", "dias": 7},
     {"id": "fora_prazo", "nome": "Fora do prazo", "cor": "vermelho", "regra": "fora_prazo", "dias": 30},
     {"id": "ct", "nome": "CT marcadas", "cor": "roxo", "regra": "ct", "dias": 7},
+    {"id": "ct_chefia", "nome": "CT com a chefia", "cor": "cinza", "regra": "ct_chefia", "dias": 7},
+    {"id": "recurso", "nome": "Recursos", "cor": "azul", "regra": "recurso", "dias": 7},
+    {"id": "recurso_chefia", "nome": "Recursos com a chefia", "cor": "cinza", "regra": "recurso_chefia", "dias": 7},
     {"id": "meta", "nome": "Meta da semana", "cor": "amarelo", "regra": "meta", "dias": 7},
 ]
 
@@ -319,6 +325,8 @@ class Api:
             reg = os.path.join(p, "analise.json")
             out.append(dict(estado_caixa(_ler(os.path.join(p, "distribuicao.json")), _ler(reg), self._cfg().get("prazo_caixa", 10)),
                             codigo=n, quando=quando, arquivos=len(arqs), analise=os.path.exists(reg),
+                            cts=_ler(os.path.join(p, "ct.json")).get("itens") or [],
+                            recursos=_ler(os.path.join(p, "recurso.json")).get("itens") or [],
                             cia=any(re.match(r"CIA \d+", os.path.basename(a)) for a in arqs)))
         out.sort(key=lambda x: -x["quando"])
         return out  # todos: os cards contam tudo; a tabela mostra os 30 primeiros sem filtro
@@ -431,7 +439,19 @@ class Api:
     def quadro(self):
         """Tarefas soltas (quadro.json). Os processos a tela tira da lista de processos()."""
         q, raiz = self._quadro()
-        return {"cartoes": q.ler(raiz)["cartoes"], "colunas": q.COLUNAS, "nomes": q.NOMES}
+        r = {"cartoes": q.ler(raiz)["cartoes"], "colunas": q.COLUNAS, "nomes": q.NOMES, "secao": None, "erro_secao": ""}
+        if self._cfg().get("servidor_quem") and acesso.tem_apelido():  # Quadro da seção (2.3.0), pelo servidor
+            try:
+                s = acesso.chamar_json("quadro", timeout=20)
+                r.update(secao=s.get("cartoes") or [], eu=s.get("eu", ""), admin=s.get("admin", False))
+            except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
+                r["erro_secao"] = str(e)[:200]
+        return r
+
+    def quadro_secao(self, acao, *args):
+        """adicionar(titulo, coluna) · pegar(id) · soltar(id) · alterar(id, campos) · remover(id) · restaurar(cartao, pos)."""
+        pedido = json.dumps({"acao": acao, "args": list(args)}, ensure_ascii=False).encode("utf-8")
+        return acesso.chamar_json("quadro-mexer", entrada=pedido, timeout=20)
 
     def quadro_mexer(self, acao, *args):
         """adicionar(titulo, coluna) · alterar(id, campos) · remover(id) · restaurar(cartao, pos)."""

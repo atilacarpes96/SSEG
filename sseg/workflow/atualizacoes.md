@@ -12,6 +12,21 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 15/10/2026 — SSEG.exe 2.3: CT e recursos nos cards, Quadro da seção
+
+- **CT e recursos:** o servidor lê todo dia útil as planilhas de CT e de recursos e marca na pasta de cada processo o que está aberto. Cards novos: CT marcadas (minuta sem Finalizado), CT com a chefia, Recursos (para redigir) e Recursos com a chefia. Quando a chefia finaliza na planilha, sai sozinho. Se o recurso é seu num processo de outro analista, a pasta aparece para você também.
+- **Quadro da seção:** na tela Quadro, a tarefa nova pode ser da seção (todos veem) ou só sua. Na da seção: "Pegar" põe o seu nome, e quem criou ou pegou move, edita e escreve o que foi feito; o cartão mostra início e fim.
+- **Abre em 3 s** (antes 20 s com o espelho ligado) e os **cards mudam de ordem arrastando** (2.2.2).
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão 2.3 (15/10/2026) e no fim me diga o que ficou feito e o que depende de mim:
+1. Confira se o clone está em dia com o GitHub (git status e git log -1). Se estiver atrás, me peça para rodar git pull no PowerShell; no Claude Code, rode você mesmo.
+2. Rode python sseg/scripts/testar.py e me diga o resultado.
+3. Me diga para abrir o SSEG.exe e aceitar a "Nova versão". Os cards de CT e de recursos aparecem em "+ card"; o Quadro da seção, na tela Quadro (precisa do acesso ao servidor: Configuração → Servidor).
+```
+
 ## 15/10/2026 — SSEG.exe 2.2: instalador e vários analistas no servidor
 
 - **Instalação:** quem baixa o SSEG.exe e abre cai na tela Instalação (menu ☰). Ela põe o programa em `%LOCALAPPDATA%\Programs\SSEG` com atalho na Área de Trabalho e no Menu Iniciar, instala Git, Python, Poppler e Claude Code, faz o login, cria as pastas e pergunta quem é você. Sem administrador e sem PowerShell.

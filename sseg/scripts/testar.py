@@ -455,6 +455,68 @@ def main():
          and (e3["estado"], e3["concluido"], e3["dias"], e3["no_prazo"]) == ("concluido", "2026-10-09", 8, True)
          and (e4["estado"], e4["vence"]) == ("fila", "") and (e5["fonte"], e5["dias"], e5["no_prazo"]) == ("manual", 15, False)
          and e6["estado"] == "sem", str([e1, e2, e3, e4, e5, e6]))
+    # 15b2. CT e recursos (2.3.0): planilhas → <código>/ct.json e recurso.json; a porta mostra a pasta ao ME
+    import ct_recursos as ctr
+    CT = [["", "", "", ""], ["Cadastro", "", "", "", "", "", "", "Agendamento", "", "", "", "", "Minuta", "", "Chefe da SSeg", ""],
+          ["PPCI", "Documento", "", "Fact", "Data Solicitação", "Nome", "QSO", "ME", "Objeto da CT", "Data", "Hora", "Modalidade", "Finalizado", "", "Data da Inclusão no Sistema", "Finalizado"],
+          ["A00011111AA001", "CT SOL", "", "F1", "46290", "x", "x", "2° Sgt Fulano", "CT", "46300", "0.375", "Virtual", "0", "", "", "0"],    # marcada
+          ["A00022222AA001", "CT SOL", "", "F2", "46290", "x", "x", "Sd Carpes", "CT", "46301", "14:00", "Presencial", "1", "", "", "0"],  # chefia
+          ["A00033333AA001", "CT SOL", "", "F3", "46290", "x", "x", "Sd Carpes", "CT", "46301", "14:00", "Presencial", "1", "", "46302", "1"],  # ok: sai
+          ["-", "CT SOL", "", "F4", "46290", "x", "x", "Sd Carpes", "CT", "", "", "", "0", "", "", "0"]]  # sem código: fora
+    REC = [["", ""], ["Cadastro", "", "", "", "", "", "", "", "Minuta", "", "", "", "", "Solução", "", "", "", "Finalização", ""],
+           ["", "PPCI", "Documento", "Data para Distribuição", "Município", "Pelotão", "Vistoriantes", "", "ME Rascunho", "Objeto do Recurso", "Data", "Finalizado", "", "ME Resp.", "Decisâo", "Data", "", "Data inclusão sistema", "Finalizado"],
+           ["1", "A00022222AA001 ", "Rec 1ª - Análise", "46304", "Lajeado", "", "", "", "Sd Carpes", "rec", "", "0.0", "", "Cap X", "", "", "", "", "0.0"],
+           ["2", "A00044444AA001", "Rec 2ª - Análise", "46300", "Colinas", "", "", "", "2º Sgt Fulano", "rec", "46301", "1.0", "", "Cap Y", "", "", "", "", "0.0"],
+           ["3", "A00055555AA001", "Rec 1ª - Análise", "46200", "x", "", "", "", "Sd Carpes", "rec", "46201", "1.0", "", "Cap Y", "Deferido", "46210", "", "46210", "1.0"]]
+    kn = ["Sd Carpes", "Sgt Fulano"]
+    cts, recs = ctr.ler_ct(CT, kn), ctr.ler_recursos(REC, kn)
+    caso("ct_recursos: CT marcada (minuta) e com a chefia; finalizada pela chefia sai; nome e hora arrumados",
+         set(cts) == {"A00011111AA001", "A00022222AA001"} and cts["A00011111AA001"][0]["estado"] == "minuta"
+         and cts["A00011111AA001"][0]["analista"] == "Sgt Fulano" and cts["A00011111AA001"][0]["hora"] == "09:00"
+         and cts["A00022222AA001"][0]["estado"] == "chefia" and cts["A00011111AA001"][0]["data"] == "2026-10-05", str(cts))
+    caso("ct_recursos: recurso para redigir e com a chefia; finalizado sai; código com espaço vale",
+         set(recs) == {"A00022222AA001", "A00044444AA001"} and recs["A00022222AA001"][0]["estado"] == "minuta"
+         and recs["A00044444AA001"][0]["estado"] == "chefia" and recs["A00044444AA001"][0]["tipo"] == "Rec 2ª - Análise", str(recs))
+    with tempfile.TemporaryDirectory() as tmp:
+        ctr.gravar(tmp, "ct", cts)
+        c2 = ctr.gravar(tmp, "ct", {"A00011111AA001": cts["A00011111AA001"]})  # a do 22222 foi finalizada
+        zerado = json.load(open(os.path.join(tmp, "A00022222AA001", "ct.json"), encoding="utf-8"))
+        import porta as _pt2
+        os.makedirs(os.path.join(tmp, "A00044444AA001"))
+        ctr.gravar(tmp, "recurso", recs)
+        json.dump({"analista": "Sd Carpes"}, open(os.path.join(tmp, "A00044444AA001", "distribuicao.json"), "w", encoding="utf-8"))
+        ac = {"admin": "Sd Carpes", "analistas": {"Sgt Fulano": {"chave": "x"}}}
+        open(os.path.join(tmp, "acesso.json"), "w", encoding="utf-8").write(json.dumps(ac))
+        ful = _pt2.Porta("Sgt Fulano", raiz=tmp, acesso=os.path.join(tmp, "acesso.json"))
+        caso("ct_recursos: o que foi finalizado vira {itens: []} (desce ao PC); o ME do recurso vê a pasta de outro analista",
+             c2 == {"gravados": 0, "zerados": 1, "iguais": 1} and zerado["itens"] == []
+             and "A00044444AA001" in ful.meus() and "A00011111AA001" in ful.meus() and "A00022222AA001" not in ful.meus(), str((c2, ful.meus())))
+    # 15b3. Quadro da seção (2.3.0): todos criam e pegam; mover, editar e excluir só quem criou, pegou ou o admin
+    with tempfile.TemporaryDirectory() as tmp:
+        ac = os.path.join(tmp, "acesso.json")
+        open(ac, "w", encoding="utf-8").write(json.dumps({"admin": "Sd Carpes", "analistas": {"Sgt Fulano": {"chave": "x"}, "Sd Beltrano": {"chave": "y"}}}))
+        Q = lambda n=None: _pt2.Porta(n, raiz=tmp, acesso=ac, quadro=os.path.join(tmp, "q"))
+        ful, bel, adm = Q("Sgt Fulano"), Q("Sd Beltrano"), Q()
+        c = ful.quadro_mexer({"acao": "adicionar", "args": ["Responder ofício da prefeitura"]})
+        barrou = []
+        for f in (lambda: bel.quadro_mexer({"acao": "alterar", "args": [c["id"], {"coluna": "feito"}]}),
+                  lambda: bel.quadro_mexer({"acao": "remover", "args": [c["id"]]})):
+            try:
+                f()
+            except SystemExit:
+                barrou.append(1)
+        bel.quadro_mexer({"acao": "pegar", "args": [c["id"]]})
+        bel.quadro_mexer({"acao": "alterar", "args": [c["id"], {"coluna": "fazendo"}]})
+        bel.quadro_mexer({"acao": "alterar", "args": [c["id"], {"coluna": "feito", "feito_texto": "Enviado ao Pel"}]})
+        try:
+            Q("Sgt Fulano").quadro_mexer({"acao": "soltar", "args": [c["id"]]})  # quem criou pode soltar
+            solto = True
+        except SystemExit:
+            solto = False
+        fim = adm.quadro()["cartoes"][0]
+        caso("quadro da seção: outro analista não mexe sem pegar; pega, move, conta o que fez; início e fim marcados",
+             len(barrou) == 2 and fim["autor"] == "Sgt Fulano" and fim["coluna"] == "feito" and fim["feito_texto"] == "Enviado ao Pel"
+             and fim.get("inicio") and fim.get("fim") and solto and "pegou" not in fim, str(fim))
     # 15c. tela Quadro (2.1.14): tarefas soltas em quadro.json
     import quadro as qd
     with tempfile.TemporaryDirectory() as tmp:

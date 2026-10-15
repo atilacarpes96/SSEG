@@ -442,7 +442,7 @@ body.sem-pc #sem-pc { display: block; }
 
     <section class="tela" id="t-quadro">
       <h2>Quadro</h2>
-      <p class="sub">Os processos entram sozinhos, pela planilha de distribuição: na fila em A fazer, na caixa em Fazendo, concluídos na semana em Feito. As tarefas soltas (pendências de trabalho das conversas, fiscalização, reunião) você move com as setas ou arrastando.</p>
+      <p class="sub">Os processos entram sozinhos, pela planilha de distribuição: na fila em A fazer, na caixa em Fazendo, concluídos na semana em Feito. As tarefas soltas você move com as setas ou arrastando. As marcadas "seção" todos os analistas veem: quem pega fica com o nome no cartão, e quem criou ou pegou move, edita e conta o que foi feito. "Só meu" fica neste PC.</p>
       <div class="quadro" id="quadro"></div>
     </section>
 
@@ -1036,6 +1036,10 @@ const isoLocal = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(
 const dataBR = iso => iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) : "";
 const diasAte = iso => Math.round((new Date(iso + "T12:00") - new Date(isoLocal(new Date()) + "T12:00")) / 864e5);
 const COM_DIAS = ["vence", "fora_prazo"];
+// CT e recurso (2.3.0): itens abertos da pasta (ct.json, recurso.json) em que o ME é quem usa este PC.
+// O nome casa pela última palavra ("2° Sgt Magalhães" = "Sgt Magalhães"); sem analista escolhido, conta todos.
+const ultima = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase().split(/\s+/).pop();
+const meus = (itens, estado) => (itens || []).filter(i => i.estado === estado && (!ESTADO.analista || ultima(i.analista) === ultima(ESTADO.analista)));
 function regra(c) {
   const hoje = new Date(), h = isoLocal(hoje), N = c.dias || 7;
   const mais = isoLocal(new Date(hoje.getTime() + N * 864e5)), desde = isoLocal(new Date(hoje.getTime() - N * 864e5));
@@ -1046,7 +1050,10 @@ function regra(c) {
     caixa: p => p.estado === "caixa",
     vence: p => p.estado === "caixa" && p.vence <= mais,
     fora_prazo: p => (p.estado === "caixa" && p.no_prazo === false) || (conc(p) && p.no_prazo === false),
-    ct: p => p.ct && p.ct >= h,
+    ct: p => (p.ct && p.ct >= h) || meus(p.cts, "minuta").length > 0,
+    ct_chefia: p => meus(p.cts, "chefia").length > 0,
+    recurso: p => meus(p.recursos, "minuta").length > 0,
+    recurso_chefia: p => meus(p.recursos, "chefia").length > 0,
     meta: p => p.estado === "concluido" && p.concluido >= isoLocal(seg),
   }[c.regra] || (() => false);
 }
@@ -1055,7 +1062,11 @@ function subtexto(c, l) {
   if (c.regra === "caixa") { const v = l.map(p => p.vence).filter(Boolean).sort()[0]; return v ? "o mais antigo vence " + dataBR(v) : "prazo de " + CARDS.prazo + " dias corridos"; }
   if (c.regra === "vence") { const v = l.filter(p => p.vence < h).length; return v ? v + " vencido(s)" : "em até " + c.dias + " dia(s)"; }
   if (c.regra === "fila") return "prazo ainda não corre";
-  if (c.regra === "ct") return l.length ? "próxima " + dataBR(l.map(p => p.ct).sort()[0]) : "";
+  if (c.regra === "ct") { const d = l.flatMap(p => meus(p.cts, "minuta").map(i => i.data).concat(p.ct && p.ct >= h ? [p.ct] : [])).filter(x => x && x >= h).sort()[0];
+    return d ? "próxima " + dataBR(d) : l.length ? "minuta sem Finalizado" : "marcadas ou pendentes"; }
+  if (c.regra === "ct_chefia" || c.regra === "recurso_chefia") return "esperando a chefia finalizar";
+  if (c.regra === "recurso") { const d = l.flatMap(p => meus(p.recursos, "minuta").map(i => i.distribuido)).filter(Boolean).sort()[0];
+    return d ? "o mais antigo desde " + dataBR(d) : "minuta sem Finalizado"; }
   if (COM_DIAS.includes(c.regra)) return "últimos " + c.dias + " dias";
   return "";
 }
@@ -1170,7 +1181,11 @@ function pintarProcessos() {
   const h = isoLocal(new Date());
   corpo.replaceChildren(...lst.map(p => el("tr", {},
     el("td", { class: "cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null),
-    el("td", {}, tagEstado(p), p.ct && p.ct >= h ? el("span", { class: "tag sit k-roxo" }, "CT " + dataBR(p.ct)) : null),
+    el("td", {}, tagEstado(p), p.ct && p.ct >= h ? el("span", { class: "tag sit k-roxo" }, "CT " + dataBR(p.ct)) : null,
+      ...meus(p.cts, "minuta").map(i => el("span", { class: "tag sit k-roxo", title: [i.fact, i.modalidade, i.hora].filter(Boolean).join(" · ") }, "CT" + (i.data ? " " + dataBR(i.data) : ""))),
+      ...meus(p.cts, "chefia").map(() => el("span", { class: "tag sit k-cinza" }, "CT com a chefia")),
+      ...meus(p.recursos, "minuta").map(i => el("span", { class: "tag sit k-azul", title: i.objeto || "" }, i.tipo || "Recurso")),
+      ...meus(p.recursos, "chefia").map(i => el("span", { class: "tag sit k-cinza", title: i.chefia || "" }, (i.tipo || "Recurso") + " com a chefia"))),
     el("td", {}, new Date(p.quando * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })),
     el("td", {}, el("span", { class: "tag" }, p.arquivos + " arquivo(s)"), p.cia ? el("span", { class: "tag" }, "CIA") : null),
     el("td", { style: "text-align:right" },
@@ -1179,6 +1194,7 @@ function pintarProcessos() {
 }
 async function carregarProcessos() {
   try { [PROCS, CARDS] = await Promise.all([api("processos"), api("cards")]); } catch (e) { return; }
+  ESTADO.analista = (CARDS.meta_info || {}).analista || "";
   pintarProcessos();
 }
 // ---- tela Quadro (2.1.14): os processos entram sozinhos pela caixa; as tarefas soltas (pendência de trabalho
@@ -1194,8 +1210,8 @@ async function carregarQuadro() {
   try { [QUADRO, PROCS] = await Promise.all([api("quadro"), api("processos")]); } catch (e) { return; }
   pintarQuadro();
 }
-async function mexer(acao, args, botao) {
-  const r = await api("quadro_mexer", [acao, ...args], botao);
+async function mexer(acao, args, botao, secao) {
+  const r = await api(secao ? "quadro_secao" : "quadro_mexer", [acao, ...args], botao);
   QUADRO = await api("quadro");
   pintarQuadro();
   return r;
@@ -1207,38 +1223,50 @@ function desfazer(texto, fn) {
   a.classList.add("mostrar");
   clearTimeout(avisar.t); avisar.t = setTimeout(() => a.classList.remove("mostrar"), 8000);
 }
-function editarCartao(c) {
+function editarCartao(c, secao) {
   const tit = el("input", { type: "text", value: c.titulo, maxlength: 200 });
   const lista = el("textarea", { rows: 5, placeholder: "Um item por linha" });
   lista.value = (c.checklist || []).map(x => x.texto).join("\n");
-  modal("Editar tarefa", c.origem ? "Veio de: " + c.origem : "", [el("label", { class: "campo-card" }, "Título ", tit),
-    el("label", { class: "campo-card", style: "align-items:flex-start" }, "Checklist ", lista)], [
+  const feito = el("textarea", { rows: 4, placeholder: "O que foi feito, para a seção saber (ex.: ofício respondido, enviado ao Pel)" });
+  feito.value = c.feito_texto || "";
+  const info = [c.autor ? "Criada por " + c.autor : "", c.pegou ? "pegou: " + c.pegou : "", c.origem ? "veio de: " + c.origem : ""].filter(Boolean).join(" · ");
+  modal(secao ? "Tarefa da seção" : "Editar tarefa", info, [el("label", { class: "campo-card" }, "Título ", tit),
+    el("label", { class: "campo-card", style: "align-items:flex-start" }, "Checklist ", lista),
+    secao ? el("label", { class: "campo-card", style: "align-items:flex-start" }, "O que foi feito ", feito) : null], [
     ["Salvar", async b => {
       const feitos = new Set((c.checklist || []).filter(x => x.feito).map(x => x.texto));
       const itens = lista.value.split("\n").map(t => t.trim()).filter(Boolean).map(t => ({ texto: t, feito: feitos.has(t) }));
-      await mexer("alterar", [c.id, { titulo: tit.value, checklist: itens }], b); fechar();
+      await mexer("alterar", [c.id, { titulo: tit.value, checklist: itens, ...(secao ? { feito_texto: feito.value } : {}) }], b, secao); fechar();
     }, true],
     ["Cancelar", fechar]]);
 }
-function cartaoSolto(c) {
+function cartaoSolto(c, secao) {
   const i = QUADRO.colunas.indexOf(c.coluna);
-  const mover = d => mexer("alterar", [c.id, { coluna: QUADRO.colunas[i + d] }]);
+  const mover = d => mexer("alterar", [c.id, { coluna: QUADRO.colunas[i + d] }], null, secao);
   const feitos = (c.checklist || []).filter(x => x.feito).length;
-  const no = el("div", { class: "qc", draggable: "true", "data-id": c.id },
+  const eu = ultima(QUADRO.eu), meu = !secao || QUADRO.admin || [c.autor, c.pegou].some(n => n && ultima(n) === eu);
+  const data = s => s ? new Date(s * 1000).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : "";
+  const no = el("div", { class: "qc" + (secao ? " qc-secao" : ""), draggable: meu ? "true" : false, "data-id": c.id },
     el("div", { class: "qc-tit" }, c.titulo),
+    secao ? el("div", { class: "qc-orig" }, el("span", { class: "tag k-azul" }, "seção"), " ",
+      c.pegou ? el("b", {}, "👤 " + c.pegou) : el("span", {}, "ninguém pegou"),
+      c.inicio ? " · início " + data(c.inicio) : "", c.fim ? " · fim " + data(c.fim) : "") : null,
     c.origem ? el("div", { class: "qc-orig", title: c.origem }, c.origem) : null,
+    c.feito_texto ? el("div", { class: "qc-orig", title: c.feito_texto }, "✓ " + c.feito_texto) : null,
     (c.checklist || []).length ? el("div", { class: "qc-check" }, ...c.checklist.map((x, k) => el("label", {},
-      el("input", { type: "checkbox", checked: x.feito, on: { change: ev => mexer("alterar", [c.id, { checklist: c.checklist.map((y, j) => j === k ? { ...y, feito: ev.target.checked } : y) }]) } }),
+      el("input", { type: "checkbox", checked: x.feito, disabled: !meu, on: { change: ev => mexer("alterar", [c.id, { checklist: c.checklist.map((y, j) => j === k ? { ...y, feito: ev.target.checked } : y) }], null, secao) } }),
       " " + x.texto)), el("small", {}, feitos + "/" + c.checklist.length)) : null,
     el("div", { class: "qc-bts" },
-      i > 0 ? el("button", { class: "bt link", title: "Coluna anterior", on: { click: () => mover(-1) } }, "←") : null,
-      i < QUADRO.colunas.length - 1 ? el("button", { class: "bt link", title: "Próxima coluna", on: { click: () => mover(1) } }, "→") : null,
-      el("button", { class: "bt link", title: "Editar", on: { click: () => editarCartao(c) } }, "✎"),
-      el("button", { class: "bt link", title: "Excluir", on: { click: async () => {
-        const r = await mexer("remover", [c.id]);
-        desfazer("Tarefa excluída.", () => mexer("restaurar", [r.cartao, r.pos]));
-      } } }, "✕")));
-  no.addEventListener("dragstart", ev => { ev.dataTransfer.setData("text/plain", c.id); no.classList.add("arrastando"); });
+      secao && !c.pegou ? el("button", { class: "bt link", title: "Esta tarefa é minha", on: { click: () => mexer("pegar", [c.id], null, true) } }, "Pegar") : null,
+      secao && c.pegou && meu ? el("button", { class: "bt link", title: "Devolver para a seção", on: { click: () => mexer("soltar", [c.id], null, true) } }, "Soltar") : null,
+      meu && i > 0 ? el("button", { class: "bt link", title: "Coluna anterior", on: { click: () => mover(-1) } }, "←") : null,
+      meu && i < QUADRO.colunas.length - 1 ? el("button", { class: "bt link", title: "Próxima coluna", on: { click: () => mover(1) } }, "→") : null,
+      meu ? el("button", { class: "bt link", title: "Editar", on: { click: () => editarCartao(c, secao) } }, "✎") : null,
+      meu ? el("button", { class: "bt link", title: "Excluir", on: { click: async () => {
+        const r = await mexer("remover", [c.id], null, secao);
+        desfazer("Tarefa excluída.", () => mexer("restaurar", [r.cartao, r.pos], null, secao));
+      } } }, "✕") : null));
+  no.addEventListener("dragstart", ev => { ev.dataTransfer.setData("text/plain", (secao ? "s:" : "l:") + c.id); no.classList.add("arrastando"); });
   no.addEventListener("dragend", () => no.classList.remove("arrastando"));
   return no;
 }
@@ -1247,24 +1275,32 @@ function cartaoProcesso(p) {
     el("div", { class: "qc-tit cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null), tagEstado(p));
 }
 function pintarQuadro() {
+  const temSecao = Array.isArray(QUADRO.secao);
   const cols = QUADRO.colunas.map(k => {
     const procs = PROCS.filter(p => colunaDoProcesso(p) === k), soltos = QUADRO.cartoes.filter(c => c.coluna === k);
-    const corpo = el("div", { class: "qcol-corpo" }, ...procs.map(cartaoProcesso), ...soltos.map(cartaoSolto));
+    const sec = temSecao ? QUADRO.secao.filter(c => c.coluna === k) : [];
+    const corpo = el("div", { class: "qcol-corpo" }, ...procs.map(cartaoProcesso), ...sec.map(c => cartaoSolto(c, true)), ...soltos.map(c => cartaoSolto(c, false)));
+    const destino = temSecao ? el("select", { title: "Onde a tarefa fica" }, el("option", { value: "secao" }, "Seção"), el("option", { value: "meu" }, "Só meu")) : null;
+    if (destino) try { destino.value = localStorage.getItem("sseg-quadro-destino") || "secao"; } catch (e) {}
     const col = el("div", { class: "qcol", "data-col": k },
-      el("h3", {}, QUADRO.nomes[k], el("span", { class: "tag" }, procs.length + soltos.length)),
+      el("h3", {}, QUADRO.nomes[k], el("span", { class: "tag" }, procs.length + soltos.length + sec.length)),
       k === "afazer" ? el("form", { class: "qc-nova", on: { submit: async ev => {
         ev.preventDefault(); const inp = ev.target.querySelector("input"); if (!inp.value.trim()) return;
-        await mexer("adicionar", [inp.value, "afazer"], ev.submitter); } } },
-        el("input", { type: "text", placeholder: "Nova tarefa…", maxlength: 200 }), el("button", { class: "bt" }, "+")) : null,
+        const naSecao = !!destino && destino.value === "secao";
+        try { if (destino) localStorage.setItem("sseg-quadro-destino", destino.value); } catch (e) {}
+        await mexer("adicionar", [inp.value, "afazer"], ev.submitter, naSecao); } } },
+        el("input", { type: "text", placeholder: "Nova tarefa…", maxlength: 200 }), destino, el("button", { class: "bt" }, "+")) : null,
       corpo);
     col.addEventListener("dragover", ev => { ev.preventDefault(); col.classList.add("alvo"); });
     col.addEventListener("dragleave", () => col.classList.remove("alvo"));
     col.addEventListener("drop", ev => { ev.preventDefault(); col.classList.remove("alvo");
-      const id = ev.dataTransfer.getData("text/plain"); const c = QUADRO.cartoes.find(x => x.id === id);
-      if (c && c.coluna !== k) mexer("alterar", [id, { coluna: k }]); });
+      const v = ev.dataTransfer.getData("text/plain") || "", secao = v.startsWith("s:"), id = v.slice(2);
+      const c = (secao ? QUADRO.secao || [] : QUADRO.cartoes).find(x => x.id === id);
+      if (c && c.coluna !== k) mexer("alterar", [id, { coluna: k }], null, secao); });
     return col;
   });
   $("#quadro").replaceChildren(...cols);
+  if (QUADRO.erro_secao) avisar("✗ Quadro da seção indisponível: " + QUADRO.erro_secao, true);
 }
 async function carregarInicio() {
   ESTADO.info = await api("inicio");

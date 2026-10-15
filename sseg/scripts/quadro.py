@@ -8,6 +8,10 @@ caixa (distribuicao.json); este arquivo guarda só o que não é processo.
 Mora em <pasta dos processos>/quadro.json, no PC, fora do Git (o texto pode citar processo ou
 pessoa). A pasta vem da configuração do SSEG.exe (%APPDATA%\\SSEG\\config.json) ou de --pasta.
 
+Quadro da seção (2.3.0): o mesmo formato, em ~/sseg-quadro/quadro.json no servidor, lido e mexido pela
+porta.py. Lá cada cartão leva quem criou ("autor"), quem pegou ("pegou"), o que foi feito ("feito_texto")
+e as datas de início (entrou em Fazendo) e de fim (entrou em Feito).
+
 USO (o Claude da conversa, depois de o analista confirmar a pendência)
   python sseg/scripts/quadro.py adicionar "Conferir o log da rotina das 7h47" --origem "conversa: cards do SSEG"
   python sseg/scripts/quadro.py listar
@@ -42,7 +46,7 @@ def ler(raiz):
     except (OSError, ValueError):
         d = {}
     d.setdefault("versao", 1)
-    d.setdefault("cartoes", [])  # {id, titulo, coluna, origem, criado, movido, checklist: [{texto, feito}]}
+    d.setdefault("cartoes", [])  # {id, titulo, coluna, origem, criado, movido, checklist: [{texto, feito}]} (+ seção: autor, pegou, feito_texto, inicio, fim)
     return d
 
 
@@ -62,7 +66,7 @@ def _achar(d, id_):
     return c
 
 
-def adicionar(raiz, titulo, origem="", coluna="afazer"):
+def adicionar(raiz, titulo, origem="", coluna="afazer", autor=""):
     titulo = " ".join((titulo or "").split())[:200]
     if not titulo:
         raise ValueError("cartão sem título")
@@ -76,13 +80,27 @@ def adicionar(raiz, titulo, origem="", coluna="afazer"):
     agora = time.time()
     c = {"id": secrets.token_hex(4), "titulo": titulo, "coluna": coluna, "origem": (origem or "").strip()[:200],
          "criado": agora, "movido": agora, "checklist": []}
+    if autor:
+        c["autor"] = autor
+    _datas(c, coluna, agora)
     d["cartoes"].append(c)
     gravar(raiz, d)
     return c
 
 
+def _datas(c, coluna, agora):
+    """Fazendo marca o início (uma vez); Feito marca o fim; sair do Feito apaga o fim."""
+    if coluna == "fazendo" and not c.get("inicio"):
+        c["inicio"] = agora
+    if coluna == "feito":
+        c["fim"] = agora
+        c.setdefault("inicio", c.get("criado", agora))
+    else:
+        c.pop("fim", None)
+
+
 def alterar(raiz, id_, **campos):
-    """coluna, titulo ou checklist ([{texto, feito}])."""
+    """coluna, titulo, checklist ([{texto, feito}]), pegou (nome ou "") e feito_texto."""
     d = ler(raiz)
     c = _achar(d, id_)
     if "coluna" in campos:
@@ -90,6 +108,15 @@ def alterar(raiz, id_, **campos):
             raise ValueError("coluna inválida: %r" % campos["coluna"])
         if campos["coluna"] != c["coluna"]:
             c["coluna"], c["movido"] = campos["coluna"], time.time()
+            _datas(c, c["coluna"], c["movido"])
+    if "pegou" in campos:
+        p = " ".join(str(campos["pegou"] or "").split())[:60]
+        if p:
+            c["pegou"] = p
+        else:
+            c.pop("pegou", None)
+    if "feito_texto" in campos:
+        c["feito_texto"] = str(campos["feito_texto"] or "").strip()[:2000]
     if "titulo" in campos:
         t = " ".join((campos["titulo"] or "").split())[:200]
         if not t:

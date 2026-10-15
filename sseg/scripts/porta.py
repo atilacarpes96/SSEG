@@ -24,6 +24,10 @@ AÇÕES
   quem-sou                                → {"analista", "papel"}
   listar | receber | entregar             → as mesmas do sincronizar.py, filtradas pelo responsável
   meus                                    → os códigos dele, um por linha (Painel do Dia)
+  quadro                                  → o Quadro da seção (~/sseg-quadro/quadro.json)
+  quadro-mexer                            → stdin {"acao", "args"}: adicionar, pegar, soltar, alterar,
+                                            remover, restaurar. Todos criam, pegam e comentam; mover,
+                                            editar e excluir só quem criou, quem pegou ou o admin
   escala                                  → a linha do analista no escala.json (o admin recebe tudo)
   relato <id>                             → guarda o .zip do stdin em ~/sseg-relatos/<analista>-<id>.zip
   analistas                     (admin)   → lista dos cadastrados
@@ -44,13 +48,15 @@ import unicodedata
 AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
 import sincronizar as sc  # noqa: E402 — manifesto, pacote e lista do que pode ir são os mesmos
+import quadro as qd  # noqa: E402 — o Quadro da seção tem o formato do quadro do PC
 
 ACESSO = os.path.expanduser("~/sseg-acesso/analistas.json")
 CHAVES = os.path.expanduser("~/.ssh/authorized_keys")
 ESCALA = os.path.expanduser("~/sseg-escala/escala.json")
 RELATOS = os.path.expanduser("~/sseg-relatos")
+QUADRO = os.path.expanduser("~/sseg-quadro")
 ADMIN_PADRAO = "Sd Carpes"
-SO_SERVIDOR = ("distribuicao.json",)  # o PC recebe, mas nunca sobe
+SO_SERVIDOR = ("distribuicao.json", "ct.json", "recurso.json")  # o PC recebe, mas nunca sobe
 MARCA = "sseg-analista:"              # comentário da linha no authorized_keys
 CHAVE_OK = re.compile(r"^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp\d+) [A-Za-z0-9+/=]{40,}$")
 
@@ -122,6 +128,18 @@ def responsavel(raiz, cod, acesso, resp=None):
     return resp.get(cod) or acesso["admin"]
 
 
+def envolvidos(raiz, cod):
+    """Analistas (normalizados) dos itens abertos em ct.json e recurso.json da pasta."""
+    nomes = set()
+    for arq in ("ct.json", "recurso.json"):
+        try:
+            with open(os.path.join(raiz, cod, arq), encoding="utf-8") as fh:
+                nomes |= {norm(it.get("analista")) for it in json.load(fh).get("itens") or [] if it.get("analista")}
+        except (OSError, ValueError, AttributeError):
+            pass
+    return nomes
+
+
 def _ler_resp(raiz):
     try:
         with open(os.path.join(raiz, ".responsaveis.json"), encoding="utf-8") as fh:
@@ -138,8 +156,8 @@ def _cod(chave):
 # ------------------------------------------------------------------------------- ações
 
 class Porta:
-    def __init__(self, analista=None, raiz=None, acesso=ACESSO, chaves=CHAVES, escala=ESCALA, relatos=RELATOS):
-        self.raiz = raiz or sc.RAIZ_SERVIDOR
+    def __init__(self, analista=None, raiz=None, acesso=ACESSO, chaves=CHAVES, escala=ESCALA, relatos=RELATOS, quadro=QUADRO):
+        self.raiz, self.quadro_raiz = raiz or sc.RAIZ_SERVIDOR, quadro
         self.arq_acesso, self.arq_chaves, self.arq_escala, self.relatos = acesso, chaves, escala, relatos
         self.acesso = ler_acesso(acesso)
         self.admin = analista is None
@@ -148,7 +166,10 @@ class Porta:
             raise SystemExit("analista não cadastrado: %s" % analista)
 
     def meu(self, cod, resp=None):
-        return norm(responsavel(self.raiz, cod, self.acesso, resp)) == norm(self.analista)
+        """Responsável pelo processo, ou ME de uma CT ou recurso em aberto nele (2.3.0)."""
+        if norm(responsavel(self.raiz, cod, self.acesso, resp)) == norm(self.analista):
+            return True
+        return norm(self.analista) in envolvidos(self.raiz, cod)
 
     def quem_sou(self):
         return {"analista": self.analista, "papel": "admin" if self.admin else "analista"}
@@ -209,6 +230,47 @@ class Porta:
         with open(os.path.join(self.relatos, nome), "wb") as fh:
             fh.write(dados)
         return {"ok": True, "arquivo": nome}
+
+    # --- Quadro da seção (2.3.0)
+    def quadro(self):
+        return {"cartoes": qd.ler(self.quadro_raiz)["cartoes"], "eu": self.analista, "admin": self.admin}
+
+    def _pode(self, c):
+        return self.admin or norm(self.analista) in (norm(c.get("autor")), norm(c.get("pegou")))
+
+    def quadro_mexer(self, pedido):
+        acao, args = pedido.get("acao"), list(pedido.get("args") or [])
+        cartao = lambda: qd._achar(qd.ler(self.quadro_raiz), args[0])  # noqa: E731
+        try:
+            if acao == "adicionar":
+                return qd.adicionar(self.quadro_raiz, args[0], "", args[1] if len(args) > 1 else "afazer", autor=self.analista)
+            if acao == "pegar":
+                c = cartao()
+                if c.get("pegou") and not self._pode(c):
+                    raise SystemExit("%s já pegou essa tarefa" % c["pegou"])
+                return qd.alterar(self.quadro_raiz, args[0], pegou=self.analista)
+            if acao == "soltar":
+                if not self._pode(cartao()):
+                    raise SystemExit("só quem pegou solta a tarefa")
+                return qd.alterar(self.quadro_raiz, args[0], pegou="")
+            if acao == "alterar":
+                campos = {k: v for k, v in (args[1] if len(args) > 1 else {}).items()
+                          if k in ("coluna", "titulo", "checklist", "feito_texto")}
+                if not self._pode(cartao()):
+                    raise SystemExit("só quem criou ou pegou a tarefa mexe nela (pegue antes)")
+                return qd.alterar(self.quadro_raiz, args[0], **campos)
+            if acao == "remover":
+                if not self._pode(cartao()):
+                    raise SystemExit("só quem criou ou pegou a tarefa exclui")
+                return qd.remover(self.quadro_raiz, args[0])
+            if acao == "restaurar":
+                c = args[0] if isinstance(args[0], dict) else {}
+                if not self._pode(c):
+                    raise SystemExit("só quem criou ou pegou a tarefa desfaz")
+                return qd.restaurar(self.quadro_raiz, c, args[1] if len(args) > 1 else None)
+        except ValueError as e:
+            raise SystemExit(str(e))
+        raise SystemExit("ação do quadro desconhecida: %s" % acao)
 
     # --- admin
     def _so_admin(self):
@@ -278,6 +340,10 @@ def executar(porta, args, entrada, script):
         r = porta.receber(entrada())
     elif acao == "entregar":
         return porta.entregar(json.loads(entrada() or b"[]"))
+    elif acao == "quadro":
+        r = porta.quadro()
+    elif acao == "quadro-mexer":
+        r = porta.quadro_mexer(json.loads(entrada() or b"{}"))
     elif acao == "escala":
         r = porta.escala()
     elif acao == "relato" and resto:
