@@ -103,6 +103,10 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
             border-radius: var(--raio); box-shadow: var(--sombra); padding: 9px 13px 10px; display: flex; flex-direction: column;
             gap: 1px; color: var(--texto); }
 .card-kpi:hover { border-color: var(--c); }
+.card-kpi[draggable="true"] { cursor: grab; }
+.card-kpi.arrastando { opacity: .35; }
+.card-kpi.sobre-antes { box-shadow: -4px 0 0 var(--c); }
+.card-kpi.sobre-depois { box-shadow: 4px 0 0 var(--c); }
 .card-kpi span { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--suave); font-weight: 600; }
 .card-kpi b { font-size: 26px; line-height: 1.15; font-variant-numeric: tabular-nums; color: var(--c); }
 .card-kpi.zero b { color: var(--suave); }
@@ -1031,7 +1035,7 @@ let PROCS = [], FILTRO = null, CARDS = null;
 const isoLocal = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 const dataBR = iso => iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) : "";
 const diasAte = iso => Math.round((new Date(iso + "T12:00") - new Date(isoLocal(new Date()) + "T12:00")) / 864e5);
-const COM_DIAS = ["vence", "aguardando", "cia", "ca", "no_prazo", "fora_prazo"];
+const COM_DIAS = ["vence", "fora_prazo"];
 function regra(c) {
   const hoje = new Date(), h = isoLocal(hoje), N = c.dias || 7;
   const mais = isoLocal(new Date(hoje.getTime() + N * 864e5)), desde = isoLocal(new Date(hoje.getTime() - N * 864e5));
@@ -1041,10 +1045,6 @@ function regra(c) {
     fila: p => p.estado === "fila",
     caixa: p => p.estado === "caixa",
     vence: p => p.estado === "caixa" && p.vence <= mais,
-    aguardando: conc,
-    cia: p => conc(p) && p.resultado === "CIA",
-    ca: p => conc(p) && p.resultado === "CA",
-    no_prazo: p => conc(p) && p.no_prazo === true,
     fora_prazo: p => (p.estado === "caixa" && p.no_prazo === false) || (conc(p) && p.no_prazo === false),
     ct: p => p.ct && p.ct >= h,
     meta: p => p.estado === "concluido" && p.concluido >= isoLocal(seg),
@@ -1055,8 +1055,6 @@ function subtexto(c, l) {
   if (c.regra === "caixa") { const v = l.map(p => p.vence).filter(Boolean).sort()[0]; return v ? "o mais antigo vence " + dataBR(v) : "prazo de " + CARDS.prazo + " dias corridos"; }
   if (c.regra === "vence") { const v = l.filter(p => p.vence < h).length; return v ? v + " vencido(s)" : "em até " + c.dias + " dia(s)"; }
   if (c.regra === "fila") return "prazo ainda não corre";
-  if (c.regra === "aguardando") return l.filter(p => p.resultado === "CIA").length + " CIA · " + l.filter(p => p.resultado === "CA").length + " CA · " + c.dias + " dias";
-  if (c.regra === "no_prazo") { const t = PROCS.filter(regra({ regra: "aguardando", dias: c.dias })).length; return t ? Math.round(l.length / t * 100) + "% de " + t + " · " + c.dias + " dias" : c.dias + " dias"; }
   if (c.regra === "ct") return l.length ? "próxima " + dataBR(l.map(p => p.ct).sort()[0]) : "";
   if (COM_DIAS.includes(c.regra)) return "últimos " + c.dias + " dias";
   return "";
@@ -1076,13 +1074,32 @@ function pintarCards() {
          el("small", {}, textoMeta())]
       : [el("b", {}, l.length), el("small", {}, subtexto(c, l))];
     return el("div", { class: "card-kpi k-" + c.cor + (l.length ? "" : " zero") + (FILTRO === c.id ? " ativo" : ""), role: "button", tabindex: 0,
-      title: "Clique para filtrar os processos",
+      title: "Clique para filtrar os processos" + (ESPELHO ? "" : "; arraste para mudar a ordem"), draggable: ESPELHO ? false : "true", "data-id": c.id,
       on: { click: () => { FILTRO = FILTRO === c.id ? null : c.id; pintarProcessos(); },
-            keydown: ev => { if (ev.key === "Enter") ev.currentTarget.click(); } } },
+            keydown: ev => { if (ev.key === "Enter") ev.currentTarget.click(); },
+            dragstart: ev => { ARRASTO = c.id; ev.dataTransfer.effectAllowed = "move"; ev.currentTarget.classList.add("arrastando"); },
+            dragend: ev => { ARRASTO = null; ev.currentTarget.classList.remove("arrastando"); limparSobre(); },
+            dragover: ev => { if (!ARRASTO || ARRASTO === c.id) return; ev.preventDefault(); limparSobre();
+              ev.currentTarget.classList.add(depoisDoMeio(ev) ? "sobre-depois" : "sobre-antes"); },
+            dragleave: ev => ev.currentTarget.classList.remove("sobre-antes", "sobre-depois"),
+            drop: ev => { ev.preventDefault(); if (ARRASTO && ARRASTO !== c.id) soltarCard(ARRASTO, c.id, depoisDoMeio(ev)); } } },
       el("span", {}, c.nome), editar, ...corpo);
   });
   lista.push(el("button", { class: "card-novo", title: "Novo card", on: { click: () => editarCard(null) } }, el("b", {}, "+"), "card"));
   $("#cards").replaceChildren(...lista);
+}
+// ordem dos cards: arrastar no PC (2.2.2); no celular, ← e → no ✎
+let ARRASTO = null;
+const limparSobre = () => document.querySelectorAll(".card-kpi.sobre-antes, .card-kpi.sobre-depois").forEach(x => x.classList.remove("sobre-antes", "sobre-depois"));
+const depoisDoMeio = ev => { const r = ev.currentTarget.getBoundingClientRect(); return ev.clientX > r.left + r.width / 2; };
+async function soltarCard(id, alvo, depois) {
+  const l = CARDS.cards.filter(x => x.id !== id), mov = CARDS.cards.find(x => x.id === id);
+  let i = l.findIndex(x => x.id === alvo);
+  if (!mov || i < 0) return;
+  l.splice(depois ? i + 1 : i, 0, mov);
+  limparSobre();
+  try { CARDS = await api("cards", [l]); } catch (e) {}
+  pintarProcessos();
 }
 function editarCard(c) {
   const novo = !c;
@@ -1122,6 +1139,7 @@ function editarCard(c) {
   }, true]];
   if (!novo) {
     if (i > 0) botoes.push(["← Mover", b => { const l = CARDS.cards.slice(); [l[i - 1], l[i]] = [l[i], l[i - 1]]; return gravar(l, b); }]);
+    if (i < CARDS.cards.length - 1) botoes.push(["Mover →", b => { const l = CARDS.cards.slice(); [l[i + 1], l[i]] = [l[i], l[i + 1]]; return gravar(l, b); }]);
     botoes.push(["Excluir", b => gravar(CARDS.cards.filter(x => x.id !== c.id), b)]);
   } else botoes.push(["Voltar aos cards padrão", b => gravar([], b)]);
   botoes.push(["Cancelar", fechar]);

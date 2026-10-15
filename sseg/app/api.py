@@ -45,10 +45,6 @@ REGRAS_CARD = {
     "fila": "Na fila: atribuído, ainda sem distribuição",
     "caixa": "Na caixa: distribuído e sem conclusão",
     "vence": "Na caixa, vence em até N dias (ou já venceu)",
-    "aguardando": "Aguardando: saiu da caixa com CIA ou CA, nos últimos N dias",
-    "cia": "Saiu com CIA, nos últimos N dias",
-    "ca": "Saiu com CA, nos últimos N dias",
-    "no_prazo": "Analisados no prazo, nos últimos N dias",
     "fora_prazo": "Fora do prazo: passou do prazo na caixa ou concluído depois dele (últimos N dias)",
     "ct": "CT marcada de hoje em diante",
     "meta": "Meta da semana: concluídos desde segunda",
@@ -58,8 +54,6 @@ CARDS_PADRAO = [
     {"id": "caixa", "nome": "Na caixa", "cor": "laranja", "regra": "caixa", "dias": 7},
     {"id": "vence", "nome": "Vencem em 3 dias", "cor": "vermelho", "regra": "vence", "dias": 3},
     {"id": "fila", "nome": "Na fila", "cor": "cinza", "regra": "fila", "dias": 7},
-    {"id": "aguardando", "nome": "Aguardando", "cor": "azul", "regra": "aguardando", "dias": 30},
-    {"id": "no_prazo", "nome": "Analisados no prazo", "cor": "verde", "regra": "no_prazo", "dias": 30},
     {"id": "fora_prazo", "nome": "Fora do prazo", "cor": "vermelho", "regra": "fora_prazo", "dias": 30},
     {"id": "ct", "nome": "CT marcadas", "cor": "roxo", "regra": "ct", "dias": 7},
     {"id": "meta", "nome": "Meta da semana", "cor": "amarelo", "regra": "meta", "dias": 7},
@@ -117,16 +111,31 @@ class Api:
         self._espelho = None
         self._tunel = None   # SSH de saída até o servidor: o caminho do celular (fase 2)
         self._pasta_web = None
+        self._antes_da_pagina = None  # lista enquanto a janela do PC não carregou (web_app liga e solta)
 
     # ---------------------------------------------------------------- infraestrutura
     def _ligar(self, janela):
         self._janela = janela
+        self._antes_da_pagina = []
+
+    def _pagina_carregou(self):
+        guardado, self._antes_da_pagina = self._antes_da_pagina or [], None
+        for js in guardado:
+            try:
+                self._janela.evaluate_js(js)
+            except Exception:  # noqa: BLE001
+                pass
 
     def _emitir(self, funcao, *args):
         """SSEG.<funcao>(args) na janela do PC e em cada tela aberta pelo navegador (espelho)."""
-        if self._janela:
+        js = "SSEG.%s(%s)" % (funcao, ", ".join(json.dumps(a, ensure_ascii=False) for a in args))
+        if self._janela and self._antes_da_pagina is not None:
+            # evaluate_js antes de a página carregar espera por ela até 20 s: era a abertura de 20 s
+            # com o espelho ligado (2.2.2). Guarda e manda quando a página carregar.
+            self._antes_da_pagina.append(js)
+        elif self._janela:
             try:
-                self._janela.evaluate_js("SSEG.%s(%s)" % (funcao, ", ".join(json.dumps(a, ensure_ascii=False) for a in args)))
+                self._janela.evaluate_js(js)
             except Exception:  # janela fechando
                 pass
         if self._espelho:
@@ -342,7 +351,9 @@ class Api:
             else:
                 cfg.pop("cards", None)
             base.gravar_config(cfg)
-        return {"cards": cfg.get("cards") or CARDS_PADRAO, "padrao": CARDS_PADRAO, "regras": REGRAS_CARD,
+        # card salvo com regra que saiu (aguardando, cia, ca e no_prazo, tiradas na 2.2.2) some sozinho
+        salvos = [c for c in cfg.get("cards") or [] if c.get("regra") in REGRAS_CARD]
+        return {"cards": salvos or CARDS_PADRAO, "padrao": CARDS_PADRAO, "regras": REGRAS_CARD,
                 "cores": CORES_CARD, "prazo": cfg.get("prazo_caixa", 10), **self._meta(cfg)}
 
     # ---------------------------------------------------------------- analista e escala (2.1.15)

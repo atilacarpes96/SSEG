@@ -32,10 +32,22 @@ def _tour(jan, api, foto):
     jan.destroy()
 
 
+def marcar(etapa):
+    """SSEG_TEMPOS=<arquivo>: anota o tempo de cada etapa da abertura (para achar o que demora)."""
+    arq = os.environ.get("SSEG_TEMPOS")
+    if arq:
+        with open(arq, "a", encoding="utf-8") as fh:
+            fh.write("%.2f %s\n" % (time.time(), etapa))
+
+
 def principal(recurso):
+    marcar("web_app.principal")
     import webview
+    marcar("import webview")
     from api import Api
+    marcar("import api")
     api = Api()
+    marcar("Api()")
     try:
         altura = min(860, webview.screens[0].height - 80)
     except Exception:
@@ -43,6 +55,10 @@ def principal(recurso):
     jan = webview.create_window("SSEG", recurso(os.path.join("web", "index.html")), js_api=api,
                                 width=1120, height=altura, min_size=(720, 520), background_color="#F4F1EF",
                                 text_select=True)
+    marcar("create_window")
+    jan.events.shown += lambda: marcar("janela visível")
+    jan.events.loaded += lambda: marcar("página carregada")
+    jan.events.loaded += api._pagina_carregou
     api._ligar(jan)
     api._pasta_web = os.path.dirname(recurso(os.path.join("web", "index.html")))
     if api._cfg().get("espelho") and not os.environ.get("SSEG_TESTE_FOTO"):
@@ -55,6 +71,7 @@ def principal(recurso):
         if foto:
             webview.start(_tour, (jan, api, foto), gui="edgechromium")
         else:
+            marcar("webview.start")
             webview.start(gui="edgechromium")
     finally:
         if api._tunel:  # fechou a janela: o ssh do túnel não fica rodando sozinho
