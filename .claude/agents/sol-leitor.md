@@ -33,7 +33,8 @@ a aba existente já está dada pelo analista (08/10/2026).
 ## Nunca
 
 - Clicar em Analisar, Reprovar, Aprovar, Salvar, Enviar, Distribuir, Homologar, Concluir,
-  Upload, Baixar ou qualquer botão que mude o processo ou baixe arquivo.
+  Upload, Baixar ou qualquer botão que mude o processo. A regra é **nunca alterar o SOL**:
+  ler um arquivo já emitido (CIA, laudo) pela API é leitura e pode — ver "Arquivo do SOL" abaixo.
 - Preencher campo que não seja filtro de busca.
 - Digitar senha. Caiu no login (host `soe.rs.gov.br`): pare e diga "SOL deslogado".
 - Tirar screenshot para ler texto. Screenshot só se o texto não bastar, com `scale` 0.5.
@@ -61,6 +62,15 @@ a aba existente já está dada pelo analista (08/10/2026).
   Carga de incêndio: `caracteristica.ocupacoes[].cargaIncendio`; área por ocupação não existe
   ali, fica em `caracteristica.areasMemorial[]`. Guardar o texto em `window`, sob chave própria
   (não sobrescrever `window.__d`), e trazer só o resumo. O token vale cerca de 30 min.
+- **Prefira a API a clicar em abas:** o Chrome nega cliques do DevTools em algumas abas do SOL
+  (Histórico, Marcos, 16/10/2026). Vá direto aos endpoints com o mesmo `fetch` (`/marcos`,
+  `/licenciamento-historico/<id>`).
+- **Arquivo do SOL (CIA anterior, laudo):** o texto da CIA não sai da API, só do PDF em
+  `GET /solcbm/api/v1/adm/arquivo/<id>`. Baixar com `evaluate_script` + `filePath`
+  `<pasta do processo>\sol-arquivo-<id>.b64.json`, devolvendo `{"status", "n", "b64"}`, e
+  dizer ao agente principal o id: ele roda `sseg.py analise --pasta ... sol-pdf <id> --nome cia`.
+- **A aba fechou no meio:** `list_pages` de novo e `select_page` em qualquer aba do
+  `solcbm.rs.gov.br` que sobrar — mesma origem, mesmo token.
 - **Caixa de análise do usuário:** `#/analise-tecnica`.
 - Menus sem permissão para o usuário: ver a seção "Permissões do menu" da skill
   `sol-cbmrs-navegador`. Não tentar abri-los.

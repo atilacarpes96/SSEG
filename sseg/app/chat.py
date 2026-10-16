@@ -37,7 +37,8 @@ PERMITIDOS = ["Read", "Grep", "Glob", "Task", "Agent", "TodoWrite",
               "mcp__chrome-devtools-live__wait_for", "mcp__chrome-devtools-live__take_snapshot",
               "mcp__chrome-devtools-live__evaluate_script", "mcp__chrome-devtools-live__list_network_requests",
               "mcp__chrome-devtools-live__get_network_request",
-              "Bash(pdftotext *)", "Bash(pdftoppm *)", "Bash(git status*)", "Bash(git log*)", "Bash(git diff*)"]
+              "Bash(pdftotext *)", "Bash(pdftoppm *)", "PowerShell(pdftotext *)", "PowerShell(pdftoppm *)",
+              "Bash(git status*)", "Bash(git log*)", "Bash(git diff*)"]
 
 INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe (não no terminal). Pasta do processo: {pasta}
 
@@ -59,7 +60,9 @@ python sseg/scripts/sseg.py analise --pasta "{pasta}" rascunho e3 - --medida "<m
 FIM
 ```
   - pendência que NÃO é pergunta (algo a ver na planta, dado que falta): `python sseg/scripts/sseg.py analise --pasta "{pasta}" pendencia "texto curto"` — uma por comando; diga também no chat.
-  - passo do checklist concluído: `python sseg/scripts/sseg.py analise --pasta "{pasta}" passo N` (os 16 passos estão em sseg/workflow/checklist-analise.json). Marque o passo LOGO que ele estiver feito (ex.: data de protocolo confirmada → passo 2), sem esperar o fim.
+  - passo do checklist concluído: `python sseg/scripts/sseg.py analise --pasta "{pasta}" passo N` — vários de uma vez: `passo 1 3 4 5` (os 16 passos estão em sseg/workflow/checklist-analise.json). Marque o passo LOGO que ele estiver feito (ex.: data de protocolo confirmada → passo 2), sem esperar o fim.
+  - PDF do SOL (CIA anterior, laudo, qualquer `arquivo/<id>`): o texto da CIA não sai da API, só do PDF. Baixe com evaluate_script + filePath "{pasta}\\sol-arquivo-<id>.b64.json", devolvendo {{"status": r.status, "n": bytes, "b64": base64}} de `GET /solcbm/api/v1/adm/arquivo/<id>`; depois `python sseg/scripts/sseg.py analise --pasta "{pasta}" sol-pdf <id> --nome cia` (grava cia-<id>.pdf, o .txt e cia-ultima.txt e apaga o intermediário) e leia o .txt com Read.
+- Comandos: só os que já rodam sem aprovação (sseg.py, pdftotext, pdftoppm, git status/log/diff). Esta janela não tem onde o analista aprovar: o resto é negado e o trabalho para. Então: um comando por chamada, sem `&&`, `;`, `|` nem laço `for`; nada de `python -c` ou script solto (JSON e texto se leem com Read; pasta se lista com Glob); se faltar uma rotina, diga ao analista qual faltou em vez de improvisar. Nunca crie arquivo temporário na pasta do SSEG.
   - pendência resolvida no chat (a sua ou uma que o analista respondeu): `python sseg/scripts/sseg.py analise --pasta "{pasta}" resolver p2 p3` — ela sai do topo do checklist.
   - o que o analista já salvou: `python sseg/scripts/sseg.py analise --pasta "{pasta}" ver`.
   Exigência e rascunho entram como rascunho; o texto final é o que o analista salvar, e você nunca o reescreve: se achar problema num texto salvo, aponte e sugira.

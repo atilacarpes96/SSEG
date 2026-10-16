@@ -172,9 +172,55 @@ def args_parser(sp):
     p.add_argument("--fundamento", default="")
     p = sub.add_parser("resolver", help="marca pendências como resolvidas (ex.: p2 p3) — sai do topo do checklist")
     p.add_argument("ids", nargs="+")
-    p = sub.add_parser("passo", help="marca um passo do checklist (1 a 16)")
-    p.add_argument("n", type=int)
+    p = sub.add_parser("passo", help="marca passos do checklist (1 a 16), um ou vários: passo 1 3 4 5")
+    p.add_argument("n", type=int, nargs="+")
     sub.add_parser("ver", help="mostra o registro (pendências e o texto final da CIA)")
+    p = sub.add_parser("sol-pdf", help="arquivo do SOL baixado em base64 (sol-arquivo-<id>.b64.json) → PDF + texto")
+    p.add_argument("id", help="id do arquivo no SOL (GET /solcbm/api/v1/adm/arquivo/<id>)")
+    p.add_argument("--nome", default="sol", help='prefixo dos arquivos; "cia" também grava cia-ultima.txt')
+
+
+def sol_pdf(pasta, ident, nome="sol"):
+    """O SOL só entrega o arquivo à aba logada (token no sessionStorage): o Claude baixa com
+    evaluate_script + filePath em <pasta>/sol-arquivo-<id>.b64.json ({"status", "n", "b64"}) e
+    esta rotina faz o resto, sem Python solto na janela: decodifica, grava o PDF, extrai o texto
+    com o pdftotext e apaga o intermediário."""
+    import base64
+    import shutil
+    import subprocess
+    origem = os.path.join(pasta, "sol-arquivo-%s.b64.json" % ident)
+    if not os.path.exists(origem):
+        return ("não achei %s — baixe antes com evaluate_script (filePath nesse caminho), devolvendo "
+                '{"status", "n", "b64"}' % origem)
+    with open(origem, encoding="utf-8") as fh:
+        t = fh.read()
+    d = json.loads(t[t.index("{"):t.rindex("}") + 1])   # o filePath às vezes grava algo antes do JSON
+    if d.get("status") != 200:
+        return "o SOL respondeu %s para o arquivo %s; nada gravado" % (d.get("status"), ident)
+    dados = base64.b64decode(d["b64"])
+    if not dados.startswith(b"%PDF"):
+        return "o arquivo %s não é PDF (começa com %r); nada gravado" % (ident, dados[:8])
+    pdf = os.path.join(pasta, "%s-%s.pdf" % (nome, ident))
+    with open(pdf, "wb") as fh:
+        fh.write(dados)
+    os.remove(origem)
+    linhas = ["PDF gravado: %s (%d bytes)" % (pdf, len(dados))]
+    if not shutil.which("pdftotext"):
+        return "\n".join(linhas + ["pdftotext não encontrado: texto não extraído"])
+    txt = os.path.splitext(pdf)[0] + ".txt"
+    subprocess.run(["pdftotext", "-layout", pdf, txt], check=True,
+                   creationflags=0x08000000 if os.name == "nt" else 0)
+    linhas.append("Texto: %s" % txt)
+    if nome == "cia":
+        shutil.copyfile(txt, os.path.join(pasta, "cia-ultima.txt"))
+        linhas.append("Cópia: %s" % os.path.join(pasta, "cia-ultima.txt"))
+    with open(txt, encoding="utf-8", errors="replace") as fh:
+        conteudo = fh.read()
+    if not conteudo.strip():
+        linhas.append("ATENÇÃO: texto vazio — PDF escaneado; ler as páginas como imagem (pdftoppm)")
+    else:
+        linhas.append("%d caracteres; leia o .txt com Read" % len(conteudo))
+    return "\n".join(linhas)
 
 
 def _texto(t):
@@ -202,8 +248,11 @@ def principal(args):
         feitas = [i for i in args.ids if atualizar(args.pasta, "pendencias", i, feita=True)]
         print("resolvida(s): %s" % (", ".join(feitas) or "nenhuma (ids não existem)"))
     elif args.acao == "passo":
-        marcar(args.pasta, "passos", args.n, True)
-        print("passo %d marcado" % args.n)
+        for n in args.n:
+            marcar(args.pasta, "passos", n, True)
+        print("passo(s) %s marcado(s)" % ", ".join(str(n) for n in args.n))
+    elif args.acao == "sol-pdf":
+        print(sol_pdf(args.pasta, args.id, args.nome))
     else:
         d = ler(args.pasta)
         print(json.dumps({"pendencias": d["pendencias"], "passos": d["passos"],
