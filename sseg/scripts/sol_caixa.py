@@ -12,7 +12,10 @@ celular) pela porta de depuração 127.0.0.1:9222 e, dentro da aba do SOL:
   3. para cada processo que ainda não tem api-<ID>.json na pasta, baixa
      GET /licenciamentos/<ID> (ID do licenciamento, o mesmo JSON que o `sseg.py receber` grava)
      em sseg/processos/<código>/api-<ID>.json;
-  4. grava sseg/processos/.caixa/caixa.json (o que tem na caixa, o que é novo, quando leu).
+  4. grava sseg/processos/.caixa/caixa.json (o que tem na caixa, o que é novo, quando leu);
+  5. (2.3.13) baixa os Marcos de cada processo (marcos.json + marcos-resumo.json, pelo marcos.py):
+     data de protocolo, análises anteriores com o PDF da CIA e recursos. Recurso ou marco novo
+     dispara o gatilho: aviso na saída, .caixa/gatilhos.json e cartão no Quadro da seção.
 A pasta sseg/processos/ não vai ao GitHub (.gitignore) e desce ao PC pelo `sseg.py sincronizar`.
 
 O QUE NÃO FAZ
@@ -177,6 +180,42 @@ def ler_caixa(aba):
         pagina += 1
 
 
+QUADRO_SECAO = os.path.expanduser("~/sseg-quadro")
+
+
+def marcos_proc(aba, ident, codigo, linha):
+    """Baixa os Marcos, grava marcos.json e marcos-resumo.json e dispara o gatilho de recurso/marco novo:
+    linha na saída, registro em .caixa/gatilhos.json e cartão no Quadro da seção (uma vez por processo e motivo)."""
+    import marcos
+    pasta = os.path.join(PROCESSOS, str(codigo))
+    with open(os.path.join(pasta, marcos.ARQUIVO), "w", encoding="utf-8") as fh:
+        json.dump(buscar(aba, "%s/%s/marcos" % (LICENCIAMENTO, ident)), fh, ensure_ascii=False)
+    r = marcos.resumir_pasta(pasta)
+    if not r or not r["gatilho"]:
+        return
+    motivos = (["recurso: " + "; ".join(x["descricao"] for x in r["recursos"])] if r["recursos"] else []) + \
+              ["marco novo: " + x["descricao"] for x in r["novos"]]
+    linha["gatilho"] = motivos
+    arq = os.path.join(PROCESSOS, ".caixa", "gatilhos.json")
+    try:
+        with open(arq, encoding="utf-8") as fh:
+            vistos = json.load(fh)
+    except (OSError, ValueError):
+        vistos = {}
+    novos = [m for m in motivos if m not in vistos.get(str(codigo), [])]
+    if not novos:
+        return
+    vistos.setdefault(str(codigo), []).extend(novos)
+    with open(arq, "w", encoding="utf-8") as fh:
+        json.dump(vistos, fh, ensure_ascii=False, indent=1)
+    if os.path.isdir(QUADRO_SECAO):
+        import quadro
+        for m in novos:
+            quadro.adicionar(QUADRO_SECAO, "Ensinar o script dos Marcos: %s com %s" % (codigo, m),
+                             origem="gatilho do sol_caixa.py: ver o marco real no SOL e dizer o que fazer com ele (marcos.py)",
+                             autor="SSEG")
+
+
 def levantar(forcar=False):
     aba = aba_do_sol()
     if aba is None:
@@ -229,6 +268,11 @@ def levantar(forcar=False):
                            "area": it.get("area"), "tipo": it.get("tipo"), "dias_analise": it.get("qtdDiasAnalise"),
                            "solicitacao": it.get("dataSolicitacao"), "prioridade": it.get("prioridade")},
                           fh, ensure_ascii=False, indent=1)
+        if ident and codigo:  # Marcos (2.3.13): protocolo, análises, recursos — a cada leitura, porque mudam
+            try:
+                marcos_proc(aba, ident, codigo, linha)
+            except RuntimeError as e:
+                linha["aviso"] = "marcos: %s" % e
         resumo.append(linha)
     agora = time.strftime("%Y-%m-%d %H:%M")
     with open(os.path.join(caixa, "caixa.json"), "w", encoding="utf-8") as fh:
@@ -246,6 +290,8 @@ def levantar(forcar=False):
             print("  ✗", r["erro"])
         if r.get("aviso"):
             print("  !", r["aviso"])
+        for g in r.get("gatilho") or []:
+            print("  !! %s — %s (cartão no Quadro da seção)" % (r["codigo"], g))
     return 0
 
 

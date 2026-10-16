@@ -47,6 +47,7 @@ def ler(raiz):
         d = {}
     d.setdefault("versao", 1)
     d.setdefault("cartoes", [])  # {id, titulo, coluna, origem, criado, movido, checklist: [{texto, feito}]} (+ seção: autor, pegou, feito_texto, inicio, fim)
+    d.setdefault("processos", {})  # código → {coluna, aguardando, estado, movido} — o lugar do processo mudado à mão (2.3.13)
     return d
 
 
@@ -127,6 +128,29 @@ def alterar(raiz, id_, **campos):
                           for x in campos["checklist"] or [] if str(x.get("texto", "")).strip()]
     gravar(raiz, d)
     return c
+
+
+AGUARDANDO = {"CA": "Aguardando lançamento da CA no SOL", "CIA": "Aguardando lançamento da CIA no SOL"}
+
+
+def processo(raiz, codigo, estado, coluna="", aguardando=""):
+    """O lugar de um processo mudado à mão (2.3.13, pedido do Átila). Sem regra própria: vale enquanto o
+    estado da caixa (fila/caixa/concluido) for o de quando foi mudado — a planilha andou (ex.: lançou a
+    CIA e concluiu), o processo volta ao lugar automático. Coluna e aguardando vazios = automático."""
+    if coluna and coluna not in COLUNAS:
+        raise ValueError("coluna inválida: %r" % coluna)
+    if aguardando and aguardando not in AGUARDANDO:
+        raise ValueError("aguardando inválido: %r" % aguardando)
+    d = ler(raiz)
+    if not coluna and not aguardando:
+        d["processos"].pop(codigo, None)
+        gravar(raiz, d)
+        return None
+    p = {"coluna": coluna or ("esperando" if aguardando else ""), "aguardando": aguardando,
+         "estado": estado or "", "movido": time.time()}
+    d["processos"][codigo] = p
+    gravar(raiz, d)
+    return p
 
 
 def remover(raiz, id_):

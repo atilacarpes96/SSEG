@@ -263,7 +263,7 @@ class Porta:
                 return qd.alterar(self.quadro_raiz, args[0], pegou="")
             if acao == "alterar":
                 campos = {k: v for k, v in (args[1] if len(args) > 1 else {}).items()
-                          if k in ("coluna", "titulo", "checklist", "feito_texto")}
+                          if k in ("coluna", "titulo", "checklist", "feito_texto", "pegou")}  # pegou = responsável (2.3.13)
                 if not self._pode(cartao()):
                     raise SystemExit("só quem criou ou pegou a tarefa mexe nela (pegue antes)")
                 return qd.alterar(self.quadro_raiz, args[0], **campos)

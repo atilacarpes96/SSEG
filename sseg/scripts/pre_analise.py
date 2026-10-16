@@ -117,18 +117,35 @@ def pre_analisar(codigo, forcar=False):
     api_arq = apis[-1]
     saida_json = os.path.join(pasta, "pre-analise.json")
     saida_txt = os.path.join(pasta, "pre-analise.txt")
-    if not forcar and os.path.exists(saida_txt) and os.path.getmtime(saida_txt) >= os.path.getmtime(api_arq):
+    resumo_arq = os.path.join(pasta, "marcos-resumo.json")
+    base = max(os.path.getmtime(api_arq), os.path.getmtime(resumo_arq) if os.path.exists(resumo_arq) else 0)
+    if not forcar and os.path.exists(saida_txt) and os.path.getmtime(saida_txt) >= base:
         return "em-dia", "já feita"
     with open(api_arq, encoding="utf-8") as fh:
         p = converter(json.load(fh))
+    marcos = {}
+    if os.path.exists(resumo_arq):  # Marcos (2.3.13): protocolo e nº da análise saem dos marcos do SOL
+        try:
+            with open(resumo_arq, encoding="utf-8") as fh:
+                marcos = json.load(fh)
+        except (OSError, ValueError):
+            pass
+    if marcos.get("protocolo"):
+        p["data_protocolo"] = marcos["protocolo"]
+    if marcos.get("analise"):
+        p["analise"] = marcos["analise"]
     with open(saida_json, "w", encoding="utf-8") as fh:
         json.dump(p, fh, ensure_ascii=False, indent=1)
     r = subprocess.run([sys.executable, SSEG, "check", "--json", saida_json], capture_output=True, text=True,
                        encoding="utf-8", errors="replace", env={**os.environ, "PYTHONUTF8": "1"})
-    cab = ("PRÉ-ANÁLISE DOCUMENTAL (script, sem Claude) · %s · de %s\n"
-           "Data de protocolo da 1ª análise: NÃO está no JSON — conferir na aba Marcos.\n"
+    if marcos.get("protocolo"):
+        import marcos as mc
+        linha_marcos = "MARCOS DO SOL (marcos.py):\n" + mc.texto(marcos) + "\n"
+    else:
+        linha_marcos = "Data de protocolo da 1ª análise: sem os Marcos na pasta — conferir na aba Marcos.\n"
+    cab = ("PRÉ-ANÁLISE DOCUMENTAL (script, sem Claude) · %s · de %s\n%s"
            "Definidora abaixo = a que o RT marcou no SOL (determinaSeguranca), não a que vale.\n\n"
-           % (codigo, os.path.basename(api_arq)))
+           % (codigo, os.path.basename(api_arq), linha_marcos))
     with open(saida_txt, "w", encoding="utf-8") as fh:
         fh.write(cab + r.stdout + (("\n[erro do check]\n" + r.stderr) if r.returncode else ""))
     marcas = sum(1 for l in r.stdout.splitlines() if l.startswith(("!!", "??", "XX")))

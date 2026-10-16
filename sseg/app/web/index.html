@@ -140,27 +140,32 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
                text-transform: none; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent);
                border-radius: 999px; padding: 1px 4px 1px 10px; margin-left: 8px; vertical-align: middle; }
 .filtro-chip button { border: 0; background: none; color: inherit; font-size: 13px; padding: 0 5px; }
+.pr-razao { font-weight: 600; font-size: 13.5px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; margin-right: 6px; }
 .pr-sit { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--suave); }
 .pr-sit select, .pr-sit input { font: inherit; font-size: 12.5px; padding: 3px 6px; border: 1px solid var(--linha); border-radius: 6px;
                                 background: var(--campo); color: var(--texto); }
 .pr-sit select { font-weight: 600; color: var(--c); }
 
 /* ---- tela Quadro (2.1.14) */
-#t-quadro { max-width: 1200px; }
+#t-quadro { max-width: 1700px; }  /* cartões maiores para ler do que se trata (2.3.13) */
 #t-inicio { max-width: 1400px; }  /* a tabela de processos tem 8 colunas (2.3.9) */
 .quadro { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
-.qcol { background: var(--fundo2); border: 1px solid var(--linha); border-radius: var(--raio); padding: 10px; min-height: 120px; }
+.qcol { background: var(--fundo2); border: 1px solid var(--linha); border-radius: var(--raio); padding: 12px; min-height: 160px; }
 .qcol.alvo { border-color: var(--verm-claro); }
 .qcol h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); display: flex; justify-content: space-between; align-items: center; }
-.qcol-corpo { display: flex; flex-direction: column; gap: 8px; }
-.qc { background: var(--cartao); border: 1px solid var(--linha); border-radius: 7px; padding: 8px 10px; box-shadow: var(--sombra); font-size: 13px; }
+.qcol-corpo { display: flex; flex-direction: column; gap: 10px; }
+.qc { background: var(--cartao); border: 1px solid var(--linha); border-radius: 8px; padding: 11px 13px; box-shadow: var(--sombra); font-size: 14px; line-height: 1.4; }
 .qc.arrastando { opacity: .5; }
-.qc-proc { cursor: pointer; border-left: 3px solid var(--verm); }
+.qc-proc { cursor: pointer; border-left: 4px solid var(--verm); }
 .qc-proc:hover { border-color: var(--verm-claro); }
-.qc-tit { font-weight: 600; overflow-wrap: anywhere; margin-bottom: 3px; }
-.qc-tit.cod { font: 600 13px Consolas, monospace; }
-.qc-orig { font-size: 11.5px; color: var(--suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.qc-check { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; font-size: 12.5px; }
+.qc-proc.aguarda { border-left-color: #C98A1B; }
+.qc-tit { font-weight: 600; font-size: 14.5px; overflow-wrap: anywhere; margin-bottom: 4px; }
+.qc-tit.cod { font: 600 14px Consolas, monospace; }
+.qc-orig { font-size: 12.5px; color: var(--suave); overflow-wrap: anywhere; margin-top: 2px; }
+.qc-razao { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+.qc-resp { font-size: 12.5px; margin-top: 4px; }
+.qc-aguarda { display: inline-block; margin-top: 5px; font-size: 12.5px; font-weight: 600; color: #C98A1B; background: color-mix(in srgb, #C98A1B 16%, transparent); border-radius: 6px; padding: 2px 7px; }
+.qc-check { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; font-size: 13px; }
 .qc-check small { color: var(--suave); }
 .qc-bts { display: flex; gap: 2px; justify-content: flex-end; margin-top: 4px; }
 .qc-bts .bt.link { text-decoration: none; font-size: 14px; padding: 2px 7px; color: var(--suave); }
@@ -465,7 +470,7 @@ body.sem-pc #sem-pc { display: block; }
 
     <section class="tela" id="t-quadro">
       <h2>Quadro</h2>
-      <p class="sub">Os processos entram sozinhos, pela planilha de distribuição: na fila em A fazer, na caixa em Fazendo, concluídos na semana em Feito. As tarefas soltas você move com as setas ou arrastando. As marcadas "seção" todos os analistas veem: quem pega fica com o nome no cartão, e quem criou ou pegou move, edita e conta o que foi feito. "Só meu" fica neste PC.</p>
+      <p class="sub">Os processos entram sozinhos, pela planilha de distribuição: na fila em A fazer, na caixa em Fazendo, concluídos na semana em Feito. No ✎ do processo (ou arrastando) você muda a coluna e marca "Aguardando lançamento da CA/CIA no SOL"; vale até a planilha mudar o processo. As tarefas soltas você move com as setas ou arrastando. As marcadas "seção" todos os analistas veem: quem pega fica com o nome no cartão, e quem criou ou pegou move, edita e conta o que foi feito. "Só meu" fica neste PC.</p>
       <div class="quadro" id="quadro"></div>
     </section>
 
@@ -1275,8 +1280,15 @@ async function carregarProcessos() {
 }
 // ---- tela Quadro (2.1.14): os processos entram sozinhos pela caixa; as tarefas soltas (pendência de trabalho
 // que sobrou de uma conversa, fiscalização, reunião) moram em quadro.json na pasta dos processos.
-let QUADRO = null;
+let QUADRO = null, NOMES_ESCALA = [];
+// processo mudado à mão (2.3.13): vale enquanto o estado da caixa for o de quando foi mudado
+function manualDoProcesso(p) {
+  const m = (QUADRO.processos || {})[p.codigo];
+  return m && m.estado === p.estado ? m : null;
+}
 function colunaDoProcesso(p) {
+  const m = manualDoProcesso(p);
+  if (m && m.coluna) return m.coluna;
   if (p.estado === "fila") return "afazer";
   if (p.estado === "caixa") return "fazendo";
   if (p.estado === "concluido" && p.concluido >= isoLocal(new Date(Date.now() - 7 * 864e5))) return "feito";
@@ -1285,6 +1297,7 @@ function colunaDoProcesso(p) {
 async function carregarQuadro() {
   try { [QUADRO, PROCS] = await Promise.all([api("quadro"), api("processos")]); } catch (e) { return; }
   pintarQuadro();
+  if (!NOMES_ESCALA.length) try { NOMES_ESCALA = (await api("analista")).nomes || []; } catch (e) {}
 }
 async function mexer(acao, args, botao, secao) {
   const r = await api(secao ? "quadro_secao" : "quadro_mexer", [acao, ...args], botao);
@@ -1305,14 +1318,17 @@ function editarCartao(c, secao) {
   lista.value = (c.checklist || []).map(x => x.texto).join("\n");
   const feito = el("textarea", { rows: 4, placeholder: "O que foi feito, para a seção saber (ex.: ofício respondido, enviado ao Pel)" });
   feito.value = c.feito_texto || "";
-  const info = [c.autor ? "Criada por " + c.autor : "", c.pegou ? "pegou: " + c.pegou : "", c.origem ? "veio de: " + c.origem : ""].filter(Boolean).join(" · ");
+  const resp = el("input", { type: "text", value: c.pegou || "", maxlength: 60, list: "q-nomes", placeholder: "ninguém" });
+  const nomes = el("datalist", { id: "q-nomes" }, ...NOMES_ESCALA.map(n => el("option", { value: n })));
+  const info = [c.autor ? "Criada por " + c.autor : "", c.origem ? "veio de: " + c.origem : ""].filter(Boolean).join(" · ");
   modal(secao ? "Tarefa da seção" : "Editar tarefa", info, [el("label", { class: "campo-card" }, "Título ", tit),
+    el("label", { class: "campo-card" }, "Responsável ", resp, nomes),
     el("label", { class: "campo-card", style: "align-items:flex-start" }, "Checklist ", lista),
     secao ? el("label", { class: "campo-card", style: "align-items:flex-start" }, "O que foi feito ", feito) : null], [
     ["Salvar", async b => {
       const feitos = new Set((c.checklist || []).filter(x => x.feito).map(x => x.texto));
       const itens = lista.value.split("\n").map(t => t.trim()).filter(Boolean).map(t => ({ texto: t, feito: feitos.has(t) }));
-      await mexer("alterar", [c.id, { titulo: tit.value, checklist: itens, ...(secao ? { feito_texto: feito.value } : {}) }], b, secao); fechar();
+      await mexer("alterar", [c.id, { titulo: tit.value, checklist: itens, pegou: resp.value, ...(secao ? { feito_texto: feito.value } : {}) }], b, secao); fechar();
     }, true],
     ["Cancelar", fechar]]);
 }
@@ -1327,6 +1343,7 @@ function cartaoSolto(c, secao) {
     secao ? el("div", { class: "qc-orig" }, el("span", { class: "tag k-azul" }, "seção"), " ",
       c.pegou ? el("b", {}, "👤 " + c.pegou) : el("span", {}, "ninguém pegou"),
       c.inicio ? " · início " + data(c.inicio) : "", c.fim ? " · fim " + data(c.fim) : "") : null,
+    !secao && c.pegou ? el("div", { class: "qc-resp" }, el("b", {}, "👤 " + c.pegou)) : null,
     c.origem ? el("div", { class: "qc-orig", title: c.origem }, c.origem) : null,
     c.feito_texto ? el("div", { class: "qc-orig", title: c.feito_texto }, "✓ " + c.feito_texto) : null,
     (c.checklist || []).length ? el("div", { class: "qc-check" }, ...c.checklist.map((x, k) => el("label", {},
@@ -1346,9 +1363,41 @@ function cartaoSolto(c, secao) {
   no.addEventListener("dragend", () => no.classList.remove("arrastando"));
   return no;
 }
+function editarProcesso(p) {
+  const m = manualDoProcesso(p) || {};
+  const col = el("select", {}, el("option", { value: "" }, "Automática (pela planilha)"),
+    ...QUADRO.colunas.map(k => el("option", { value: k }, QUADRO.nomes[k])));
+  col.value = m.coluna && !m.aguardando ? m.coluna : "";
+  const ag = el("select", {}, el("option", { value: "" }, "—"),
+    ...Object.entries(QUADRO.aguardando || {}).map(([k, t]) => el("option", { value: k }, t)));
+  ag.value = m.aguardando || "";
+  ag.addEventListener("change", () => { if (ag.value) col.value = "esperando"; });
+  modal("Processo " + p.codigo, [p.razao, p.ocupacao].filter(Boolean).join(" · "), [
+    el("label", { class: "campo-card" }, "Situação ", ag),
+    el("label", { class: "campo-card" }, "Coluna ", col),
+    el("p", { class: "sub" }, "Vale até a planilha de distribuição mudar o processo (ex.: concluído); aí ele volta sozinho ao lugar automático.")], [
+    ["Salvar", async b => { await mexer("processo", [p.codigo, p.estado, col.value, ag.value], b, false); fechar(); }, true],
+    ["Voltar ao automático", async b => { await mexer("processo", [p.codigo, p.estado, "", ""], b, false); fechar(); }],
+    ["Cancelar", fechar]]);
+}
 function cartaoProcesso(p) {
-  return el("div", { class: "qc qc-proc", title: "Processo: o lugar vem da planilha de distribuição. Clique para abrir.", on: { click: () => abrirProcesso(p.codigo) } },
-    el("div", { class: "qc-tit cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null), tagEstado(p));
+  const m = manualDoProcesso(p);
+  const aguarda = m && m.aguardando ? (QUADRO.aguardando || {})[m.aguardando] : "";
+  const parar = fn => ev => { ev.stopPropagation(); fn(); };
+  const no = el("div", { class: "qc qc-proc" + (aguarda ? " aguarda" : ""), draggable: "true",
+      title: "Processo: clique para abrir. ✎ ou arrastar muda o lugar e a situação.", on: { click: () => abrirProcesso(p.codigo) } },
+    el("div", { class: "qc-tit cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null),
+    p.razao ? el("div", { class: "qc-razao" }, p.razao) : null,
+    p.ocupacao || p.area ? el("div", { class: "qc-orig" }, [p.ocupacao, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""].filter(Boolean).join(" · ")) : null,
+    el("div", { style: "margin-top:5px" }, tagEstado(p)),
+    aguarda ? el("div", { class: "qc-aguarda" }, "⏳ " + aguarda) : null,
+    m && m.coluna && !aguarda ? el("div", { class: "qc-orig" }, "lugar mudado à mão") : null,
+    el("div", { class: "qc-bts" },
+      el("button", { class: "bt link", title: "Mudar situação ou coluna", on: { click: parar(() => editarProcesso(p)) } }, "✎"),
+      m ? el("button", { class: "bt link", title: "Voltar ao lugar automático", on: { click: parar(() => mexer("processo", [p.codigo, p.estado, "", ""], null, false)) } }, "↺") : null));
+  no.addEventListener("dragstart", ev => { ev.dataTransfer.setData("text/plain", "p:" + p.codigo); no.classList.add("arrastando"); });
+  no.addEventListener("dragend", () => no.classList.remove("arrastando"));
+  return no;
 }
 function pintarQuadro() {
   const temSecao = Array.isArray(QUADRO.secao);
@@ -1371,6 +1420,11 @@ function pintarQuadro() {
     col.addEventListener("dragleave", () => col.classList.remove("alvo"));
     col.addEventListener("drop", ev => { ev.preventDefault(); col.classList.remove("alvo");
       const v = ev.dataTransfer.getData("text/plain") || "", secao = v.startsWith("s:"), id = v.slice(2);
+      if (v.startsWith("p:")) {
+        const p = PROCS.find(x => x.codigo === id), m = p && manualDoProcesso(p);
+        if (p && colunaDoProcesso(p) !== k) mexer("processo", [id, p.estado, k, k === "esperando" && m ? m.aguardando : ""], null, false);
+        return;
+      }
       const c = (secao ? QUADRO.secao || [] : QUADRO.cartoes).find(x => x.id === id);
       if (c && c.coluna !== k) mexer("alterar", [id, { coluna: k }], null, secao); });
     return col;
@@ -1658,14 +1712,23 @@ function renderProcesso(d) {
   const an = (ESTADO.info && ESTADO.info.fluxos || []).find(f => f.id === "analise");
   PR.fluxo = an || { modelo: "claude-sonnet-5-5", esforco: "high", modelo_texto: "Sonnet 5.5 alto" };
   $("#pr-modelo").textContent = "· " + PR.fluxo.modelo_texto;
+  // cabeçalho enxuto (2.3.13, pedido do Átila): código, razão social, nº de medidas; o resto no title
   $("#pr-tags").replaceChildren(...[
-    el("span", { class: "tag" }, d.json_sol ? "JSON do SOL: " + d.json_sol : "sem JSON do SOL na pasta"),
-    el("span", { class: "tag" }, d.medidas.length + " medida(s)"),
-    d.cias.length ? el("span", { class: "tag" }, d.cias.length + " CIA anterior(es)") : null].filter(Boolean));
+    d.razao ? el("span", { class: "pr-razao", title: d.razao }, d.razao) : null,
+    el("span", { class: "tag", title: d.json_sol ? "JSON do SOL: " + d.json_sol : "sem JSON do SOL na pasta" }, d.medidas.length + " medida(s)"),
+    d.cias.length ? el("span", { class: "tag" }, d.cias.length + " CIA anterior(es)") : null,
+    tagRecurso(d)].filter(Boolean));
   $("#pr-laudo").hidden = !d.laudo;
   pintarSituacao(d.caixa || { estado: "sem" });
   pintarCota();
   pintarChecklist(); pintarCIA();
+}
+// recurso (2.3.13): aparece se o processo TEVE recurso — nos Marcos do SOL (marcos-resumo.json) ou no recurso.json
+function tagRecurso(d) {
+  const sol = (d.marcos && d.marcos.recursos) || [], seus = d.recursos || [];
+  if (!sol.length && !seus.length) return null;
+  const linhas = [...sol.map(r => dataBR(r.data) + " · " + r.descricao), ...seus.map(i => [i.tipo || "Recurso", i.estado, i.objeto].filter(Boolean).join(" · "))];
+  return el("span", { class: "tag sit k-azul", title: linhas.join("\n") }, (sol.length + seus.length > 1 ? (sol.length + seus.length) + " recursos" : "Recurso"));
 }
 // caixa do analista na janela do processo (2.1.13): da planilha só mostra; sem planilha, marca à mão
 function pintarSituacao(e) {
@@ -1677,9 +1740,8 @@ function pintarSituacao(e) {
     return [rot, i];
   };
   const partes = [tagEstado(e)];
-  if (e.fonte === "planilha") {
-    partes.push(el("span", { class: "tag", title: "Da planilha Distribuição Análise, trazida pelo Sincronizar processos" },
-      (e.distribuido ? "distribuído " + dataBR(e.distribuido) + " · vence " + dataBR(e.vence) : "protocolo " + dataBR(e.protocolo)) + " · planilha"));
+  if (e.fonte === "planilha") {  // as datas da planilha ficam no title da situação (2.3.13)
+    partes[0].title = (e.distribuido ? "Distribuído " + dataBR(e.distribuido) + " · vence " + dataBR(e.vence) : "Protocolo " + dataBR(e.protocolo)) + " · da planilha de distribuição";
   } else {
     const res = el("select", { title: "Resultado da análise" }, ...["", "CIA", "CA"].map(k => el("option", { value: k }, k || "resultado")));
     res.value = e.resultado || "";
@@ -1687,7 +1749,10 @@ function pintarSituacao(e) {
     partes.push(...data("distribuido", "distribuído", "Data em que caiu na sua caixa (fora da planilha)"),
       ...data("concluido", "concluído", "Data em que saiu da caixa"), res);
   }
-  partes.push(...data("ct", "CT", "Data da consulta técnica"));
+  // CT só aparece quando o processo teve (data marcada ou ct.json); sem CT, um "+ CT" discreto para marcar
+  const temCT = e.ct || (PR.dados.cts || []).length;
+  if (temCT) partes.push(...data("ct", "CT", "Data da consulta técnica"));
+  else partes.push(el("button", { class: "bt link", title: "Marcar a data de uma consulta técnica", on: { click: ev => ev.currentTarget.replaceWith(...data("ct", "CT", "Data da consulta técnica")) } }, "+ CT"));
   $("#pr-sit").replaceChildren(...partes);
 }
 function pintarCota() {

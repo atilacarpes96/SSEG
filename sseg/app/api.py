@@ -504,7 +504,9 @@ class Api:
     def quadro(self):
         """Tarefas soltas (quadro.json). Os processos a tela tira da lista de processos()."""
         q, raiz = self._quadro()
-        r = {"cartoes": q.ler(raiz)["cartoes"], "colunas": q.COLUNAS, "nomes": q.NOMES, "secao": None, "erro_secao": ""}
+        d = q.ler(raiz)
+        r = {"cartoes": d["cartoes"], "processos": d["processos"], "aguardando": q.AGUARDANDO,
+             "colunas": q.COLUNAS, "nomes": q.NOMES, "secao": None, "erro_secao": ""}
         if self._cfg().get("servidor_quem") and acesso.tem_apelido():  # Quadro da seção (2.3.0), pelo servidor
             try:
                 s = acesso.chamar_json("quadro", timeout=20)
@@ -519,13 +521,18 @@ class Api:
         return acesso.chamar_json("quadro-mexer", entrada=pedido, timeout=20)
 
     def quadro_mexer(self, acao, *args):
-        """adicionar(titulo, coluna) · alterar(id, campos) · remover(id) · restaurar(cartao, pos)."""
+        """adicionar(titulo, coluna) · alterar(id, campos) · remover(id) · restaurar(cartao, pos) ·
+        processo(codigo, estado, coluna, aguardando)."""
         q, raiz = self._quadro()
         try:
             if acao == "adicionar":
                 return q.adicionar(raiz, args[0], "", args[1] if len(args) > 1 else "afazer")
+            if acao == "processo":
+                if not CODIGO.match(str(args[0])):
+                    raise ValueError("código inválido")
+                return q.processo(raiz, args[0], *args[1:4])
             if acao == "alterar":
-                livres = {k: v for k, v in (args[1] or {}).items() if k in ("coluna", "titulo", "checklist")}
+                livres = {k: v for k, v in (args[1] or {}).items() if k in ("coluna", "titulo", "checklist", "pegou")}
                 return q.alterar(raiz, args[0], **livres)
             if acao == "remover":
                 return q.remover(raiz, args[0])
@@ -578,7 +585,13 @@ class Api:
         if not os.path.isdir(pasta):
             raise RuntimeError("Não há pasta %s na pasta dos processos." % codigo)
         d = processo.montar(self._clone(), pasta)
-        d["caixa"] = estado_caixa(_ler(os.path.join(pasta, "distribuicao.json")), d["analise"], self._cfg().get("prazo_caixa", 10))
+        dist = _ler(os.path.join(pasta, "distribuicao.json"))
+        d["caixa"] = estado_caixa(dist, d["analise"], self._cfg().get("prazo_caixa", 10))
+        # cabeçalho enxuto (2.3.13): código, razão social, medidas; CT e recurso só quando existem
+        d["razao"] = identificacao(pasta, os.listdir(pasta), dist)["razao"]
+        d["cts"] = _ler(os.path.join(pasta, "ct.json")).get("itens") or []
+        d["recursos"] = _ler(os.path.join(pasta, "recurso.json")).get("itens") or []
+        d["marcos"] = _ler(os.path.join(pasta, "marcos-resumo.json"))  # protocolo, análises e recursos do SOL
         c = self._conversas.get(codigo)
         d["ocupado"] = bool(c and c.ocupado)
         return d
