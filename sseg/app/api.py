@@ -617,7 +617,7 @@ class Api:
             alvo = re.sub(r"\s+", " ", texto).strip().lower()
             for p in d["pendencias"]:
                 if re.sub(r"\s+", " ", p["texto"]).strip().lower() == alvo:
-                    p.update(resposta=resp, enviada=True)
+                    p.update(resposta=resp, enviada=True, feita=True)  # respondida = resolvida: sai do topo (2.3.10)
         reg.gravar(pasta, d)
 
     def norma_pdf(self, rotulo, consulta=""):

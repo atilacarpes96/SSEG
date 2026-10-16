@@ -170,6 +170,8 @@ def args_parser(sp):
     p.add_argument("texto", help='texto, ou "-" para ler da entrada (heredoc)')
     p.add_argument("--medida", default="")
     p.add_argument("--fundamento", default="")
+    p = sub.add_parser("resolver", help="marca pendências como resolvidas (ex.: p2 p3) — sai do topo do checklist")
+    p.add_argument("ids", nargs="+")
     p = sub.add_parser("passo", help="marca um passo do checklist (1 a 16)")
     p.add_argument("n", type=int)
     sub.add_parser("ver", help="mostra o registro (pendências e o texto final da CIA)")
@@ -196,6 +198,9 @@ def principal(args):
     elif args.acao == "exigencia":
         e = exigencia(args.pasta, args.texto, args.medida, args.fundamento)
         print("exigência %s registrada como rascunho (o analista salva o texto final)" % e["id"])
+    elif args.acao == "resolver":
+        feitas = [i for i in args.ids if atualizar(args.pasta, "pendencias", i, feita=True)]
+        print("resolvida(s): %s" % (", ".join(feitas) or "nenhuma (ids não existem)"))
     elif args.acao == "passo":
         marcar(args.pasta, "passos", args.n, True)
         print("passo %d marcado" % args.n)

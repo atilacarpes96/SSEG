@@ -1700,8 +1700,10 @@ function pintarChecklist() {
   // pendências
   const pend = el("div", { class: "bloco" }, el("b", {}, "Pendências"));
   const abertas = r.pendencias.filter(p => !p.feita).length;
+  const resolvidas = r.pendencias.filter(p => p.feita);
   if (!r.pendencias.length) pend.append(el("p", { class: "sub" }, "As perguntas e o que falta ver aparecem aqui."));
-  for (const p of r.pendencias) {
+  else if (!abertas) pend.append(el("p", { class: "sub" }, "Nenhuma pendência aberta."));
+  for (const p of r.pendencias.filter(p => !p.feita)) {
     const resp = el("input", { type: "text", value: p.resposta || "", placeholder: "sua resposta (vai para o Claude)", "data-id": p.id });
     resp.addEventListener("input", () => PR.sujos["p" + p.id] = resp.value);
     resp.addEventListener("change", () => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { resposta: resp.value, enviada: false }]).then(() => delete PR.sujos["p" + p.id]));
@@ -1711,6 +1713,10 @@ function pintarChecklist() {
         el("label", {}, el("input", { type: "checkbox", checked: p.feita, on: { change: ev => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { feita: ev.target.checked }]).then(recarregarRegistro) } }), " resolvida"),
         el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "pendencias", p.id]).then(recarregarRegistro) } }, "tirar"))));
   }
+  if (resolvidas.length) pend.append(el("details", { class: "discreto", style: "margin:2px 0 6px;font-size:12px" },
+    el("summary", {}, resolvidas.length + " resolvida(s)"),
+    ...resolvidas.map(p => el("div", { class: "pend feita" }, el("div", {}, p.texto), p.resposta ? el("div", { class: "sub", style: "margin:2px 0" }, "→ " + p.resposta) : null,
+      el("div", { class: "linha-bts" }, el("button", { class: "bt link", on: { click: () => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { feita: false }]).then(recarregarRegistro) } }, "reabrir"))))));
   const nova = el("input", { type: "text", placeholder: "+ pendência sua (Enter)", style: "width:100%;padding:5px 7px;border:1px solid var(--linha);border-radius:5px" });
   nova.addEventListener("keydown", async ev => { if (ev.key === "Enter" && nova.value.trim()) { await api("processo_pendencia", [PR.codigo, nova.value.trim()]); nova.value = ""; recarregarRegistro(); } });
   pend.append(nova);
@@ -1782,7 +1788,7 @@ async function enviarRespostas() {
   const r = PR.reg, lst = r.pendencias.filter(p => p.resposta && !p.enviada && !p.feita);
   const texto = "Respostas às pendências:\n" + lst.map(p => "- " + p.texto + " → " + p.resposta).join("\n");
   await chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), texto);
-  for (const p of lst) await api("processo_atualizar", [PR.codigo, "pendencias", p.id, { enviada: true }]);
+  for (const p of lst) await api("processo_atualizar", [PR.codigo, "pendencias", p.id, { enviada: true, feita: true }]);
   recarregarRegistro();
 }
 
@@ -1938,7 +1944,10 @@ async function recarregarRegistro() {
 }
 // O Claude escreve pelo sseg.py: a janela confere o analise.json a cada 2 s (sem mexer no que você digita).
 setInterval(async () => {
-  if (!PR.codigo || PR.foto || !$("#t-processo").classList.contains("ativa") || document.activeElement && /TEXTAREA|INPUT/.test(document.activeElement.tagName)) return;
+  // só não repinta se o cursor está num campo do checklist ou da CIA (perderia o que está sendo digitado);
+  // a caixa do chat não conta — antes ela travava a atualização o tempo todo (2.3.10)
+  const foco = document.activeElement;
+  if (!PR.codigo || PR.foto || !$("#t-processo").classList.contains("ativa") || foco && /TEXTAREA|INPUT|SELECT/.test(foco.tagName) && foco.closest("#pr-check, #pr-cia")) return;
   try { const r = await window.pywebview.api.processo_registro(PR.codigo); if ((r.alterado || 0) !== PR.alterado) { PR.reg = r; PR.alterado = r.alterado || 0; pintarChecklist(); pintarCIA(); pintarCota(); } } catch (e) {}
 }, 2000);
 

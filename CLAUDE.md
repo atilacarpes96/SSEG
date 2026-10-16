@@ -60,11 +60,12 @@ As skills foram escritas para o Cowork. No Claude Code, traduzir:
 - "gravar no projeto" / `project_write` / `Projects` → gravar o arquivo em `sseg/` neste clone.
   O repositório é a fonte; o projeto do claude.ai recebe pelo GitHub sincronizado.
 - "trazer os scripts do clone" → rodar direto de `sseg/scripts/`.
-- Chrome (SOL): usar a integração do Claude in Chrome com o Claude Code. A senha do SOL é
-  sempre digitada pelo usuário. Antes de abrir aba nova, chamar `tabs_context_mcp` e **reutilizar
-  a aba do SOL que já estiver no grupo** (o login mora nela); o analista autorizou isso
-  (08/10/2026). As ferramentas só agem em abas do grupo do Claude, então o login tem de ser feito
-  nelas.
+- Chrome (SOL): **primeiro o Chrome DevTools MCP** (`chrome-devtools-live`, ferramentas
+  `mcp__chrome-devtools-live__*`), que enxerga **todas** as abas do Chrome do analista — o acesso
+  foi liberado por ele (16/10/2026). `list_pages` → `select_page` na aba do SOL em que ele já
+  entrou → ler com `evaluate_script`. Tempo esgotado: o Chrome pede "Permitir" a cada conexão nova.
+  A senha do SOL é sempre digitada pelo usuário. Sem o DevTools MCP (Cowork), o Claude in Chrome:
+  `tabs_context_mcp` e reutilizar a aba do SOL que já estiver no grupo (autorizado em 08/10/2026).
 
 ## Subagentes (`.claude/agents/`)
 

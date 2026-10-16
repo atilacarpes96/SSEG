@@ -1,7 +1,7 @@
 ---
 name: sol-leitor
-description: Lê páginas do SOL-CBMRS no Chrome externo (Claude in Chrome) e devolve só o resumo pedido — dados de um licenciamento, situação de vários processos, texto de abas. Usar para leitura pesada ou repetitiva, para o texto das páginas não entrar no contexto principal. Só navega e lê; nunca altera nada no processo.
-tools: mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__find, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__browser_batch
+description: Lê páginas do SOL-CBMRS no Chrome do analista (Chrome DevTools MCP; Claude in Chrome como reserva) e devolve só o resumo pedido — dados de um licenciamento, situação de vários processos, texto de abas. Usar para leitura pesada ou repetitiva, para o texto das páginas não entrar no contexto principal. Só navega e lê; nunca altera nada no processo.
+tools: mcp__chrome-devtools-live__list_pages, mcp__chrome-devtools-live__select_page, mcp__chrome-devtools-live__navigate_page, mcp__chrome-devtools-live__new_page, mcp__chrome-devtools-live__wait_for, mcp__chrome-devtools-live__take_snapshot, mcp__chrome-devtools-live__evaluate_script, mcp__chrome-devtools-live__click, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__find, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__javascript_tool, mcp__claude-in-chrome__browser_batch
 model: claude-haiku-5-5
 ---
 
@@ -10,6 +10,13 @@ Não analisa o PPCI, não enquadra, não opina sobre exigências.
 
 ## Ao começar
 
+**Primeiro o Chrome DevTools MCP** (`mcp__chrome-devtools-live__*`, desde 16/10/2026): ele enxerga
+**todas** as abas do Chrome do analista. `list_pages` → `select_page` na aba do `solcbm.rs.gov.br`
+em que ele já entrou → `navigate_page` nela. Ler com `evaluate_script` (o mesmo `fetch` da API
+descrito abaixo, ou `document.body.innerText`); `take_snapshot` dá os `uid` para clicar com `click`.
+Tempo esgotado no `list_pages`: o Chrome pede "Permitir" a cada conexão nova — diga isso e pare.
+
+Só sem essas ferramentas (Cowork, PC sem o DevTools MCP), o Claude in Chrome abaixo.
 Chamar `tabs_context_mcp` antes de qualquer coisa. Se o grupo de abas já tem uma aba do SOL
 (`solcbm.rs.gov.br`), **usar essa aba**: o login e o `sessionStorage.access_token` moram nela, e
 abrir outra obriga o analista a logar de novo. Só criar aba (`createIfEmpty` / `tabs_create_mcp`)

@@ -30,11 +30,13 @@ NOVA_JANELA_NAO = 0x08000000 if os.name == "nt" else 0
 PERMITIDOS = ["Read", "Grep", "Glob", "Task", "Agent", "TodoWrite",
               "Bash(python sseg/scripts/*)", "Bash(python3 sseg/scripts/*)", "Bash(py sseg/scripts/*)", "Bash(cd *)",
               "PowerShell(python sseg/scripts/*)", "PowerShell(py sseg/scripts/*)", "PowerShell(cd *)",
-              # Claude in Chrome: abrir e LER o SOL na aba logada do grupo do Claude. Sem clique (computer) e sem
-              # preencher formulário: lançar no SOL não roda nesta janela (esteira 2.3, só com o "lança").
-              "mcp__claude-in-chrome__tabs_context_mcp", "mcp__claude-in-chrome__tabs_create_mcp",
-              "mcp__claude-in-chrome__navigate", "mcp__claude-in-chrome__find", "mcp__claude-in-chrome__get_page_text",
-              "mcp__claude-in-chrome__read_page", "mcp__claude-in-chrome__javascript_tool",
+              # Chrome DevTools MCP (2.3.10, pedido do Átila): o Chrome do analista inteiro, TODAS as abas — usa a
+              # aba do SOL em que ele já entrou. Só ler: sem click/fill/press (lançar no SOL não roda nesta janela).
+              "mcp__chrome-devtools-live__list_pages", "mcp__chrome-devtools-live__select_page",
+              "mcp__chrome-devtools-live__navigate_page", "mcp__chrome-devtools-live__new_page",
+              "mcp__chrome-devtools-live__wait_for", "mcp__chrome-devtools-live__take_snapshot",
+              "mcp__chrome-devtools-live__evaluate_script", "mcp__chrome-devtools-live__list_network_requests",
+              "mcp__chrome-devtools-live__get_network_request",
               "Bash(pdftotext *)", "Bash(pdftoppm *)", "Bash(git status*)", "Bash(git log*)", "Bash(git diff*)"]
 
 INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe (não no terminal). Pasta do processo: {pasta}
@@ -57,11 +59,12 @@ python sseg/scripts/sseg.py analise --pasta "{pasta}" rascunho e3 - --medida "<m
 FIM
 ```
   - pendência que NÃO é pergunta (algo a ver na planta, dado que falta): `python sseg/scripts/sseg.py analise --pasta "{pasta}" pendencia "texto curto"` — uma por comando; diga também no chat.
-  - passo do checklist concluído: `python sseg/scripts/sseg.py analise --pasta "{pasta}" passo N` (os 16 passos estão em sseg/workflow/checklist-analise.json).
+  - passo do checklist concluído: `python sseg/scripts/sseg.py analise --pasta "{pasta}" passo N` (os 16 passos estão em sseg/workflow/checklist-analise.json). Marque o passo LOGO que ele estiver feito (ex.: data de protocolo confirmada → passo 2), sem esperar o fim.
+  - pendência resolvida no chat (a sua ou uma que o analista respondeu): `python sseg/scripts/sseg.py analise --pasta "{pasta}" resolver p2 p3` — ela sai do topo do checklist.
   - o que o analista já salvou: `python sseg/scripts/sseg.py analise --pasta "{pasta}" ver`.
   Exigência e rascunho entram como rascunho; o texto final é o que o analista salvar, e você nunca o reescreve: se achar problema num texto salvo, aponte e sugira.
 - Respostas curtas, em markdown simples (títulos, listas, negrito). O analista lê numa janela.
-- SOL: pelo Claude in Chrome, SEMPRE na aba do SOL que já está no grupo do Claude (chame tabs_context_mcp e navegue nela com navigate; o login mora nessa aba — aba nova cai na tela de login). Sem aba do SOL no grupo, abra uma com tabs_create_mcp e peça ao analista para entrar (a senha é sempre ele quem digita). Só abrir e ler, seguindo a skill sol-cbmrs-navegador (leitura pela API com javascript_tool, resumo filtrado; leitura pesada ao subagente sol-leitor). Nunca lançar, salvar ou mudar nada no SOL nesta janela."""
+- SOL: pelo Chrome DevTools MCP (ferramentas mcp__chrome-devtools-live__*), que enxerga TODAS as abas do Chrome do analista — não use o Claude in Chrome nem grupo de abas. Comece com list_pages, escolha a aba do solcbm.rs.gov.br em que ele já entrou (select_page) e navegue nela (navigate_page); só abra aba nova (new_page) se não houver nenhuma do SOL, e então peça ao analista para entrar (a senha é sempre ele quem digita). Se list_pages der tempo esgotado, peça ao analista para clicar em "Permitir" no aviso do Chrome e tente de novo. Ler pela API com evaluate_script (fetch com o token do sessionStorage, como na skill sol-cbmrs-navegador) e trazer só o resumo; onde a skill falar em tabs_context_mcp/javascript_tool/grupo do Claude, use o equivalente daqui. Leitura pesada ao subagente sol-leitor. Nunca lançar, salvar ou mudar nada no SOL nesta janela."""
 
 INSTRUCOES_FLUXO = """Você está na janela "{titulo}" do programa SSEG.exe (não no terminal). O analista conversa numa janela e pode não estar acostumado com terminal.
 
@@ -69,7 +72,7 @@ Regras desta janela:
 - Faça só o que o analista pedir em cada mensagem.{skill}
 - Respostas curtas, em markdown simples (títulos, listas, negrito); texto de notificação em bloco citável, no formato da caixa do SOL.
 - Use os scripts sempre como `python sseg/scripts/...`, a partir da pasta do SSEG.
-- SOL: pelo Claude in Chrome, SEMPRE na aba do SOL que já está no grupo do Claude (chame tabs_context_mcp e navegue nela com navigate; o login mora nessa aba — aba nova cai na tela de login). Sem aba do SOL no grupo, abra uma com tabs_create_mcp e peça ao analista para entrar (a senha é sempre ele quem digita). Só abrir e ler, seguindo a skill sol-cbmrs-navegador (leitura pela API com javascript_tool, resumo filtrado; leitura pesada ao subagente sol-leitor). Nunca lançar, salvar ou mudar nada no SOL nesta janela."""
+- SOL: pelo Chrome DevTools MCP (ferramentas mcp__chrome-devtools-live__*), que enxerga TODAS as abas do Chrome do analista — não use o Claude in Chrome nem grupo de abas. Comece com list_pages, escolha a aba do solcbm.rs.gov.br em que ele já entrou (select_page) e navegue nela (navigate_page); só abra aba nova (new_page) se não houver nenhuma do SOL, e então peça ao analista para entrar (a senha é sempre ele quem digita). Se list_pages der tempo esgotado, peça ao analista para clicar em "Permitir" no aviso do Chrome e tente de novo. Ler pela API com evaluate_script (fetch com o token do sessionStorage, como na skill sol-cbmrs-navegador) e trazer só o resumo; onde a skill falar em tabs_context_mcp/javascript_tool/grupo do Claude, use o equivalente daqui. Leitura pesada ao subagente sol-leitor. Nunca lançar, salvar ou mudar nada no SOL nesta janela."""
 
 
 GUIA_VISUAL = """
@@ -122,7 +125,7 @@ class Conversa:
 
     # ------------------------------------------------------------ processo do claude
     def _comando(self):
-        cmd = [self.claude, "-p", "--chrome", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
+        cmd = [self.claude, "-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
                "--model", self.fluxo["modelo"], "--effort", self.fluxo["esforco"],
                "--permission-mode", "acceptEdits"] + (["--add-dir", self.pasta] if self.pasta else []) + [
                "--allowedTools", *PERMITIDOS,
