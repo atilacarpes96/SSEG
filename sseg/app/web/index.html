@@ -147,6 +147,7 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 
 /* ---- tela Quadro (2.1.14) */
 #t-quadro { max-width: 1200px; }
+#t-inicio { max-width: 1400px; }  /* a tabela de processos tem 8 colunas (2.3.9) */
 .quadro { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
 .qcol { background: var(--fundo2); border: 1px solid var(--linha); border-radius: var(--raio); padding: 10px; min-height: 120px; }
 .qcol.alvo { border-color: var(--verm-claro); }
@@ -294,7 +295,9 @@ details.medida .itens { padding: 0 9px 8px; }
 .exig .conta { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--suave); }
 .exig .conta.alto { color: var(--verm); font-weight: 700; }
 .exig .salvo { color: var(--ok); }
-.t-proc td.corta { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-proc td.razao { min-width: 160px; max-width: 260px; }
+.t-proc td.razao > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
+.t-proc td.ocup-c, .t-proc td.quando, .t-proc td.arqs { white-space: nowrap; }
 .t-proc .tag.sit { white-space: nowrap; display: inline-block; margin: 1px 4px 1px 0; }
 .t-proc .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .rola-x { overflow-x: auto; }
@@ -451,7 +454,7 @@ body.sem-pc #sem-pc { display: block; }
       <div class="cards" id="cards"></div>
       <h2>Processos em andamento<span id="filtro"></span></h2>
       <p class="sub">Primeiro os da sua caixa, o que está há mais dias no topo; depois os que saíram com CIA e os que saíram com CA, o mais recente primeiro. Na caixa, a ordem é a dos dias em análise do SOL. "Abrir" mostra a janela do processo: conversa, checklist e CIA. Abrir não põe o Claude para trabalhar: ele espera o seu pedido.</p>
-      <div class="cartao rola-x"><table class="t-proc"><thead><tr><th>Processo</th><th>Razão social</th><th>Ocupação predominante</th><th class="num">Área</th><th>Situação</th><th>Mexido em</th><th></th><th></th></tr></thead>
+      <div class="cartao rola-x"><table class="t-proc"><thead><tr><th>Processo</th><th>Razão social</th><th>Ocupação</th><th class="num">Área</th><th>Situação</th><th>Mexido em</th><th></th><th></th></tr></thead>
         <tbody id="processos"><tr><td class="vazio" colspan="8">Carregando…</td></tr></tbody></table></div>
       <h2>Iniciar conversa</h2>
       <p class="sub">Em revisão e teste. Cada demanda abre o Claude Code com o modelo e o esforço da política de modelo.</p>
@@ -1225,6 +1228,8 @@ function tagEstado(p) {
 }
 // Ordem da tabela (2.3.7, pedido do Átila): 1) na caixa, há mais dias primeiro (distribuído mais antigo);
 // 2) concluídos com CIA; 3) concluídos com CA — os dois pelo mais recente; 4) o resto (fila, sem dados), mais mexido primeiro.
+// "J-1 a J-4 - Armazéns gerais…" → "J-1 a J-4"; o nome inteiro fica no title da célula
+const siglaOcupacao = t => ((t || "").match(/^\s*([A-M]-\d+(?:\.\d+)?(?:\s*a\s*[A-M]-\d+)?)/) || [])[1] || (t || "").split(" - ")[0];
 function ordemProcessos(lst) {
   const grupo = p => p.estado === "caixa" ? 0 : p.estado === "concluido" && p.resultado === "CIA" ? 1
     : p.estado === "concluido" && p.resultado === "CA" ? 2 : 3;
@@ -1248,16 +1253,16 @@ function pintarProcessos() {
   const h = isoLocal(new Date());
   corpo.replaceChildren(...lst.map(p => el("tr", {},
     el("td", { class: "cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null),
-    el("td", { class: "corta", title: p.razao || "" }, p.razao || el("span", { class: "discreto" }, "—")),
-    el("td", { class: "corta", title: p.ocupacao || "" }, p.ocupacao || el("span", { class: "discreto" }, "—")),
+    el("td", { class: "razao", title: p.razao || "" }, el("span", {}, p.razao || "—")),
+    el("td", { class: "ocup-c", title: p.ocupacao || "" }, siglaOcupacao(p.ocupacao) || el("span", { class: "discreto" }, "—")),
     el("td", { class: "num" }, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""),
     el("td", {}, tagEstado(p), p.estado === "caixa" && p.dias_sol != null ? el("span", { class: "tag sit " + (p.dias_sol > 30 ? "k-vermelho" : "k-cinza"), title: "Dias em análise, como na caixa do SOL" }, p.dias_sol + " dias no SOL") : null, p.ct && p.ct >= h ? el("span", { class: "tag sit k-roxo" }, "CT " + dataBR(p.ct)) : null,
       ...meus(p.cts, "minuta").map(i => el("span", { class: "tag sit k-roxo", title: [i.fact, i.modalidade, i.hora].filter(Boolean).join(" · ") }, "CT" + (i.data ? " " + dataBR(i.data) : ""))),
       ...meus(p.cts, "chefia").map(() => el("span", { class: "tag sit k-cinza" }, "CT com a chefia")),
       ...meus(p.recursos, "minuta").map(i => el("span", { class: "tag sit k-azul", title: i.objeto || "" }, i.tipo || "Recurso")),
       ...meus(p.recursos, "chefia").map(i => el("span", { class: "tag sit k-cinza", title: i.chefia || "" }, (i.tipo || "Recurso") + " com a chefia"))),
-    el("td", {}, new Date(p.quando * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })),
-    el("td", {}, el("span", { class: "tag" }, p.arquivos + " arquivo(s)"), p.cia ? el("span", { class: "tag" }, "CIA") : null),
+    el("td", { class: "quando" }, new Date(p.quando * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })),
+    el("td", { class: "arqs" }, el("span", { class: "tag" }, p.arquivos + " arquivo(s)"), p.cia ? el("span", { class: "tag" }, "CIA") : null),
     el("td", { style: "text-align:right" },
       el("button", { class: "bt link", on: { click: () => abrirProcesso(p.codigo) } }, "abrir"),
       el("button", { class: "bt link", on: { click: () => api("abrir_processo", [p.codigo]) } }, "pasta")))));

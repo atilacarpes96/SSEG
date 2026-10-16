@@ -313,6 +313,7 @@ shell: a chave dele só roda a `scripts/porta.py`.
   - **Tabela do Início como a caixa do SOL:** colunas Razão social, Ocupação predominante e Área; a caixa ordenada pelos dias em análise do SOL (tag "N dias no SOL", vermelha acima de 30). Fonte: `<código>/sol-caixa.json`, gravado pelo `sol_caixa.py` no servidor a cada leitura; sem ele, o api-<ID>.json e a planilha
   - **Checklist ligado aos scripts:** passo 3 marcado sozinho quando o JSON do SOL está na pasta, passo 4 quando há `pre-analise.txt` mais novo que o JSON (tag "auto", caixa travada). Bloco "Pré-análise documental" com os pontos marcados, "ver tudo" e "Mandar ao Claude" (a conversa segue dela, sem refazer o check)
   - "Análise técnica no SOL" abre direto no processo quando a caixa do SOL deu o idAnalise
+- [x] **2.3.9** (16/10/2026): tabela do Início arrumada — razão social quebra em até 2 linhas, ocupação só a sigla (nome inteiro no title), tela inicial até 1.400 px de largura
 - [ ] Teste do Átila: baixar o SSEG.exe do release num PC sem SSEG (ou numa conta nova do Windows) e seguir a tela Instalação
 - [ ] Publicar: push → `git pull` no servidor ANTES de soltar o .exe novo (o programa avisa "servidor sem a porta" se faltar)
 - [ ] Espelho no celular para analista: porta própria por analista (`permitlisten`) e `tailscale serve` de cada uma — depois
