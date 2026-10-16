@@ -52,6 +52,9 @@ header { background: var(--cartao); border-bottom: 3px solid var(--verm); displa
 .chip .n { background: var(--verm); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; }
 .chip.novo { border-color: var(--laranja); color: var(--creme-txt); background: var(--creme); font-weight: 600; }
 .chip.novo::before { background: var(--laranja); }
+.chip.pendente { border-color: var(--am-borda); background: var(--am-bg); font-weight: 600; }
+.chip.pendente::before { background: var(--amarelo); }
+.chip.pendente .n { background: var(--amarelo); color: #000; }
 @keyframes pisca { 50% { opacity: .3; } }
 
 /* ---- corpo */
@@ -899,11 +902,31 @@ async function estadoPastas() {
     return p;
   } catch (e) { chip("#e-pastas", "alerta", "Pastas: erro"); }
 }
+// Chip do servidor (2.3.4): confere de verdade, por script (o plano da sincronização, só leitura; sem Claude).
+// Verde = PC e servidor iguais · amarelo com número = algo a baixar/enviar/escolher · vermelho = servidor não respondeu.
+let SRV_CONFERINDO = false;
 async function estadoServidor() {
-  const s = await api("estado_servidor");
-  chip("#e-servidor", s.configurado ? "ok" : "", s.configurado ? "Servidor" : "Servidor: sem SSH");
-  $("#e-servidor").title = s.configurado ? "Sincronizar processos com o servidor" : "Este PC não tem a chave do servidor (opcional)";
+  const s = await api("estado_servidor"), c = $("#e-servidor");
+  if (!s.configurado) { chip("#e-servidor", "", "Servidor: sem SSH"); c.title = "Este PC não tem a chave do servidor (opcional)"; return; }
+  if (SRV_CONFERINDO) return;
+  SRV_CONFERINDO = true;
+  if (!/\b(ok|pendente|alerta)\b/.test(c.className)) chip("#e-servidor", "carregando", "Servidor");
+  try {
+    const r = await window.pywebview.api.servidor_conferir();  // direto: o erro vira o chip vermelho, não aviso na barra
+    const n = r.sobe + r.desce + r.conflito;
+    if (!n) { chip("#e-servidor", "ok", "Servidor"); c.title = "PC e servidor iguais (conferido às " + new Date().toLocaleTimeString().slice(0, 5) + ")"; return; }
+    chip("#e-servidor", "pendente", "Servidor", r.novos.length ? r.novos.length + " novo" + (r.novos.length > 1 ? "s" : "") : n);
+    c.title = [r.novos.length ? r.novos.length + " processo(s) novo(s) na sua caixa: " + r.novos.join(", ") : "",
+      r.desce ? r.desce + " arquivo(s) a baixar (" + r.processos_descem + " processo(s))" : "",
+      r.sobe ? r.sobe + " arquivo(s) deste PC a enviar" : "",
+      r.conflito ? r.conflito + " mudou dos dois lados — escolher qual fica" : "",
+      "Clique para sincronizar."].filter(Boolean).join("\n");
+  } catch (e) {
+    chip("#e-servidor", "alerta", "Servidor: sem conexão");
+    c.title = "O servidor não respondeu: " + String(e.message || e).slice(-300) + "\nClique para tentar de novo.";
+  } finally { SRV_CONFERINDO = false; }
 }
+if (!ESPELHO) setInterval(estadoServidor, 10 * 60 * 1000);
 async function estadoGithub() {
   chip("#e-github", "carregando", "GitHub");
   try {
@@ -994,7 +1017,7 @@ function telaServidor(plano) {
     ["Sincronizar", async b => {
       const esc = {};
       document.querySelectorAll("#m-meio input[type=radio]:checked").forEach(r => esc[r.dataset.k] = r.value);
-      await api("servidor_aplicar", [esc], b); fechar(); carregarProcessos();
+      await api("servidor_aplicar", [esc], b); fechar(); carregarProcessos(); estadoServidor();
     }, true],
     ["Cancelar", fechar],
   ]);

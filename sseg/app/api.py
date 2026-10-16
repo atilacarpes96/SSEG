@@ -779,6 +779,17 @@ class Api:
     def servidor_planejar(self):
         return json.loads(self._sseg_py("sincronizar", "--json"))
 
+    def servidor_conferir(self):
+        """Para o chip (2.3.4): o plano, só lendo, resumido em números. Script puro, sem Claude.
+        novos = processos que descem e ainda não têm pasta neste PC (chegaram na caixa)."""
+        p = self.servidor_planejar()
+        cods = lambda lst: {k.split("/", 1)[0] if "/" in k else k[:-3] for k in lst}
+        desce = cods(p["desce"])
+        pasta = self._cfg().get("processos") or ""
+        novos = sorted(c for c in desce if not os.path.isdir(os.path.join(pasta, c)))
+        return {"sobe": len(p["sobe"]), "desce": len(p["desce"]), "conflito": len(p["conflito"]),
+                "processos_descem": len(desce), "novos": novos}
+
     def servidor_aplicar(self, escolhas):
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as fh:
             json.dump(escolhas or {}, fh)
