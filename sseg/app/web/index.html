@@ -466,8 +466,8 @@ body.sem-pc #sem-pc { display: block; }
         <span id="pr-tags"></span>
         <span class="pr-sit" id="pr-sit"></span>
         <div class="dir">
-          <button class="bt" id="pr-sol-lic" title="O Claude abre na aba do SOL do grupo dele (onde está o login)">Licenciamento no SOL</button>
-          <button class="bt" id="pr-sol-an" title="O Claude abre na aba do SOL do grupo dele (onde está o login)">Análise técnica no SOL</button>
+          <button class="bt" id="pr-sol-lic" title="Abre no navegador">Licenciamento no SOL</button>
+          <button class="bt" id="pr-sol-an" title="Abre no navegador">Análise técnica no SOL</button>
           <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
           <button class="bt link so-pc" id="pr-pasta">abrir pasta</button>
           <button class="bt so-pc" id="pr-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button>
@@ -1958,16 +1958,15 @@ for (const b of document.querySelectorAll("#pr-abas button")) b.onclick = () => 
 };
 $("#cv-voltar").onclick = () => ir("inicio");
 $("#pr-pasta").onclick = () => api("abrir_pasta_processo", [PR.codigo]);
-// Os botões do SOL pedem ao Claude da conversa que abra o endereço NA ABA DO SOL DO GRUPO DO CLAUDE
-// (o login mora nela; aba nova pelo Chrome comum cai na tela de login).
-function abrirNoSol(url, oque) {
-  const ctx = ctxDe(PR.codigo, PR.fluxo, "");
-  chatEnviar(ctx, "Abra no Chrome " + oque + ": " + url + " — na aba do SOL que já está no grupo do Claude (tabs_context_mcp e navigate nela; aba nova só se não houver uma). Só abra a página: não leia nem mude nada.");
+// Os botões do SOL são link direto (2.3.5, pedido do Átila): abrem no navegador padrão, sem passar pelo
+// chat. No celular (espelho), abre no próprio celular.
+function abrirNoSol(url) {
+  if (ESPELHO) window.open(url, "_blank", "noopener");
+  else api("abrir_url", [url]);
 }
-$("#pr-sol-lic").onclick = () => { const sol = PR.dados.sol;
-  abrirNoSol(sol.licenciamento, sol.id ? "o licenciamento deste processo" : "a consulta de licenciamentos (o id deste processo no SOL ainda não é conhecido)"); };
-$("#pr-sol-an").onclick = () => { const sol = PR.dados.sol;
-  abrirNoSol(sol.analise, sol.analise_direta ? "a análise técnica deste processo" : "a caixa de análise técnica (depois eu clico em Analisar na linha do processo)"); };
+// sem o id do processo no SOL, o licenciamento cai na consulta; sem a análise direta, na caixa de análise
+$("#pr-sol-lic").onclick = () => abrirNoSol(PR.dados.sol.licenciamento);
+$("#pr-sol-an").onclick = () => abrirNoSol(PR.dados.sol.analise);
 $("#pr-laudo").onclick = () => modal("Laudo de inviabilidade técnica", "Texto do laudo no JSON do SOL. Separar as compensatórias por medida é do analista (ou peça ao Claude no chat).",
   el("div", { class: "lista", style: "max-height:420px;font:13.5px/1.55 'Segoe UI',system-ui,sans-serif" }, PR.dados.laudo), [["Fechar", fechar]]);
 
