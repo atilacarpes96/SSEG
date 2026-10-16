@@ -267,6 +267,7 @@ main.processo { padding: 0; overflow: hidden; }
 .bloco { margin-bottom: 14px; }
 .bloco > b { display: block; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); margin: 4px 0 6px; }
 .ck { display: flex; gap: 8px; align-items: flex-start; padding: 4px 2px; font-size: 13px; }
+.ck input[type=checkbox], .pend .linha-bts input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; flex: none; }
 .ck input { margin-top: 3px; }
 .ck small { display: block; color: var(--suave); font-size: 11.5px; }
 .ck.feito > span { color: var(--suave); text-decoration: line-through; }
@@ -1710,7 +1711,7 @@ function pintarChecklist() {
     pend.append(el("div", { class: "pend" + (p.feita ? " feita" : "") },
       el("div", {}, p.texto, p.origem === "analista" ? el("span", { class: "marca-tag" }, "sua") : null),
       resp, el("div", { class: "linha-bts" },
-        el("label", {}, el("input", { type: "checkbox", checked: p.feita, on: { change: ev => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { feita: ev.target.checked }]).then(recarregarRegistro) } }), " resolvida"),
+        el("span", {}, el("input", { type: "checkbox", checked: p.feita, on: { change: ev => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { feita: ev.target.checked }]).then(recarregarRegistro) } }), " resolvida"),
         el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "pendencias", p.id]).then(recarregarRegistro) } }, "tirar"))));
   }
   if (resolvidas.length) pend.append(el("details", { class: "discreto", style: "margin:2px 0 6px;font-size:12px" },
@@ -1742,7 +1743,8 @@ function pintarChecklist() {
     if (p.fase !== fase) { fase = p.fase; fluxo.append(el("div", { class: "sub", style: "margin:6px 0 2px;font-weight:600" }, fase)); }
     const porScript = auto[String(p.n)] && !r.passos[String(p.n)];
     const feito = !!r.passos[String(p.n)] || !!porScript;
-    fluxo.append(el("label", { class: "ck" + (feito ? " feito" : ""), title: porScript ? "Feito por script: " + porScript : "" },
+    // div, não label: só o quadradinho marca — clicar na linha marcava sem querer (2.3.11)
+    fluxo.append(el("div", { class: "ck" + (feito ? " feito" : ""), title: porScript ? "Feito por script: " + porScript : "" },
       el("input", { type: "checkbox", checked: feito, disabled: !!porScript, on: { change: ev => api("processo_marcar", [PR.codigo, "passos", String(p.n), ev.target.checked || null]).then(recarregarRegistro) } }),
       el("span", {}, p.n + ". " + p.t, porScript ? el("span", { class: "ok-tag", style: "margin-left:4px;font-size:10.5px" }, "auto") : null, p.marca ? el("span", { class: "marca-tag" }, p.marca === "seu" ? "seu" : p.marca === "para" ? "para e pergunta" : "conversa nova") : null, el("small", {}, p.d))));
   }
