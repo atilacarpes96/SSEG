@@ -129,6 +129,9 @@ class Conversa:
                "--model", self.fluxo["modelo"], "--effort", self.fluxo["esforco"],
                "--permission-mode", "acceptEdits"] + (["--add-dir", self.pasta] if self.pasta else []) + [
                "--allowedTools", *PERMITIDOS,
+               # o plugin Claude in Chrome fica bloqueado de vez (também para os subagentes): ele cria grupo de abas
+               # e pede "Permitir" a cada ação; a memória antiga do PC ainda mandava usá-lo (2.3.12)
+               "--no-chrome", "--disallowedTools", "mcp__claude-in-chrome",
                "--append-system-prompt", INSTRUCOES.format(codigo=self.codigo, pasta=self.pasta) + self._sol_txt() + GUIA_VISUAL if self.pasta
                else instrucoes_fluxo(self.fluxo)]
         sessao = self.registro.ler(self.pasta)["chat"].get("sessao") if self.pasta else self.sessao

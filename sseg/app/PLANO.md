@@ -319,6 +319,7 @@ shell: a chave dele só roda a `scripts/porta.py`.
   - **Pendências:** respondida no chat (ou pelo "Mandar respostas" do checklist) = resolvida, sai do topo; as resolvidas ficam recolhidas ("N resolvida(s)", com "reabrir"). Comando novo `sseg.py analise resolver p2 p3` para o Claude fechar as dele
   - **Checklist se atualiza sozinho:** a leitura de 2 s pulava sempre que o cursor estava numa caixa de texto — e o cursor fica na caixa do chat. Agora só pula com o cursor dentro do checklist ou da CIA. O Claude é instruído a marcar o passo assim que ele estiver feito
 - [x] **2.3.11** (pedido do Átila, 16/10/2026): passo do checklist e pendência só marcam no quadradinho (a linha era um `<label>`: clique fora do texto, na altura do passo, marcava sem o analista ver e pulava etapa). Quadradinho um pouco maior
+- [x] **2.3.12** (pedido do Átila, 16/10/2026: o Claude ainda criava grupo de abas e pedia "Permitir" a cada ação): o chat sobe com `--no-chrome` e `--disallowedTools mcp__claude-in-chrome` — o plugin não existe mais nessa janela, nem para os subagentes; só o DevTools MCP
 - [ ] Teste do Átila: baixar o SSEG.exe do release num PC sem SSEG (ou numa conta nova do Windows) e seguir a tela Instalação
 - [ ] Publicar: push → `git pull` no servidor ANTES de soltar o .exe novo (o programa avisa "servidor sem a porta" se faltar)
 - [ ] Espelho no celular para analista: porta própria por analista (`permitlisten`) e `tailscale serve` de cada uma — depois
