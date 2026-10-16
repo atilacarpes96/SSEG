@@ -301,6 +301,7 @@ shell: a chave dele só roda a `scripts/porta.py`.
   - **Copiar por item:** botão "Copiar" em cada exigência (o texto da caixa, no formato do SOL: abre com quebra de linha) e "copiar a medida" no cabeçalho de cada medida, quando agrupado, com as exigências salvas juntas e a contagem contra os 2.000 caracteres — no SOL o lançamento é por medida
   - **Caixa da exigência do tamanho do texto**, sem barra de rolagem; a alça de altura saiu do canto da caixa e foi para baixo do item (duplo clique volta ao tamanho do texto). A altura puxada fica até fechar o processo
   - **Caixa do chat:** abre com 4 linhas, cresce com o texto até 60% da tela e a alça fica **em cima**, porque a caixa cresce para cima
+- [x] **2.3.2 — mensagem do commit pronta** (pedido do Átila, 16/10/2026): a tela "Sincronizar com o GitHub" já abre com a mensagem montada pela lista (`git_sinc.sugerir_mensagem`): 1ª linha com as áreas (SSEG.exe com a versão, skill, PDF de norma, normas, scripts, workflow) e um arquivo por linha com novo/apagado/linhas +−. O que fica fora (✗) não entra. O analista confere e acrescenta o porquê
 - [ ] Teste do Átila: baixar o SSEG.exe do release num PC sem SSEG (ou numa conta nova do Windows) e seguir a tela Instalação
 - [ ] Publicar: push → `git pull` no servidor ANTES de soltar o .exe novo (o programa avisa "servidor sem a porta" se faltar)
 - [ ] Espelho no celular para analista: porta própria por analista (`permitlisten`) e `tailscale serve` de cada uma — depois

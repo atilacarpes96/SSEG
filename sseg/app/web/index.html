@@ -950,7 +950,8 @@ async function telaGit(botao, info) {
   if (!linhas.length) linhas.push("Nada a fazer: este PC e o GitHub estão iguais.");
   const campos = [];
   if (info.itens.length) {
-    campos.push(el("label", { class: "campo" }, "O que mudou (mensagem do commit)"), el("textarea", { id: "g-msg", rows: 2 }));
+    const msg = el("textarea", { id: "g-msg", rows: 5 }); msg.value = info.mensagem || "";
+    campos.push(el("label", { class: "campo" }, "O que mudou (mensagem do commit) — veio pronta pela lista; acrescente o porquê"), msg);
     if (!info.nome) campos.push(el("label", { class: "campo" }, "Seu nome (fica no commit)"), el("textarea", { id: "g-nome", rows: 1 }));
     if (!info.email) campos.push(el("label", { class: "campo" }, "Seu e-mail do GitHub"), el("textarea", { id: "g-email", rows: 1 }));
   }

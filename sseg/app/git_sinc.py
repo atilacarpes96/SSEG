@@ -52,7 +52,46 @@ def conferir(clone, python):
     _, nome = _git(clone, "config", "user.name")
     _, email = _git(clone, "config", "user.email")
     return {"itens": itens, "barrados": barrados, "atras": int(atras or 0), "frente": int(frente or 0),
-            "nome": nome if "\n" not in nome else "", "email": email if "\n" not in email else ""}
+            "nome": nome if "\n" not in nome else "", "email": email if "\n" not in email else "",
+            "mensagem": sugerir_mensagem(clone, itens, barrados)}
+
+
+# Rótulo de cada área do repositório, na ordem em que aparece na mensagem.
+_AREAS = [("sseg/app/", "SSEG.exe"), ("sseg/skills/", "skill"), ("sseg/normas/pdf/", "PDF de norma"),
+          ("sseg/normas/", "normas"), ("sseg/scripts/", "scripts"), ("sseg/workflow/", "workflow"), ("", "outros")]
+_ACAO = {"?": "novo", "??": "novo", "A": "novo", "D": "apagado", "R": "renomeado"}
+
+
+def sugerir_mensagem(clone, itens, barrados):
+    """Mensagem de commit pronta a partir do que mudou: 1ª linha com as áreas, depois um arquivo por
+    linha (novo/apagado/linhas +−). O analista confere e acrescenta o porquê."""
+    vao = [(c, a) for c, a in itens if a not in barrados]
+    if not vao:
+        return ""
+    _, num = _git(clone, "-c", "core.quotepath=off", "diff", "HEAD", "--numstat")
+    linhas_mudadas = {}
+    for l in num.splitlines():
+        partes = l.split("\t")
+        if len(partes) == 3 and partes[0] != "-":
+            linhas_mudadas[partes[2]] = "+%s −%s" % (partes[0], partes[1])
+    grupos = {}
+    for c, a in vao:
+        rot = next(r for pre, r in _AREAS if a.startswith(pre))
+        if rot == "skill":
+            rot = "skill " + a.split("/")[2]
+        grupos.setdefault(rot, []).append((c, a))
+    resumo = []
+    for rot, lst in grupos.items():
+        nomes = [os.path.basename(a) for _, a in lst]
+        if rot == "SSEG.exe" and any(a == "sseg/app/VERSION" for _, a in lst):
+            try:
+                rot += " " + open(os.path.join(clone, "sseg", "app", "VERSION"), encoding="utf-8").read().strip()
+            except OSError:
+                pass
+        nomes = [n for n in nomes if n != "VERSION"]
+        resumo.append(rot + (" (" + ", ".join(nomes[:3]) + (" e mais %d" % (len(nomes) - 3) if len(nomes) > 3 else "") + ")" if nomes else ""))
+    corpo = ["- %s: %s" % (a, _ACAO.get(c, _ACAO.get(c[:1], linhas_mudadas.get(a, "alterado")))) for c, a in vao]
+    return "Atualiza " + "; ".join(resumo) + "\n\n" + "\n".join(corpo)
 
 
 def sincronizar(clone, mensagem, python, nome="", email=""):

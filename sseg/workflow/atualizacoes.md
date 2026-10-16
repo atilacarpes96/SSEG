@@ -12,7 +12,9 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
-## 16/10/2026 — SSEG.exe 2.3.1 (copiar por item na CIA) e RT 05 Parte 08 na base
+## 16/10/2026 — SSEG.exe 2.3.2 (copiar por item na CIA, commit com mensagem pronta) e RT 05 Parte 08 na base
+
+- **GitHub (2.3.2):** a tela Sincronizar já abre com a mensagem do commit escrita a partir dos arquivos mudados; é só conferir e acrescentar o porquê.
 
 - **CIA:** cada exigência tem "Copiar" (texto pronto para a caixa Especificar do SOL) e, agrupado por medida, cada medida tem "copiar a medida", com a contagem dos 2.000 caracteres. A caixa da exigência abre do tamanho do texto e a alça de altura fica embaixo do item.
 - **Chat:** a caixa de escrever abre maior, cresce com o texto e a alça fica em cima.
@@ -21,7 +23,7 @@ e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o 
 ### Prompt para atualizar
 
 ```text
-Atualize o meu lado do SSEG para a versão 2.3.1 (16/10/2026) e no fim me diga o que ficou feito e o que depende de mim:
+Atualize o meu lado do SSEG para a versão 2.3.2 (16/10/2026) e no fim me diga o que ficou feito e o que depende de mim:
 1. Confira se o clone está em dia com o GitHub (git status e git log -1). Se estiver atrás, me peça para rodar git pull no PowerShell; no Claude Code, rode você mesmo.
 2. Rode python sseg/scripts/testar.py e me diga o resultado.
 3. Me diga para abrir o SSEG.exe e aceitar a "Nova versão".
