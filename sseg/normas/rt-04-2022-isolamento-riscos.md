@@ -24,4 +24,6 @@
 
 ## Notas de uso
 
-Itens conferidos via banco de notificações padrão do usuário (alta confiabilidade). Link oficial e restante do texto (demais parâmetros de isolamento) ainda não levantados nesta sessão — buscar quando necessário.
+Itens conferidos via banco de notificações padrão do usuário (alta confiabilidade). Restante do texto (demais parâmetros de isolamento) ainda não transcrito aqui.
+
+> ✅ **16/10/2026:** o PDF oficial está no projeto — `normas/pdf/RT CBMRS 04 – Isolamento de Riscos.pdf` — com a versão leve conferida em `normas/base/RT_CBMRS_04_Isolamento_de_Riscos.md` (e `normas/md/`). Item que não está transcrito aqui: procurar na versão leve e conferir no PDF, **nunca** responder que a norma não está na base.

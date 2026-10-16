@@ -27,4 +27,6 @@ https://admin.bombeiros.rs.gov.br/upload/arquivos/201706/01161830-rtcbmrs-n-14-2
 **Tabelas 1, 2 e 3** — distribuição das unidades extintoras (usar para conferir/rever distribuição proposta no PPCI).
 
 ## Notas de uso
-Itens acima conferidos via banco de notificações padrão do usuário. Conteúdo completo das Tabelas 1-3 e demais Anexos A/B (capacidade extintora exata por tipo de risco, distância máxima de deslocamento) ainda não conferido item a item — abrir o PDF oficial antes de afirmar valor não listado aqui.
+Itens acima conferidos via banco de notificações padrão do usuário. Conteúdo completo das Tabelas 1-3 e demais Anexos A/B (capacidade extintora exata por tipo de risco, distância máxima de deslocamento) ainda não transcrito aqui item a item — abrir o PDF oficial antes de afirmar valor não listado aqui. Tabela 2 e item 5.4.5 (sobre rodas) já conferidos no PDF em 22/09/2026 (ver `workflow/pasta-normas-local.md`).
+
+> ✅ **16/10/2026:** o PDF oficial está no projeto — `normas/pdf/RT14.pdf` — com a versão leve conferida em `normas/base/RT14.md` (e `normas/md/`). Item que não está transcrito aqui: procurar na versão leve e conferir no PDF, **nunca** responder que a norma não está na base.

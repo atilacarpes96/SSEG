@@ -16,4 +16,6 @@
 
 ## Notas de uso
 
-Doc criado a partir de citações confirmadas no banco de notificações padrão do usuário — ainda não houve consulta direta ao PDF integral desta RT nesta sessão. Link oficial e demais itens (glossário completo) ainda não levantados; buscar no site do CBMRS quando necessário.
+Doc criado a partir de citações confirmadas no banco de notificações padrão do usuário — ainda não houve consulta direta ao PDF integral desta RT nesta sessão. Glossário completo ainda não transcrito aqui.
+
+> ✅ **16/10/2026:** o PDF oficial está no projeto — `normas/pdf/RT CBMRS 02 – Termos e Definições.pdf` — com a versão leve conferida em `normas/base/RT_CBMRS_02_Termos_e_Definições.md` (e `normas/md/`). Item que não está transcrito aqui: procurar na versão leve e conferir no PDF, **nunca** responder que a norma não está na base.

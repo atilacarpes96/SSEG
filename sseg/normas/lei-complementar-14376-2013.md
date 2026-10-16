@@ -13,12 +13,14 @@ vigência no [[00-indice-normativo]].
 
 ## ⚠️ Status de vigência — atenção obrigatória antes de usar
 
-O PDF oficial localizado nesta verificação está consolidado apenas **até a Lei Complementar nº 14.924, de 22/09/2016**:
+✅ **Resolvido em 16/10/2026:** o PDF do repositório (`normas/pdf/Lec nº 14.376.pdf`, 89 p., texto da Assembleia — al.rs.gov.br/legis) está **"atualizada até a Lei Complementar n.º 16.280, de 23 de abril de 2025"** (capa). Ele estava no projeto desde 15/09/2026 e este doc continuava dizendo que só havia a consolidação de 2016. Conferidos nele em 16/10/2026: **Art. 10 §§ 1º a 3º** (redação da LC 14.924/16, sem alteração posterior) e **Art. 31** (incisos I a VIII, redação original) — as transcrições abaixo continuam valendo. Conversão em `normas/base/Lec_nº_14.376.md` e `normas/md/Lec nº 14.376.md`.
+
+Histórico — antes se registrava que o PDF localizado estava consolidado apenas **até a Lei Complementar nº 14.924, de 22/09/2016**:
 https://admin.bombeiros.rs.gov.br/upload/arquivos/202007/19192636-lec-n-14-376.pdf
 
 Porém, a página oficial "Últimas Atualizações" do CBMRS (bombeiros.rs.gov.br/ultimas-atualizacoes) indica que existe consolidação mais recente, **até a Lei Complementar nº 16.280, de 23/04/2025** (atualização publicada em 30/04/2025). O link direto para esse PDF consolidado não foi confirmado nesta sessão. Reportagens oficiais (Secretaria da Segurança Pública/RS, CAU-RS) associam a LC 16.280/2025 a alterações relacionadas a **prazos de adequação** de edificações à "Lei Kiss".
 
-**Regra de uso neste projeto:** antes de fundamentar qualquer exigência ou análise num dispositivo desta lei, confirmar em bombeiros.rs.gov.br/leis (ou outro canal oficial do CBMRS/Assembleia Legislativa do RS) se o artigo em questão foi alterado pela LC 16.280/2025 ou por lei posterior. Não presumir que o texto de 2016 é o vigente. **As transcrições abaixo são da consolidação de 2016.**
+**Regra de uso neste projeto:** antes de fundamentar qualquer exigência ou análise num dispositivo desta lei, confirmar em bombeiros.rs.gov.br/leis (ou outro canal oficial do CBMRS/Assembleia Legislativa do RS) se o artigo em questão foi alterado pela LC 16.280/2025 ou por lei posterior. Superada em 16/10/2026: usar o PDF do repositório (consolidado até a LC 16.280/2025). Lei posterior a 23/04/2025: conferir em al.rs.gov.br/legis.
 
 ## ⭐ Art. 10 — prazo de validade do APPCI
 

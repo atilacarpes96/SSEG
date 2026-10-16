@@ -140,7 +140,7 @@ Enquadramento pelo **volume de óleo de cada transformador** (por isso o 4.8.6.1
 
 | Norma | Nº / Data | Status | Doc |
 |---|---|---|---|
-| Lei Complementar | LC 14.376, de 26/12/2013 ("Lei Kiss") | Vigente. Consolidação indicada pelo CBMRS: até a **LC 16.280/2025**. ⚠️ Ver limitação abaixo. | [[lei-complementar-14376-2013]] |
+| Lei Complementar | LC 14.376, de 26/12/2013 ("Lei Kiss") | Vigente. PDF do projeto consolidado até a **LC 16.280/2025** ✅ (conferido em 16/10/2026). | [[lei-complementar-14376-2013]] |
 | Decreto regulamentador | Decreto nº 51.803, de 10/09/2014 | Vigente, **consolidado até o Decreto nº 57.967/2024** ✅. **Anexo B transcrito** ⭐. Arts. 27-29 conferidos. | [[decreto-51803-2014]] |
 
 ## Resoluções Técnicas — Procedimentos administrativos e técnicos
@@ -216,7 +216,7 @@ Norma do RS, **nível 4** (abaixo das RTs), sujeita à regra de vigência por da
 - **Instruções do Projeto** — em 24/09/2026 o campo já trazia a RT 17 com vigência em **01/01/2027** (a pendência antiga do 01/07/2026 estava resolvida). Faltavam duas mudanças, entregues ao usuário para colar no campo nessa data: a ressalva das **IT do CBPMESP chamadas pela RT 01/2024** (4.3.1 + Tabela 2; 4.8 para a M-6), junto com a posição das **IN do CBMRS**, e a contagem de **PDFs (17)**. O espelho [[instrucoes-projeto-espelho]] já está com o texto novo — **conferir se o campo foi atualizado** antes de dar por encerrado.
 - **IN 068/2025** (enquadramento F-5, F-6, F-8, F-11, F-12; DOE 252, de 26/12/2025) — PDF **não está no projeto**. Pela leitura por WebFetch (não confiável) não menciona a IN 066. Conferir no PDF antes de afirmar que as duas convivem.
 - **IN 067/2025 — a Portaria que regula o Corpo Técnico** que avalia a STE (Art. 8º) **não está no projeto**; nem a transição para PPCI já em análise em 05/11/2025.
-- **LC 14.376/2013** — único PDF acessível está consolidado até a LC 14.924/2016; o CBMRS indica até a LC 16.280/2025. **Não usar o texto de 2016 sem confirmar o dispositivo.**
+- ✅ **LC 14.376/2013 — resolvido em 16/10/2026:** o PDF em `normas/pdf/Lec nº 14.376.pdf` já é o consolidado **até a LC 16.280/2025** (capa); estava no projeto desde 15/09/2026 sem que este alerta fosse baixado. Arts. 10 e 31 conferidos nele.
 - **Banco de notificações — dois modelos com ressalva anotada ao lado** (texto da chefia preservado): o da "existente regularizada" cita o item **6.2.1** da RT 05 P07, quando os requisitos estão no **6.2.1.2.1**; e o da escala cita o **6.3.6.1.2.2**, que é a **lista de escalas permitidas**.
 - **RT 16/2017 — vigência nunca conferida.** Publicação confirmada (DOE 092, de 17/05/2017); falta ler o **Art. 2º** no PDF oficial para saber o prazo. Não citar data até lá.
 - **RT 01/2024 — versões corrigidas** de out/2024, jan/2025 e 08/06/2026: a vigência não muda, mas **não está verificado se a numeração dos itens se manteve**.

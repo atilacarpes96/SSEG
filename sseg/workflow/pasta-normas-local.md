@@ -152,12 +152,10 @@ Versão lida da capa e do Art. 2º de cada arquivo, um a um.
    do Anexo A. O **quadro de parâmetros do Anexo A da IN 67** sai do `pdftotext -layout` com as
    colunas "Critério" e "Parâmetro" intercaladas — ler com atenção ou renderizar a página.
 
-## O que NÃO está na pasta (24/09/2026)
+## O que NÃO está na pasta (24/09/2026; LC 14.376 retirada em 16/10/2026 — o PDF está lá, consolidado até a LC 16.280/2025)
 
 Precisa de anexo do usuário ou de outra fonte:
 
-- **LC 14.376/2013** — e o índice já registra que o PDF acessível está consolidado só até a
-  LC 14.924/2016.
 - **RT 05 Parte 06/2025** (fiscalização) · 
   **RT 05 Parte 4B** (construções provisórias)
 - **RT 09/2025** (CMAR) · **RT 13/2025** (iluminação) · **RT 15 Parte 01/2023** (brigada) ·
