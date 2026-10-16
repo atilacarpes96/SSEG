@@ -297,6 +297,10 @@ shell: a chave dele só roda a `scripts/porta.py`.
   - Cards novos: "CT marcadas" (regra `ct`: minuta sem Finalizado, mais a CT marcada à mão), "CT com a chefia", "Recursos" e "Recursos com a chefia"; contam só os itens em que o ME é quem usa o PC. Etiquetas na tabela de processos
   - Rotina do Painel do Dia: as planilhas de CT e de ofícios passam a ser baixadas todo dia útil, e o passo 0d roda o `ct_recursos.py`
 - [x] **2.3.0 — Quadro da seção** (pedido do Átila, 15/10/2026): `~/sseg-quadro/quadro.json` no servidor, pela porta (`quadro`, `quadro-mexer`). Cartão leva autor, quem pegou, "o que foi feito" e as datas de início (entrou em Fazendo) e fim (entrou em Feito). Todos criam e pegam; mover, editar e excluir só quem criou, quem pegou ou o admin. Na tela Quadro, a nova tarefa escolhe "Seção" ou "Só meu" (o só meu continua no `quadro.json` do PC)
+- [x] **2.3.1 — CIA e chat** (pedido do Átila, 16/10/2026):
+  - **Copiar por item:** botão "Copiar" em cada exigência (o texto da caixa, no formato do SOL: abre com quebra de linha) e "copiar a medida" no cabeçalho de cada medida, quando agrupado, com as exigências salvas juntas e a contagem contra os 2.000 caracteres — no SOL o lançamento é por medida
+  - **Caixa da exigência do tamanho do texto**, sem barra de rolagem; a alça de altura saiu do canto da caixa e foi para baixo do item (duplo clique volta ao tamanho do texto). A altura puxada fica até fechar o processo
+  - **Caixa do chat:** abre com 4 linhas, cresce com o texto até 60% da tela e a alça fica **em cima**, porque a caixa cresce para cima
 - [ ] Teste do Átila: baixar o SSEG.exe do release num PC sem SSEG (ou numa conta nova do Windows) e seguir a tela Instalação
 - [ ] Publicar: push → `git pull` no servidor ANTES de soltar o .exe novo (o programa avisa "servidor sem a porta" se faltar)
 - [ ] Espelho no celular para analista: porta própria por analista (`permitlisten`) e `tailscale serve` de cada uma — depois

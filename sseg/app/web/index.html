@@ -246,8 +246,16 @@ main.processo { padding: 0; overflow: hidden; }
 .ativ { font-size: 11.5px; color: var(--suave); margin: 4px 0 4px 2px; }
 .msg.aviso { font-size: 12px; color: var(--verm); }
 .sub-linha { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--suave); margin: 6px 0; }
-.entrada { border-top: 1px solid var(--linha); padding: 8px 10px; display: flex; gap: 8px; align-items: flex-end; background: var(--cartao); }
-.entrada textarea { flex: 1; min-height: 40px; max-height: 160px; }
+.entrada { position: relative; border-top: 1px solid var(--linha); padding: 10px 10px 8px; display: flex; gap: 8px; align-items: flex-end; background: var(--cartao); }
+.entrada textarea { flex: 1; min-height: 84px; resize: none; }
+/* alças de altura (2.3.1): a do chat fica em cima (a caixa cresce para cima); a da CIA, embaixo do item */
+.puxa { touch-action: none; user-select: none; cursor: ns-resize; }
+.puxa::after { content: ""; display: block; width: 38px; height: 4px; border-radius: 2px; background: var(--linha); margin: 0 auto; }
+.puxa:hover::after, .puxa.puxando::after { background: var(--verm); }
+.entrada .puxa { position: absolute; left: 0; right: 0; top: -7px; height: 14px; padding-top: 5px; z-index: 2; }
+.exig .puxa { height: 12px; margin: 2px -10px -8px; padding-top: 5px; position: relative; }
+.exig .puxa::before { content: ""; position: absolute; right: 3px; bottom: 2px; width: 9px; height: 9px;
+  background: linear-gradient(135deg, transparent 45%, var(--suave) 45% 55%, transparent 55% 70%, var(--suave) 70% 80%, transparent 80%); opacity: .7; }
 .bt.mic { padding: 7px 10px; }
 .bt.mic.ouvindo { background: var(--verm); border-color: var(--verm); animation: pisca 1s infinite; }
 .trabalhando { font-size: 12px; color: var(--suave); padding: 0 14px 6px; display: flex; gap: 8px; align-items: center; min-height: 26px; }
@@ -277,7 +285,7 @@ details.medida .itens { padding: 0 9px 8px; }
 .exig .cab { display: flex; gap: 6px; align-items: baseline; font-size: 12px; color: var(--suave); flex-wrap: wrap; }
 .exig .cab b { color: var(--texto); }
 .exig .rasc { background: var(--az-bg); border: 1px dashed var(--az-borda); border-radius: 5px; padding: 6px 8px; font-size: 12.5px; margin: 6px 0; white-space: pre-wrap; }
-.exig textarea { margin-top: 6px; min-height: 70px; font-size: 13px; }
+.exig textarea { margin-top: 6px; min-height: 70px; font-size: 13px; resize: none; overflow-y: hidden; }
 .exig .rod { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; flex-wrap: wrap; }
 .exig .rod .bt { white-space: nowrap; padding: 5px 10px; }
 .exig .conta { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--suave); }
@@ -288,6 +296,8 @@ details.medida .itens { padding: 0 9px 8px; }
 .cia-vista .bt.on { border-color: var(--verm); color: var(--verm); }
 .cia-grupo { border-left: 3px solid var(--linha); padding-left: 8px; margin-bottom: 12px; }
 .cia-grupo .cab-grupo { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 12.5px; margin-bottom: 6px; }
+.cia-grupo .cab-grupo .bt.link { margin-left: auto; font-size: 12px; }
+.cia-grupo .cab-grupo .alto { color: var(--verm); font-weight: 700; }
 .exig.compacta { display: flex; gap: 8px; align-items: center; padding: 5px 9px; margin-bottom: 5px; cursor: pointer; font-size: 12.5px; }
 .exig.compacta:hover { border-color: var(--verm); }
 .exig.compacta .cx-med { color: var(--suave); white-space: nowrap; max-width: 34%; overflow: hidden; text-overflow: ellipsis; }
@@ -467,7 +477,7 @@ body.sem-pc #sem-pc { display: block; }
         <div class="coluna" data-col="chat">
           <h2>Conversa <span class="sub" style="margin:0;text-transform:none;letter-spacing:0;font-weight:400" id="pr-modelo"></span></h2>
           <div class="slot" id="pr-slot"></div>
-          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
+          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="4" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
         </div>
         <div class="coluna" data-col="check">
           <h2>Checklist</h2>
@@ -488,7 +498,7 @@ body.sem-pc #sem-pc { display: block; }
       </div>
       <div class="coluna conversa-unica">
         <div class="slot" id="cv-slot"></div>
-        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="3" placeholder="Escreva ao Claude — Ctrl+Enter envia"></textarea><button type="button" class="bt mic" data-campo="cv-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
+        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="4" placeholder="Escreva ao Claude — Ctrl+Enter envia"></textarea><button type="button" class="bt mic" data-campo="cv-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
       </div>
     </section>
     <section class="tela" id="t-busca">
@@ -1698,12 +1708,40 @@ async function enviarRespostas() {
   recarregarRegistro();
 }
 
+// ---- Caixas que acompanham o texto (2.3.1). data-manual = altura escolhida na alça, que vale como
+// mínimo; acima dela a caixa cresce com o texto até o teto (o resto rola). Duplo clique na alça desfaz.
+function autoAltura(ta, teto = Infinity) {
+  if (!ta.isConnected || !ta.offsetParent) return;  // aba escondida (celular): mede quando aparecer
+  const man = +ta.dataset.manual || 0;
+  ta.style.height = "auto";
+  const conteudo = ta.scrollHeight + 2, h = Math.max(man, Math.min(conteudo, teto));
+  ta.style.height = h + "px";
+  ta.style.overflowY = conteudo > h ? "auto" : "hidden";
+}
+// sentido 1: puxar para baixo aumenta (CIA); -1: puxar para cima aumenta (chat, que cresce para cima)
+function alca(ta, sentido, teto, guardar) {
+  const a = el("div", { class: "puxa", title: "Arraste para mudar a altura · duplo clique volta ao tamanho do texto" });
+  a.addEventListener("pointerdown", ev => {
+    ev.preventDefault(); a.setPointerCapture(ev.pointerId); a.classList.add("puxando");
+    const y0 = ev.clientY, h0 = ta.offsetHeight;
+    const mover = e => { const h = Math.round(Math.max(48, Math.min(teto(), h0 + sentido * (e.clientY - y0))));
+      ta.dataset.manual = h; ta.style.height = h + "px"; ta.style.overflowY = ta.scrollHeight > h + 2 ? "auto" : "hidden"; };
+    const soltar = () => { a.classList.remove("puxando"); a.removeEventListener("pointermove", mover); a.removeEventListener("pointerup", soltar);
+      a.removeEventListener("pointercancel", soltar); autoAltura(ta, teto()); if (guardar) guardar(+ta.dataset.manual); };
+    a.addEventListener("pointermove", mover); a.addEventListener("pointerup", soltar); a.addEventListener("pointercancel", soltar);
+  });
+  a.addEventListener("dblclick", () => { delete ta.dataset.manual; autoAltura(ta, teto()); if (guardar) guardar(0); });
+  return a;
+}
+// Texto no formato da caixa "Especificar" do SOL: abre com quebra de linha, um parágrafo por exigência.
+const textoSOL = lista => "\n" + lista.map(t => t.trim()).filter(Boolean).join("\n\n");
+
 // ---- CIA: uma caixa por item. Com rascunho do Claude e sem texto final, a caixa já vem com o rascunho
 // ("edite e salve"); salvar vira o texto final e o rascunho original fica guardado à parte.
 // Compacto: cada item vira uma linha (clique abre só aquele). Agrupar: itens da mesma medida juntos, na
 // ordem do SOL; o número continua o da CIA (é a ordem do "copiar a CIA"). Preferência guardada neste navegador.
 const CIA_VISTA = (() => { try { return Object.assign({ compacto: false, agrupar: true }, JSON.parse(localStorage.getItem("sseg-cia-vista") || "{}")); } catch (e) { return { compacto: false, agrupar: true }; } })();
-const CIA_ABERTOS = new Set();
+const CIA_ABERTOS = new Set(), CIA_ALTURA = new Map();  // altura puxada na alça, por exigência
 function vistaCIA(k) {
   CIA_VISTA[k] = !CIA_VISTA[k]; CIA_ABERTOS.clear();
   try { localStorage.setItem("sseg-cia-vista", JSON.stringify(CIA_VISTA)); } catch (e) {}
@@ -1728,7 +1766,8 @@ function pintarCIA() {
     const conta = el("span", { class: "conta" });
     const st = el("span", {}, deRascunho ? "rascunho do Claude — edite e salve" : "");
     const contar = () => { const n = ta.value.length; conta.textContent = n + " / 2000"; conta.classList.toggle("alto", n > 1950); };
-    ta.addEventListener("input", () => { PR.sujos["e" + e.id] = ta.value; st.textContent = "não salvo"; st.className = ""; contar(); });
+    if (CIA_ALTURA.get(e.id)) ta.dataset.manual = CIA_ALTURA.get(e.id);
+    ta.addEventListener("input", () => { PR.sujos["e" + e.id] = ta.value; st.textContent = "não salvo"; st.className = ""; contar(); autoAltura(ta); });
     contar();
     const salvar = async () => { await api("processo_atualizar", [PR.codigo, "exigencias", e.id, { final: ta.value.trim() ? ta.value.replace(/\s+$/, "") : "", fundamento: fund.value.trim() }]); delete PR.sujos["e" + e.id]; recarregarRegistro(); };
     const pedir = async () => {
@@ -1739,6 +1778,12 @@ function pintarCIA() {
       chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Redija a exigência do item " + e.id + " da coluna CIA" + (e.medida ? " (medida: " + e.medida + ")" : " (escolha a medida do SOL)") +
         " a partir do meu achado: «" + achado + "». Grave o rascunho NO MESMO item com o comando rascunho " + e.id + " (heredoc), com --medida e --fundamento.");
       recarregarRegistro();
+    };
+    // Copiar este item para a caixa do SOL: o texto que está na caixa (salvo ou não).
+    const copiarItem = async () => {
+      if (!ta.value.trim()) return SSEG.log(["✗ Item " + (i + 1) + " vazio."]);
+      await copiar(textoSOL([ta.value]));
+      SSEG.log(["Item " + (i + 1) + " copiado" + (PR.sujos["e" + e.id] != null ? " (com alteração NÃO salva)" : temFinal ? "" : " (ainda não salvo como texto final)") + "."]);
     };
     const rascDiferente = temFinal && e.rascunho && e.rascunho.trim() !== e.final.trim();
     if (CIA_VISTA.compacto && !CIA_ABERTOS.has(e.id) && PR.sujos["e" + e.id] == null) {
@@ -1760,28 +1805,45 @@ function pintarCIA() {
       el("div", { class: "rod" },
         el("button", { class: "bt p", on: { click: salvar } }, "Salvar"),
         el("button", { class: "bt", title: "Manda o texto da caixa ao chat como achado; o rascunho volta para este item", on: { click: pedir } }, "Pedir ao Claude"),
+        el("button", { class: "bt", title: "Copia o texto deste item no formato da caixa Especificar do SOL", on: { click: copiarItem } }, "Copiar"),
         st,
         CIA_VISTA.agrupar ? null : el("button", { class: "bt link", title: "subir", on: { click: () => api("processo_mover", [PR.codigo, e.id, -1]).then(recarregarRegistro) } }, "↑"),
         CIA_VISTA.agrupar ? null : el("button", { class: "bt link", title: "descer", on: { click: () => api("processo_mover", [PR.codigo, e.id, 1]).then(recarregarRegistro) } }, "↓"),
         CIA_VISTA.compacto ? el("button", { class: "bt link", title: "voltar a uma linha", on: { click: () => { CIA_ABERTOS.delete(e.id); pintarCIA(); } } }, "fechar") : null,
         el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "exigencias", e.id]).then(recarregarRegistro) } }, "excluir"),
         conta),
-      temFinal ? el("div", { class: "discreto salvo" }, "✓ texto final salvo") : null));
+      temFinal ? el("div", { class: "discreto salvo" }, "✓ texto final salvo") : null,
+      alca(ta, 1, () => Infinity, h => h ? CIA_ALTURA.set(e.id, h) : CIA_ALTURA.delete(e.id))));
   });
   if (CIA_VISTA.agrupar && r.exigencias.length > 1) {
     const ordem = m => { const k = medidas.indexOf(m); return m ? (k < 0 ? 900 : k) : 999; };
     const grupos = new Map();
     for (const e of r.exigencias) { const m = e.medida || ""; if (!grupos.has(m)) grupos.set(m, []); grupos.get(m).push(e); }
     [...grupos.keys()].sort((a, b) => ordem(a) - ordem(b)).forEach(m => {
-      const l = grupos.get(m), salvas = l.filter(e => (e.final || "").trim()).length;
+      const l = grupos.get(m), fin = l.filter(e => (e.final || "").trim()), salvas = fin.length;
+      // No SOL o lançamento é por medida: este botão junta as exigências salvas dela numa caixa Especificar.
+      const tam = salvas ? textoSOL(fin.map(e => e.final)).length : 0;
+      const copiarMedida = async () => {
+        if (!salvas) return SSEG.log(["✗ Nenhuma exigência salva em \"" + (m || "sem medida") + "\"."]);
+        await copiar(textoSOL(fin.map(e => e.final)));
+        SSEG.log(["\"" + (m || "sem medida") + "\" copiada: " + salvas + " exigência(s), " + tam + " caracteres" + (salvas < l.length ? " — " + (l.length - salvas) + " sem texto salvo ficou(aram) de fora" : "") + (tam > 2000 ? ". ⚠ Passa de 2.000: dividir antes de lançar" : "") + "."]);
+      };
       out.push(el("div", { class: "cia-grupo" }, el("div", { class: "cab-grupo" }, el("b", {}, m || "Sem medida escolhida"),
-        el("span", { class: "discreto" }, l.length + " exigência(s)" + (salvas ? " · " + salvas + " salva(s)" : ""))), ...l.map(e => itens.get(e.id))));
+        el("span", { class: "discreto" }, l.length + " exigência(s)" + (salvas ? " · " + salvas + " salva(s)" : "")),
+        salvas ? el("span", { class: tam > 2000 ? "alto" : "discreto" }, tam + " / 2000") : null,
+        el("button", { class: "bt link", title: "Copia as exigências salvas desta medida, prontas para a caixa Especificar do SOL", on: { click: copiarMedida } }, "copiar a medida")),
+        ...l.map(e => itens.get(e.id))));
     });
   } else out.push(...r.exigencias.map(e => itens.get(e.id)));
   out.push(el("button", { class: "bt", on: { click: async () => { await api("processo_exigencia", [PR.codigo, "", "", ""]); await recarregarRegistro(); const u = [...document.querySelectorAll("#pr-cia textarea")].pop(); if (u) u.focus(); } } }, "+ exigência"));
   const alvo = $("#pr-cia"), top = alvo.scrollTop;
-  alvo.replaceChildren(...out); alvo.scrollTop = top;
+  alvo.replaceChildren(...out);
+  for (const t of alvo.querySelectorAll(".exig textarea")) autoAltura(t);
+  alvo.scrollTop = top;
 }
+// largura mudou ou a aba CIA apareceu (celular): o texto quebra em outro lugar, refazer as alturas
+let largCIA = 0;
+new ResizeObserver(([o]) => { const w = Math.round(o.contentRect.width); if (w === largCIA) return; largCIA = w; const a = $("#pr-cia"), top = a.scrollTop; for (const t of a.querySelectorAll(".exig textarea")) autoAltura(t); a.scrollTop = top; }).observe($("#pr-cia"));
 $("#pr-copiar-cia").onclick = async () => {
   const fin = PR.reg.exigencias.filter(e => (e.final || "").trim());
   await copiar(fin.map(e => e.final.trim()).join("\n\n"));
@@ -1830,8 +1892,14 @@ async function chatEnviar(ctx, texto) {
   ctx.ativ = null; trabalhando(ctx, true);
   try { await api("chat_enviar", [ctx.chave, texto, CLIENTE]); } catch (e) { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
 }
+const tetoChat = () => Math.round(window.innerHeight * 0.6);
 function ligarForm(form, campo, ctxAtual) {
-  $(form).onsubmit = ev => { ev.preventDefault(); pararVoz(); const t = $(campo).value.trim(); if (!t) return; $(campo).value = ""; chatEnviar(ctxAtual(), t); };
+  const ta = $(campo), aj = () => autoAltura(ta, tetoChat());
+  $(form).prepend(alca(ta, -1, tetoChat));  // em cima: a caixa cresce para cima
+  ta.addEventListener("input", aj);
+  let larg = 0;  // só a largura interessa: a altura do form muda com a própria caixa
+  new ResizeObserver(([o]) => { const w = Math.round(o.contentRect.width); if (w !== larg) { larg = w; aj(); } }).observe($(form));
+  $(form).onsubmit = ev => { ev.preventDefault(); pararVoz(); const t = ta.value.trim(); if (!t) return; ta.value = ""; aj(); chatEnviar(ctxAtual(), t); };
   $(campo).addEventListener("keydown", ev => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) $(form).requestSubmit(); });
 }
 ligarForm("#pr-form", "#pr-msg", () => CTX[PR.codigo]);
@@ -1847,7 +1915,7 @@ for (const bt of document.querySelectorAll(".bt.mic")) {
     const campo = $("#" + bt.dataset.campo), antes = campo.value ? campo.value.replace(/\s*$/, " ") : "";
     const rec = new Reconhecer();
     rec.lang = "pt-BR"; rec.interimResults = true; rec.continuous = true;
-    rec.onresult = ev => { if (VOZ.rec !== rec) return; let t = ""; for (const r of ev.results) t += r[0].transcript; campo.value = antes + t.trim(); };
+    rec.onresult = ev => { if (VOZ.rec !== rec) return; let t = ""; for (const r of ev.results) t += r[0].transcript; campo.value = antes + t.trim(); campo.dispatchEvent(new Event("input")); };
     rec.onerror = ev => SSEG.log(["✗ voz: " + (ev.error === "not-allowed" ? "o navegador não deixou usar o microfone (Ajustes → Safari → Microfone)" : ev.error)]);
     rec.onend = () => { bt.classList.remove("ouvindo"); bt.textContent = "🎤"; VOZ.rec = null; campo.focus(); };
     VOZ.rec = rec; VOZ.bt = bt;
@@ -1887,7 +1955,7 @@ function abrirConversa(f, sugestao) {
     f.skill ? el("span", { class: "tag" }, "skill " + f.skill) : null,
     f.subagentes && f.subagentes.length ? el("span", { class: "tag" }, "subagentes: " + f.subagentes.join(", ")) : null].filter(Boolean));
   mostrarCtx("#cv-slot", ctx);
-  if (!ctx.caixa.querySelector(".msg") && sugestao) $("#cv-msg").value = sugestao;
+  if (!ctx.caixa.querySelector(".msg") && sugestao) { $("#cv-msg").value = sugestao; $("#cv-msg").dispatchEvent(new Event("input")); }
   ir("conversa");
   $("#cv-msg").focus();
 }
