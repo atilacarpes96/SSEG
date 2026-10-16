@@ -46,6 +46,7 @@ def conferir(clone, python):
             barrados = json.loads(p.stdout or "{}")
         except ValueError:
             barrados = {}
+    barrados.update(_pdfs_repetidos(clone, itens))
     _git(clone, "fetch", "--quiet", "origin")
     _, atras = _git(clone, "rev-list", "--count", "HEAD..origin/main")
     _, frente = _git(clone, "rev-list", "--count", "origin/main..HEAD")
@@ -54,6 +55,33 @@ def conferir(clone, python):
     return {"itens": itens, "barrados": barrados, "atras": int(atras or 0), "frente": int(frente or 0),
             "nome": nome if "\n" not in nome else "", "email": email if "\n" not in email else "",
             "mensagem": sugerir_mensagem(clone, itens, barrados)}
+
+
+def _pdfs_repetidos(clone, itens):
+    """PDF novo em normas/pdf/ com o mesmo conteúdo de um que já está no repositório (caso de 16/10/2026:
+    "RT 5 Parte 8.pdf" salvo no PC enquanto o GitHub já tinha RT05P08.pdf). Fica fora, com o nome do outro."""
+    import hashlib
+    pasta = "sseg/normas/pdf/"
+    novos = [a for c, a in itens if c in ("?", "??", "A") and a.startswith(pasta) and a.lower().endswith(".pdf")]
+    if not novos:
+        return {}
+    _, lst = _git(clone, "-c", "core.quotepath=off", "ls-files", pasta)
+    soma = lambda a: hashlib.sha256(open(os.path.join(clone, a), "rb").read()).hexdigest()
+    conhecidos = {}
+    for a in lst.splitlines():
+        try:
+            conhecidos[soma(a)] = a
+        except OSError:
+            pass
+    fora = {}
+    for a in novos:
+        try:
+            igual = conhecidos.get(soma(a))
+        except OSError:
+            continue
+        if igual:
+            fora[a] = "mesmo PDF que %s (já está no repositório): apague este" % os.path.basename(igual)
+    return fora
 
 
 # Rótulo de cada área do repositório, na ordem em que aparece na mensagem.
