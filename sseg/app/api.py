@@ -220,19 +220,39 @@ class Api:
         achados = instalar.localizar()
         self._claude = achados.get("claude")
         logado = bool(self._claude) and instalar.claude_logado(self._claude)
-        itens = []
+        itens, quebrado = [], []
         for chave, nome, _id in instalar.PROGRAMAS:
             ok = bool(achados.get(chave))
-            extra = "" if chave != "claude" or not ok else (" (logado)" if logado else " (falta entrar)")
-            itens.append({"nome": nome + extra, "ok": ok and (chave != "claude" or logado)})
+            erro = instalar.roda(chave, achados[chave]) if ok else None  # existe, mas roda? (2.3.6)
+            if erro:
+                quebrado.append(nome + ": " + erro)
+            extra = (" — " + erro) if erro else "" if chave != "claude" or not ok else (" (logado)" if logado else " (falta entrar)")
+            itens.append({"nome": nome + extra, "ok": ok and not erro and (chave != "claude" or logado)})
         falta = instalar.faltando(achados)
-        return {"ok": not falta and logado, "falta": bool(falta), "logado": logado, "itens": itens}
+        return {"ok": not falta and not quebrado and logado, "falta": bool(falta), "logado": logado,
+                "quebrado": quebrado, "itens": itens}
 
     def estado_pastas(self):
         cfg = self._cfg()
         clone_ok, proc_ok = base.eh_clone(cfg["clone"]), os.path.isdir(cfg["processos"])
-        return {"ok": clone_ok and proc_ok, "clone": cfg["clone"], "processos": cfg["processos"],
-                "clone_ok": clone_ok, "processos_ok": proc_ok}
+        # operante (2.3.6): o clone tem os scripts e a pasta dos processos aceita gravar
+        problemas = []
+        if clone_ok and not os.path.isfile(os.path.join(cfg["clone"], "sseg", "scripts", "sseg.py")):
+            problemas.append("o clone não tem sseg/scripts/sseg.py")
+        if proc_ok:
+            teste = os.path.join(cfg["processos"], ".sseg-teste-gravacao")
+            try:
+                with open(teste, "w") as fh:
+                    fh.write("ok")
+                os.remove(teste)
+            except OSError as e:
+                problemas.append("não consigo gravar na pasta dos processos (%s)" % e.strerror)
+        if not clone_ok:
+            problemas.append("a pasta do SSEG não é um clone do Git")
+        if not proc_ok:
+            problemas.append("a pasta dos processos não existe")
+        return {"ok": not problemas, "clone": cfg["clone"], "processos": cfg["processos"],
+                "clone_ok": clone_ok, "processos_ok": proc_ok, "problemas": problemas}
 
     def estado_servidor(self):
         """Sem conectar: só confere se este PC tem o apelido sseg-servidor no ~/.ssh/config.

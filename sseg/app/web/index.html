@@ -891,7 +891,8 @@ async function estadoProgramas() {
   try {
     const p = await api("estado_programas");
     ESTADO.programas = p;
-    chip("#e-programas", p.ok ? "ok" : "alerta", p.ok ? "Programas" : p.falta ? "Programas: falta instalar" : "Programas: falta entrar");
+    chip("#e-programas", p.ok ? "ok" : "alerta", p.ok ? "Programas" : p.falta ? "Programas: falta instalar" : (p.quebrado || []).length ? "Programas: não roda" : "Programas: falta entrar");
+    $("#e-programas").title = p.itens.map(i => (i.ok ? "✓ " : "✗ ") + i.nome).join("\n") + "\nConferido às " + agoraHM();
     pintarProgramas();
   } catch (e) { chip("#e-programas", "alerta", "Programas: erro"); }
 }
@@ -899,6 +900,7 @@ async function estadoPastas() {
   try {
     const p = await api("estado_pastas");
     chip("#e-pastas", p.ok ? "ok" : "alerta", p.ok ? "Pastas" : "Pastas: conferir");
+    $("#e-pastas").title = (p.ok ? "Clone e pasta dos processos funcionando (gravação testada)" : "✗ " + p.problemas.join("\n✗ ")) + "\nConferido às " + agoraHM();
     return p;
   } catch (e) { chip("#e-pastas", "alerta", "Pastas: erro"); }
 }
@@ -926,16 +928,27 @@ async function estadoServidor() {
     c.title = "O servidor não respondeu: " + String(e.message || e).slice(-300) + "\nClique para tentar de novo.";
   } finally { SRV_CONFERINDO = false; }
 }
-if (!ESPELHO) setInterval(estadoServidor, 10 * 60 * 1000);
+// Todos os chips de cima se reconferem sozinhos a cada 10 min, por script (2.3.6): verde funciona,
+// amarelo tem pendência, vermelho não funciona. Na hora em que a janela volta a ter foco, também.
+const agoraHM = () => new Date().toLocaleTimeString().slice(0, 5);
+let CHIPS_EM = 0;
+function reconferirChips() {
+  if (Date.now() - CHIPS_EM < 60 * 1000) return;  // não repetir em rajada (foco indo e vindo)
+  CHIPS_EM = Date.now();
+  estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub();
+}
+if (!ESPELHO) { setInterval(reconferirChips, 10 * 60 * 1000); window.addEventListener("focus", reconferirChips); }
 async function estadoGithub() {
   chip("#e-github", "carregando", "GitHub");
   try {
     const g = await api("estado_github");
     ESTADO.git = g;
-    if (g.erro) return chip("#e-github", "alerta", "GitHub: erro");
+    if (g.erro) { chip("#e-github", "alerta", "GitHub: erro"); $("#e-github").title = g.erro; return; }
     const n = (g.atras || 0) + (g.frente || 0) + (g.sujos ? g.sujos.length : 0);
-    chip("#e-github", n ? "alerta" : "ok", "GitHub", n || null);
-  } catch (e) { chip("#e-github", "alerta", "GitHub: erro"); }
+    chip("#e-github", n ? "pendente" : "ok", "GitHub", n || null);  // pendência é amarelo; vermelho só se não falou com o GitHub
+    $("#e-github").title = (n ? [g.atras ? g.atras + " atualização(ões) a trazer" : "", g.frente ? g.frente + " commit(s) a enviar" : "",
+      g.sujos.length ? g.sujos.length + " arquivo(s) mudado(s) sem commit" : ""].filter(Boolean).join("\n") : "Em dia com o GitHub") + "\nConferido às " + agoraHM();
+  } catch (e) { chip("#e-github", "alerta", "GitHub: erro"); $("#e-github").title = String(e.message || e); }
 }
 async function estadoVersao() {
   if (ESPELHO) return;  // atualizar é só na janela do PC
@@ -2103,7 +2116,7 @@ setInterval(() => { if (!ESPELHO && $("#t-config").classList.contains("ativa")) 
 window.addEventListener("pywebviewready", async () => {
   const info = await carregarInicio();
   SSEG.log(["SSEG " + info.versao + "."]);
-  estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub(); estadoVersao(); estadoEspelho();
+  CHIPS_EM = Date.now(); estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub(); estadoVersao(); estadoEspelho();
   if (!ESPELHO && (info.instalacao || info.primeira_vez)) ir("instalar");
   else if (!ESPELHO) estadoAnalista(true);
   try { const v = sessionStorage.getItem("sseg-atualizou"); if (v) { sessionStorage.removeItem("sseg-atualizou"); avisar("✓ O PC voltou atualizado: versão " + v + "."); } } catch (e) {}

@@ -82,6 +82,30 @@ def localizar(which=shutil.which):
     }
 
 
+# Teste de que o programa RODA, não só existe (2.3.6): comando curto e o que a saída precisa ter.
+# pdftoppm -v: o Poppler responde "pdftoppm version"; o Xpdf que vem com o Git não tem pdftoppm.
+TESTE = {"git": (["--version"], "git version"), "python": (["-c", "import sys; print(sys.version)"], ""),
+         "poppler": (["-v"], "pdftoppm version")}
+
+
+def roda(chave, exe):
+    """None se rodou; senão o motivo, curto."""
+    if chave not in TESTE:
+        return None
+    args, espera = TESTE[chave]
+    try:
+        p = subprocess.run([exe, *args], capture_output=True, text=True, timeout=20, encoding="utf-8",
+                           errors="replace", creationflags=SEM_JANELA, stdin=subprocess.DEVNULL)
+    except (OSError, subprocess.SubprocessError) as e:
+        return "não abriu (%s)" % e.__class__.__name__
+    saida = p.stdout + p.stderr
+    if espera and espera not in saida:
+        return "não respondeu como esperado: " + (saida.strip().splitlines() or ["(sem saída)"])[0][:120]
+    if not espera and p.returncode:
+        return "saiu com erro %d" % p.returncode
+    return None
+
+
 def faltando(achados):
     return [k for k, _n, _i in PROGRAMAS if not achados.get(k)]
 
