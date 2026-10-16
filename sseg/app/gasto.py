@@ -9,6 +9,11 @@ Cada resposta aparece várias vezes no registro (uma por bloco): conta uma vez, 
   entrada   = tokens novos enviados (input + gravação de cache)
   cache     = tokens relidos do cache (bem mais baratos)
   saída     = tokens escritos pelo modelo (os mais caros)
+
+Gasto por tipo de conversa (16/10/2026, controle interno, fora da janela): o chat anota em
+%APPDATA%\\SSEG\\conversas.jsonl a sessão e o botão que a abriu (Analisar processo, Revisar CIA...).
+Conversa aberta fora do programa (Claude Code direto, desenvolvimento) aparece como "fora do programa".
+  python sseg/app/gasto.py [dias]
 """
 
 import datetime
@@ -17,6 +22,48 @@ import json
 import os
 import re
 from collections import defaultdict
+
+
+def arquivo_conversas():
+    return os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "SSEG", "conversas.jsonl")
+
+
+def anotar_conversa(sessao, fluxo, codigo=None, arquivo=None):
+    """Uma linha por sessão nova do chat. Falha calada: anotar gasto nunca derruba a conversa."""
+    try:
+        arquivo = arquivo or arquivo_conversas()
+        os.makedirs(os.path.dirname(arquivo), exist_ok=True)
+        with open(arquivo, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"sessao": sessao, "fluxo": fluxo.get("id"), "processo": codigo,
+                                 "modelo": fluxo.get("modelo"), "esforco": fluxo.get("esforco"),
+                                 "quando": datetime.datetime.now().astimezone().isoformat(timespec="seconds")},
+                                ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
+def tipos_das_sessoes(arquivo=None):
+    tipos = {}
+    try:
+        with open(arquivo or arquivo_conversas(), encoding="utf-8") as fh:
+            for linha in fh:
+                try:
+                    d = json.loads(linha)
+                except ValueError:
+                    continue
+                tipos[d.get("sessao")] = d.get("fluxo") or "?"
+    except OSError:
+        pass
+    return tipos
+
+
+def por_tipo(regs, tipos):
+    """[(tipo, soma, nº de conversas)], do que mais gastou para o que menos gastou."""
+    grupos = defaultdict(list)
+    for r in regs:
+        grupos[tipos.get(r["sessao"], "fora do programa")].append(r)
+    saida = [(t, _soma(v), len({r["sessao"] for r in v})) for t, v in grupos.items()]
+    return sorted(saida, key=lambda x: -(x[1]["entrada"] + 5 * x[1]["saida"]))
 
 
 def pastas_do_projeto(clone, base=None):
@@ -123,3 +170,19 @@ def texto(res, dias=30):
     L.append("\nSaída é o que mais pesa no limite; cache relido é barato. Conversa longa reenvia o histórico a "
              "cada mensagem: uma conversa por processo.")
     return "\n".join(L)
+
+
+def texto_por_tipo(regs, tipos):
+    L = ["%-26s %9s %9s %9s %6s %6s" % ("tipo", "entrada", "cache", "saída", "resp.", "conv.")]
+    for t, s, n in por_tipo(regs, tipos):
+        L.append("%-26s %9s %9s %9s %6d %6d" % (t[:26], _k(s["entrada"]), _k(s["cache"]), _k(s["saida"]),
+                                                s["respostas"], n))
+    return "\n".join(L)
+
+
+if __name__ == "__main__":
+    import sys
+    dias = int(sys.argv[1]) if len(sys.argv) > 1 else 30
+    clone = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    print("Gasto por tipo de conversa, últimos %d dias (%s):" % (dias, arquivo_conversas()))
+    print(texto_por_tipo(ler(clone, dias=dias), tipos_das_sessoes()))

@@ -22,6 +22,8 @@ import subprocess
 import threading
 import time
 
+import gasto
+
 NOVA_JANELA_NAO = 0x08000000 if os.name == "nt" else 0
 
 # Só o que a análise precisa sem perguntar; o resto volta como "negado" e o analista decide.
@@ -193,6 +195,8 @@ class Conversa:
     def _evento(self, d):
         t = d.get("type")
         if t == "system" and d.get("subtype") == "init" and d.get("session_id"):
+            if d["session_id"] != self.sessao:
+                gasto.anotar_conversa(d["session_id"], self.fluxo, self.codigo)
             self.sessao = d["session_id"]
             if not self.pasta:
                 return

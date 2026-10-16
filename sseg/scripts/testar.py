@@ -287,6 +287,11 @@ def main():
         caso("gasto: conta cada resposta uma vez e separa subagente",
              res["total"]["respostas"] == 2 and res["total"]["saida"] == 15
              and dict(res["subagentes"]).get("subagente", {}).get("saida") == 5, str(res["total"]))
+        arq = os.path.join(d, "conversas.jsonl")
+        gasto_m.anotar_conversa("s1", {"id": "analise", "modelo": "claude-sonnet-5-5", "esforco": "high"}, "A00012345AA001", arq)
+        tipos = dict((t, s["respostas"]) for t, s, n in gasto_m.por_tipo(gasto_m.ler(clone, base=os.path.join(d, "projects")),
+                                                                          gasto_m.tipos_das_sessoes(arq)))
+        caso("gasto por tipo: sessão anotada pelo chat vai para o botão que a abriu", tipos == {"analise": 2}, str(tipos))
     # 13. botão Sincronizar com o GitHub: commit + push num "GitHub" local; a CIA fica fora e na pasta
     import git_sinc
     with tempfile.TemporaryDirectory() as d:
