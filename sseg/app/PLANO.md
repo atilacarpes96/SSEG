@@ -74,6 +74,8 @@ Gasto em análises reais onde o token vai (início, meio ou fim da conversa).
 - [x] **1. Buscar nas normas e no banco** (1.2.0): banco → normas comentadas → texto convertido (marcado "só localiza"), sem acento, todos os termos, número não casa no meio de outro; [copiar] o modelo ou o trecho com arquivo e linha. O trabalho do `localizador-normas` sem token
 - [x] **1b. [PDF] em cada resultado** (1.2.2): abre o PDF oficial de `normas/pdf/` no Edge/Chrome, na página provável (item citado + termos, pelo `pdftotext`); modelo do banco liga à primeira norma que cita. Norma sem PDF na pasta fica sem link
 - [ ] **2. Pré-análise:** "Analisar processo" roda antes o `sseg.py check` no JSON da pasta do processo e a conversa começa lendo o resumo
+  - [x] 16/10/2026: `scripts/pre_analise.py` (script, sem Claude) converte o api-<ID>.json do SOL para o formato do `check`, roda o `check` e grava `pre-analise.json` e `pre-analise.txt` na pasta do processo (descem ao PC no sincronizar). O `sol_caixa.py` roda nos processos novos da caixa. Fica de fora: data de protocolo da 1ª análise (aba Marcos) e as compensatórias do laudo
+  - [ ] Janela do processo mostrar o `pre-analise.txt` e a skill de análise começar por ele
 - [ ] **3. Arquivar e enviar por botão:** sem rodadas do Claude no fim da conversa
 - [ ] **4. Pré-revisão da CIA:** "Revisar CIA" roda antes o `sseg.py revisar-cia` e abre a conversa com o resultado
 - [ ] **5. Conferir a caixa do SOL:** colar o texto → 2.000 caracteres, hífen, quebra de linha

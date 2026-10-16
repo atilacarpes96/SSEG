@@ -21,9 +21,9 @@ O QUE NÃO FAZ
   - Não decide nada da análise: a pré-análise é outra rotina, que lê estes arquivos.
   - Não sobrescreve api-<ID>.json que já existe (use --forcar).
 
-Os campos de cada item de `pendentes` ainda não foram vistos com processo na caixa (13 e
-14/10/2026 ela estava vazia): o primeiro item lido fica cru em .caixa/item-exemplo.json e o id
-e o código são procurados pelos nomes prováveis. Conferir e fixar quando houver processo.
+Campos do item de `pendentes` fixados em 16/10/2026 pelo primeiro item real (.caixa/item-exemplo.json):
+id = licenciamento, idAnalise = análise técnica, numeroLicenciamento = código. Até ali o id era
+procurado em nomes errados e nenhum JSON era baixado. No fim, roda o pre_analise.py nos novos.
 
 USO (no servidor)
 ---
@@ -198,9 +198,11 @@ def levantar(forcar=False):
             json.dump(itens[0], fh, ensure_ascii=False, indent=1)
     resumo = []
     for it in itens:
-        ident = _achar(it, "licenciamento.id", "idLicenciamento", "licenciamentoId")
-        codigo = _achar(it, "licenciamento.numero", "numeroLicenciamento", "numero", "codigo")
-        linha = {"id": ident, "id_analise": _achar(it, "id", "idAnaliseTecnica"), "codigo": codigo, "novo": False}
+        # Item real (15/10/2026, .caixa/item-exemplo.json): "id" é o do LICENCIAMENTO (bate com o
+        # api-<ID>.json) e "idAnalise" o da análise técnica; o código vem em "numeroLicenciamento".
+        ident = _achar(it, "id", "licenciamento.id", "idLicenciamento", "licenciamentoId")
+        codigo = _achar(it, "numeroLicenciamento", "licenciamento.numero", "numero", "codigo")
+        linha = {"id": ident, "id_analise": _achar(it, "idAnalise", "idAnaliseTecnica"), "codigo": codigo, "novo": False}
         if ident and codigo:
             pasta = os.path.join(PROCESSOS, str(codigo))
             arq = os.path.join(pasta, "api-%s.json" % ident)
@@ -223,6 +225,11 @@ def levantar(forcar=False):
     with open(os.path.join(caixa, "caixa.json"), "w", encoding="utf-8") as fh:
         json.dump({"lido_em": agora, "total": len(itens), "itens": resumo}, fh, ensure_ascii=False, indent=1)
     novos = [r["codigo"] for r in resumo if r["novo"]]
+    if novos:  # pré-análise documental dos que acabaram de chegar (script, sem Claude)
+        import pre_analise
+        for c in novos:
+            linha_pa = pre_analise.pre_analisar(c, forcar=True)
+            print("  pré-análise %s: %s" % (c, linha_pa[1]))
     print("%s · caixa: %d · novos baixados: %d%s" % (agora, len(itens), len(novos),
                                                      (" (" + ", ".join(map(str, novos)) + ")") if novos else ""))
     for r in resumo:
