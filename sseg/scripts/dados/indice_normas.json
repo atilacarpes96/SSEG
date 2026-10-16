@@ -1,7 +1,7 @@
 {
   "_leia_isto": "Forma legivel por maquina do normas/00-indice-normativo.md. Serve para a conferencia automatica das normas citadas no campo '4. Medidas de seguranca' do print do SOL. NAO e fundamento: o fundamento sai do PDF oficial. Manter em sincronia com o 00-indice-normativo.md.",
-  "_atualizado_em": "2026-09-30",
-  "_onde_estao_as_normas": "Os PDFs oficiais estao em normas/pdf/ (18 arquivos desde 30/09/2026, com IN66.pdf, IN67.pdf, IT37.pdf e RT31.pdf) DENTRO do repositorio desde 15/09/2026 - nao pedir PDF ao usuario sem olhar la. O texto integral convertido pelo anydoc esta em normas/md/, e serve so para LOCALIZAR trecho: nao fundamenta, porque a extracao automatica erra hierarquia de titulo e desalinha tabela. A copia local em C:\\\\Users\\\\55519\\\\Desktop\\\\Carpes\\\\Normas continua existindo e e a mesma coisa.",
+  "_atualizado_em": "2026-10-16",
+  "_onde_estao_as_normas": "Os PDFs oficiais estao em normas/pdf/ (20 arquivos desde 16/10/2026, com IN66.pdf, IN67.pdf, IT37.pdf, RT31.pdf e RT05P08.pdf) DENTRO do repositorio desde 15/09/2026 - nao pedir PDF ao usuario sem olhar la. O texto integral convertido pelo anydoc esta em normas/md/, e serve so para LOCALIZAR trecho: nao fundamenta, porque a extracao automatica erra hierarquia de titulo e desalinha tabela. A copia local em C:\\\\Users\\\\55519\\\\Desktop\\\\Carpes\\\\Normas continua existindo e e a mesma coisa.",
   "_regra_de_vigencia": "A versao aplicavel e a que estava vigente na DATA DE PROTOCOLO do PPCI PARA A PRIMEIRA ANALISE, nao a mais recente hoje. Fundamento: RT 01/2024, itens 3.4 e 4.3.3 (conferidos no PDF oficial em 01/09/2026, reconferidos em 02/09/2026 e 21/09/2026). Nunca 'atualizar' a citacao de um PPCI antigo para a versao nova. Em edificacao EXISTENTE REGULARIZADA a legislacao da epoca pode ser usada, desde que especificado no laudo de inviabilidade e no campo de medidas.",
   "_onde_achar_a_data_de_protocolo": "Aba 'Consultar licenciamento' > aba 'Marcos', marco 'Numero do licenciamento gerado'. Nao esta na tela da analise tecnica.",
   "_normas_por_remissao": "IT do CBPMESP e NBR listadas na Tabela 2 da RT 01/2024 (item 4.3.1: 'ate a entrada em vigor de Resolucao Tecnica especifica, deverao ser observadas as Normas Brasileiras e Instrucoes Tecnicas dispostas na Tabela 2, em sua edicao mais recente') e a IT 37 do CBPMESP para a M-6 (itens 4.8.1 e 4.8.7) SAO a norma aplicavel da medida, nao citacao irregular. Conferido no PDF da pasta local em 22/09/2026. O site do CBMRS (bombeiros.rs.gov.br/instrucoes-tecnicas) lista como 'em vigor no CBMRS', desde 01/07/2025: IT 08/2025 (P1 e P2), IT 09/2025, IT 15/2025 (P1 a P9), IT 25/2025 (P1 a P5) e IT 37/2025.",
@@ -49,8 +49,11 @@
       "obs": "CORRIGIDO em 02/09/2026: o Art. 2o diz 1o de FEVEREIRO de 2025, nao 01/01/2025. Item 6.2.1 e a lista de documentos comprobatorios emitidos ate 26/12/2013; os requisitos de mesma area / atividade equivalente / mesmo endereco estao no item 6.2.1.2.1."
     },
     "RT 05 Parte 08/2016": {
-      "titulo": "Simbolos empregados em PPCI",
-      "vigente_desde": "2016-01-01"
+      "titulo": "Simbolos Graficos (PPCI na forma completa)",
+      "vigente_desde": "2016-11-08",
+      "publicada_em": "2016-11-08",
+      "conferido_em": "2026-10-16",
+      "obs": "PDF em normas/pdf/RT05P08.pdf. Assinada 07/11/2016, DOE 212 de 08/11/2016, Art. 2o: vigor na publicacao (a data 2016-01-01 antes registrada nao tinha fonte). Itens 5.1 a 5.6 e Tabela 1 (Anexo A) conferidos; simbolos so na imagem."
     },
     "RT 09/2025": {
       "titulo": "Controle de Materiais de Acabamento e Revestimento (CMAR)",

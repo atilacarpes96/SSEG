@@ -9,7 +9,7 @@ regra está aqui em cima.
 | **Conversão automática** | `md/` | **localizar** item, artigo, palavra | fundamentar exigência |
 | **Transcrição comentada** | os `.md` desta pasta | raciocínio, travas, itens já conferidos | substituir o PDF na conferência |
 
-## `pdf/` — os PDFs oficiais (19 em 02/10/2026)
+## `pdf/` — os PDFs oficiais (20 em 16/10/2026)
 
 Cópia da pasta local `C:\Users\55519\Desktop\Carpes\Normas`, para que as normas viajem junto
 com o repositório em vez de ficarem só numa máquina. **A versão sai da capa e do Art. 2º**,
@@ -20,7 +20,7 @@ Duas que se repetem e derrubam análise:
 
 - **`RTISOL.pdf` não é "isolamento de riscos"** — é a RT de Implantação do SOL. Isolamento de
   riscos é o `RT CBMRS 04`.
-- **Arquivos de duas colunas** (`RTISOL`, `RT18` e o corpo da `RT11`): `pdftotext -layout`
+- **Arquivos de duas colunas** (`RTISOL`, `RT18`, o corpo da `RT11` e a pág. 3 da `RT05P08`): `pdftotext -layout`
   intercala as colunas e embaralha a ordem dos itens. Nesses, `pdftotext` **sem** `-layout`
   para texto; `-layout` só nas tabelas dos anexos. Se a numeração sair fora de ordem, é
   duas colunas.

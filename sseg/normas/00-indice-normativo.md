@@ -1,6 +1,6 @@
 # Índice de Bases Normativas — SCI/CBMRS/RS
 
-Última verificação/atualização: **30/09/2026** — **RT 31/2025** (Câmaras Frigoríficas; vigente desde 01/11/2025; **revogou a IN 056**) **incorporada**: PDF em `normas/pdf/RT31.pdf`, conversão em `normas/md/RT31.md`, íntegra conferida em [[rt-31-2025-camaras-frigorificas]] (itens 5.5 e 6.2, Tabela 1 lida na imagem); modelo dos frigoríficos do banco atualizado. Em 24/09/2026: **IN 066/2025** (saídas de emergência em F-5, F-6, F-11 e F-12; vigente desde 30/09/2025) e **IN 067/2025** (Solução Técnica Equivalente — STE; vigente desde 05/11/2025) **incorporadas**: PDFs em `normas/pdf/IN66.pdf` e `IN67.pdf`, conversões em `normas/md/`, íntegras conferidas em [[in-066-2025-saidas-reuniao-publico]] e [[in-067-2025-solucao-tecnica-equivalente]]; criada a seção **"Instruções Normativas do CBMRS"** abaixo. Em 22/09/2026: **IT 37/2025 em PDF na pasta local (`IT37.pdf`)**, itens 4.4.2, 4.4.4, 4.4.7, 4.4.9, 4.6 e Anexo B conferidos (Tabelas B.1 e B.2 são **imagem** no PDF). **normas por remissão da RT 01/2024** (Tabela 2 e item 4.8, IT 37 para a M-6) conferidas no PDF e registradas abaixo: IT 08, IT 09, IT 15 e IT 37 do CBPMESP e NBR 15219, 10897/16981 e 5419 citadas no campo 4 **são regulares**. Em 21/09/2026: vigência da **RT 17 P01/2025 reconferida no PDF oficial: 01/01/2027** (a "correção" de 19/09/2026 para 01/07/2026 estava errada; ver "Erros de citação registrados"). Vigências da RT 15 P01 e RT 16 reconferidas em 19/09/2026. PDFs oficiais e conversões vivem no repositório desde 15/09/2026 (`normas/pdf/` e `normas/md/`). Conferência das normas contra os PDFs: 02/09/2026.
+Última verificação/atualização: **16/10/2026** — **RT 05 Parte 08/2016** (Símbolos Gráficos; vigente desde 08/11/2016) **incorporada**: PDF em `normas/pdf/RT05P08.pdf`, conversão em `normas/base/` e `normas/md/`, itens 5.1 a 5.6 e Tabela 1 do Anexo A conferidos em [[rt-05-parte08-2016-simbologia]]. Em 30/09/2026: **RT 31/2025** (Câmaras Frigoríficas; vigente desde 01/11/2025; **revogou a IN 056**) **incorporada**: PDF em `normas/pdf/RT31.pdf`, conversão em `normas/md/RT31.md`, íntegra conferida em [[rt-31-2025-camaras-frigorificas]] (itens 5.5 e 6.2, Tabela 1 lida na imagem); modelo dos frigoríficos do banco atualizado. Em 24/09/2026: **IN 066/2025** (saídas de emergência em F-5, F-6, F-11 e F-12; vigente desde 30/09/2025) e **IN 067/2025** (Solução Técnica Equivalente — STE; vigente desde 05/11/2025) **incorporadas**: PDFs em `normas/pdf/IN66.pdf` e `IN67.pdf`, conversões em `normas/md/`, íntegras conferidas em [[in-066-2025-saidas-reuniao-publico]] e [[in-067-2025-solucao-tecnica-equivalente]]; criada a seção **"Instruções Normativas do CBMRS"** abaixo. Em 22/09/2026: **IT 37/2025 em PDF na pasta local (`IT37.pdf`)**, itens 4.4.2, 4.4.4, 4.4.7, 4.4.9, 4.6 e Anexo B conferidos (Tabelas B.1 e B.2 são **imagem** no PDF). **normas por remissão da RT 01/2024** (Tabela 2 e item 4.8, IT 37 para a M-6) conferidas no PDF e registradas abaixo: IT 08, IT 09, IT 15 e IT 37 do CBPMESP e NBR 15219, 10897/16981 e 5419 citadas no campo 4 **são regulares**. Em 21/09/2026: vigência da **RT 17 P01/2025 reconferida no PDF oficial: 01/01/2027** (a "correção" de 19/09/2026 para 01/07/2026 estava errada; ver "Erros de citação registrados"). Vigências da RT 15 P01 e RT 16 reconferidas em 19/09/2026. PDFs oficiais e conversões vivem no repositório desde 15/09/2026 (`normas/pdf/` e `normas/md/`). Conferência das normas contra os PDFs: 02/09/2026.
 
 Ponto de partida para qualquer análise de PPCI, fiscalização ou notificação. Lista as bases normativas incorporadas, seu status de vigência, e para onde ir primeiro ao montar uma notificação.
 
@@ -14,7 +14,7 @@ Desde **15/09/2026** as normas viajam com o repositório. Não pedir PDF ao usu�
 
 | Camada | Onde | Serve para | **Não** serve para |
 |---|---|---|---|
-| **PDF oficial** | `normas/pdf/` — 18 arquivos (14 + `IN66.pdf`, `IN67.pdf` e `IT37.pdf`, em 24/09/2026, + `RT31.pdf`, em 30/09/2026) | **citar em CIA** | — |
+| **PDF oficial** | `normas/pdf/` — 20 arquivos em 16/10/2026 (`RT05P08.pdf` foi o último; lista em `workflow/pasta-normas-local.md`) | **citar em CIA** | — |
 | **Conversão automática** (anydoc) | `normas/md/` | **localizar** item, artigo, palavra | fundamentar exigência |
 | **Transcrição comentada** | os `.md` desta pasta | itens já conferidos, travas, aplicação a casos | substituir o PDF na conferência |
 
@@ -71,6 +71,7 @@ A versão aplicável é a vigente **na data em que o PPCI foi protocolado para a
 | **IN 045/2023** (corredor enclausurado; revogou a IN 025/2020) | **27/04/2023** | vigente |
 | **IN 066/2025** (saídas em F-5, F-6, F-11, F-12) | **30/09/2025** (Art. 5º, na publicação) | vigente — PPCI protocolado antes segue a RT 11 pura |
 | **IN 067/2025** (Solução Técnica Equivalente — STE) | **05/11/2025** (Art. 15, na publicação) | vigente |
+| **RT 05 Parte 08/2016** (Símbolos Gráficos) | **08/11/2016** (Art. 2º, na publicação; DOE 212) | vigente |
 | **RT 31/2025** (Câmaras Frigoríficas) | **01/11/2025** (Art. 2º) | vigente — **revoga a IN 056/CBMRS/DSPCI** (PPCI protocolado antes de 01/11/2025 segue a IN 056) |
 
 ## Hierarquia adotada
@@ -154,7 +155,7 @@ Enquadramento pelo **volume de óleo de cada transformador** (por isso o 4.8.6.1
 | RT 05, Parte 1.1/2016 | PPCI na forma completa | — ⭐ **Anexo "L" lido integralmente**; complementada pela **IN 067/2025** (STE) | [[rt-05-parte01-1-2016-ppci-completo]] |
 | RT 05, Parte 06/2025 | Fiscalização e Penalidades | — | [[rt-05-parte-06-2025-fiscalizacao]] |
 | RT 05, Parte 07/2025 | Edificações e Áreas Existentes | **01/02/2025** ⭐ **Anexo A transcrito**; itens 4.1"c", 5.4, 5.5, 6.2.1 e 6.2.1.2.1 conferidos | [[rt-05-parte07-2025-edificacoes-existentes]] |
-| RT 05, Parte 08/2016 | Simbologia | — | [[rt-05-parte08-2016-simbologia]] |
+| RT 05, Parte 08/2016 | Símbolos Gráficos (PPCI forma completa) | **08/11/2016** ⭐ PDF em mãos; itens 5.1 a 5.6 e **Tabela 1 (Anexo A) conferidos** em 16/10/2026 | [[rt-05-parte08-2016-simbologia]] |
 
 ## Resoluções Técnicas — Medidas de segurança contra incêndio
 
@@ -235,6 +236,8 @@ Tabela 4 e Tabelas 6M.1/6M.2/6M.4/6M.5 (eixo não é altura); Tabela L.3 do Anex
 ✅ **24/09/2026:** **IN 066/2025 e IN 067/2025 incorporadas** — PDFs do site oficial, conversão anydoc, íntegras conferidas no PDF e **5.4.1.2.2 da RT 11** conferido no PDF local; seção de Instruções Normativas criada neste índice.
 
 ✅ **30/09/2026:** **RT 31/2025 incorporada** (caso de recurso, 19/09/2026): PDF, conversão, transcrição, índice JSON e modelo do banco; IN 056 marcada como revogada.
+
+✅ **16/10/2026:** **RT 05 Parte 08/2016 incorporada** (PDF trazido pelo usuário): PDF, conversão verificada, transcrição com a Tabela 1 e índice JSON. Os itens 5.2 e 5.5 citados no banco estão conferidos.
 
 ## Metodologia
 

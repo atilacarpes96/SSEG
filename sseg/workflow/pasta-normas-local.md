@@ -97,7 +97,7 @@ falta dele lá, do arquivo que o usuário salvar na pasta ou anexar.
 Validado: staging + `pdftotext` funcionam; `pdftotext`, `pdftoppm`, `pdfinfo` e `qpdf` estão
 instalados no sandbox.
 
-## Inventário conferido — 09/09/2026, atualizado em 11/09/2026, 22/09/2026, 24/09/2026 e 30/09/2026
+## Inventário conferido — 09/09/2026, atualizado em 11/09/2026, 22/09/2026, 24/09/2026, 30/09/2026 e 16/10/2026
 
 Versão lida da capa e do Art. 2º de cada arquivo, um a um.
 
@@ -112,6 +112,7 @@ Versão lida da capa e do Art. 2º de cada arquivo, um a um.
 | `RT CBMRS 02 – Termos e Definições.pdf` (25 p.) | RT 02 | **2014** — 19/12/2014, DOE 037 de 25/02/2015 | ✅ |
 | `RT CBMRS 04 – Isolamento de Riscos.pdf` (35 p.) | RT 04 | **2022** — 12/04/2022, vigor 60 dias após publicação | ✅ |
 | `RTCBMRS 5 parte 1 - 1 2016 - ppci na forma completa.pdf` (62 p.) | RT 05 Parte 1.1 | **2016** — vigor na publicação; revoga a Parte 01 de 14/03/2016 | ✅ |
+| **`RT05P08.pdf`** (7 p.) ⭐ novo em 16/10/2026 ⚠️ duas colunas na pág. 3 | **RT 05 Parte 08** — Símbolos Gráficos | **2016** — assinada 07/11/2016, DOE 212 de **08/11/2016**, Art. 2º: vigor na publicação | ✅ íntegra em [[rt-05-parte08-2016-simbologia]]; símbolos só na imagem |
 | `RT 05 Parte 07.pdf` (55 p.) | RT 05 Parte 07 | **2025** — Art. 2º: **1º de fevereiro de 2025** | ✅ confirma a correção de 02/09 |
 | `RT10.pdf` (9 p.) | RT 10 | **2024** — Art. 2º: **07/04/2025** | ✅ |
 | `RT11.pdf` (37 p.) ⚠️ duas colunas no corpo | RT 11 Parte 01 | **2016** — vigor **19/09/2016**, DOE 146 de 02/08/2016 | ✅ 5.12.1.2 transcrito em 11/09/2026; 5.7.3.3.1 conferido em 22/09/2026; **5.4.1.2.2** conferido em 24/09/2026 |
@@ -157,7 +158,7 @@ Precisa de anexo do usuário ou de outra fonte:
 
 - **LC 14.376/2013** — e o índice já registra que o PDF acessível está consolidado só até a
   LC 14.924/2016.
-- **RT 05 Parte 06/2025** (fiscalização) · **RT 05 Parte 08/2016** (simbologia) ·
+- **RT 05 Parte 06/2025** (fiscalização) · 
   **RT 05 Parte 4B** (construções provisórias)
 - **RT 09/2025** (CMAR) · **RT 13/2025** (iluminação) · **RT 15 Parte 01/2023** (brigada) ·
   **RT 16/2017** (hidrante urbano)
@@ -191,6 +192,8 @@ Na mesma leitura foi conferido o **item 5.12.1.2 da RT 11**, que é o regime do 
 ✅ **RT 31/2025 entrou em 30/09/2026** (caso de recurso, 19/09/2026). PDF em `sseg/normas/pdf/RT31.pdf`, conversão em `sseg/normas/md/RT31.md`; íntegra em [[rt-31-2025-camaras-frigorificas]]. ✅ Copiada para `Carpes\Normas\` (PDF e `_md\`) em 03/10/2026.
 
 ✅ **03/10/2026:** `Carpes\Normas\_md\` passou a **espelhar `sseg/normas/base/`** (19 normas convertidas por `normas_converter.py` e conferidas contra o PDF por `normas_verificador.py`, mais a pasta `img/`). A pasta antiga, feita com anydoc e com 17 normas, ficou em `Carpes\Normas\_md_antigo\`. `Carpes\Normas\` tem agora os 19 PDFs, iguais a `sseg/normas/pdf/`.
+
+✅ **RT 05 Parte 08/2016 entrou em 16/10/2026** (PDF trazido pelo usuário). Em `sseg/normas/pdf/RT05P08.pdf`, `base/` e `md/`; íntegra em [[rt-05-parte08-2016-simbologia]]. ⏳ Copiar para `Carpes\Normas\` (PDF e `_md\`) no PC.
 
 ## Sincronizar
 
