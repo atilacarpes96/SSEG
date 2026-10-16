@@ -104,6 +104,49 @@ def estado_caixa(dist, reg, prazo=10, hoje=None):
     return e
 
 
+_IDENT = {}  # caminho do api-<ID>.json → (mtime, dados): ler 30 KB por pasta a cada atualização da tabela pesa
+
+
+def identificacao(pasta, nomes, dist):
+    """Razão social, ocupação predominante, área e dias em análise, como na caixa do SOL (2.3.8).
+    Fonte: sol-caixa.json (caixa do SOL lida no servidor) > api-<ID>.json > distribuicao.json."""
+    import datetime
+    sc = _ler(os.path.join(pasta, "sol-caixa.json"))
+    out = {"razao": sc.get("razao_social") or "", "ocupacao": sc.get("ocupacao") or "",
+           "area": sc.get("area"), "dias_sol": None}
+    if sc.get("dias_analise") is not None and sc.get("lido_em"):
+        try:  # o SOL contou na leitura; somam-se os dias desde então
+            out["dias_sol"] = sc["dias_analise"] + (datetime.date.today() - datetime.date.fromisoformat(sc["lido_em"])).days
+        except ValueError:
+            pass
+    if not (out["razao"] and out["ocupacao"] and out["area"]):
+        apis = [n for n in nomes if n.startswith("api-") and n.endswith(".json")]
+        if apis:
+            arq = os.path.join(pasta, sorted(apis)[-1])
+            try:
+                mt = os.path.getmtime(arq)
+                if _IDENT.get(arq, (None,))[0] != mt:
+                    d = _ler(arq)
+                    est = ((d.get("envolvidos") or {}).get("estabelecimentos") or [{}])[0] or {}
+                    car = d.get("caracteristica") or {}
+                    pred = [o for o in car.get("ocupacoes") or [] if (o.get("ocupacao") or "") == "PREDOMINANTE"]
+                    cn = (pred[0].get("cnae") or {}) if pred else {}
+                    _IDENT[arq] = (mt, {"razao": est.get("razaoSocial") or "",
+                                        "ocupacao": " - ".join(x for x in (cn.get("divisao"), cn.get("descricao")) if x),
+                                        "area": car.get("areaConstruida")})
+                for k, v in _IDENT[arq][1].items():
+                    out[k] = out[k] or v
+            except OSError:
+                pass
+    out["ocupacao"] = out["ocupacao"] or dist.get("ocupacao") or ""
+    if not out["area"]:
+        try:
+            out["area"] = float(dist.get("area") or 0) or None
+        except ValueError:
+            pass
+    return out
+
+
 class Api:
     def __init__(self):
         self._janela = None
@@ -343,7 +386,9 @@ class Api:
             arqs = [os.path.join(p, a) for a in os.listdir(p)]
             quando = max([os.path.getmtime(a) for a in arqs] + [os.path.getmtime(p)])
             reg = os.path.join(p, "analise.json")
-            out.append(dict(estado_caixa(_ler(os.path.join(p, "distribuicao.json")), _ler(reg), self._cfg().get("prazo_caixa", 10)),
+            dist = _ler(os.path.join(p, "distribuicao.json"))
+            out.append(dict(estado_caixa(dist, _ler(reg), self._cfg().get("prazo_caixa", 10)),
+                            **identificacao(p, os.listdir(p), dist),
                             codigo=n, quando=quando, arquivos=len(arqs), analise=os.path.exists(reg),
                             cts=_ler(os.path.join(p, "ct.json")).get("itens") or [],
                             recursos=_ler(os.path.join(p, "recurso.json")).get("itens") or [],

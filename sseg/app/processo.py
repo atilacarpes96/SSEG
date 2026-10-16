@@ -55,11 +55,11 @@ def json_do_sol(pasta):
 SOL = "https://solcbm.rs.gov.br/solcbm/adm/#/"
 
 
-def links_sol(sol):
+def links_sol(sol, id_analise=None):
     """Rotas das skills: licenciamento pelo id interno do SOL (o "id" do api-<id>.json, não o A000...).
     A análise técnica tem id próprio: sem ele no JSON, vai para a caixa (#/analise-tecnica)."""
     lic = sol.get("id") if sol and ("numero" in sol or "envolvidos" in sol) else None
-    an = sol.get("idAnaliseTecnica") if sol else None
+    an = (sol.get("idAnaliseTecnica") if sol else None) or id_analise  # id_analise: da caixa do SOL (sol-caixa.json)
     return {"id": lic,
             "licenciamento": SOL + ("licenciamento/consulta/%s" % lic if lic else "licenciamento"),
             "analise": SOL + ("analise-tecnica/%s" % an if an else "analise-tecnica"),
@@ -108,6 +108,23 @@ def montar(clone, pasta):
             medidas.append({"nome": nome, "norma": re.sub(r"\s+", " ", ((m.get("norma") or {}).get("nome") or "")).strip(),
                             "inviabilidade": inv, "tabela": tabela, "itens": itens, "nota": nota})
     arquivos = sorted(os.listdir(pasta)) if os.path.isdir(pasta) else []
-    return {"codigo": os.path.basename(os.path.normpath(pasta)), "pasta": pasta, "json_sol": arq and os.path.basename(arq),
+    try:
+        sc = _ler_json(os.path.join(pasta, "sol-caixa.json"))
+    except (OSError, ValueError):
+        sc = {}
+    # Passos que um script já fez (2.3.8): marcados sozinhos, com a origem. O analista não refaz.
+    auto, pre = {}, None
+    if arq:
+        auto["3"] = "JSON do SOL na pasta (%s)" % os.path.basename(arq)
+    pa = os.path.join(pasta, "pre-analise.txt")
+    if os.path.exists(pa):
+        with open(pa, encoding="utf-8") as fh:
+            texto = fh.read()
+        velha = bool(arq) and os.path.getmtime(pa) < os.path.getmtime(arq)
+        pre = {"texto": texto, "velha": velha,
+               "marcas": [l for l in texto.splitlines() if l.startswith(("XX", "!!", "??"))]}
+        if not velha:
+            auto["4"] = "pré-análise documental (script, sem Claude): pre-analise.txt"
+    return {"auto": auto, "pre_analise": pre,"codigo": os.path.basename(os.path.normpath(pasta)), "pasta": pasta, "json_sol": arq and os.path.basename(arq),
             "passos": passos, "medidas": medidas, "laudo": laudo, "compensatoria": anexo.get("compensatoria", ""),
-            "cias": [a for a in arquivos if re.match(r"CIA \d+", a)], "analise": reg.ler(pasta), "sol": links_sol(sol)}
+            "cias": [a for a in arquivos if re.match(r"CIA \d+", a)], "analise": reg.ler(pasta), "sol": links_sol(sol, sc.get("id_analise"))}

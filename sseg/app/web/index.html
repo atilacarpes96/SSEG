@@ -294,6 +294,12 @@ details.medida .itens { padding: 0 9px 8px; }
 .exig .conta { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--suave); }
 .exig .conta.alto { color: var(--verm); font-weight: 700; }
 .exig .salvo { color: var(--ok); }
+.t-proc td.corta { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-proc .tag.sit { white-space: nowrap; display: inline-block; margin: 1px 4px 1px 0; }
+.t-proc .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rola-x { overflow-x: auto; }
+.ck .ok-tag { color: var(--ok); font-weight: 700; }
+.pre-marcas { font: 11.5px/1.45 Consolas, monospace; background: var(--fundo2); border: 1px solid var(--linha); border-radius: 6px; padding: 6px 8px; max-height: 220px; overflow-y: auto; margin-bottom: 4px; }
 .cia-vista { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; font-size: 12px; }
 .cia-vista .bt { padding: 4px 9px; font-size: 12px; }
 .cia-vista .bt.on { border-color: var(--verm); color: var(--verm); }
@@ -444,9 +450,9 @@ body.sem-pc #sem-pc { display: block; }
       <h2>Semana</h2>
       <div class="cards" id="cards"></div>
       <h2>Processos em andamento<span id="filtro"></span></h2>
-      <p class="sub">Primeiro os da sua caixa, o que está há mais dias no topo; depois os que saíram com CIA e os que saíram com CA, o mais recente primeiro. "Abrir" mostra a janela do processo: conversa, checklist e CIA. Abrir não põe o Claude para trabalhar: ele espera o seu pedido.</p>
-      <div class="cartao"><table><thead><tr><th>Processo</th><th>Situação</th><th>Mexido em</th><th></th><th></th></tr></thead>
-        <tbody id="processos"><tr><td class="vazio" colspan="5">Carregando…</td></tr></tbody></table></div>
+      <p class="sub">Primeiro os da sua caixa, o que está há mais dias no topo; depois os que saíram com CIA e os que saíram com CA, o mais recente primeiro. Na caixa, a ordem é a dos dias em análise do SOL. "Abrir" mostra a janela do processo: conversa, checklist e CIA. Abrir não põe o Claude para trabalhar: ele espera o seu pedido.</p>
+      <div class="cartao rola-x"><table class="t-proc"><thead><tr><th>Processo</th><th>Razão social</th><th>Ocupação predominante</th><th class="num">Área</th><th>Situação</th><th>Mexido em</th><th></th><th></th></tr></thead>
+        <tbody id="processos"><tr><td class="vazio" colspan="8">Carregando…</td></tr></tbody></table></div>
       <h2>Iniciar conversa</h2>
       <p class="sub">Em revisão e teste. Cada demanda abre o Claude Code com o modelo e o esforço da política de modelo.</p>
       <div id="fluxos"></div>
@@ -1225,6 +1231,7 @@ function ordemProcessos(lst) {
   return lst.slice().sort((a, b) => {
     const g = grupo(a) - grupo(b);
     if (g) return g;
+    if (grupo(a) === 0 && (a.dias_sol != null || b.dias_sol != null)) return (b.dias_sol ?? -1) - (a.dias_sol ?? -1);  // como o SOL: mais dias no topo
     if (grupo(a) === 0) return (a.distribuido || "9999") < (b.distribuido || "9999") ? -1 : (a.distribuido || "9999") > (b.distribuido || "9999") ? 1 : 0;
     if (grupo(a) < 3) return (b.concluido || "") < (a.concluido || "") ? -1 : (b.concluido || "") > (a.concluido || "") ? 1 : 0;
     return (b.quando || 0) - (a.quando || 0);
@@ -1236,12 +1243,15 @@ function pintarProcessos() {
   $("#filtro").replaceChildren(...(def ? [el("span", { class: "filtro-chip k-" + def.cor }, def.nome,
     el("button", { title: "Tirar o filtro", on: { click: () => { FILTRO = null; pintarProcessos(); } } }, "✕"))] : []));
   const lst = ordemProcessos(def ? PROCS.filter(regra(def)) : PROCS).slice(0, def ? 999 : 40);
-  if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 5 },
+  if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 8 },
     def ? "Nenhum processo neste card." : "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
   const h = isoLocal(new Date());
   corpo.replaceChildren(...lst.map(p => el("tr", {},
     el("td", { class: "cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null),
-    el("td", {}, tagEstado(p), p.ct && p.ct >= h ? el("span", { class: "tag sit k-roxo" }, "CT " + dataBR(p.ct)) : null,
+    el("td", { class: "corta", title: p.razao || "" }, p.razao || el("span", { class: "discreto" }, "—")),
+    el("td", { class: "corta", title: p.ocupacao || "" }, p.ocupacao || el("span", { class: "discreto" }, "—")),
+    el("td", { class: "num" }, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""),
+    el("td", {}, tagEstado(p), p.estado === "caixa" && p.dias_sol != null ? el("span", { class: "tag sit " + (p.dias_sol > 30 ? "k-vermelho" : "k-cinza"), title: "Dias em análise, como na caixa do SOL" }, p.dias_sol + " dias no SOL") : null, p.ct && p.ct >= h ? el("span", { class: "tag sit k-roxo" }, "CT " + dataBR(p.ct)) : null,
       ...meus(p.cts, "minuta").map(i => el("span", { class: "tag sit k-roxo", title: [i.fact, i.modalidade, i.hora].filter(Boolean).join(" · ") }, "CT" + (i.data ? " " + dataBR(i.data) : ""))),
       ...meus(p.cts, "chefia").map(() => el("span", { class: "tag sit k-cinza" }, "CT com a chefia")),
       ...meus(p.recursos, "minuta").map(i => el("span", { class: "tag sit k-azul", title: i.objeto || "" }, i.tipo || "Recurso")),
@@ -1702,15 +1712,28 @@ function pintarChecklist() {
   const comResp = r.pendencias.filter(p => p.resposta && !p.enviada && !p.feita);
   if (comResp.length) pend.append(el("button", { class: "bt p", style: "margin-top:6px", on: { click: enviarRespostas } }, "Mandar " + comResp.length + " resposta(s) ao Claude"));
   out.push(pend);
+  // pré-análise documental (2.3.8): o que o script já leu, para não refazer
+  const auto = d.auto || {};
+  if (d.pre_analise) {
+    const pa = d.pre_analise, cor = l => l.startsWith("XX") ? "var(--verm)" : l.startsWith("!!") ? "var(--creme-txt)" : "var(--suave)";
+    out.push(el("div", { class: "bloco" }, el("b", {}, "Pré-análise documental (script)"),
+      pa.velha ? el("p", { class: "sub", style: "color:var(--verm)" }, "O JSON do SOL mudou depois da pré-análise: rodar de novo (pre_analise.py).") : null,
+      pa.marcas.length ? el("div", { class: "pre-marcas" }, ...pa.marcas.map(l => el("div", { style: "color:" + cor(l) }, l)))
+        : el("p", { class: "sub" }, "Nenhum ponto marcado."),
+      el("button", { class: "bt link", on: { click: () => modal("Pré-análise documental", "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
+        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", () => { fechar(); chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto); }], ["Fechar", fechar]]) } }, "ver tudo")));
+  }
   // fluxo
-  const fluxo = el("div", { class: "bloco" }, el("b", {}, "Fluxo (" + Object.keys(r.passos).length + " de " + d.passos.length + ")"));
+  const feitos = new Set([...Object.keys(r.passos), ...Object.keys(auto)]);
+  const fluxo = el("div", { class: "bloco" }, el("b", {}, "Fluxo (" + d.passos.filter(p => feitos.has(String(p.n))).length + " de " + d.passos.length + ")"));
   let fase = null;
   for (const p of d.passos) {
     if (p.fase !== fase) { fase = p.fase; fluxo.append(el("div", { class: "sub", style: "margin:6px 0 2px;font-weight:600" }, fase)); }
-    const feito = !!r.passos[String(p.n)];
-    fluxo.append(el("label", { class: "ck" + (feito ? " feito" : "") },
-      el("input", { type: "checkbox", checked: feito, on: { change: ev => api("processo_marcar", [PR.codigo, "passos", String(p.n), ev.target.checked || null]).then(recarregarRegistro) } }),
-      el("span", {}, p.n + ". " + p.t, p.marca ? el("span", { class: "marca-tag" }, p.marca === "seu" ? "seu" : p.marca === "para" ? "para e pergunta" : "conversa nova") : null, el("small", {}, p.d))));
+    const porScript = auto[String(p.n)] && !r.passos[String(p.n)];
+    const feito = !!r.passos[String(p.n)] || !!porScript;
+    fluxo.append(el("label", { class: "ck" + (feito ? " feito" : ""), title: porScript ? "Feito por script: " + porScript : "" },
+      el("input", { type: "checkbox", checked: feito, disabled: !!porScript, on: { change: ev => api("processo_marcar", [PR.codigo, "passos", String(p.n), ev.target.checked || null]).then(recarregarRegistro) } }),
+      el("span", {}, p.n + ". " + p.t, porScript ? el("span", { class: "ok-tag", style: "margin-left:4px;font-size:10.5px" }, "auto") : null, p.marca ? el("span", { class: "marca-tag" }, p.marca === "seu" ? "seu" : p.marca === "para" ? "para e pergunta" : "conversa nova") : null, el("small", {}, p.d))));
   }
   out.push(fluxo);
   // medidas

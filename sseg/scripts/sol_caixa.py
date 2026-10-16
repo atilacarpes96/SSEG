@@ -220,6 +220,15 @@ def levantar(forcar=False):
                 linha["novo"] = True
         else:
             linha["erro"] = "id ou código não achados no item (ver .caixa/item-exemplo.json)"
+        if codigo:  # o que a tela do SOL mostra, para o SSEG.exe (tabela do Início e link da análise)
+            pasta = os.path.join(PROCESSOS, str(codigo))
+            os.makedirs(pasta, exist_ok=True)
+            with open(os.path.join(pasta, "sol-caixa.json"), "w", encoding="utf-8") as fh:
+                json.dump({"lido_em": time.strftime("%Y-%m-%d"), "id": ident, "id_analise": linha["id_analise"],
+                           "razao_social": it.get("razaoSocial"), "ocupacao": it.get("ocupacaoPredominante"),
+                           "area": it.get("area"), "tipo": it.get("tipo"), "dias_analise": it.get("qtdDiasAnalise"),
+                           "solicitacao": it.get("dataSolicitacao"), "prioridade": it.get("prioridade")},
+                          fh, ensure_ascii=False, indent=1)
         resumo.append(linha)
     agora = time.strftime("%Y-%m-%d %H:%M")
     with open(os.path.join(caixa, "caixa.json"), "w", encoding="utf-8") as fh:
