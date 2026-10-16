@@ -443,13 +443,13 @@ body.sem-pc #sem-pc { display: block; }
     <section class="tela ativa" id="t-inicio">
       <h2>Semana</h2>
       <div class="cards" id="cards"></div>
-      <h2>Iniciar conversa</h2>
-      <p class="sub">Cada demanda abre o Claude Code com o modelo e o esforço da política de modelo.</p>
-      <div id="fluxos"></div>
       <h2>Processos em andamento<span id="filtro"></span></h2>
-      <p class="sub">Pastas de processo na sua pasta dos processos, a mais mexida primeiro. "Abrir" mostra a janela do processo: conversa, checklist e CIA. Abrir não põe o Claude para trabalhar: ele espera o seu pedido.</p>
+      <p class="sub">Primeiro os da sua caixa, o que está há mais dias no topo; depois os que saíram com CIA e os que saíram com CA, o mais recente primeiro. "Abrir" mostra a janela do processo: conversa, checklist e CIA. Abrir não põe o Claude para trabalhar: ele espera o seu pedido.</p>
       <div class="cartao"><table><thead><tr><th>Processo</th><th>Situação</th><th>Mexido em</th><th></th><th></th></tr></thead>
         <tbody id="processos"><tr><td class="vazio" colspan="5">Carregando…</td></tr></tbody></table></div>
+      <h2>Iniciar conversa</h2>
+      <p class="sub">Em revisão e teste. Cada demanda abre o Claude Code com o modelo e o esforço da política de modelo.</p>
+      <div id="fluxos"></div>
     </section>
 
 
@@ -1217,12 +1217,25 @@ function tagEstado(p) {
     title: p.dias != null ? p.dias + " dia(s) na caixa" : "" }, (p.resultado || "Concluído") + " " + dataBR(p.concluido) + (p.no_prazo === false ? " · fora do prazo" : ""));
   return el("span", { class: "tag sit k-cinza", title: "Fora da planilha e sem datas marcadas na janela do processo" }, "Sem dados");
 }
+// Ordem da tabela (2.3.7, pedido do Átila): 1) na caixa, há mais dias primeiro (distribuído mais antigo);
+// 2) concluídos com CIA; 3) concluídos com CA — os dois pelo mais recente; 4) o resto (fila, sem dados), mais mexido primeiro.
+function ordemProcessos(lst) {
+  const grupo = p => p.estado === "caixa" ? 0 : p.estado === "concluido" && p.resultado === "CIA" ? 1
+    : p.estado === "concluido" && p.resultado === "CA" ? 2 : 3;
+  return lst.slice().sort((a, b) => {
+    const g = grupo(a) - grupo(b);
+    if (g) return g;
+    if (grupo(a) === 0) return (a.distribuido || "9999") < (b.distribuido || "9999") ? -1 : (a.distribuido || "9999") > (b.distribuido || "9999") ? 1 : 0;
+    if (grupo(a) < 3) return (b.concluido || "") < (a.concluido || "") ? -1 : (b.concluido || "") > (a.concluido || "") ? 1 : 0;
+    return (b.quando || 0) - (a.quando || 0);
+  });
+}
 function pintarProcessos() {
   pintarCards();
   const corpo = $("#processos"), def = FILTRO && CARDS.cards.find(c => c.id === FILTRO);
   $("#filtro").replaceChildren(...(def ? [el("span", { class: "filtro-chip k-" + def.cor }, def.nome,
     el("button", { title: "Tirar o filtro", on: { click: () => { FILTRO = null; pintarProcessos(); } } }, "✕"))] : []));
-  const lst = def ? PROCS.filter(regra(def)) : PROCS.slice(0, 30);
+  const lst = ordemProcessos(def ? PROCS.filter(regra(def)) : PROCS).slice(0, def ? 999 : 40);
   if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 5 },
     def ? "Nenhum processo neste card." : "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
   const h = isoLocal(new Date());
