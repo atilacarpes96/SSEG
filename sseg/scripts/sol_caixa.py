@@ -50,6 +50,8 @@ PROCESSOS = os.path.normpath(os.path.join(AQUI, "..", "processos"))
 DEPURACAO = "http://127.0.0.1:9222"
 API = "/solcbm/api/v1/adm/analise-tecnica"
 LICENCIAMENTO = "/solcbm/api/v1/adm/licenciamentos"
+HISTORICO = "/solcbm/api/v1/adm/licenciamento-historico"
+FACTS = "/solcbm/api/v1/adm/facts/facts-licenciamento"
 
 
 # ------------------------------------------------------------------ DevTools (só biblioteca padrão)
@@ -188,11 +190,17 @@ GATILHOS = "gatilhos-quadro.json"  # o gatilhos.json da 2.3.14 marcava como avis
 
 def motivos_marcos(r):
     """Chave curta de cada motivo (o que já foi avisado) → texto para o cartão."""
+    import marcos
     m = {}
-    if r["recursos"]:
-        u = r["recursos"][-1]
-        m["recurso"] = "recurso (%d marco%s, último: %s em %s)" % (
-            len(r["recursos"]), "s" if len(r["recursos"]) > 1 else "", u["descricao"], "/".join(reversed(u["data"].split("-"))))
+    br = lambda s: "/".join(reversed((s or "").split("-")))  # noqa: E731
+    sem_status = [x for x in r["recursos"] if "status" not in x]
+    estranhos = [x for x in r["recursos"] if "status" in x and x["status"] not in marcos.RECURSO_STATUS]
+    if sem_status:  # o histórico não veio: só os Marcos, sem o resultado
+        u = sem_status[-1]
+        m["recurso"] = "recurso sem resultado lido (%d marco%s, último: %s em %s)" % (
+            len(sem_status), "s" if len(sem_status) > 1 else "", u["descricao"], br(u["data"]))
+    for x in estranhos:  # resultado que o script ainda não conhece
+        m["recurso:" + x["status"]] = "recurso com resultado novo: %s (%s)" % (x["status"], br(x["data"]))
     for x in r["novos"]:
         m["novo:" + x["descricao"]] = x["descricao"]
     return m
@@ -204,8 +212,18 @@ def marcos_proc(aba, ident, codigo, linha):
     quadro.py cria a pasta). Só depois que o cartão existe o motivo vai a .caixa/gatilhos-quadro.json."""
     import marcos
     pasta = os.path.join(PROCESSOS, str(codigo))
-    with open(os.path.join(pasta, marcos.ARQUIVO), "w", encoding="utf-8") as fh:
-        json.dump(buscar(aba, "%s/%s/marcos" % (LICENCIAMENTO, ident)), fh, ensure_ascii=False)
+    for nome, caminho, opcional in ((marcos.ARQUIVO, "%s/%s/marcos" % (LICENCIAMENTO, ident), False),
+                                    (marcos.HISTORICO, "%s/%s" % (HISTORICO, ident), True),  # resultado dos recursos
+                                    (marcos.FACTS, "%s/%s" % (FACTS, ident), True)):         # consultas técnicas (CT)
+        try:
+            dados = buscar(aba, caminho)
+        except RuntimeError as e:
+            if not opcional:
+                raise
+            linha.setdefault("aviso", "%s: %s" % (nome, e))
+            continue
+        with open(os.path.join(pasta, nome), "w", encoding="utf-8") as fh:
+            json.dump(dados, fh, ensure_ascii=False)
     r = marcos.resumir_pasta(pasta)
     if not r or not r["gatilho"]:
         return

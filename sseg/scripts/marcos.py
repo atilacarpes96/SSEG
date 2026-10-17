@@ -31,6 +31,12 @@ import os
 import sys
 
 ARQUIVO, RESUMO = "marcos.json", "marcos-resumo.json"
+# (16/10/2026, ensinado com A00029172AA001, A00047947AA001 e A00016321AB001) o resultado do recurso NÃO
+# está nos Marcos: vem de GET /licenciamento-historico/<ID> → historicoRecurso[] {data (ms), situacao,
+# statusRecurso (INDEFERIDO, DEFERIDO_TOTAL, ...), instancia, tipoRecurso, documento {id} = PDF da decisão,
+# arquivoCiaCiv {id} = a CIA contestada}. A consulta técnica (CT) vem de GET /facts/facts-licenciamento/<ID>
+# → [{id, dthStatus "dd/mm/aaaa", status}]. O sol_caixa.py grava os dois ao lado do marcos.json.
+HISTORICO, FACTS = "historico.json", "facts.json"
 
 # o que já se sabe ler (descrições vistas no A00046788AA001 em 16/10/2026)
 CONHECIDOS = {
@@ -41,7 +47,12 @@ CONHECIDOS = {
     "Distribuição de análise técnica", "Editando licenciamento em CIA", "Ciência de documento de CIA",
     "Ciência de documento de CIA de Inviabilidade Técnica",
     "Ciência de documento de Deferimento de Medidas Compensatórias",
+    # vistos nos 3 processos com recurso: o FACT é a CT (detalhe em facts.json); a revisão de endereço é só registro
+    "Vinculação de FACT a um licenciamento", "Solicitação de revisão de endereço",
+    "Análise de revisão de endereço - Reprovado", "Análise de revisão de endereço - Aprovado",
 }
+RECURSO_STATUS = {"INDEFERIDO": "indeferido", "DEFERIDO_TOTAL": "deferido", "DEFERIDO_PARCIAL": "deferido em parte"}
+RECURSO_TIPO = {"CORRECAO_DE_ANALISE": "correção de análise"}
 CONCLUSAO = "Conclusão de análise técnica - "
 HOMOLOGACAO = "Homologação de análise técnica - "
 INVIAB = "Conclusão de análise de inviabilidade técnica - "
@@ -86,14 +97,47 @@ def resumir(marcos):
     return r
 
 
+def com_historico(r, historico, facts):
+    """Recursos com o resultado (licenciamento-historico) e CTs (facts). Com o histórico lido, recurso deixa de
+    ser gatilho: o script já sabe dizer como terminou. Sem ele, fica o que os Marcos dizem e o gatilho."""
+    if isinstance(historico, dict):
+        rec = []
+        for x in historico.get("historicoRecurso") or []:
+            st = x.get("statusRecurso") or ""
+            tipo = x.get("tipoRecurso") or ""
+            rec.append({"data": _data(x.get("data")), "instancia": x.get("instancia"),
+                        "tipo": RECURSO_TIPO.get(tipo, tipo.replace("_", " ").lower()),
+                        "status": st, "resultado": RECURSO_STATUS.get(st, st.lower().replace("_", " ")),
+                        "situacao": x.get("situacao") or "", "pdf": (x.get("documento") or {}).get("id"),
+                        "cia_contestada": (x.get("arquivoCiaCiv") or {}).get("id"), "ciencia": x.get("ciencia")})
+        r["recursos_marcos"] = len(r["recursos"])
+        r["recursos"] = sorted(rec, key=lambda x: x["data"])
+        conhecidos = set(RECURSO_STATUS) | {""}
+        r["gatilho"] = bool(r["novos"] or any(x["status"] not in conhecidos for x in r["recursos"]))
+    if isinstance(facts, list):
+        def iso(s):
+            p = (s or "").split("/")
+            return "-".join(reversed(p)) if len(p) == 3 else ""
+        r["facts"] = [{"id": f.get("id"), "data": iso(f.get("dthStatus")), "status": f.get("status") or ""} for f in facts]
+    return r
+
+
 def resumir_pasta(pasta):
-    """Lê marcos.json da pasta e grava marcos-resumo.json. Devolve o resumo (ou None sem marcos)."""
+    """Lê marcos.json (e historico.json/facts.json, se houver) da pasta e grava marcos-resumo.json.
+    Devolve o resumo (ou None sem marcos)."""
     try:
         with open(os.path.join(pasta, ARQUIVO), encoding="utf-8") as fh:
             marcos = json.load(fh)
     except (OSError, ValueError):
         return None
-    r = resumir(marcos)
+
+    def ler(nome):
+        try:
+            with open(os.path.join(pasta, nome), encoding="utf-8") as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            return None
+    r = com_historico(resumir(marcos), ler(HISTORICO), ler(FACTS))
     # só regrava quando o resumo muda: a pré-analise refaz quando o resumo é mais novo que ela
     try:
         with open(os.path.join(pasta, RESUMO), encoding="utf-8") as fh:
@@ -117,7 +161,13 @@ def texto(r):
     for a in r["inviabilidade"]:
         L.append("  %s inviabilidade: %s" % (br(a["data"]), a["resultado"]))
     for a in r["recursos"]:
-        L.append("  !! RECURSO %s: %s" % (br(a["data"]), a["descricao"]))
+        if "status" in a:
+            L.append("  !! RECURSO %s (%sª instância, %s): %s%s" % (br(a["data"]), a["instancia"] or "?", a["tipo"],
+                                                                  a["resultado"].upper(), " · CIA contestada: PDF %s" % a["cia_contestada"] if a["cia_contestada"] else ""))
+        else:
+            L.append("  !! RECURSO %s: %s" % (br(a["data"]), a["descricao"]))
+    for f in r.get("facts") or []:
+        L.append("  CT (FACT %s) %s: %s" % (f["id"], br(f["data"]), f["status"].replace("_", " ").lower()))
     for a in r["novos"]:
         L.append("  ?? marco que o script não conhece: %s (%s)" % (a["descricao"], br(a["data"])))
     return "\n".join(L)

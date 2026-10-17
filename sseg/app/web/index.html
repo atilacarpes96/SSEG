@@ -1727,8 +1727,13 @@ function renderProcesso(d) {
 function tagRecurso(d) {
   const sol = (d.marcos && d.marcos.recursos) || [], seus = d.recursos || [];
   if (!sol.length && !seus.length) return null;
-  const linhas = [...sol.map(r => dataBR(r.data) + " · " + r.descricao), ...seus.map(i => [i.tipo || "Recurso", i.estado, i.objeto].filter(Boolean).join(" · "))];
-  return el("span", { class: "tag sit k-azul", title: linhas.join("\n") }, (sol.length + seus.length > 1 ? (sol.length + seus.length) + " recursos" : "Recurso"));
+  // do SOL (licenciamento-historico): resultado por recurso; sem ele, só a descrição do marco
+  const linhas = [...sol.map(r => dataBR(r.data) + " · " + (r.resultado ? (r.instancia || "?") + "ª instância, " + (r.tipo ? r.tipo + ", " : "") + r.resultado : r.descricao)),
+    ...seus.map(i => [i.tipo || "Recurso", i.estado, i.objeto].filter(Boolean).join(" · "))];
+  const ult = sol.filter(r => r.resultado).slice(-1)[0];
+  const txt = sol.length + seus.length > 1 ? (sol.length + seus.length) + " recursos" : "Recurso";
+  return el("span", { class: "tag sit " + (ult && /^deferido/.test(ult.resultado) ? "k-verde" : "k-azul"), title: linhas.join("\n") },
+    txt + (ult ? " " + ult.resultado : ""));
 }
 // caixa do analista na janela do processo (2.1.13): da planilha só mostra; sem planilha, marca à mão
 function pintarSituacao(e) {
@@ -1750,8 +1755,11 @@ function pintarSituacao(e) {
       ...data("concluido", "concluído", "Data em que saiu da caixa"), res);
   }
   // CT só aparece quando o processo teve (data marcada ou ct.json); sem CT, um "+ CT" discreto para marcar
-  const temCT = e.ct || (PR.dados.cts || []).length;
-  if (temCT) partes.push(...data("ct", "CT", "Data da consulta técnica"));
+  const facts = (PR.dados.marcos && PR.dados.marcos.facts) || [];
+  const temCT = e.ct || (PR.dados.cts || []).length || facts.length;
+  if (facts.length) partes.push(el("span", { class: "tag sit k-roxo", title: facts.map(f => "FACT " + f.id + " · " + dataBR(f.data) + " · " + ({ ANALISE_CONCLUIDA: "análise concluída" }[f.status] || f.status.replace(/_/g, " ").toLowerCase())).join("\n") },
+    facts.length > 1 ? facts.length + " CTs" : "CT " + dataBR(facts[0].data)));
+  else if (temCT) partes.push(...data("ct", "CT", "Data da consulta técnica"));
   else partes.push(el("button", { class: "bt link", title: "Marcar a data de uma consulta técnica", on: { click: ev => ev.currentTarget.replaceWith(...data("ct", "CT", "Data da consulta técnica")) } }, "+ CT"));
   $("#pr-sit").replaceChildren(...partes);
 }
