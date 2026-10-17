@@ -183,9 +183,25 @@ def ler_caixa(aba):
 QUADRO_SECAO = os.path.expanduser("~/sseg-quadro")
 
 
+GATILHOS = "gatilhos-quadro.json"  # o gatilhos.json da 2.3.14 marcava como avisado sem o cartão existir
+
+
+def motivos_marcos(r):
+    """Chave curta de cada motivo (o que já foi avisado) → texto para o cartão."""
+    m = {}
+    if r["recursos"]:
+        u = r["recursos"][-1]
+        m["recurso"] = "recurso (%d marco%s, último: %s em %s)" % (
+            len(r["recursos"]), "s" if len(r["recursos"]) > 1 else "", u["descricao"], "/".join(reversed(u["data"].split("-"))))
+    for x in r["novos"]:
+        m["novo:" + x["descricao"]] = x["descricao"]
+    return m
+
+
 def marcos_proc(aba, ident, codigo, linha):
     """Baixa os Marcos, grava marcos.json e marcos-resumo.json e dispara o gatilho de recurso/marco novo:
-    linha na saída, registro em .caixa/gatilhos.json e cartão no Quadro da seção (uma vez por processo e motivo)."""
+    linha na saída e UM cartão por processo no Quadro da seção (~/sseg-quadro, o mesmo da porta.py; o
+    quadro.py cria a pasta). Só depois que o cartão existe o motivo vai a .caixa/gatilhos-quadro.json."""
     import marcos
     pasta = os.path.join(PROCESSOS, str(codigo))
     with open(os.path.join(pasta, marcos.ARQUIVO), "w", encoding="utf-8") as fh:
@@ -193,27 +209,30 @@ def marcos_proc(aba, ident, codigo, linha):
     r = marcos.resumir_pasta(pasta)
     if not r or not r["gatilho"]:
         return
-    motivos = (["recurso: " + "; ".join(x["descricao"] for x in r["recursos"])] if r["recursos"] else []) + \
-              ["marco novo: " + x["descricao"] for x in r["novos"]]
-    linha["gatilho"] = motivos
-    arq = os.path.join(PROCESSOS, ".caixa", "gatilhos.json")
+    motivos = motivos_marcos(r)
+    linha["gatilho"] = list(motivos.values())
+    arq = os.path.join(PROCESSOS, ".caixa", GATILHOS)
     try:
         with open(arq, encoding="utf-8") as fh:
             vistos = json.load(fh)
     except (OSError, ValueError):
         vistos = {}
-    novos = [m for m in motivos if m not in vistos.get(str(codigo), [])]
+    novos = {k: v for k, v in motivos.items() if k not in vistos.get(str(codigo), [])}
     if not novos:
         return
-    vistos.setdefault(str(codigo), []).extend(novos)
+    import quadro
+    textos = [novos.pop("recurso")] if "recurso" in novos else []
+    if novos:
+        textos.append(("marcos novos: " if len(novos) > 1 else "marco novo: ") + "; ".join(novos.values()))
+    titulo = "Ensinar o script dos Marcos: %s — %s" % (codigo, " · ".join(textos))
+    quadro.adicionar(QUADRO_SECAO, titulo[:200],
+                     origem="gatilho do sol_caixa.py: ver os marcos reais no SOL e dizer o que fazer com eles (marcos.py)",
+                     autor="SSEG")
+    linha["cartao"] = True
+    ja = vistos.setdefault(str(codigo), [])
+    ja += [k for k in motivos if k not in ja]
     with open(arq, "w", encoding="utf-8") as fh:
         json.dump(vistos, fh, ensure_ascii=False, indent=1)
-    if os.path.isdir(QUADRO_SECAO):
-        import quadro
-        for m in novos:
-            quadro.adicionar(QUADRO_SECAO, "Ensinar o script dos Marcos: %s com %s" % (codigo, m),
-                             origem="gatilho do sol_caixa.py: ver o marco real no SOL e dizer o que fazer com ele (marcos.py)",
-                             autor="SSEG")
 
 
 def levantar(forcar=False):
@@ -278,11 +297,13 @@ def levantar(forcar=False):
     with open(os.path.join(caixa, "caixa.json"), "w", encoding="utf-8") as fh:
         json.dump({"lido_em": agora, "total": len(itens), "itens": resumo}, fh, ensure_ascii=False, indent=1)
     novos = [r["codigo"] for r in resumo if r["novo"]]
-    if novos:  # pré-análise documental dos que acabaram de chegar (script, sem Claude)
-        import pre_analise
-        for c in novos:
-            linha_pa = pre_analise.pre_analisar(c, forcar=True)
-            print("  pré-análise %s: %s" % (c, linha_pa[1]))
+    # pré-análise documental (script, sem Claude): à força nos que acabaram de chegar; nos outros, só se o
+    # JSON ou o marcos-resumo.json mudou desde a última (o pre_analise.py compara as datas dos arquivos)
+    import pre_analise
+    for c in [r["codigo"] for r in resumo if r.get("codigo")]:
+        sit, txt = pre_analise.pre_analisar(c, forcar=c in novos)
+        if sit != "em-dia":
+            print("  pré-análise %s: %s" % (c, txt))
     print("%s · caixa: %d · novos baixados: %d%s" % (agora, len(itens), len(novos),
                                                      (" (" + ", ".join(map(str, novos)) + ")") if novos else ""))
     for r in resumo:
@@ -291,7 +312,7 @@ def levantar(forcar=False):
         if r.get("aviso"):
             print("  !", r["aviso"])
         for g in r.get("gatilho") or []:
-            print("  !! %s — %s (cartão no Quadro da seção)" % (r["codigo"], g))
+            print("  !! %s — %s%s" % (r["codigo"], g, " (cartão novo no Quadro da seção)" if r.get("cartao") else " (já avisado)"))
     return 0
 
 
