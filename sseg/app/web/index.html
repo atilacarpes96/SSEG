@@ -440,6 +440,119 @@ body.sem-pc #sem-pc { display: block; }
   #cota { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .modal { max-height: 94vh; }
 }
+/* ==== visual 2.4 (17/10/2026, pedido do Átila: "sóbrio, mas não da década passada") ====================
+   Camada por cima do estilo antigo: só aparência, nenhum seletor de comportamento. Paleta neutra fria, o
+   vermelho do CBM só como destaque (marca, botão principal, item ativo), títulos em caixa normal. */
+:root {
+  --verm: #C0262D; --verm-claro: #D63A40;
+  --fundo: #F5F6F8; --cartao: #FFFFFF; --texto: #1B1D22; --suave: #646B76; --linha: #E4E7EC;
+  --fundo2: #FAFBFC; --bt: #FFFFFF; --bt-h: #F1F3F6; --campo: #FFFFFF; --ponto: #C3C8D0;
+  --rosa: #FDF0F0; --rosa-borda: #F4CFCF;
+  --c-analise: #C2620A; --c-aguarda: #2563C9; --c-prazo: #C0262D; --c-ct: #6D4BC0; --c-fechado: #1F7A3A; --c-meta: #8A6A00; --c-parado: #646B76;
+  --raio: 12px; --raio-p: 8px; --foco: 0 0 0 3px color-mix(in srgb, var(--verm) 22%, transparent);
+  --sombra: 0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+}
+@media (prefers-color-scheme: dark) { :root {
+  --verm: #EF5B5F; --verm-claro: #F47A7D;
+  --fundo: #0F1115; --cartao: #171A20; --texto: #E8EAEE; --suave: #9AA1AC; --linha: #2A2F38;
+  --fundo2: #13161B; --bt: #1D2128; --bt-h: #252A33; --campo: #13161B; --ponto: #4A515C; --rosa: #2A1719; --rosa-borda: #4D2A2D;
+  --c-analise: #F0A050; --c-aguarda: #6E9CF0; --c-prazo: #EF5B5F; --c-ct: #A98BF0; --c-fechado: #4CC26E; --c-meta: #E3C047; --c-parado: #9AA1AC;
+  --sombra: 0 1px 2px rgba(0,0,0,.4); } }
+body { font: 14px/1.5 "Segoe UI Variable Text", "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+       -webkit-font-smoothing: antialiased; letter-spacing: -.003em; }
+a { text-decoration: none; } a:hover { text-decoration: underline; }
+
+/* topo: barra limpa, linha fina, marca em tom escuro */
+header { border-bottom: 1px solid var(--linha); padding: 8px 16px; box-shadow: none; }
+.marca img { width: 32px; height: 32px; }
+.marca b { color: var(--texto); font-size: 17px; letter-spacing: .01em; font-weight: 700; }
+.marca b::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--verm);
+                  margin-left: 5px; vertical-align: middle; }
+.marca small { letter-spacing: .02em; text-transform: none; font-size: 11.5px; }
+.chip { border-color: var(--linha); background: var(--cartao); font-size: 12px; padding: 4px 11px 4px 9px; color: var(--suave); }
+.chip:hover { background: var(--bt-h); }
+#b-menu { font-size: 18px; color: var(--suave); }
+
+/* menu lateral: item ativo em pílula, sem a barra vermelha */
+nav { background: var(--cartao); }
+nav.aberto { width: 200px; }
+nav button { width: 184px; margin: 2px 8px; padding: 8px 12px; border-left: 0; border-radius: var(--raio-p); color: var(--suave); font-weight: 500; }
+nav button:first-child { margin-top: 10px; }
+nav button:hover { background: var(--bt-h); color: var(--texto); }
+nav button.ativo { background: color-mix(in srgb, var(--verm) 9%, transparent); color: var(--verm); font-weight: 600; }
+
+/* títulos em caixa normal */
+main { padding: 22px 28px 28px; }
+h2 { font-size: 15px; letter-spacing: -.005em; text-transform: none; color: var(--texto); font-weight: 650; margin: 26px 0 6px; }
+.sub { font-size: 12.5px; margin: 0 0 12px; max-width: 900px; }
+.cartao { border: 1px solid var(--linha); box-shadow: var(--sombra); border-radius: var(--raio); }
+
+/* botões e campos */
+.bt { border-radius: var(--raio-p); border-color: var(--linha); background: var(--bt); padding: 6px 13px; font-weight: 500;
+      box-shadow: 0 1px 1px rgba(16,24,40,.04); }
+.bt.p { box-shadow: none; }
+.bt.link { text-decoration: none; font-weight: 500; }
+.bt.link:hover { text-decoration: underline; }
+.bt:focus-visible, nav button:focus-visible, .chip:focus-visible { outline: none; box-shadow: var(--foco); }
+input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea {
+  border: 1px solid var(--linha); border-radius: var(--raio-p); background: var(--campo); color: var(--texto); padding: 6px 9px; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: color-mix(in srgb, var(--verm) 55%, var(--linha)); box-shadow: var(--foco); }
+input[type=checkbox] { accent-color: var(--verm); }
+
+/* tabelas: cabeçalho discreto, linha com realce ao passar o mouse */
+th { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; color: var(--suave); }
+td, th { border-bottom-color: var(--linha); padding: 9px 8px; }
+tbody tr:hover td { background: var(--fundo2); }
+td.cod { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 13px; white-space: nowrap; }
+.tag { border-radius: 6px; padding: 1px 7px; font-weight: 500; }
+.tag.sit { font-weight: 600; }
+
+/* cards do Início: sem a faixa grossa no alto, número em destaque */
+.card-kpi { border: 1px solid var(--linha); border-top: 1px solid var(--linha); border-radius: var(--raio); padding: 12px 14px; }
+.card-kpi span { text-transform: none; letter-spacing: 0; font-size: 12.5px; font-weight: 600; color: var(--suave);
+                 display: flex; align-items: center; gap: 7px; }
+.card-kpi span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.card-kpi b { font-size: 28px; font-weight: 700; color: var(--texto); letter-spacing: -.02em; margin-top: 2px; }
+.card-kpi.zero b { color: var(--ponto); }
+.card-kpi:hover { border-color: color-mix(in srgb, var(--c) 45%, var(--linha)); }
+.card-kpi.ativo { outline: 2px solid color-mix(in srgb, var(--c) 60%, transparent); }
+.card-novo { border-radius: var(--raio); }
+.card-novo b { color: var(--suave); }
+
+/* janela do processo e rodapé */
+.faixa { border-bottom: 1px solid var(--linha); }
+footer { color: var(--suave); }
+.todos-painel { background: var(--cartao); border-radius: var(--raio); }
+#t-todos { max-width: 1400px; }
+.t-todos td.razao { min-width: 140px; max-width: 210px; }
+.t-todos td.cidade { white-space: normal; max-width: 120px; }
+.t-todos td, .t-todos th { padding-left: 6px; padding-right: 6px; }
+
+/* conteúdo das células (2.4): uma linha por informação, o resto no title */
+.t-proc td { vertical-align: middle; }
+.t-proc td.razao { max-width: 200px; }
+/* razão social e endereço menores e quebrando linha (pedido do Átila, 17/10/2026): até 2 linhas cada, o resto no title */
+.t-proc td.razao > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+                          white-space: normal; font-size: 12.5px; line-height: 1.3; }
+.t-proc td.razao .sec, .t-proc .sec { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+                          white-space: normal; font-size: 11.5px; line-height: 1.3; color: var(--suave); margin-top: 2px; }
+.t-proc td.cidade { white-space: nowrap; }
+.t-proc .tag.sit { display: inline-block; margin: 1px 4px 1px 0; white-space: nowrap; }
+.t-proc td:last-child { white-space: nowrap; text-align: right; }
+.t-proc td:last-child .bt.link { margin-left: 6px; }
+.t-proc td.quando { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.t-proc td.quando .tag { margin-left: 6px; }
+.t-todos td.razao { min-width: 140px; max-width: 190px; }
+.t-todos { font-size: 13px; }
+.bt.link.cod-sol { font: inherit; color: var(--texto); padding: 0; text-decoration: none; }
+.bt.link.cod-sol:hover { color: var(--verm); text-decoration: underline; }
+.t-todos td, .t-todos th { padding-left: 5px; padding-right: 5px; }
+.t-todos .tag.sit { font-size: 10.5px; padding: 1px 6px; }
+.t-todos td:nth-child(7) .discreto { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-proc td.arqs .tag { margin: 0; }
+.t-todos td.cidade { white-space: normal; max-width: 115px; }
+.t-todos td:nth-child(6) { max-width: 175px; }
+.t-todos td:nth-child(6) .tag.sit { white-space: normal; }
 </style>
 </head>
 <body>
@@ -473,7 +586,7 @@ body.sem-pc #sem-pc { display: block; }
       <h2>Semana</h2>
       <div class="cards" id="cards"></div>
       <h2>Processos em andamento<span id="filtro"></span></h2>
-      <p class="sub">Primeiro os da sua caixa, o que está há mais dias no topo; depois os que saíram com CIA e os que saíram com CA, o mais recente primeiro. Na caixa, a ordem é a dos dias em análise do SOL. "Abrir" mostra a janela do processo: conversa, checklist e CIA. Abrir não põe o Claude para trabalhar: ele espera o seu pedido.</p>
+      <p class="sub">Sua caixa primeiro, pelos dias em análise no SOL; depois os que saíram com CIA e com CA. "Abrir" mostra conversa, checklist e CIA — o Claude só trabalha quando você pede.</p>
       <div class="cartao rola-x"><table class="t-proc"><thead><tr><th>Processo</th><th>Razão social</th><th>Ocupação</th><th class="num">Área</th><th>Situação</th><th>Mexido em</th><th></th><th></th></tr></thead>
         <tbody id="processos"><tr><td class="vazio" colspan="8">Carregando…</td></tr></tbody></table></div>
       <h2>Iniciar conversa</h2>
@@ -484,7 +597,7 @@ body.sem-pc #sem-pc { display: block; }
 
     <section class="tela" id="t-todos">
       <h2>Todos os processos do SOL</h2>
-      <p class="sub">A base que o servidor coleta do SOL: a lista inteira às 8h20, 12h20 e 16h20 dos dias úteis, o detalhe de quem está vivo ou mudou de situação, e tudo de novo a cada duas semanas. Encerrado = alvará vigente ou vencido, extinto e rascunho; o Início não mostra esses. Os filtros se somam; clique no título de uma coluna para ordenar.</p>
+      <p class="sub">Coletados do SOL pelo servidor às 8h20, 12h20 e 16h20 (dias úteis). Encerrado = alvará, extinto ou rascunho. Os filtros se somam; clique no título da coluna para ordenar e no código para abrir no SOL.</p>
       <div class="todos-filtros">
         <input id="todos-busca" type="search" placeholder="Código, razão social, fantasia, CNPJ, endereço, bairro, RT ou analista">
         <select id="todos-sit" title="Situação no SOL"></select>
@@ -517,7 +630,7 @@ body.sem-pc #sem-pc { display: block; }
 
     <section class="tela" id="t-quadro">
       <h2>Quadro</h2>
-      <p class="sub">Os processos entram sozinhos, pela planilha de distribuição: na fila em A fazer, na caixa em Fazendo, concluídos na semana em Feito. No ✎ do processo (ou arrastando) você muda a coluna e marca "Aguardando lançamento da CA/CIA no SOL"; vale até a planilha mudar o processo. As tarefas soltas você move com as setas ou arrastando. As marcadas "seção" todos os analistas veem: quem pega fica com o nome no cartão, e quem criou ou pegou move, edita e conta o que foi feito. "Só meu" fica neste PC.</p>
+      <p class="sub">Os processos entram sozinhos pela planilha de distribuição: fila em A fazer, caixa em Fazendo, concluídos da semana em Feito. Arraste ou use o ✎ para mudar. Tarefas "seção" todos veem; "só meu" fica neste PC.</p>
       <div class="quadro" id="quadro"></div>
     </section>
 
@@ -1411,6 +1524,11 @@ let TODOS_F = {}, TODOS_ORD = { c: "", desc: false }, TODOS_LST = [];
 try { const s = JSON.parse(localStorage.getItem("sseg-todos-filtros") || "{}"); TODOS_F = s.f || {}; TODOS_ORD = s.o || TODOS_ORD; if (s.sit) TODOS_SIT = s.sit; } catch (e) {}
 const semAcento = t => (t || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const titulo = t => (t || "").toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
+// "SANTA CRUZ DO SUL" → "Santa Cruz do Sul" (preposições em minúscula)
+const cidadeBonita = t => titulo(t).replace(/ (Da|De|Do|Das|Dos|E)(?= )/g, m => m.toLowerCase());
+// nome de guerra da escala quando o analista é da seção (o servidor casa o nome do SOL); senão, o nome completo
+const BASE_GUERRA = n => /^(Sd|Sgt|Cb|Ten|Cap|Maj|Asp|St|Subten)\b/.test(n || "");
+const quemAn = u => (u && (u.guerra || titulo(u.quem))) || "";
 const predom = p => ((p.ocupacoes || []).find(o => o.tipo === "predominante") || (p.ocupacoes || [])[0] || {});
 function guardarFiltros() {
   try { localStorage.setItem("sseg-todos-filtros", JSON.stringify({ f: TODOS_F, o: TODOS_ORD, sit: TODOS_SIT })); } catch (e) {}
@@ -1434,7 +1552,7 @@ function filtrarTodos(ps) {
       : TODOS_SIT.startsWith("s:") ? p.situacao !== TODOS_SIT.slice(2) : false) return false;
     if (q) {
       const alvo = semAcento([p.numero, p.razao, (p.fantasia || []).join(" "), p.cidade, p.endereco, p.bairro,
-        (p.rt || []).join(" "), (p.ultima || {}).quem].join(" "));
+        (p.rt || []).join(" "), (p.ultima || {}).quem, (p.ultima || {}).guerra].join(" "));
       if (!alvo.includes(q) && !(qd.length >= 5 && (p.cnpj || []).some(c => c.includes(qd)))) return false;
     }
     if (F.cidade && p.cidade !== F.cidade) return false;
@@ -1477,7 +1595,10 @@ function pintarTodos() {
   const conta = f => { const c = {}; ps.forEach(p => { const v = f(p); if (v) c[v] = (c[v] || 0) + 1; }); return c; };
   const cc = conta(p => p.cidade), ca = conta(p => (p.ultima || {}).quem);
   opcoes("cidade", Object.keys(cc).sort().map(c => [c, c + " (" + cc[c] + ")"]));
-  opcoes("analista", Object.keys(ca).sort().map(a => [a, titulo(a) + " (" + ca[a] + ")"]));
+  const nomeDe = {}; ps.forEach(p => { if (p.ultima && p.ultima.quem) nomeDe[p.ultima.quem] = quemAn(p.ultima); });
+  // os da seção (nome de guerra) primeiro, depois os outros pelo nome
+  opcoes("analista", Object.keys(ca).sort((a, b) => (!(BASE_GUERRA(nomeDe[a])) - !(BASE_GUERRA(nomeDe[b]))) || nomeDe[a].localeCompare(nomeDe[b]))
+    .map(a => [a, nomeDe[a] + " (" + ca[a] + ")"]));
   document.querySelectorAll("#todos-painel [data-f]").forEach(i => {
     const v = TODOS_F[i.dataset.f];
     if (i.type === "checkbox") i.checked = !!v; else if (i.tagName !== "SELECT" || ["ed", "res", "nan"].includes(i.dataset.f)) i.value = v || "";
@@ -1500,22 +1621,23 @@ function pintarTodos() {
   corpo.replaceChildren(...lst.slice(0, TODOS_N).map(p => {
     const u = p.ultima, meu = meusCod.has(p.numero), pr = predom(p);
     return el("tr", {},
-      el("td", { class: "cod" }, p.numero, meu ? el("span", { class: "tag", style: "margin-left:6px", title: "Tem pasta neste PC" }, "seu") : null),
+      el("td", { class: "cod" }, el("button", { class: "bt link cod-sol", title: "Abrir o licenciamento no SOL (na aba em que você já entrou)",
+        on: { click: () => abrirNoSol("https://solcbm.rs.gov.br/solcbm/adm/#/licenciamento/consulta/" + p.id) } }, p.numero),
+        meu ? el("span", { class: "tag", style: "margin-left:6px", title: "Tem pasta neste PC" }, "seu") : null),
       el("td", { class: "razao", title: [p.razao, (p.fantasia || []).join(" / "), p.endereco, p.bairro, (p.rt || []).length ? "RT: " + p.rt.map(titulo).join(", ") : ""].filter(Boolean).join("\n") },
-        el("span", {}, p.razao || "—")),
-      el("td", { class: "cidade" }, p.cidade || ""),
+        el("span", {}, p.razao || "—"), p.endereco ? el("span", { class: "sec" }, titulo(p.endereco) + (p.bairro ? " · " + titulo(p.bairro) : "")) : null),
+      el("td", { class: "cidade" }, cidadeBonita(p.cidade)),
       el("td", { class: "ocup-c", title: (p.ocupacoes || []).map(o => o.div + " (" + o.tipo + ") " + o.cnae).join("\n") },
         pr.div || el("span", { class: "discreto" }, p.coletado_em ? "—" : "…"), (p.ocupacoes || []).length > 1 ? el("span", { class: "discreto" }, " +" + (p.ocupacoes.length - 1)) : null),
       el("td", { class: "num" }, p.area != null ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""),
       el("td", {}, el("span", { class: "tag sit " + corSit(p.situacao) }, nomeSit(p.situacao)),
         p.mudou_em ? el("span", { class: "tag sit k-vermelho", title: "Era " + nomeSit(p.anterior) + "; mudou na coleta de " + dataCaixa(p.mudou_em) }, "voltou · era " + nomeSit(p.anterior)) : null,
         p.recursos ? el("span", { class: "tag sit k-azul" }, p.recursos + " recurso(s)") : null),
-      el("td", {}, u ? [el("span", {}, dataAno(u.data) + " · " + u.resultado), el("div", { class: "discreto" }, titulo(u.quem) + (p.analises > 1 ? " · " + p.analises + " análises" : ""))]
+      el("td", {}, u ? [el("span", {}, dataAno(u.data) + " · " + u.resultado), el("div", { class: "discreto", title: titulo(u.quem) }, quemAn(u) + (p.analises > 1 ? " · " + p.analises + " análises" : ""))]
         : el("span", { class: "discreto", title: p.coletado_em ? "" : "Detalhe ainda não coletado" }, p.coletado_em ? "nenhuma" : "…")),
       el("td", { class: "quando" }, p.protocolo ? dataAno(p.protocolo) : ""),
       el("td", { style: "text-align:right;white-space:nowrap" },
-        meu ? el("button", { class: "bt link", on: { click: () => abrirProcesso(p.numero) } }, "abrir") : null,
-        el("button", { class: "bt link", title: "Licenciamento no SOL (na aba em que você já entrou)", on: { click: () => abrirNoSol("https://solcbm.rs.gov.br/solcbm/adm/#/licenciamento/consulta/" + p.id) } }, "SOL")));
+        meu ? el("button", { class: "bt link", on: { click: () => abrirProcesso(p.numero) } }, "abrir") : null));
   }));
 }
 const repintarTodos = () => { TODOS_N = 200; guardarFiltros(); pintarTodos(); };
@@ -1542,7 +1664,7 @@ $("#todos-csv").onclick = () => {
     "Protocolo", "Análises", "Última análise", "Resultado", "Analista", "RT"];
   const L = TODOS_LST.map(p => [p.numero, p.razao, p.cidade, p.bairro, predom(p).div, p.area ?? "", p.altura ?? "", p.populacao ?? "", nomeSit(p.situacao),
     p.protocolo ? dataAno(p.protocolo) : "", p.analises ?? "", p.ultima ? dataAno(p.ultima.data) : "", (p.ultima || {}).resultado || "",
-    titulo((p.ultima || {}).quem), (p.rt || []).map(titulo).join(", ")].map(v => String(v).replace(/[\t\n]/g, " ")).join("\t"));
+    quemAn(p.ultima), (p.rt || []).map(titulo).join(", ")].map(v => String(v).replace(/[\t\n]/g, " ")).join("\t"));
   copiar([cab.join("\t"), ...L].join("\n"));
   avisar(TODOS_LST.length + " processo(s) copiados: cole na planilha.");
 };

@@ -285,9 +285,34 @@ def baixar_cias(s, ids):
 
 # ------------------------------------------------------------------ 4. índice
 
+def _guerra():
+    """Nome completo do SOL → nome de guerra da escala ("CASSIO LUIZ BRITO" → "Sgt Brito"), pela regra do
+    distribuicao.nome_conhecido. Quem não é da seção fica com o nome completo (pedido do Átila, 17/10/2026)."""
+    import distribuicao
+    nomes = list((_ler(os.path.expanduser("~/sseg-escala/escala.json"), {}).get("horas") or {}).keys())
+    feitos = {}
+
+    def f(completo):
+        if not completo or not nomes:
+            return ""
+        if completo not in feitos:
+            n = distribuicao.nome_conhecido(completo, nomes)
+            if n not in nomes:
+                # dois nomes de guerra no mesmo nome ("SERGIO PATRICK CARDOZO PENA": Sgt Sérgio, não Sd Patrick, que é
+                # o Patrick José de Almeida): vale a palavra que vem primeiro no nome completo
+                pal = distribuicao._norm(completo).split()
+                cand = [(pal.index(distribuicao._norm(k).split()[-1]), k) for k in nomes
+                        if distribuicao._norm(k).split() and distribuicao._norm(k).split()[-1] in pal]
+                n = min(cand)[1] if len(cand) > 1 else ""
+            feitos[completo] = n
+        return feitos[completo]
+    return f
+
+
 def gerar_indice(lista=None, estado=None):
     lista = lista if lista is not None else _ler(LISTA, {})
     estado = estado if estado is not None else _ler(ESTADO, {})
+    guerra = _guerra()
     linhas = []
     for k, l in lista.items():
         if not l.get("presente"):
@@ -300,7 +325,7 @@ def gerar_indice(lista=None, estado=None):
                                                 "cnpj", "fantasia", "rt", "bairro", "criado")},
                        "desde": l.get("desde", ""), "vivo": l["situacao"] not in ENCERRADAS,
                        "protocolo": r.get("protocolo", ""), "analises": r.get("analises"),
-                       "ultima": r.get("ultima"), "recursos": r.get("recursos"), "id_analise": r.get("id_analise"),
+                       "ultima": dict(r["ultima"], guerra=guerra(r["ultima"].get("quem"))) if r.get("ultima") else None, "recursos": r.get("recursos"), "id_analise": r.get("id_analise"),
                        "cias": len(r.get("cias") or []), "coletado_em": (estado.get(k) or {}).get("coletado_em", "")})
     linhas.sort(key=lambda x: x["numero"], reverse=True)
     meta = _ler(os.path.join(BASE, "rodada.json"), {})

@@ -4,6 +4,25 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.4.0
+
+- **Visual novo, sóbrio e atual.**
+  - Fundo cinza-claro neutro, cartões brancos e texto escuro.
+  - O vermelho do CBM fica só como destaque: marca, botão principal e item ativo do menu.
+  - Títulos e cabeçalhos de tabela em letra normal, sem maiúsculas vermelhas.
+  - Topo com linha fina; menu com o item ativo em destaque suave.
+  - Cards da semana com um ponto de cor e o número grande.
+  - Campos e botões arredondados; a linha da tabela realça com o mouse.
+  - Modo escuro com a paleta nova.
+- **Tabelas mais limpas.**
+  - Razão social e endereço em letra menor, até 2 linhas, com o nome inteiro no mouse.
+  - Cidade escrita normalmente ("Santa Cruz do Sul").
+  - A etiqueta "4ª análise" não quebra mais para baixo do código.
+  - Na aba Processos, clique no código para abrir no SOL. A tabela cabe na tela sem rolar para o lado.
+- **Nome de guerra.** A última análise mostra "Sgt Brito" em vez do nome completo do SOL, também no filtro
+  de analista e na cópia para planilha. Quem não é da seção continua com o nome completo.
+- Explicações do topo de cada tela mais curtas.
+
 ## 2.3.23
 
 - **Aba Processos com busca de verdade.** O "Mais filtros" abre, e os filtros se somam:

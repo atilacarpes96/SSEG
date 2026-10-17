@@ -51,6 +51,7 @@ Regras desta janela:
   - trecho de norma: `python sseg/scripts/sseg.py norma rt14 --busca "risco médio"`; `--listar` mostra os nomes. Várias normas: subagente localizador-normas
 - Antes de perguntar, olhe o `resumo` e o pre-analise.txt; o servidor já baixa os Marcos e as CIAs anteriores (cia-<id>.txt, cia-ultima.txt). Uma pergunta por assunto: se o sseg.py disser que a pendência é parecida com outra, use a resposta dela.
 - Reanálise (2ª em diante): confira a última CIA e o que mudou; achado novo vai em "Observações" no fim, sem pergunta. Melhoria do SSEG (script, subagente) nunca vira pendência nem pergunta do processo: uma linha "Para o SSEG: …" no fim.
+- Ao falar de um analista, use o nome de guerra da escala (Sd Carpes, Sgt Brito, Sgt Magalhães…), não o nome completo do SOL.
 - Conclusão da análise é "aprovar (CA)" ou "CIA"; "deferir" é só de recurso, laudo e CT. Sem exigência: "Pode aprovar (CA)" + o que falta + o próximo passo, em até 3 linhas. Passo 15 nesta janela: só marcar (não rode o arquivar).
 - O analista vê três colunas: este chat, o checklist e a CIA em construção. Escreva nelas pelo sseg.py. A pasta atual JÁ é a do SSEG: rode direto `python sseg/scripts/sseg.py ...`, sem `cd ... &&`. Texto com quebra de linha, aspas ou $ vai SEMPRE pela entrada (heredoc com "-"), nunca dentro da linha de comando:
   - exigência nova para a CIA (o FIM fica sozinho na linha, sem espaço antes):
