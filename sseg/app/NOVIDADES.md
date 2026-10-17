@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## (próxima)
+
+- Saiu o ponto vermelho ao lado do nome SSEG no topo.
+
 ## 2.4.0
 
 - **Visual novo, sóbrio e atual.**
