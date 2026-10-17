@@ -16,6 +16,10 @@ celular) pela porta de depuração 127.0.0.1:9222 e, dentro da aba do SOL:
   5. (2.3.13) baixa os Marcos de cada processo (marcos.json + marcos-resumo.json, pelo marcos.py):
      data de protocolo, análises anteriores com o PDF da CIA e recursos. Recurso ou marco novo
      dispara o gatilho: aviso na saída, .caixa/gatilhos.json e cartão no Quadro da seção.
+     (17/10/2026) baixa o PDF de cada CIA anterior (GET /arquivo/<id>, ids do marcos-resumo.json)
+     e extrai o texto: cia-<id>.pdf, cia-<id>.txt e cia-ultima.txt. Só o que ainda não tem.
+Pausa de 0,15 s entre consultas e até 3 tentativas em erro passageiro (5xx, 429, rede), como o
+coletor do Sgt Magalhães: o SOL é sistema de produção.
 A pasta sseg/processos/ não vai ao GitHub (.gitignore) e desce ao PC pelo `sseg.py sincronizar`.
 
 O QUE NÃO FAZ
@@ -39,8 +43,10 @@ import argparse
 import base64
 import json
 import os
+import shutil
 import socket
 import struct
+import subprocess
 import sys
 import time
 import urllib.request
@@ -52,6 +58,9 @@ API = "/solcbm/api/v1/adm/analise-tecnica"
 LICENCIAMENTO = "/solcbm/api/v1/adm/licenciamentos"
 HISTORICO = "/solcbm/api/v1/adm/licenciamento-historico"
 FACTS = "/solcbm/api/v1/adm/facts/facts-licenciamento"
+ARQUIVO = "/solcbm/api/v1/adm/arquivo"
+PAUSA = 0.15      # segundos entre consultas: o SOL é sistema de produção
+TENTATIVAS = 3    # erro passageiro (rede, 429, 5xx): tenta de novo com espera de 1 s, 2 s
 
 
 # ------------------------------------------------------------------ DevTools (só biblioteca padrão)
@@ -147,14 +156,86 @@ BUSCAR = r"""(async () => {
   return JSON.stringify({ status: r.status, corpo: await r.text() });
 })()"""
 
+# o PDF em base64, em blocos (fromCharCode com o arquivo inteiro estoura a pilha)
+BAIXAR = r"""(async () => {
+  const tok = sessionStorage.getItem("access_token") || localStorage.getItem("access_token");
+  const r = await fetch(%s, { credentials: "include", headers: { Authorization: "Bearer " + tok } });
+  if (r.status !== 200) return JSON.stringify({ status: r.status, b64: "" });
+  const b = new Uint8Array(await r.arrayBuffer());
+  let s = "";
+  for (let i = 0; i < b.length; i += 32768) s += String.fromCharCode.apply(null, b.subarray(i, i + 32768));
+  return JSON.stringify({ status: 200, b64: btoa(s) });
+})()"""
+
+
+def _consultar(aba, js, caminho):
+    """Uma consulta na aba, com pausa antes e nova tentativa em erro passageiro. 401/403 não repete."""
+    for n in range(TENTATIVAS):
+        time.sleep(PAUSA)
+        try:
+            r = aba.avaliar(js % json.dumps(caminho))
+        except RuntimeError as e:  # o fetch falhou dentro da página (rede)
+            r = {"status": 0, "corpo": str(e), "b64": ""}
+        if r["status"] in (401, 403):
+            raise PermissionError("SOL respondeu %s em %s" % (r["status"], caminho))
+        if not (r["status"] in (0, 429) or r["status"] >= 500) or n == TENTATIVAS - 1:
+            return r
+        time.sleep(2 ** n)
+
 
 def buscar(aba, caminho):
-    r = aba.avaliar(BUSCAR % json.dumps(caminho))
-    if r["status"] in (401, 403):
-        raise PermissionError("SOL respondeu %s em %s" % (r["status"], caminho))
+    r = _consultar(aba, BUSCAR, caminho)
     if r["status"] != 200:
         raise RuntimeError("SOL respondeu %s em %s: %s" % (r["status"], caminho, r["corpo"][:200]))
     return json.loads(r["corpo"])
+
+
+def baixar_cias(aba, codigo, linha):
+    """PDF e texto de cada CIA anterior: cia-<id>.pdf, cia-<id>.txt e cia-ultima.txt (os nomes do
+    `analise_registro.py sol-pdf`, que o Claude usava no chat). Ids do marcos-resumo.json; só baixa o
+    que ainda não tem. Erro vira aviso e não para a caixa: tenta de novo na próxima leitura."""
+    import marcos
+    pasta = os.path.join(PROCESSOS, str(codigo))
+    try:
+        with open(os.path.join(pasta, marcos.RESUMO), encoding="utf-8") as fh:
+            r = json.load(fh)
+    except (OSError, ValueError):
+        return
+    ids = [a["arquivo"] for a in r.get("analises") or [] if a.get("resultado") == "CIA" and a.get("arquivo")]
+    for ident in ids:
+        txt = os.path.join(pasta, "cia-%s.txt" % ident)
+        if os.path.exists(txt) and os.path.getsize(txt):
+            continue
+        try:
+            d = _consultar(aba, BAIXAR, "%s/%s" % (ARQUIVO, ident))
+            if d["status"] != 200:
+                raise RuntimeError("SOL respondeu %s" % d["status"])
+            dados = base64.b64decode(d["b64"])
+            if not dados.startswith(b"%PDF"):
+                raise RuntimeError("não veio PDF")
+            pdf = os.path.join(pasta, "cia-%s.pdf" % ident)
+            with open(pdf, "wb") as fh:
+                fh.write(dados)
+            subprocess.run(["pdftotext", "-layout", pdf, txt], check=True, timeout=60)
+            if not os.path.getsize(txt):
+                raise RuntimeError("PDF sem texto (imagem): ler com pdftoppm")
+            linha["cias"] = linha.get("cias", 0) + 1
+        except PermissionError:  # sessão caída: não é problema desta CIA
+            raise
+        except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as e:
+            linha["aviso"] = "CIA %s: %s" % (ident, e)
+    ultima = os.path.join(pasta, "cia-%s.txt" % ids[-1]) if ids else ""
+    if ultima and os.path.exists(ultima) and os.path.getsize(ultima):
+        destino = os.path.join(pasta, "cia-ultima.txt")
+        with open(ultima, "rb") as fh:
+            novo = fh.read()
+        try:
+            with open(destino, "rb") as fh:
+                igual = fh.read() == novo
+        except OSError:
+            igual = False
+        if not igual:
+            shutil.copyfile(ultima, destino)
 
 
 # ------------------------------------------------------------------ caixa
@@ -310,6 +391,7 @@ def levantar(forcar=False):
                 marcos_proc(aba, ident, codigo, linha)
             except RuntimeError as e:
                 linha["aviso"] = "marcos: %s" % e
+            baixar_cias(aba, codigo, linha)  # a CIA anterior chega pronta: o Claude não baixa mais no chat
         resumo.append(linha)
     agora = time.strftime("%Y-%m-%d %H:%M")
     with open(os.path.join(caixa, "caixa.json"), "w", encoding="utf-8") as fh:
@@ -322,8 +404,9 @@ def levantar(forcar=False):
         sit, txt = pre_analise.pre_analisar(c, forcar=c in novos)
         if sit != "em-dia":
             print("  pré-análise %s: %s" % (c, txt))
-    print("%s · caixa: %d · novos baixados: %d%s" % (agora, len(itens), len(novos),
-                                                     (" (" + ", ".join(map(str, novos)) + ")") if novos else ""))
+    cias = sum(r.get("cias", 0) for r in resumo)
+    print("%s · caixa: %d · novos baixados: %d%s · CIAs baixadas: %d" % (
+        agora, len(itens), len(novos), (" (" + ", ".join(map(str, novos)) + ")") if novos else "", cias))
     for r in resumo:
         if r.get("erro"):
             print("  ✗", r["erro"])

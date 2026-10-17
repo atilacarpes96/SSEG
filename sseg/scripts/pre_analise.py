@@ -108,6 +108,27 @@ def converter(api):
     }
 
 
+INICIO_CIA = "apresentou as seguintes inconformidades"  # frase fixa do PDF do SOL antes dos apontamentos
+RODAPE_CIA = re.compile(r"^\s*CBMRS \d\d/\d\d/\d{4} [\d:]+\s+Pagina \d+ de \d+\s*$")
+
+
+def secao_cia(arq, marcos):
+    """Última CIA para o fim do pre-analise.txt. Só o texto: comparar (passo 11) é do analista e do Claude."""
+    tem_cia = any(a.get("resultado") == "CIA" for a in marcos.get("analises") or [])
+    if not os.path.exists(arq):
+        return "\nÚLTIMA CIA: anterior ainda não baixada (sol_caixa.py).\n" if tem_cia else ""
+    with open(arq, encoding="utf-8", errors="replace") as fh:
+        texto = fh.read()
+    m = re.search(INICIO_CIA + r"[^:]*:", texto)  # a frase quebra linha: vai até o "aplicáveis:"
+    i = m.end() if m else -1
+    if i >= 0:  # corta cabeçalho, identificação, ocupações e laudo (já estão no JSON do SOL)
+        texto = texto[i:]
+    linhas = [l.rstrip() for l in texto.replace("\f", "\n").splitlines() if not RODAPE_CIA.match(l)]
+    texto = re.sub(r"\n{3,}", "\n\n", "\n".join(linhas)).strip()
+    return "\n\nÚLTIMA CIA (texto do PDF do SOL, cia-ultima.txt%s):\n%s\n" % (
+        "" if i >= 0 else "; texto inteiro, início dos apontamentos não achado", texto)
+
+
 def pre_analisar(codigo, forcar=False):
     """(situação, texto curto). Grava pre-analise.json e pre-analise.txt na pasta do processo."""
     pasta = os.path.join(PROCESSOS, codigo)
@@ -118,7 +139,8 @@ def pre_analisar(codigo, forcar=False):
     saida_json = os.path.join(pasta, "pre-analise.json")
     saida_txt = os.path.join(pasta, "pre-analise.txt")
     resumo_arq = os.path.join(pasta, "marcos-resumo.json")
-    base = max(os.path.getmtime(api_arq), os.path.getmtime(resumo_arq) if os.path.exists(resumo_arq) else 0)
+    cia_arq = os.path.join(pasta, "cia-ultima.txt")  # o sol_caixa.py baixa: refaz quando chega CIA nova
+    base = max([os.path.getmtime(a) for a in (api_arq, resumo_arq, cia_arq) if os.path.exists(a)])
     if not forcar and os.path.exists(saida_txt) and os.path.getmtime(saida_txt) >= base:
         return "em-dia", "já feita"
     with open(api_arq, encoding="utf-8") as fh:
@@ -147,7 +169,7 @@ def pre_analisar(codigo, forcar=False):
            "Definidora abaixo = a que o RT marcou no SOL (determinaSeguranca), não a que vale.\n\n"
            % (codigo, os.path.basename(api_arq), linha_marcos))
     with open(saida_txt, "w", encoding="utf-8") as fh:
-        fh.write(cab + r.stdout + (("\n[erro do check]\n" + r.stderr) if r.returncode else ""))
+        fh.write(cab + r.stdout + (("\n[erro do check]\n" + r.stderr) if r.returncode else "") + secao_cia(cia_arq, marcos))
     marcas = sum(1 for l in r.stdout.splitlines() if l.startswith(("!!", "??", "XX")))
     return ("feita" if not r.returncode else "erro"), "%d ponto(s) marcados" % marcas
 
