@@ -64,7 +64,9 @@ As skills foram escritas para o Cowork. No Claude Code, traduzir:
   `mcp__chrome-devtools-live__*`), que enxerga **todas** as abas do Chrome do analista — o acesso
   foi liberado por ele (16/10/2026). `list_pages` → `select_page` na aba do SOL em que ele já
   entrou → ler com `evaluate_script`. Tempo esgotado: o Chrome pede "Permitir" a cada conexão nova.
-  A senha do SOL é sempre digitada pelo usuário. Sem o DevTools MCP (Cowork), o Claude in Chrome:
+  A senha do SOL é sempre digitada pelo usuário — exceto o login automático do servidor
+  (`sol_senha.py` + `sol_caixa.py`), autorizado pelo Átila em 17/10/2026, com a senha que ele grava
+  uma vez num terminal; o Claude nunca digita nem lê a senha. Sem o DevTools MCP (Cowork), o Claude in Chrome:
   `tabs_context_mcp` e reutilizar a aba do SOL que já estiver no grupo (autorizado em 08/10/2026).
 
 ## Subagentes (`.claude/agents/`)

@@ -140,6 +140,14 @@ Cuidados:
   proprietário ou RT na página. Dado de processo só vai para o Painel do Dia, que é privado.
 - Continuam na nuvem, sem pasta: "Escala na agenda" (domingo, 18h) e "Resumo semanal"
   (sexta, 16h).
+- **Caixa do SOL** (`sol_caixa.py`, 8h/12h/16h; `--sessao` de hora em hora): caixa, JSON, Marcos,
+  CIAs anteriores (desde 17/10/2026) e pré-análise, sem modelo. **Login automático (17/10/2026,
+  autorizado pelo Átila):** sessão caída, o script recarrega a aba do Chromium do servidor — se o
+  login do SOE ainda vale, o token volta sem senha; se o SOE pedir, preenche com a senha que o
+  Átila gravou uma vez (`sol_senha.py gravar`, num terminal; `~/sseg-acesso/sol-login.json`, 600,
+  fora do Git). Uma tentativa por queda: falhou, liga a trava `sol-login-falhou` e põe cartão no
+  Quadro; só volta com novo `gravar`. As chaves dos analistas são `restrict` e não leem o arquivo;
+  as sessões do Claude no servidor leem.
 
 ## Rotinas propostas
 

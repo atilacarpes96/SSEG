@@ -24,7 +24,9 @@ A pasta sseg/processos/ não vai ao GitHub (.gitignore) e desce ao PC pelo `sseg
 
 O QUE NÃO FAZ
 -------------
-  - Não entra no SOL, não digita senha, não clica em nada: só lê com a sessão aberta.
+  - Só lê com a sessão aberta. Exceção (17/10/2026, autorizada pelo Átila): sessão caída, recarrega a aba
+    e, se o SOE pedir, digita a senha que o Átila gravou com sol_senha.py — uma tentativa por queda;
+    falhou, liga a trava (~/sseg-acesso/sol-login-falhou) e avisa no Quadro.
   - Não decide nada da análise: a pré-análise é outra rotina, que lê estes arquivos.
   - Não sobrescreve api-<ID>.json que já existe (use --forcar).
 
@@ -36,7 +38,7 @@ USO (no servidor)
 ---
   python3 sseg/scripts/sol_caixa.py            # levanta e imprime um resumo
   python3 sseg/scripts/sol_caixa.py --sessao   # só diz se está logado e até quando
-Saída: 0 ok · 2 sessão caída (entrar de novo pelo celular) · 3 Chrome do servidor fora do ar
+Saída: 0 ok · 2 sessão caída e sem login automático (entrar pelo celular) · 3 Chrome do servidor fora do ar
 """
 
 import argparse
@@ -61,6 +63,8 @@ FACTS = "/solcbm/api/v1/adm/facts/facts-licenciamento"
 ARQUIVO = "/solcbm/api/v1/adm/arquivo"
 PAUSA = 0.15      # segundos entre consultas: o SOL é sistema de produção
 TENTATIVAS = 3    # erro passageiro (rede, 429, 5xx): tenta de novo com espera de 1 s, 2 s
+LOGIN = os.path.expanduser("~/sseg-acesso/sol-login.json")  # gravado pelo Átila com sol_senha.py
+ENTRADA = "https://www.solcbm.rs.gov.br/solcbm/adm/"
 
 
 # ------------------------------------------------------------------ DevTools (só biblioteca padrão)
@@ -134,7 +138,10 @@ def aba_do_sol():
         paginas = json.load(urllib.request.urlopen(DEPURACAO + "/json/list", timeout=5))
     except OSError:
         return None
-    sol = [p for p in paginas if p.get("type") == "page" and "solcbm.rs.gov.br" in p.get("url", "")]
+    abas = [p for p in paginas if p.get("type") == "page"]
+    sol = [p for p in abas if "solcbm.rs.gov.br" in p.get("url", "")]
+    # caída, a aba fica na tela do SOE (outro endereço): o Chromium do servidor é só do SOL, vale a 1ª aba
+    sol = sol or (abas[:1] if os.path.exists(LOGIN) else [])
     return Aba(sol[0]["webSocketDebuggerUrl"]) if sol else None
 
 
@@ -334,12 +341,117 @@ def marcos_proc(aba, ident, codigo, linha):
         json.dump(vistos, fh, ensure_ascii=False, indent=1)
 
 
+# ------------------------------------------------------------------ login automático (17/10/2026)
+# Autorizado pelo Átila: com a senha que ele gravou (sol_senha.py), refaz a sessão na MESMA aba do
+# Chromium do servidor. Campos do SOE como no coletor do Sgt Magalhães. Uma tentativa por queda.
+
+TELA_LOGIN = r"""(() => {
+  const vis = e => e && (e.offsetParent !== null || getComputedStyle(e).position === "fixed");
+  const t = sessionStorage.getItem("access_token") || localStorage.getItem("access_token");
+  let logado = false;
+  try { logado = !!t && JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp > Date.now() / 1000; } catch (e) {}
+  const erros = [...document.querySelectorAll("[role=alert], .alert, .alert-danger, .ui-messages-error, .ui-growl-message, .text-danger, .invalid-feedback, [class*=erro], [class*=error]")]
+    .filter(vis).map(e => e.innerText.trim()).filter(s => s && s.length < 300);
+  return JSON.stringify({ sol: location.host.includes("solcbm.rs.gov.br"), logado, form: vis(document.querySelector("#senha")), erros });
+})()"""
+
+PREENCHER = r"""(() => {
+  const set = (sel, v) => {
+    const e = document.querySelector(sel);
+    if (!e) return false;
+    const p = Object.getPrototypeOf(e), d = Object.getOwnPropertyDescriptor(p, "value");
+    d && d.set ? d.set.call(e, v) : (e.value = v);
+    e.dispatchEvent(new Event("input", { bubbles: true }));
+    e.dispatchEvent(new Event("change", { bubbles: true }));
+    return e.value === v;
+  };
+  const ok = [set("#organizacao", %s), set("#matricula", %s), set("#senha", %s)];
+  if (ok.includes(false)) return JSON.stringify({ ok: false, campos: ok });
+  document.querySelector("#btnLogonOrganizacao").click();
+  return JSON.stringify({ ok: true });
+})()"""
+
+
+def _tela(aba):
+    try:
+        return aba.avaliar(TELA_LOGIN)
+    except (RuntimeError, OSError, ValueError):  # página trocando no meio da leitura
+        return {"sol": False, "logado": False, "form": False, "erros": []}
+
+
+def _falhou(msg):
+    """Liga a trava (nada de nova tentativa até o Átila rodar sol_senha.py gravar) e avisa no Quadro."""
+    import sol_senha
+    with open(sol_senha.TRAVA, "w", encoding="utf-8") as fh:
+        fh.write("%s · %s" % (time.strftime("%d/%m/%Y %H:%M"), msg))
+    try:
+        import quadro
+        quadro.adicionar(QUADRO_SECAO, ("Login automático do SOL falhou: %s. Entrar pelo celular e rodar "
+                                        "sol_senha.py gravar" % msg)[:200],
+                         origem="sol_caixa.py, entrar(): trava ligada, sem nova tentativa", autor="SSEG")
+    except Exception as e:  # o aviso no Quadro não pode esconder a falha
+        print("  (cartão no Quadro não criado: %s)" % e)
+    return False, msg
+
+
+def entrar(aba):
+    """(conseguiu, texto). Recarrega o SOL; se o login do SOE ainda vale, o token volta sem senha.
+    Se aparecer o formulário, preenche UMA vez com a senha gravada. Falha liga a trava."""
+    import sol_senha
+    cred = sol_senha.ler()
+    if not cred:
+        return False, "sem senha gravada (sol_senha.py gravar)"
+    if os.path.exists(sol_senha.TRAVA):
+        return False, "trava ligada desde a última falha: " + sol_senha._ler_texto(sol_senha.TRAVA)
+    try:  # ?r= muda o endereço: só o "#" não recarregaria a página
+        aba.avaliar("(() => { location.href = %s; return '1'; })()" % json.dumps("%s?r=%d#/dashboard" % (ENTRADA, time.time())))
+    except (RuntimeError, OSError, ValueError):
+        pass
+    fim = time.time() + 30
+    while True:
+        time.sleep(1)
+        t = _tela(aba)
+        if t["sol"] and t["logado"]:
+            return True, "sessão renovada sem senha (o login do SOE ainda valia)"
+        if t["form"]:
+            break
+        if time.time() > fim:
+            return False, "o formulário do SOE não apareceu em 30 s (nada preenchido)"
+    antes = set(t["erros"])
+    time.sleep(1)  # a tela termina de montar
+    r = aba.avaliar(PREENCHER % (json.dumps("cbm"), json.dumps(cred["matricula"]), json.dumps(cred["senha"])))
+    if not r.get("ok"):
+        return _falhou("campos do SOE não preenchidos (%s): a tela mudou?" % r.get("campos"))
+    fim = time.time() + 30
+    while time.time() < fim:
+        time.sleep(1)
+        t = _tela(aba)
+        if t["sol"] and t["logado"]:
+            with open(sol_senha.ULTIMO, "w", encoding="utf-8") as fh:
+                fh.write(time.strftime("%d/%m/%Y %H:%M"))
+            return True, "sessão refeita por login automático"
+        novos = [e for e in t["erros"] if e not in antes]
+        if novos and not t["sol"]:
+            return _falhou("o SOE recusou: " + novos[0])
+    return _falhou("o login não terminou em 30 s")
+
+
+def _logar_se_caiu(aba):
+    """Sessão caída: uma chamada a entrar() e nova conferência. Devolve o SESSAO final."""
+    s = aba.avaliar(SESSAO)
+    if s["logado"]:
+        return s
+    ok, txt = entrar(aba)
+    print(("Sessão do SOL: %s." if ok else "Login automático não feito: %s.") % txt)
+    return aba.avaliar(SESSAO) if ok else s
+
+
 def levantar(forcar=False):
     aba = aba_do_sol()
     if aba is None:
         print("Chrome do servidor fora do ar ou sem aba do SOL: rode ~/rotinas/sol-chrome.sh iniciar.")
         return 3
-    s = aba.avaliar(SESSAO)
+    s = _logar_se_caiu(aba)
     if not s["logado"]:
         print("Sessão do SOL caída: entre de novo pelo celular.")
         return 2
@@ -422,7 +534,7 @@ def sessao():
     if aba is None:
         print("Chrome do servidor fora do ar ou sem aba do SOL.")
         return 3
-    s = aba.avaliar(SESSAO)
+    s = _logar_se_caiu(aba)
     if s["logado"]:
         print("Logado no SOL (%s), token até %s." % (s["url"], time.strftime("%H:%M", time.localtime(s["exp"]))))
         return 0
