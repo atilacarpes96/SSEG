@@ -39,7 +39,7 @@ def origem():
 
 
 def pasta_destino():
-    return os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "SSEG", "sol-entrar")
+    return os.path.join(os.environ.get("LOCALAPPDATA") or os.path.expanduser(os.path.join("~", ".config")), "SSEG", "sol-entrar")
 
 
 def chrome():

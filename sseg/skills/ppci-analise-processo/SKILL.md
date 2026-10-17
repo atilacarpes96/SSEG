@@ -44,6 +44,49 @@ Mesma disciplina fora do desempate: nota que condiciona a medida a um fato do ca
 (ex.: "obrigatório se a edificação estiver afastada mais do que 20 metros da via pública")
 **nunca** se resolve sozinha — apontar a condição e perguntar.
 
+## Na janela do processo do SSEG.exe (17/10/2026)
+
+Regras tiradas das 4 análises de 16 e 17/10/2026 (conversas guardadas no servidor). Na janela, a
+pasta do processo já chega pronta e as regras do programa valem sobre o resto desta skill.
+
+**Antes de perguntar, ler o que já está na pasta.** `python sseg/scripts/sseg.py resumo --pasta "<pasta>"`
+lista tudo: cadastro do SOL (ocupações com CNAE, carga e risco, área, alturas, pavimentos, população,
+riscos específicos, plantas desta análise), Marcos (protocolo, nº da análise, CIAs com o id do PDF),
+CIAs anteriores já em texto (`cia-<id>.txt`, `cia-ultima.txt`), CT e recurso das planilhas. Não
+perguntar ao analista nada que esteja ali (16/10: data de protocolo e PDF da CIA; 17/10: "olha aí, isso
+tem nos arquivos"). Não fazer Grep no `api-*.json`: é uma linha só e volta "[Omitted long matching line]".
+
+**Tabela de exigências.** O check já traz a linha transcrita do PDF, célula a célula, com as notas.
+Para ver a tabela na imagem: `python sseg/scripts/sseg.py norma decreto --tabela 6J.2` (ou `rt05p07`)
+devolve a página e o PNG para ler com Read. Não pedir a imagem ao analista.
+
+**Trecho de norma.** `python sseg/scripts/sseg.py norma <rt14|rt11|decreto|...> --busca "<termo>"`
+(Poppler, UTF-8, página indicada) ou o subagente `localizador-normas` quando forem várias normas. Não
+rodar `pdftotext` à mão: na janela saiu o do Git (sem acento), e o arquivo foi parar na pasta do processo.
+
+**Uma pergunta por assunto.** O `sseg.py analise ... pendencia` recusa pendência parecida com uma já
+registrada e mostra a resposta, se houver: usar essa. No A00022658AA002 a mesma pergunta entrou 2 ou 3
+vezes (23 pendências, um terço repetida).
+
+**Pendência é do processo.** Melhoria do SSEG (ajustar subagente, script que faltou) não vira pendência
+nem pergunta do processo: uma linha no fim, "Para o SSEG: …". Misturar fez o "CA, pode colocar na aba
+esperando" mover o cartão errado (16/10).
+
+**Reanálise (2ª em diante): o escopo é a última CIA mais o que mudou.** Conferir item por item o que a
+CIA anterior apontou e o que o RT mudou no cadastro e nas plantas desta análise. Achado fora disso vai em
+"Observações", no fim, sem pergunta e sem virar exigência sozinho: quem decide abrir assunto novo numa
+4ª ou 5ª análise é o analista (16/10, A00046788AA001: "vamos nos ater ao que foi notificado"). Exceção:
+erro de definidora, de tabela ou de norma que mude o campo 4 — apontar, mas como observação.
+
+**Fechar.** Sem exigência: "**Pode aprovar (CA).**" + o que falta (se faltar) + o próximo passo, em até 3
+linhas. Tabela de medidas e lista de normas só se algo divergiu ou se o analista pedir. **Aprovar** é da
+análise (CA); **deferir/indeferir** é de recurso, laudo de inviabilidade e CT — não trocar. Passo 15
+("Atualizar a pasta") na janela: só marcar; o `arquivar` é do fluxo antigo.
+
+**Tamanho de cada resposta = tamanho da novidade.** Veredito em uma linha; tabela só quando muda alguma
+coisa; não repetir o quadro inteiro a cada turno. Nas 4 análises as respostas tiveram de 1.300 a 3.500
+caracteres por turno, a maioria repetindo o turno anterior.
+
 ## ⏱️ Custo — as regras que mais economizam
 
 Medição de uma sessão real (02/09/2026, 147 rodadas): a **execução** das ferramentas custou
@@ -140,6 +183,10 @@ exigência, ou quando o usuário pedir, no formato: fonte · item · trecho lite
 ## 📖 Ler os PDFs das normas
 
 ### ⭐ De onde vem o arquivo: a pasta local, não o link
+
+**No PC (Claude Code / SSEG.exe), antes de tudo o resto desta seção:** `python sseg/scripts/sseg.py norma
+<norma> --busca "<termo>"` para o trecho e `--tabela <n>` para a página da tabela em imagem. O método
+manual abaixo é do Cowork.
 
 **`sseg/normas/pdf/`, dentro da pasta do projeto,** é a fonte primária — vale nos dois
 computadores (quartel: `C:\Users\55519\Desktop\Carpes\SSEG\`; casa: `E:\Atila\bombers\SSEG\`).
@@ -273,6 +320,9 @@ histórico inteiro a cada mensagem — foi o maior gasto medido em 24–25/09/20
 conversa aberta das 07:28 às 17:58).
 
 ### 1.2 Data de protocolo — onde achar (não perguntar antes de olhar)
+
+**Na janela do SSEG.exe:** já está no `pre-analise.txt` e no `sseg.py resumo` (Marcos baixados pelo
+servidor). Só procurar no SOL se a pasta não tiver `marcos-resumo.json`.
 
 **Não está na tela da análise técnica.** Sai da aba **"Consultar licenciamento" → "Marcos"**,
 no marco **"Número do licenciamento gerado"**. A mesma aba traz a linha do tempo inteira,
@@ -437,6 +487,10 @@ de compensatória.
 
 ### 10. Comparação com a análise anterior (da 2ª em diante)
 
+**Escopo (17/10/2026):** a última CIA mais o que mudou — ver "Na janela do processo do SSEG.exe". As CIAs
+anteriores já estão em texto na pasta (`cia-<id>.txt`); ler a última inteira e as outras só no item em
+discussão.
+
 `sseg.py diff` (com um JSON de trabalho no container, não gravado na pasta), ou comparação
 campo a campo. Reportar em quatro colunas: **o que mudou · o que não mudou · o que foi
 corrigido em resposta à CIA anterior · o que continua irregular**. Os textos das
@@ -470,6 +524,11 @@ Atalhos que o modelo tende a tomar nesta análise, e por que não valem. Cada li
 
 ## Nunca
 
+- **Perguntar de novo o que já foi perguntado** ou o que `sseg.py resumo` mostra.
+- **Dizer "deferir" para a conclusão da análise** — é aprovar (CA). Deferir é de recurso, laudo e CT.
+- **Pôr manutenção do SSEG como pendência ou pergunta do processo.**
+- **Gravar arquivo temporário na pasta do processo** (imagem de página, texto de norma): o `sseg.py norma`
+  já grava na pasta temporária do sistema.
 - **Aplicar sozinho uma nota de tabela que decide contagem ou definidora** — parar e perguntar.
 - Abrir `scripts/dados/tabelas_conferidas.json` numa análise.
 - **Ler inteira, por `project_read`, transcrição comentada de norma ou o índice normativo**

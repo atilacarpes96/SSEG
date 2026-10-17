@@ -630,9 +630,15 @@ class Api:
         d = reg.ler(pasta)
         for texto, resp in pares or []:
             alvo = re.sub(r"\s+", " ", texto).strip().lower()
+            achou = False
             for p in d["pendencias"]:
                 if re.sub(r"\s+", " ", p["texto"]).strip().lower() == alvo:
                     p.update(resposta=resp, enviada=True, feita=True)  # respondida = resolvida: sai do topo (2.3.10)
+                    achou = True
+            # pergunta repetida não vira pendência nova (2.3.22): a resposta vai para a parecida que já existe
+            par = None if achou or not hasattr(reg, "parecida") else reg.parecida(d, texto)  # clone antigo: sem
+            if par:
+                par.update(resposta=resp, enviada=True, feita=True)
         reg.gravar(pasta, d)
 
     def norma_pdf(self, rotulo, consulta=""):

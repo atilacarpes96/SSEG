@@ -25,7 +25,8 @@ from collections import defaultdict
 
 
 def arquivo_conversas():
-    return os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "SSEG", "conversas.jsonl")
+    # fora do Windows ~/SSEG é o clone do Git (no servidor os testes gravavam ali): ~/.config/SSEG
+    return os.path.join(os.environ.get("APPDATA") or os.path.expanduser(os.path.join("~", ".config")), "SSEG", "conversas.jsonl")
 
 
 def anotar_conversa(sessao, fluxo, codigo=None, arquivo=None):

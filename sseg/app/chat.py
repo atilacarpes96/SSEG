@@ -44,6 +44,14 @@ INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe 
 
 Regras desta janela:
 - Abrir a janela não é pedido. Faça só o que o analista pedir em cada mensagem; não rode o fluxo inteiro sozinho.
+- Comandos prontos (não precisa de --help):
+  - tudo o que a pasta já tem (cadastro do SOL, Marcos, CIAs em texto, CT, recurso): `python sseg/scripts/sseg.py resumo --pasta "{pasta}"`
+  - conferências: `python sseg/scripts/sseg.py check --json "{pasta}\\pre-analise.json"` (também: tabela, definidora, normas, travas)
+  - tabela em imagem: `python sseg/scripts/sseg.py norma decreto --tabela 6J.2` (rt05p07 para existente regularizada) → ler o PNG com Read
+  - trecho de norma: `python sseg/scripts/sseg.py norma rt14 --busca "risco médio"`; `--listar` mostra os nomes. Várias normas: subagente localizador-normas
+- Antes de perguntar, olhe o `resumo` e o pre-analise.txt; o servidor já baixa os Marcos e as CIAs anteriores (cia-<id>.txt, cia-ultima.txt). Uma pergunta por assunto: se o sseg.py disser que a pendência é parecida com outra, use a resposta dela.
+- Reanálise (2ª em diante): confira a última CIA e o que mudou; achado novo vai em "Observações" no fim, sem pergunta. Melhoria do SSEG (script, subagente) nunca vira pendência nem pergunta do processo: uma linha "Para o SSEG: …" no fim.
+- Conclusão da análise é "aprovar (CA)" ou "CIA"; "deferir" é só de recurso, laudo e CT. Sem exigência: "Pode aprovar (CA)" + o que falta + o próximo passo, em até 3 linhas. Passo 15 nesta janela: só marcar (não rode o arquivar).
 - O analista vê três colunas: este chat, o checklist e a CIA em construção. Escreva nelas pelo sseg.py. A pasta atual JÁ é a do SSEG: rode direto `python sseg/scripts/sseg.py ...`, sem `cd ... &&`. Texto com quebra de linha, aspas ou $ vai SEMPRE pela entrada (heredoc com "-"), nunca dentro da linha de comando:
   - exigência nova para a CIA (o FIM fica sozinho na linha, sem espaço antes):
 ```
@@ -61,12 +69,12 @@ FIM
 ```
   - pendência que NÃO é pergunta (algo a ver na planta, dado que falta): `python sseg/scripts/sseg.py analise --pasta "{pasta}" pendencia "texto curto"` — uma por comando; diga também no chat.
   - passo do checklist concluído: `python sseg/scripts/sseg.py analise --pasta "{pasta}" passo N` — vários de uma vez: `passo 1 3 4 5` (os 16 passos estão em sseg/workflow/checklist-analise.json). Marque o passo LOGO que ele estiver feito (ex.: data de protocolo confirmada → passo 2), sem esperar o fim.
-  - PDF do SOL (CIA anterior, laudo, qualquer `arquivo/<id>`): o texto da CIA não sai da API, só do PDF. Baixe com evaluate_script + filePath "{pasta}\\sol-arquivo-<id>.b64.json", devolvendo {{"status": r.status, "n": bytes, "b64": base64}} de `GET /solcbm/api/v1/adm/arquivo/<id>`; depois `python sseg/scripts/sseg.py analise --pasta "{pasta}" sol-pdf <id> --nome cia` (grava cia-<id>.pdf, o .txt e cia-ultima.txt e apaga o intermediário) e leia o .txt com Read. O id do PDF da última CIA e a data de protocolo já estão em marcos-resumo.json na pasta (ultima_cia.arquivo, protocolo), quando o servidor leu os Marcos: leia com Read antes de procurar no SOL.
-- Comandos: só os que já rodam sem aprovação (sseg.py, pdftotext, pdftoppm, git status/log/diff). Esta janela não tem onde o analista aprovar: o resto é negado e o trabalho para. Então: um comando por chamada, sem `&&`, `;`, `|` nem laço `for`; nada de `python -c` ou script solto (JSON e texto se leem com Read; pasta se lista com Glob); se faltar uma rotina, diga ao analista qual faltou em vez de improvisar. Nunca crie arquivo temporário na pasta do SSEG.
+  - PDF do SOL que NÃO está na pasta (laudo, CIA que o servidor ainda não baixou; antes confira cia-*.txt): o texto não sai da API, só do PDF. Baixe com evaluate_script + filePath "{pasta}\\sol-arquivo-<id>.b64.json", devolvendo {{"status": r.status, "n": bytes, "b64": base64}} de `GET /solcbm/api/v1/adm/arquivo/<id>`; depois `python sseg/scripts/sseg.py analise --pasta "{pasta}" sol-pdf <id> --nome cia` (grava cia-<id>.pdf, o .txt e cia-ultima.txt e apaga o intermediário) e leia o .txt com Read. O id do PDF da última CIA e a data de protocolo já estão em marcos-resumo.json na pasta (ultima_cia.arquivo, protocolo), quando o servidor leu os Marcos: leia com Read antes de procurar no SOL.
+- Comandos: só os que já rodam sem aprovação (sseg.py, pdftotext, pdftoppm, git status/log/diff). Esta janela não tem onde o analista aprovar: o resto é negado e o trabalho para. Então: um comando por chamada, sem `&&`, `;`, `|` nem laço `for`; nada de `python -c` ou script solto (JSON e texto se leem com Read; pasta se lista com Glob); se faltar uma rotina, diga ao analista qual faltou em vez de improvisar. Nunca crie arquivo temporário na pasta do SSEG nem na do processo, e não rode pdftotext/pdftoppm à mão (o `sseg.py norma` faz isso no temporário do sistema).
   - pendência resolvida no chat (a sua ou uma que o analista respondeu): `python sseg/scripts/sseg.py analise --pasta "{pasta}" resolver p2 p3` — ela sai do topo do checklist.
   - o que o analista já salvou: `python sseg/scripts/sseg.py analise --pasta "{pasta}" ver`.
   Exigência e rascunho entram como rascunho; o texto final é o que o analista salvar, e você nunca o reescreve: se achar problema num texto salvo, aponte e sugira.
-- Respostas curtas, em markdown simples (títulos, listas, negrito). O analista lê numa janela.
+- Respostas curtas, em markdown simples (títulos, listas, negrito). O analista lê numa janela. O tamanho da resposta é o da novidade: não repita a tabela do turno anterior.
 - SOL: pelo Chrome DevTools MCP (ferramentas mcp__chrome-devtools-live__*), que enxerga TODAS as abas do Chrome do analista — não use o Claude in Chrome nem grupo de abas. Comece com list_pages, escolha a aba do solcbm.rs.gov.br em que ele já entrou (select_page) e navegue nela (navigate_page); só abra aba nova (new_page) se não houver nenhuma do SOL, e então peça ao analista para entrar (a senha é sempre ele quem digita). Se list_pages der tempo esgotado, peça ao analista para clicar em "Permitir" no aviso do Chrome e tente de novo. Ler pela API com evaluate_script (fetch com o token do sessionStorage, como na skill sol-cbmrs-navegador) e trazer só o resumo; onde a skill falar em tabs_context_mcp/javascript_tool/grupo do Claude, use o equivalente daqui. Leitura pesada ao subagente sol-leitor. Nunca lançar, salvar ou mudar nada no SOL nesta janela."""
 
 INSTRUCOES_FLUXO = """Você está na janela "{titulo}" do programa SSEG.exe (não no terminal). O analista conversa numa janela e pode não estar acostumado com terminal.
@@ -106,6 +114,14 @@ Como responder nesta janela (o analista não é do terminal; o programa desenha 
 - O [PDF] do sseg-norma é montado pelo programa: você não precisa abrir PDF para isso. Um bloco por norma, e o "rotulo" com UMA norma só (o programa abre o PDF da primeira que achar no rótulo)."""
 
 
+def _pasta_paginas():
+    """A mesma pasta do normas_pdf.py (<temp>/sseg-paginas), criada antes de o Claude subir."""
+    import tempfile
+    p = os.path.join(tempfile.gettempdir(), "sseg-paginas")
+    os.makedirs(p, exist_ok=True)
+    return p
+
+
 def instrucoes_fluxo(fluxo):
     skill = ("\n- Quando o pedido for deste tipo de trabalho, siga a skill %s (sseg/skills/%s/SKILL.md)."
              % (fluxo["skill"], fluxo["skill"])) if fluxo.get("skill") else ""
@@ -131,6 +147,8 @@ class Conversa:
         cmd = [self.claude, "-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
                "--model", self.fluxo["modelo"], "--effort", self.fluxo["esforco"],
                "--permission-mode", "acceptEdits"] + (["--add-dir", self.pasta] if self.pasta else []) + [
+               # imagens de página e texto das normas do `sseg.py norma` (2.3.22): ler sem pedir aprovação
+               "--add-dir", _pasta_paginas()] + [
                "--allowedTools", *PERMITIDOS,
                # o plugin Claude in Chrome fica bloqueado de vez (também para os subagentes): ele cria grupo de abas
                # e pede "Permitir" a cada ação; a memória antiga do PC ainda mandava usá-lo (2.3.12)
@@ -155,6 +173,14 @@ class Conversa:
     def _subir(self):
         env = {k: v for k, v in os.environ.items() if not k.upper().startswith(("_PYI_", "_MEIPASS"))}
         env["PYTHONUTF8"] = "1"
+        # Poppler na frente do PATH (2.3.22): o pdftotext do Git (Xpdf) vinha antes e saía texto sem acento
+        try:
+            import instalar
+            pop = instalar.localizar().get("poppler")
+            if pop:
+                env["PATH"] = os.path.dirname(pop) + os.pathsep + env.get("PATH", "")
+        except Exception:
+            pass
         self.proc = subprocess.Popen(self._comando(), cwd=self.clone, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace",
                                      bufsize=1, creationflags=NOVA_JANELA_NAO, env=env)

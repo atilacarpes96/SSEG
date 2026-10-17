@@ -12,6 +12,36 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 17/10/2026 — SSEG.exe 2.3.22 e skill ppci-analise-processo: menos pergunta, menos trava, reanálise focada
+
+Feito depois de ler as conversas das 4 análises de 16 e 17/10 (guardadas no servidor, fora do Git).
+
+- **Skill `ppci-analise-processo`:** seção nova "Na janela do processo do SSEG.exe". Pede para ler a
+  pasta antes de perguntar (`sseg.py resumo`), para não repetir pergunta e para tratar a reanálise como
+  a última CIA mais o que mudou (assunto novo vai em "Observações"). Também fixa o fechamento curto
+  ("Pode aprovar (CA)"; deferir é só de recurso, laudo e CT), tira a manutenção do SSEG das pendências
+  do processo e manda buscar norma pelo `sseg.py norma` ou pelo `localizador-normas`.
+- **Scripts:**
+  - `sseg.py resumo` e `sseg.py norma` (página da tabela, busca de trecho, imagem);
+  - check com a linha transcrita da tabela e as notas;
+  - pendência parecida recusada;
+  - pré-análise com o cadastro do SOL.
+- **SSEG.exe 2.3.22:** instruções da janela do processo com a lista de comandos e as mesmas regras,
+  e o Poppler na frente do PATH.
+- **Para guardar as conversas:** `"cleanupPeriodDays": 365` em `%USERPROFILE%\.claude\settings.json`
+  (o padrão apaga depois de 30 dias).
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão 2.3.22 (17/10/2026) e no fim me diga o que ficou feito e o que depende de mim:
+1. Confira se o clone está em dia com o GitHub (git status e git log -1). Se estiver atrás, rode git pull (no Cowork, me peça para rodar no PowerShell).
+2. Rode python sseg/scripts/testar.py e me diga o resultado.
+3. Me diga para abrir o SSEG.exe e aceitar a "Nova versão" (2.3.22).
+4. A skill ppci-analise-processo mudou: gere o .zip com Python (zipfile, caminho ppci-analise-processo/SKILL.md) e me diga para subir em claude.ai > Configurações > Capacidades > Skills > Substituir.
+5. Em %USERPROFILE%\.claude\settings.json, acrescente "cleanupPeriodDays": 365 sem apagar o que já está lá.
+```
+
 ## 16/10/2026 — SSEG.exe 2.3.2 (copiar por item na CIA, commit com mensagem pronta) e RT 05 Parte 08 na base
 
 - **GitHub (2.3.2):** a tela Sincronizar já abre com a mensagem do commit escrita a partir dos arquivos mudados; é só conferir e acrescentar o porquê.

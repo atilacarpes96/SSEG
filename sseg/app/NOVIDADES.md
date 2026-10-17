@@ -4,6 +4,23 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.3.22
+
+Mudanças a partir da leitura das 4 análises de 16 e 17/10 (conversas guardadas no servidor):
+
+- **O Claude da janela do processo pergunta menos e trava menos.** Ele recebe a lista dos comandos
+  prontos, sem precisar rodar "--help" antes de cada um. Também é orientado a olhar primeiro o que a
+  pasta já tem e a não improvisar comandos que pedem aprovação (era o que parava a janela).
+- **Sem pergunta repetida:** a mesma dúvida, com outras palavras, não vira pendência de novo. A
+  resposta vai para a que já existia.
+- **Pré-análise com o cadastro do SOL:** ocupações (CNAE, carga, risco), área, alturas, pavimentos,
+  população, riscos específicos e as plantas desta análise.
+- **Tabela de exigências pronta no check:** a linha da tabela transcrita do PDF, célula a célula, com
+  o texto das notas. Quando precisa ver a tabela, o Claude gera a imagem da página certa sozinho, sem
+  sujar a pasta do processo e com o texto das normas com acento.
+- **Reanálise:** o Claude confere a última CIA e o que mudou; assunto novo vai em "Observações", sem
+  pergunta. A conclusão sai curta ("Pode aprovar (CA)"), e "deferir" fica só para recurso, laudo e CT.
+
 ## 2.3.21
 
 - **Cor do prazo pelos dias na caixa:** verde até o 7º dia (o comum), laranja do 8º ao 10º e vermelho

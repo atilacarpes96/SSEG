@@ -243,7 +243,7 @@ def arquivar(api_path, trabalho_path, pasta, forcar=False):
 def args_parser(sp_receber, sp_arquivar):
     sp_receber.add_argument("--saida", required=True)
     sp_receber.add_argument("--porta", type=int, default=8765)
-    sp_arquivar.add_argument("--api", required=True, help="JSON da API gravado pelo receber")
-    sp_arquivar.add_argument("--trabalho", required=True, help="<N>.json de trabalho da análise")
+    sp_arquivar.add_argument("--api", help="JSON da API gravado pelo receber")
+    sp_arquivar.add_argument("--trabalho", help="<N>.json de trabalho da análise (fluxo Cowork)")
     sp_arquivar.add_argument("--pasta", required=True, help="pasta do processo em print ppci")
     sp_arquivar.add_argument("--forcar", action="store_true")

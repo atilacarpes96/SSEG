@@ -129,6 +129,52 @@ def secao_cia(arq, marcos):
         "" if i >= 0 else "; texto inteiro, início dos apontamentos não achado", texto)
 
 
+def _br(v, casas=2):
+    try:
+        return ("{:,.%df}" % casas).format(float(v)).replace(",", "X").replace(".", ",").replace("X", ".")
+    except (TypeError, ValueError):
+        return "—"
+
+
+def cadastro(api):
+    """O cadastro do SOL em poucas linhas (17/10/2026): o que o Claude procurava no JSON com Grep a cada
+    processo (o JSON vem numa linha só e o Grep devolve "[Omitted long matching line]"). Só o que o RT
+    declarou; não confere nada."""
+    import datetime
+    c = api.get("caracteristica") or {}
+    L = ["CADASTRO DO SOL (o que o RT declarou; %s):" % (api.get("numero") or "")]
+    L.append("Área construída %s m² · protegida %s m² · subsolo %s m² · pavimentos: %s acima, %s abaixo do solo"
+             % (_br(c.get("areaConstruida")), _br(c.get("areaProtegida")), _br(c.get("areaSubsolo")),
+                c.get("pavimAcimaSolo"), c.get("pavimAbaixoSolo")))
+    L.append("Altura descendente %s m · ascendente %s m · população total %s · pavimento de maior população %s (área %s m²)"
+             % (_br(c.get("alturaDescendente")), _br(c.get("alturaAscendente")), c.get("populacaoTotal"),
+                c.get("populacaoPavimMaior"), _br(c.get("areaMaiorPopulacao"))))
+    L.append("Situação: %s%s · característica construtiva %s · depósito descoberto: %s"
+             % ((c.get("edificacao") or "?").replace("_", " ").lower(),
+                "" if c.get("regularizada") is None else " regularizada" if c.get("regularizada") else " não regularizada",
+                c.get("caracteristicaConstrutiva"), "sim" if _sim(c.get("depositoDescoberto")) else "não"))
+    L.append("Ocupações (a área de cada uma não está no cadastro: é da planta):")
+    for o in c.get("ocupacoes") or []:
+        cn = o.get("cnae") or {}
+        L.append("  %s %s — %s (CNAE %s) · carga %s MJ/m² · risco %s%s"
+                 % ((o.get("ocupacao") or "?").lower(), cn.get("divisao"), _espaco(cn.get("descricao") or ""), cn.get("cnae"),
+                    o.get("cargaIncendio"), (o.get("grauRisco") or "?").lower(),
+                    " · marcada como definidora pelo RT" if o.get("determinaSeguranca") else ""))
+    riscos = api.get("especsRiscos") or []
+    if riscos:
+        L.append("Riscos específicos: " + "; ".join(
+            ((r.get("risco") or {}).get("descricao") or "?") + (" (%s)" % r["outros"] if r.get("outros") else "")
+            for r in riscos))
+    ativos = [e for e in api.get("elemGraficos") or [] if e.get("situacao") == "ATIVO"]
+    if ativos:
+        def dia(ms):
+            return datetime.datetime.fromtimestamp(ms / 1000).strftime("%d/%m/%Y") if ms else "?"
+        L.append("Elementos gráficos ativos (desta análise): " + "; ".join(
+            "%s %s (incluído %s)" % ((e.get("tipo") or "").replace("_", " ").lower(), e.get("descricao"), dia(e.get("dthInclusao")))
+            for e in ativos))
+    return "\n".join(L) + "\n"
+
+
 def pre_analisar(codigo, forcar=False):
     """(situação, texto curto). Grava pre-analise.json e pre-analise.txt na pasta do processo."""
     pasta = os.path.join(PROCESSOS, codigo)
@@ -144,7 +190,8 @@ def pre_analisar(codigo, forcar=False):
     if not forcar and os.path.exists(saida_txt) and os.path.getmtime(saida_txt) >= base:
         return "em-dia", "já feita"
     with open(api_arq, encoding="utf-8") as fh:
-        p = converter(json.load(fh))
+        api = json.load(fh)
+    p = converter(api)
     marcos = {}
     if os.path.exists(resumo_arq):  # Marcos (2.3.13): protocolo e nº da análise saem dos marcos do SOL
         try:
@@ -169,7 +216,7 @@ def pre_analisar(codigo, forcar=False):
            "Definidora abaixo = a que o RT marcou no SOL (determinaSeguranca), não a que vale.\n\n"
            % (codigo, os.path.basename(api_arq), linha_marcos))
     with open(saida_txt, "w", encoding="utf-8") as fh:
-        fh.write(cab + r.stdout + (("\n[erro do check]\n" + r.stderr) if r.returncode else "") + secao_cia(cia_arq, marcos))
+        fh.write(cab + cadastro(api) + "\n" + r.stdout + (("\n[erro do check]\n" + r.stderr) if r.returncode else "") + secao_cia(cia_arq, marcos))
     marcas = sum(1 for l in r.stdout.splitlines() if l.startswith(("!!", "??", "XX")))
     return ("feita" if not r.returncode else "erro"), "%d ponto(s) marcados" % marcas
 

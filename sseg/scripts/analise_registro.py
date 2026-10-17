@@ -56,8 +56,45 @@ def _novo_id(lista, prefixo):
     return "%s%d" % (prefixo, n + 1)
 
 
+# palavras que aparecem em quase toda pergunta de análise e não dizem o assunto
+_COMUNS = {"planta", "area", "areas", "cada", "ainda", "como", "qual", "quais", "voce", "quer", "existe", "dentro",
+           "traz", "esta", "isso", "para", "pela", "pelo", "processo", "analise", "sobre", "algum", "alguma", "foram",
+           "ficou", "continua", "continuam", "tambem", "informada", "informado", "aparece"}
+
+
+def _palavras(t):
+    import re
+    import unicodedata
+    t = unicodedata.normalize("NFD", t or "").encode("ascii", "ignore").decode().lower()
+    divisoes = set(re.findall(r"\b[a-m]-\d+\b", t))  # J-3, D-1: o assunto, não número solto
+    t = re.sub(r"\b[a-m]-\d+\b", " ", t)
+    return divisoes | {w for w in re.findall(r"[a-z0-9]+(?:[.,][0-9]+)?", t)
+                       if w not in _COMUNS and (len(w) > 3 or (len(w) > 1 and any(c.isdigit() for c in w)))}
+
+
+def parecida(d, texto):
+    """Pendência já registrada (aberta ou respondida) sobre o mesmo assunto. Nas conversas de 17/10/2026 a mesma
+    pergunta entrou 2 ou 3 vezes (pelo sseg.py e pelo bloco de perguntas, com outras palavras). Mesmo assunto =
+    a menor das duas tem metade das palavras na outra (3 em comum) ou 2/3 delas (2 em comum)."""
+    novo = _palavras(texto)
+    melhor, nota = None, 0.0
+    for p in d["pendencias"]:
+        velho = _palavras(p["texto"])
+        if not (novo and velho):
+            continue
+        comum = len(novo & velho)
+        ov = comum / float(min(len(novo), len(velho)))
+        if ((comum >= 3 and ov >= 0.5) or (comum >= 2 and ov >= 0.66)) and ov > nota:
+            melhor, nota = p, ov
+    return melhor
+
+
 def pendencia(pasta, texto, origem="claude"):
     d = ler(pasta)
+    if origem == "claude":
+        ja = parecida(d, texto)
+        if ja:
+            return dict(ja, repetida=True)
     p = {"id": _novo_id(d["pendencias"], "p"), "texto": texto.strip(), "origem": origem,
          "resposta": "", "feita": False, "quando": time.time()}
     d["pendencias"].append(p)
@@ -242,7 +279,12 @@ def principal(args):
         return
     if args.acao == "pendencia":
         p = pendencia(args.pasta, args.texto)
-        print("pendência %s registrada" % p["id"])
+        if p.get("repetida"):
+            print("NÃO registrada: parecida com %s (\"%s\")%s. Use essa; não pergunte de novo."
+                  % (p["id"], p["texto"][:120], ("; o analista já respondeu: " + p["resposta"]) if p.get("resposta") else
+                     "; ainda aberta"))
+        else:
+            print("pendência %s registrada" % p["id"])
     elif args.acao == "exigencia":
         e = exigencia(args.pasta, args.texto, args.medida, args.fundamento)
         print("exigência %s registrada como rascunho (o analista salva o texto final)" % e["id"])

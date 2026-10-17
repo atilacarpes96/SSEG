@@ -285,6 +285,11 @@ def tabela_para_divisao(divisao):
     for tab, meta in mapa.items():
         if any(_norm(d).upper().replace(" ", "") == div for d in meta["divisoes"]):
             return tab, meta.get("status") == "confirmado"
+    # a transcrição do Anexo B diz em que tabela está cada bloco de divisões (A-2, A-3 e Condomínios → 6A)
+    achadas = [tab for tab, t in ((_dados("tabelas_conferidas.json").get("anexo_b_decreto") or {}).get("tabelas") or {}).items()
+               if any(_cobre(d, divisao) for d in t.get("divisoes") or [])]
+    if len(achadas) == 1:
+        return achadas[0], True
     grupo = (divisao or "").split("-")[0].strip().upper()
     return ("6%s" % grupo) if grupo else None, False
 
@@ -300,6 +305,72 @@ def linha_conferida(divisao, coluna):
                 and _norm(ln["coluna"]) == _norm(coluna)):
             return ln
     return None
+
+
+COLUNAS_ALTURA = ["Terrea", "H<=6", "6<H<=12", "12<H<=23", "23<H<=30", "H>30"]
+
+
+def _cobre(rotulo, divisao):
+    """O rótulo de coluna/bloco ('I e J', 'F-1, F-2, F-3, F-4, F-8, F-9 e F-10', 'A-2, A-3 e Condomínios
+    Residenciais', 'J-3') cobre a divisão? 'J-1 a J-4' vale pelo grupo (J)."""
+    div = _norm(divisao).upper().replace(" ", "")
+    grupo = div.split("-")[0]
+    partes = [x.strip().upper().replace(" ", "") for x in re.split(r",|\be\b", _norm(rotulo)) if x.strip()]
+    faixa = re.match(r"^([A-M])-\d+A\1-\d+$", div)  # "J-1aJ-4": só cabe em coluna do grupo inteiro
+    return any(x == div or (x == grupo) or (faixa and x == grupo) for x in partes)
+
+
+def linha_transcrita(p, divisao, tabela, coluna):
+    """Célula a célula, da transcrição do PDF oficial (tabelas_conferidas.json: anexo_b_decreto, ou
+    rt05_p07_anexo_a se a edificação é existente regularizada). Notas ficam coladas na célula (X4, X8):
+    aplicá-las ao caso é do analista. Devolve None quando a transcrição não cobre."""
+    dados = _dados("tabelas_conferidas.json")
+    sit = _norm(p.get("situacao_existencia"))
+    chave = "rt05_p07_anexo_a" if ("regularizada" in sit and "nao" not in sit) else "anexo_b_decreto"
+    fonte = dados.get(chave) or {}
+    if tabela == "5":
+        t = fonte.get("tabela_5") or {}
+        cols = t.get("colunas") or []
+        idx = next((i for i, c in enumerate(cols) if _cobre(c, divisao)), None)
+        if idx is None:
+            return None
+        rotulo = cols[idx]
+        celulas = {m: v[idx] for m, v in (t.get("medidas") or {}).items()}
+    else:
+        t = (fonte.get("tabelas") or {}).get(tabela) or {}
+        blocos = t.get("divisoes") or []
+        b = next((i for i, d in enumerate(blocos) if _cobre(d, divisao)), None)
+        if b is None or coluna not in COLUNAS_ALTURA:
+            return None
+        c = COLUNAS_ALTURA.index(coluna)
+        rotulo = "%s / %s" % (blocos[b], coluna)
+        celulas = {m: v[b * 6 + c] for m, v in (t.get("medidas") or {}).items() if len(v) > b * 6 + c}
+    exigidas = {m: v for m, v in celulas.items() if v.strip() not in ("-", "")}
+    nums = sorted({n for v in exigidas.values() for n in re.findall(r"\d+", v)}, key=int)
+    notas, dentro = [], False
+    for n in t.get("notas") or []:  # nota longa vem quebrada em várias entradas: as seguintes não têm número
+        m = re.match(r"^\s*(\d+)\s*[–-]", n)
+        if m or n.strip().upper().startswith("NOTAS"):
+            dentro = bool(m) and m.group(1) in nums
+            if dentro:
+                notas.append(n.strip())
+        elif dentro and notas:
+            notas[-1] += " " + n.strip()
+    return {"fonte": chave, "tabela": tabela, "rotulo": rotulo, "exigidas": exigidas, "notas": notas}
+
+
+def mostrar_transcrita(ln, s):
+    fonte = "Decreto 51.803/2014, Anexo B" if ln["fonte"] == "anexo_b_decreto" else "RT 05 Parte 07/2025, Anexo A"
+    s.ok("Linha TRANSCRITA do PDF (%s, Tabela %s, %s): %d célula(s) marcada(s)."
+         % (fonte, ln["tabela"], ln["rotulo"], len(ln["exigidas"])))
+    for m, v in ln["exigidas"].items():
+        s.info("  %s: %s" % (m, v))
+    for n in ln["notas"]:
+        s.info("  nota %s" % n.strip())
+    if ln["notas"]:
+        s.atencao("Célula com nota: quem aplica a nota ao caso é o analista. Em empate de definidora (5.1.2 b), "
+                  "levar as células e as notas a ele; conferir na imagem: sseg.py norma %s --tabela %s."
+                  % ("decreto" if ln["fonte"] == "anexo_b_decreto" else "rt05p07", ln["tabela"]))
 
 
 # ------------------------------------------------------------------------ definidora
@@ -885,6 +956,33 @@ SCHEMA = {
 }
 
 
+def resumo_pasta(pasta):
+    """Tudo o que já está na pasta, para o Claude não perguntar ao analista nem procurar no SOL (17/10/2026)."""
+    import glob as _g
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import pre_analise
+    L = ["PASTA %s" % pasta]
+    apis = sorted(_g.glob(os.path.join(pasta, "api-*.json")), key=os.path.getmtime)
+    if apis:
+        L.append(pre_analise.cadastro(_load(apis[-1])))
+    else:
+        L.append("Sem api-<ID>.json: o cadastro do SOL ainda não veio (o servidor baixa na leitura da caixa).")
+    mr = os.path.join(pasta, "marcos-resumo.json")
+    if os.path.exists(mr):
+        import marcos as mc
+        L.append("MARCOS DO SOL:\n" + mc.texto(_load(mr)))
+    cias = sorted(_g.glob(os.path.join(pasta, "cia-*.txt")))
+    if cias:
+        L.append("CIAs anteriores com texto (ler com Read): " + ", ".join(os.path.basename(c) for c in cias))
+    for nome, o_que in (("pre-analise.txt", "pré-análise do script"), ("analise.json", "checklist, pendências e CIA da janela"),
+                        ("ct.json", "CT em aberto (planilha)"), ("recurso.json", "recurso em aberto (planilha)"),
+                        ("distribuicao.json", "distribuição (planilha)"), ("historico.json", "histórico de recurso do SOL"),
+                        ("facts.json", "consultas técnicas (FACT) do SOL")):
+        if os.path.exists(os.path.join(pasta, nome)):
+            L.append("Tem %s: %s" % (nome, o_que))
+    return "\n".join(L)
+
+
 # -------------------------------------------------------------------------------- cli
 
 def main():
@@ -926,7 +1024,21 @@ def main():
     import analise_registro
     analise_registro.args_parser(sub.add_parser("analise", help="pendências e rascunhos da janela do processo (analise.json)"))
 
+    import normas_pdf
+    normas_pdf.args_parser(sub.add_parser("norma", help="página de tabela, trecho ou imagem de página dos PDFs de normas/pdf/"))
+
+    sp = sub.add_parser("resumo", help="o que já está na pasta do processo: cadastro do SOL, Marcos, CIAs e arquivos")
+    sp.add_argument("--pasta", required=True)
+
     args = ap.parse_args()
+
+    if args.cmd == "norma":
+        normas_pdf.principal(args)
+        return
+
+    if args.cmd == "resumo":
+        print(resumo_pasta(args.pasta))
+        return
 
     if args.cmd == "analise":
         analise_registro.principal(args)
@@ -945,6 +1057,11 @@ def main():
         return
 
     if args.cmd == "arquivar":
+        if not (args.api and args.trabalho):
+            # na janela do SSEG.exe a pasta já é a do processo e vai ao servidor pelo sincronizar do programa:
+            # não há <N>.json de trabalho nem pasta "print ppci" (conversa de 17/10/2026 parou aqui)
+            sys.exit("arquivar é do fluxo antigo (Cowork, pasta print ppci, com --api e --trabalho). Na janela do "
+                     "SSEG.exe a pasta do processo já está atualizada: marque o passo 15 e não rode o arquivar.")
         arquivar.arquivar(args.api, args.trabalho, args.pasta, args.forcar)
         return
 
@@ -986,13 +1103,17 @@ def main():
         if div:
             h, _q = altura_governante(p)
             ln = linha_conferida(div, coluna_altura(h))
+            tab, col, _s = rota_tabela(p, Saida())
+            tr = linha_transcrita(p, div, tab, col) if tab else None
             if ln:
                 s.ok("Linha CONFERIDA: Tabela %s, %s, %s = %d medidas exigidas."
                      % (ln["tabela"], ln["divisao"], ln["coluna"], ln["total_medidas"]))
+            elif tr:
+                mostrar_transcrita(tr, s)
             else:
-                s.pergunta("Linha NAO CONFERIDA para %s na coluna %s. Contagem nunca sai de extracao de "
-                           "PDF: quando ela for necessaria, renderizar a pagina da tabela (pdftoppm) e "
-                           "ler a linha — sem pedir a imagem ao analista." % (div, coluna_altura(h)))
+                s.pergunta("Linha NAO CONFERIDA nem transcrita para %s na coluna %s. Quando a contagem for "
+                           "necessaria: sseg.py norma decreto --tabela <tabela> e ler a linha na imagem — "
+                           "sem pedir a imagem ao analista." % (div, coluna_altura(h)))
     if args.cmd in ("check", "normas"):
         confere_normas(p, s)
     if args.cmd in ("check", "travas"):

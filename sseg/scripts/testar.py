@@ -692,6 +692,29 @@ def main():
     if shutil.which("pdftotext"):
         pg = busca.pagina(os.path.join(RAIZ, r[0]["pdf"]), 'extintor "5 m"', r[0]["texto"])
         caso("busca: PDF abre na página do item 5.2.10 da RT 14", pg == 5, str(pg))
+    # 19. lições das conversas de 16–17/10/2026 (2.3.22): pergunta repetida, linha transcrita, página da tabela
+    import analise_registro as ar
+    regs = {"pendencias": [{"id": "p4", "texto": "Planta CIA02: os 40,55 m² de depósito de cerveja saíram de 'área técnica'?"},
+                           {"id": "p5", "texto": "Planta CIA02: 'circulação – isento' foi vinculada à ocupação real?"},
+                           {"id": "p9", "texto": "Qual a data de protocolo da 1ª análise?"}]}
+    caso("pendência: a mesma pergunta com outras palavras é reconhecida",
+         (ar.parecida(regs, "Os 40,55 m² de depósito de cerveja continuam como 'área técnica / isento'?") or {}).get("id") == "p4"
+         and (ar.parecida(regs, "A 'circulação – isento' ainda existe na planta nova?") or {}).get("id") == "p5"
+         and ar.parecida(regs, "Os extintores estão a no máximo 20 m (classe A)?") is None)
+    import sseg as sseg_m
+    tr = sseg_m.linha_transcrita({"situacao_existencia": "a construir"}, "J-1 a J-4", "5", None)
+    caso("check: Tabela 5, coluna 'I e J', 5 medidas transcritas do PDF",
+         tr is not None and tr["rotulo"] == "I e J" and len(tr["exigidas"]) == 5, str(tr and tr["exigidas"]))
+    tr = sseg_m.linha_transcrita({"situacao_existencia": "a construir"}, "C-2", "6C", "H<=6")
+    caso("check: 6C/C-2/H<=6 traz as notas 8 e 9 com o texto",
+         tr is not None and any(n.startswith("8") for n in tr["notas"]) and any("750" in n for n in tr["notas"]), str(tr and tr["notas"]))
+    if shutil.which("pdftotext") and shutil.which("pdftoppm"):
+        import normas_pdf
+        dec = normas_pdf.achar_pdf("decreto")
+        caso("norma: Tabela 5 do Decreto na página 66 e 6J.2 na 99 (não na citação 'Conforme Tabela 5')",
+             normas_pdf.pagina_da_tabela(dec, "5")[:1] == [66] and normas_pdf.pagina_da_tabela(dec, "6J.2")[:1] == [99])
+        caso("norma: busca sem acento acha 'risco médio' na RT 14",
+             any(n == 4 for n, _t in normas_pdf.buscar(normas_pdf.achar_pdf("rt14"), "risco medio")))
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)
