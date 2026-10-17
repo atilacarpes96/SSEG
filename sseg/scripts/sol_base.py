@@ -201,15 +201,54 @@ def a_coletar(lista, estado, completo):
     return fila
 
 
+def _data_sol(t):
+    """'28/02/2026 - 12:14' → '2026-02-28'."""
+    p = (t or "").split(" ")[0].split("/")
+    return "-".join(reversed(p)) if len(p) == 3 else ""
+
+
+def ficha(lic):
+    """Campos de busca da aba Processos (2.3.23), tirados do licenciamento. CPF de pessoa física fica de fora:
+    só CNPJ (14 dígitos) entra na busca."""
+    lic = lic or {}
+    c = lic.get("caracteristica") or {}
+    env = lic.get("envolvidos") or {}
+    ocup = [{"div": ((o.get("cnae") or {}).get("divisao") or "").strip(), "tipo": (o.get("ocupacao") or "").lower(),
+             "cnae": " ".join(((o.get("cnae") or {}).get("descricao") or "").split())[:90]}
+            for o in c.get("ocupacoes") or []]
+    docs = {(x.get("cpfCnpj") or "") for x in (env.get("proprietarios") or []) + (env.get("estabelecimentos") or [])}
+    fantasia = {(x.get("nomeFantasia") or "").strip() for x in (env.get("estabelecimentos") or []) + (env.get("proprietarios") or [])}
+    loc = lic.get("localizacao") or {}
+    alt = max(float(c.get("alturaDescendente") or 0), float(c.get("alturaAscendente") or 0))
+    return {"ocupacoes": ocup, "area": c.get("areaConstruida"), "altura": round(alt, 2),
+            "populacao": c.get("populacaoTotal"), "pavimentos": (c.get("pavimAcimaSolo") or 0) + (c.get("pavimAbaixoSolo") or 0),
+            "situacao_ed": (c.get("edificacao") or "").replace("_", " ").lower(),
+            "cnpj": sorted(d for d in docs if len(d) == 14), "fantasia": sorted(f for f in fantasia if f)[:3],
+            "rt": sorted({(x.get("nome") or "").strip() for x in env.get("rts") or [] if x.get("nome")}),
+            "bairro": (loc.get("bairro") or "").strip(), "criado": _data_sol(lic.get("dataCriacao"))}
+
+
 def resumo_do(lic, marcos, historico):
     r = mc.com_historico(mc.resumir(marcos), historico, None)
     ult = r["analises"][-1] if r["analises"] else {}
-    return {"protocolo": r["protocolo"], "analises": len(r["analises"]),
-            "ultima": {"data": ult.get("data", ""), "resultado": ult.get("resultado", ""),
-                       "quem": ult.get("responsavel", "")} if ult else None,
-            "cias": [a["arquivo"] for a in r["analises"] if a["resultado"] == "CIA" and a["arquivo"]],
-            "recursos": len(r["recursos"]),
-            "id_analise": (lic or {}).get("idAnaliseTecnica")}
+    return dict(ficha(lic), protocolo=r["protocolo"], analises=len(r["analises"]),
+                ultima={"data": ult.get("data", ""), "resultado": ult.get("resultado", ""),
+                        "quem": ult.get("responsavel", "")} if ult else None,
+                cias=[a["arquivo"] for a in r["analises"] if a["resultado"] == "CIA" and a["arquivo"]],
+                recursos=len(r["recursos"]), id_analise=(lic or {}).get("idAnaliseTecnica"))
+
+
+def refazer_resumos():
+    """Recalcula o resumo de cada processo a partir de proc/<id>.json, sem consultar o SOL (campo novo no índice)."""
+    estado = _ler(ESTADO, {})
+    n = 0
+    for k, e in estado.items():
+        d = _ler(os.path.join(BASE, "proc", k + ".json"), None)
+        if d:
+            e["resumo"] = resumo_do(d.get("licenciamento"), d.get("marcos") or [], d.get("historico") or {})
+            n += 1
+    _gravar(ESTADO, estado)
+    return n
 
 
 def coletar(s, k, linha):
@@ -255,7 +294,10 @@ def gerar_indice(lista=None, estado=None):
             continue
         r = (estado.get(k) or {}).get("resumo") or {}
         linhas.append({"id": l["id"], "numero": l["numero"], "situacao": l["situacao"], "cidade": l["cidade"],
-                       "razao": l["razao"], "mudou_em": l.get("mudou_em", ""), "anterior": l.get("anterior", ""),
+                       "razao": l["razao"], "endereco": l.get("endereco", ""), "mudou_em": l.get("mudou_em", ""),
+                       "anterior": l.get("anterior", ""),
+                       **{c: r.get(c) for c in ("ocupacoes", "area", "altura", "populacao", "pavimentos", "situacao_ed",
+                                                "cnpj", "fantasia", "rt", "bairro", "criado")},
                        "desde": l.get("desde", ""), "vivo": l["situacao"] not in ENCERRADAS,
                        "protocolo": r.get("protocolo", ""), "analises": r.get("analises"),
                        "ultima": r.get("ultima"), "recursos": r.get("recursos"), "id_analise": r.get("id_analise"),
@@ -341,8 +383,12 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("--completo", action="store_true", help="consulta todos os processos da lista")
     ap.add_argument("--indice", action="store_true", help="só refaz o indice.json")
+    ap.add_argument("--resumos", action="store_true", help="recalcula os resumos dos proc/*.json (sem SOL) e o índice")
     ap.add_argument("--limite", type=int, help="no máximo N detalhes nesta rodada")
     a = ap.parse_args()
+    if a.resumos:
+        print("Resumos refeitos: %d." % refazer_resumos())
+        a.indice = True
     if a.indice:
         print("Índice: %d processos." % gerar_indice())
         return 0

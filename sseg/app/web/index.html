@@ -305,6 +305,15 @@ details.medida .itens { padding: 0 9px 8px; }
 .t-proc td.razao > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
 .t-proc td.ocup-c, .t-proc td.quando, .t-proc td.arqs { white-space: nowrap; }
 .t-proc .tag.sit { white-space: nowrap; display: inline-block; margin: 1px 4px 1px 0; }
+.todos-painel { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px 14px; margin: 0 0 10px;
+  padding: 12px; border: 1px solid var(--linha, #ddd); border-radius: 10px; }
+.todos-painel label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
+.todos-painel label.marca { flex-direction: row; align-items: center; gap: 6px; }
+.todos-painel .faixa-num { display: flex; gap: 4px; }
+.todos-painel .faixa-num input { width: 50%; min-width: 0; }
+.t-todos td:nth-child(7) { min-width: 150px; }
+.t-todos th[data-ord] { cursor: pointer; user-select: none; }
+.t-todos th[data-ord].ord::after { content: " " attr(data-dir); }
 .todos-filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
 .todos-filtros input { flex: 1 1 260px; min-width: 0; }
 .t-proc td.cidade { white-space: nowrap; }
@@ -475,16 +484,35 @@ body.sem-pc #sem-pc { display: block; }
 
     <section class="tela" id="t-todos">
       <h2>Todos os processos do SOL</h2>
-      <p class="sub">A base que o servidor coleta do SOL: a lista inteira três vezes por dia, o detalhe de quem está vivo ou mudou de situação, e tudo de novo a cada duas semanas. Encerrado = alvará vigente ou vencido, extinto e rascunho; o Início não mostra esses. "Voltou" = mudou de situação desde a coleta anterior.</p>
+      <p class="sub">A base que o servidor coleta do SOL: a lista inteira às 8h20, 12h20 e 16h20 dos dias úteis, o detalhe de quem está vivo ou mudou de situação, e tudo de novo a cada duas semanas. Encerrado = alvará vigente ou vencido, extinto e rascunho; o Início não mostra esses. Os filtros se somam; clique no título de uma coluna para ordenar.</p>
       <div class="todos-filtros">
-        <input id="todos-busca" type="search" placeholder="Código, razão social, cidade ou analista">
-        <select id="todos-sit"></select>
-        <span class="discreto" id="todos-info"></span>
-        <button class="bt link" id="todos-atualizar">atualizar</button>
+        <input id="todos-busca" type="search" placeholder="Código, razão social, fantasia, CNPJ, endereço, bairro, RT ou analista">
+        <select id="todos-sit" title="Situação no SOL"></select>
+        <button class="bt" id="todos-mais-filtros">Mais filtros</button>
+        <button class="bt link" id="todos-limpar" hidden>limpar filtros</button>
       </div>
-      <div class="cartao rola-x"><table class="t-proc"><thead><tr><th>Processo</th><th>Razão social</th><th>Cidade</th><th>Situação no SOL</th><th>Última análise</th><th>Protocolo</th><th></th></tr></thead>
-        <tbody id="todos"><tr><td class="vazio" colspan="7">Carregando…</td></tr></tbody></table></div>
-      <p style="text-align:center"><button class="bt" id="todos-mais" hidden>mostrar mais</button></p>
+      <div class="todos-painel" id="todos-painel" hidden>
+        <label>Cidade <select data-f="cidade"></select></label>
+        <label>Bairro <input data-f="bairro" type="search" placeholder="parte do nome"></label>
+        <label title="Grupo (J), divisão (J-3) ou CNAE em texto">Ocupação <input data-f="ocup" type="search" placeholder="J, J-3, A-2, oficina…"></label>
+        <label class="marca"><input data-f="pred" type="checkbox"> só a predominante</label>
+        <label>Edificação <select data-f="ed"><option value="">qualquer</option><option value="a construir">a construir</option><option value="existente">existente</option></select></label>
+        <label>Área (m²) <span class="faixa-num"><input data-f="area1" type="number" min="0" placeholder="de"><input data-f="area2" type="number" min="0" placeholder="até"></span></label>
+        <label>Altura (m) <span class="faixa-num"><input data-f="alt1" type="number" min="0" step="0.1" placeholder="de"><input data-f="alt2" type="number" min="0" step="0.1" placeholder="até"></span></label>
+        <label>População <span class="faixa-num"><input data-f="pop1" type="number" min="0" placeholder="de"><input data-f="pop2" type="number" min="0" placeholder="até"></span></label>
+        <label>Protocolo <span class="faixa-num"><input data-f="prot1" type="date"><input data-f="prot2" type="date"></span></label>
+        <label>Última análise <select data-f="res"><option value="">qualquer</option><option value="CIA">CIA</option><option value="CA">CA</option><option value="nenhuma">sem análise</option></select></label>
+        <label>Analista da última <select data-f="analista"></select></label>
+        <label>Nº de análises <select data-f="nan"><option value="">qualquer</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4 ou mais</option></select></label>
+        <label>Responsável técnico <input data-f="rt" type="search" placeholder="nome do RT"></label>
+        <label class="marca"><input data-f="recurso" type="checkbox"> com recurso</label>
+        <label class="marca"><input data-f="mudou" type="checkbox"> mudou de situação</label>
+        <label class="marca"><input data-f="meus" type="checkbox"> só os que têm pasta neste PC</label>
+      </div>
+      <p class="discreto" id="todos-info"></p>
+      <div class="cartao rola-x"><table class="t-proc t-todos"><thead><tr><th data-ord="numero">Processo</th><th data-ord="razao">Razão social</th><th data-ord="cidade">Cidade</th><th data-ord="ocup">Ocupação</th><th data-ord="area" class="num">Área</th><th data-ord="situacao">Situação no SOL</th><th data-ord="ultima">Última análise</th><th data-ord="protocolo">Protocolo</th><th></th></tr></thead>
+        <tbody id="todos"><tr><td class="vazio" colspan="9">Carregando…</td></tr></tbody></table></div>
+      <p style="text-align:center"><button class="bt" id="todos-mais" hidden>mostrar mais</button> <button class="bt link" id="todos-csv" title="Copia a lista filtrada (todas as linhas) para colar numa planilha">copiar para planilha</button> <button class="bt link" id="todos-atualizar">atualizar</button></p>
     </section>
 
     <section class="tela" id="t-quadro">
@@ -1378,40 +1406,111 @@ async function carregarTodos(forcar) {
   if (!BASE || forcar) await carregarBase(forcar);
   pintarTodos();
 }
+// filtros da aba (2.3.23, pedido do Átila: "adicionar mais campos na busca, parecido com o SOL"); ficam neste PC
+let TODOS_F = {}, TODOS_ORD = { c: "", desc: false }, TODOS_LST = [];
+try { const s = JSON.parse(localStorage.getItem("sseg-todos-filtros") || "{}"); TODOS_F = s.f || {}; TODOS_ORD = s.o || TODOS_ORD; if (s.sit) TODOS_SIT = s.sit; } catch (e) {}
+const semAcento = t => (t || "").toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const titulo = t => (t || "").toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
+const predom = p => ((p.ocupacoes || []).find(o => o.tipo === "predominante") || (p.ocupacoes || [])[0] || {});
+function guardarFiltros() {
+  try { localStorage.setItem("sseg-todos-filtros", JSON.stringify({ f: TODOS_F, o: TODOS_ORD, sit: TODOS_SIT })); } catch (e) {}
+}
+// "J" casa J-1…J-4 e "J-1 a J-4"; "J-3" casa J-3 e a faixa "J-1 a J-4"; texto livre procura no CNAE
+function casaOcup(o, q) {
+  const d = (o.div || "").toUpperCase().replace(/\s/g, ""), Q = q.toUpperCase().replace(/\s/g, "");
+  if (/^[A-M]$/.test(Q)) return d.startsWith(Q + "-");
+  const m = /^([A-M])-(\d+)$/.exec(Q);
+  if (m) {
+    const f = /^([A-M])-(\d+)A\1-(\d+)$/.exec(d);
+    return d === Q || (f && f[1] === m[1] && +m[2] >= +f[2] && +m[2] <= +f[3]);
+  }
+  return semAcento(o.cnae).includes(semAcento(q)) || semAcento(o.div).includes(semAcento(q));
+}
+function filtrarTodos(ps) {
+  const F = TODOS_F, num = v => (v === "" || v == null ? null : +v), meus = new Set(PROCS.map(p => p.codigo));
+  const q = semAcento($("#todos-busca").value.trim()), qd = q.replace(/\D/g, "");
+  return ps.filter(p => {
+    if (TODOS_SIT === "vivos" ? !p.vivo : TODOS_SIT === "encerrados" ? p.vivo : TODOS_SIT === "voltou" ? !p.mudou_em
+      : TODOS_SIT.startsWith("s:") ? p.situacao !== TODOS_SIT.slice(2) : false) return false;
+    if (q) {
+      const alvo = semAcento([p.numero, p.razao, (p.fantasia || []).join(" "), p.cidade, p.endereco, p.bairro,
+        (p.rt || []).join(" "), (p.ultima || {}).quem].join(" "));
+      if (!alvo.includes(q) && !(qd.length >= 5 && (p.cnpj || []).some(c => c.includes(qd)))) return false;
+    }
+    if (F.cidade && p.cidade !== F.cidade) return false;
+    if (F.bairro && !semAcento(p.bairro).includes(semAcento(F.bairro))) return false;
+    if (F.ocup) { const os = F.pred ? [predom(p)] : (p.ocupacoes || []); if (!os.some(o => casaOcup(o, F.ocup.trim()))) return false; }
+    if (F.ed && !(p.situacao_ed || "").startsWith(F.ed)) return false;
+    const faixa = (v, a, b) => (num(a) == null || (v != null && v >= num(a))) && (num(b) == null || (v != null && v <= num(b)));
+    if (!faixa(p.area, F.area1, F.area2) || !faixa(p.altura, F.alt1, F.alt2) || !faixa(p.populacao, F.pop1, F.pop2)) return false;
+    if (F.prot1 && !(p.protocolo && p.protocolo >= F.prot1)) return false;
+    if (F.prot2 && !(p.protocolo && p.protocolo <= F.prot2)) return false;
+    if (F.res === "nenhuma" ? !!p.ultima : F.res && (p.ultima || {}).resultado !== F.res) return false;
+    if (F.analista && (p.ultima || {}).quem !== F.analista) return false;
+    if (F.nan && (F.nan === "4" ? (p.analises || 0) < 4 : (p.analises || 0) !== +F.nan)) return false;
+    if (F.rt && !semAcento((p.rt || []).join(" ")).includes(semAcento(F.rt))) return false;
+    if (F.recurso && !p.recursos) return false;
+    if (F.mudou && !p.mudou_em) return false;
+    if (F.meus && !meus.has(p.numero)) return false;
+    return true;
+  });
+}
+const CHAVE_ORD = { numero: p => p.numero, razao: p => semAcento(p.razao), cidade: p => p.cidade, ocup: p => predom(p).div || "",
+  area: p => p.area ?? -1, situacao: p => nomeSit(p.situacao), ultima: p => (p.ultima || {}).data || "", protocolo: p => p.protocolo || "" };
 function pintarTodos() {
   const corpo = $("#todos"), ps = (BASE && BASE.processos) || [];
-  if (!ps.length) { $("#todos-info").textContent = ""; return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 7 },
+  if (!ps.length) { $("#todos-info").textContent = ""; return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 9 },
     "A base ainda não chegou do servidor (sem servidor neste PC, ou a primeira coleta não terminou)."))); }
-  const r = BASE.rodada || {};
-  $("#todos-info").textContent = BASE.total + " processos, " + BASE.vivos + " vivos · base de " + dataCaixa(BASE.gerado_em)
-    + (r.resultado === "em andamento" ? " · coleta em andamento" : "");
-  // situações com contagem, as mais comuns primeiro
-  const cont = {};
+  const r = BASE.rodada || {}, cont = {};
   ps.forEach(p => cont[p.situacao] = (cont[p.situacao] || 0) + 1);
   const sel = $("#todos-sit");
   sel.replaceChildren(el("option", { value: "vivos" }, "Vivos (" + BASE.vivos + ")"), el("option", { value: "voltou" }, "Mudaram de situação"),
     el("option", { value: "encerrados" }, "Encerrados (" + (BASE.total - BASE.vivos) + ")"), el("option", { value: "" }, "Todos (" + BASE.total + ")"),
     ...Object.keys(cont).sort((a, b) => cont[b] - cont[a]).map(s => el("option", { value: "s:" + s }, nomeSit(s) + " (" + cont[s] + ")")));
   sel.value = TODOS_SIT;
-  const q = $("#todos-busca").value.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  const meusCod = new Set(PROCS.map(p => p.codigo));
-  let lst = ps.filter(p => TODOS_SIT === "vivos" ? p.vivo : TODOS_SIT === "encerrados" ? !p.vivo : TODOS_SIT === "voltou" ? !!p.mudou_em
-    : TODOS_SIT.startsWith("s:") ? p.situacao === TODOS_SIT.slice(2) : true);
-  if (q) lst = lst.filter(p => [p.numero, p.razao, p.cidade, (p.ultima || {}).quem].join(" ").toLowerCase()
-    .normalize("NFD").replace(/[̀-ͯ]/g, "").includes(q));
-  if (TODOS_SIT === "voltou") lst.sort((a, b) => (b.mudou_em || "").localeCompare(a.mudou_em || ""));
+  // listas dos selects saem da própria base
+  const opcoes = (campo, valores) => {
+    const s = $('#todos-painel [data-f="' + campo + '"]'), atual = TODOS_F[campo] || "";
+    s.replaceChildren(el("option", { value: "" }, "qualquer"), ...valores.map(([v, n]) => el("option", { value: v }, n)));
+    s.value = atual;
+  };
+  const conta = f => { const c = {}; ps.forEach(p => { const v = f(p); if (v) c[v] = (c[v] || 0) + 1; }); return c; };
+  const cc = conta(p => p.cidade), ca = conta(p => (p.ultima || {}).quem);
+  opcoes("cidade", Object.keys(cc).sort().map(c => [c, c + " (" + cc[c] + ")"]));
+  opcoes("analista", Object.keys(ca).sort().map(a => [a, titulo(a) + " (" + ca[a] + ")"]));
+  document.querySelectorAll("#todos-painel [data-f]").forEach(i => {
+    const v = TODOS_F[i.dataset.f];
+    if (i.type === "checkbox") i.checked = !!v; else if (i.tagName !== "SELECT" || ["ed", "res", "nan"].includes(i.dataset.f)) i.value = v || "";
+  });
+  const nFiltros = Object.values(TODOS_F).filter(v => v !== "" && v !== false && v != null).length;
+  $("#todos-mais-filtros").textContent = "Mais filtros" + (nFiltros ? " (" + nFiltros + ")" : "");
+  $("#todos-limpar").hidden = !nFiltros && !$("#todos-busca").value;
+  let lst = filtrarTodos(ps);
+  const k = CHAVE_ORD[TODOS_ORD.c];
+  if (k) lst.sort((a, b) => { const x = k(a), y = k(b); return (x < y ? -1 : x > y ? 1 : 0) * (TODOS_ORD.desc ? -1 : 1); });
+  else if (TODOS_SIT === "voltou") lst.sort((a, b) => (b.mudou_em || "").localeCompare(a.mudou_em || ""));
+  document.querySelectorAll("#t-todos th[data-ord]").forEach(th => th.classList.toggle("ord", th.dataset.ord === TODOS_ORD.c)
+    || th.setAttribute("data-dir", th.dataset.ord === TODOS_ORD.c ? (TODOS_ORD.desc ? "▼" : "▲") : ""));
+  TODOS_LST = lst;
+  $("#todos-info").textContent = lst.length + " de " + BASE.total + " processos · base de " + dataCaixa(BASE.gerado_em)
+    + (r.resultado === "em andamento" ? " · coleta em andamento" : "");
   $("#todos-mais").hidden = lst.length <= TODOS_N;
-  if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 7 }, "Nenhum processo com esse filtro.")));
+  if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 9 }, "Nenhum processo com esses filtros.")));
+  const meusCod = new Set(PROCS.map(p => p.codigo));
   corpo.replaceChildren(...lst.slice(0, TODOS_N).map(p => {
-    const u = p.ultima, meu = meusCod.has(p.numero);
+    const u = p.ultima, meu = meusCod.has(p.numero), pr = predom(p);
     return el("tr", {},
       el("td", { class: "cod" }, p.numero, meu ? el("span", { class: "tag", style: "margin-left:6px", title: "Tem pasta neste PC" }, "seu") : null),
-      el("td", { class: "razao", title: p.razao || "" }, el("span", {}, p.razao || "—")),
+      el("td", { class: "razao", title: [p.razao, (p.fantasia || []).join(" / "), p.endereco, p.bairro, (p.rt || []).length ? "RT: " + p.rt.map(titulo).join(", ") : ""].filter(Boolean).join("\n") },
+        el("span", {}, p.razao || "—")),
       el("td", { class: "cidade" }, p.cidade || ""),
+      el("td", { class: "ocup-c", title: (p.ocupacoes || []).map(o => o.div + " (" + o.tipo + ") " + o.cnae).join("\n") },
+        pr.div || el("span", { class: "discreto" }, p.coletado_em ? "—" : "…"), (p.ocupacoes || []).length > 1 ? el("span", { class: "discreto" }, " +" + (p.ocupacoes.length - 1)) : null),
+      el("td", { class: "num" }, p.area != null ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""),
       el("td", {}, el("span", { class: "tag sit " + corSit(p.situacao) }, nomeSit(p.situacao)),
         p.mudou_em ? el("span", { class: "tag sit k-vermelho", title: "Era " + nomeSit(p.anterior) + "; mudou na coleta de " + dataCaixa(p.mudou_em) }, "voltou · era " + nomeSit(p.anterior)) : null,
         p.recursos ? el("span", { class: "tag sit k-azul" }, p.recursos + " recurso(s)") : null),
-      el("td", {}, u ? [el("span", {}, dataAno(u.data) + " · " + u.resultado), el("div", { class: "discreto" }, (u.quem || "").toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase()) + (p.analises > 1 ? " · " + p.analises + " análises" : ""))]
+      el("td", {}, u ? [el("span", {}, dataAno(u.data) + " · " + u.resultado), el("div", { class: "discreto" }, titulo(u.quem) + (p.analises > 1 ? " · " + p.analises + " análises" : ""))]
         : el("span", { class: "discreto", title: p.coletado_em ? "" : "Detalhe ainda não coletado" }, p.coletado_em ? "nenhuma" : "…")),
       el("td", { class: "quando" }, p.protocolo ? dataAno(p.protocolo) : ""),
       el("td", { style: "text-align:right;white-space:nowrap" },
@@ -1419,11 +1518,34 @@ function pintarTodos() {
         el("button", { class: "bt link", title: "Licenciamento no SOL (na aba em que você já entrou)", on: { click: () => abrirNoSol("https://solcbm.rs.gov.br/solcbm/adm/#/licenciamento/consulta/" + p.id) } }, "SOL")));
   }));
 }
-$("#todos-sit").onchange = e => { TODOS_SIT = e.target.value; TODOS_N = 200; pintarTodos(); };
+const repintarTodos = () => { TODOS_N = 200; guardarFiltros(); pintarTodos(); };
+$("#todos-sit").onchange = e => { TODOS_SIT = e.target.value; repintarTodos(); };
 let _todosT;
-$("#todos-busca").oninput = () => { clearTimeout(_todosT); _todosT = setTimeout(() => { TODOS_N = 200; pintarTodos(); }, 200); };
+const depois = fn => () => { clearTimeout(_todosT); _todosT = setTimeout(fn, 250); };
+$("#todos-busca").oninput = depois(repintarTodos);
+document.querySelectorAll("#todos-painel [data-f]").forEach(i => {
+  const ler = () => { TODOS_F[i.dataset.f] = i.type === "checkbox" ? i.checked : i.value; };
+  if (i.type === "checkbox" || i.tagName === "SELECT" || i.type === "date") i.onchange = () => { ler(); repintarTodos(); };
+  else i.oninput = depois(() => { ler(); repintarTodos(); });
+});
+$("#todos-mais-filtros").onclick = () => { $("#todos-painel").hidden = !$("#todos-painel").hidden; };
+$("#todos-limpar").onclick = () => { TODOS_F = {}; $("#todos-busca").value = ""; repintarTodos(); };
+document.querySelectorAll("#t-todos th[data-ord]").forEach(th => th.onclick = () => {
+  TODOS_ORD = TODOS_ORD.c === th.dataset.ord ? { c: th.dataset.ord, desc: !TODOS_ORD.desc } : { c: th.dataset.ord, desc: ["area", "ultima", "protocolo"].includes(th.dataset.ord) };
+  repintarTodos();
+});
 $("#todos-mais").onclick = () => { TODOS_N += 300; pintarTodos(); };
 $("#todos-atualizar").onclick = () => carregarTodos(true);
+// a lista filtrada inteira, separada por tabulação: cola direto no Google Planilhas / Excel
+$("#todos-csv").onclick = () => {
+  const cab = ["Processo", "Razão social", "Cidade", "Bairro", "Ocupação predominante", "Área m²", "Altura m", "População", "Situação no SOL",
+    "Protocolo", "Análises", "Última análise", "Resultado", "Analista", "RT"];
+  const L = TODOS_LST.map(p => [p.numero, p.razao, p.cidade, p.bairro, predom(p).div, p.area ?? "", p.altura ?? "", p.populacao ?? "", nomeSit(p.situacao),
+    p.protocolo ? dataAno(p.protocolo) : "", p.analises ?? "", p.ultima ? dataAno(p.ultima.data) : "", (p.ultima || {}).resultado || "",
+    titulo((p.ultima || {}).quem), (p.rt || []).map(titulo).join(", ")].map(v => String(v).replace(/[\t\n]/g, " ")).join("\t"));
+  copiar([cab.join("\t"), ...L].join("\n"));
+  avisar(TODOS_LST.length + " processo(s) copiados: cole na planilha.");
+};
 // ---- tela Quadro (2.1.14): os processos entram sozinhos pela caixa; as tarefas soltas (pendência de trabalho
 // que sobrou de uma conversa, fiscalização, reunião) moram em quadro.json na pasta dos processos.
 let QUADRO = null, NOMES_ESCALA = [];

@@ -477,6 +477,11 @@ def levantar(forcar=False):
     if itens and not os.path.exists(os.path.join(caixa, "item-exemplo.json")):
         with open(os.path.join(caixa, "item-exemplo.json"), "w", encoding="utf-8") as fh:
             json.dump(itens[0], fh, ensure_ascii=False, indent=1)
+    try:  # quem já estava na caixa na leitura anterior (2.3.23): quem volta para outra análise baixa o JSON de novo
+        with open(os.path.join(caixa, "caixa.json"), encoding="utf-8") as fh:
+            estavam = {i.get("codigo") for i in json.load(fh).get("itens") or []}
+    except (OSError, ValueError):
+        estavam = None
     resumo = []
     for it in itens:
         # Item real (15/10/2026, .caixa/item-exemplo.json): "id" é o do LICENCIAMENTO (bate com o
@@ -487,7 +492,10 @@ def levantar(forcar=False):
         if ident and codigo:
             pasta = os.path.join(PROCESSOS, str(codigo))
             arq = os.path.join(pasta, "api-%s.json" % ident)
-            if forcar or not os.path.exists(arq):
+            # voltou à caixa (outra análise) com o JSON da análise anterior na pasta: baixa o de agora e guarda o
+            # velho como anterior-api-<ID>.json, que a pré-análise da reanálise compara (antes ficava o velho)
+            voltou = estavam is not None and codigo not in estavam and os.path.exists(arq)
+            if forcar or voltou or not os.path.exists(arq):
                 d = buscar(aba, "%s/%s" % (LICENCIAMENTO, ident))
                 codigo_api = d.get("numero")
                 if codigo_api and codigo_api != codigo:  # o item da caixa mentiu: vale o do SOL
@@ -496,6 +504,11 @@ def levantar(forcar=False):
                     pasta = os.path.join(PROCESSOS, str(codigo))
                     arq = os.path.join(pasta, "api-%s.json" % ident)
                 os.makedirs(pasta, exist_ok=True)
+                if os.path.exists(arq):
+                    with open(arq, encoding="utf-8") as fh:
+                        velho = json.load(fh)
+                    if velho != d:
+                        os.replace(arq, os.path.join(pasta, "anterior-api-%s.json" % ident))
                 with open(arq, "w", encoding="utf-8") as fh:
                     json.dump(d, fh, ensure_ascii=False)
                 linha["novo"] = True

@@ -715,6 +715,20 @@ def main():
              normas_pdf.pagina_da_tabela(dec, "5")[:1] == [66] and normas_pdf.pagina_da_tabela(dec, "6J.2")[:1] == [99])
         caso("norma: busca sem acento acha 'risco médio' na RT 14",
              any(n == 4 for n, _t in normas_pdf.buscar(normas_pdf.achar_pdf("rt14"), "risco medio")))
+    # 20. pré-análise da reanálise (2.3.23): plantas trocadas e o que mudou desde o JSON anterior
+    import pre_analise as pa_m
+    api_a = {"caracteristica": {"populacaoTotal": 60, "ocupacoes": [{"ocupacao": "PREDOMINANTE", "cnae": {"divisao": "J"}}]},
+             "especSeguranca": {"medidas": [{"tipo": {"nome": "Extintores"}, "norma": {"nome": "RT 14/2016"}},
+                                            {"tipo": {"nome": "Plano de Emergência"}, "norma": {"nome": "RT 15"}}]}}
+    api_b = {"caracteristica": {"populacaoTotal": 81, "ocupacoes": [{"ocupacao": "PREDOMINANTE", "cnae": {"divisao": "J-3"}}]},
+             "especSeguranca": {"medidas": [{"tipo": {"nome": "Extintores"}, "norma": {"nome": "RT 14/2016"}}]},
+             "elemGraficos": [{"situacao": "INATIVO", "tipo": "PLANTA_BAIXA", "descricao": "CIA01", "dthExclusao": 1790000000000,
+                               "justificativas": [{"justificativa": "- Adequar a classificação"}]},
+                              {"situacao": "ATIVO", "tipo": "PLANTA_BAIXA", "descricao": "CIA02", "dthInclusao": 1790000000000}]}
+    t = pa_m.secao_reanalise(api_b, api_a, {"analise": 3})
+    caso("pré-análise da reanálise: planta nova, notificada a substituída, população e medida que saiu",
+         "NOVO planta baixa: CIA02" in t and "Adequar a classificação" in t and "População total: 60 → 81" in t
+         and "campo 4, saiu: Plano de Emergência" in t, t[-400:])
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

@@ -4,6 +4,27 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.3.23
+
+- **Aba Processos com busca de verdade.** O "Mais filtros" abre, e os filtros se somam:
+  - cidade, bairro e situação da edificação;
+  - ocupação: grupo (J), divisão (J-3) ou CNAE em texto, com a opção de olhar só a predominante;
+  - faixas de área, altura e população, e período de protocolo;
+  - resultado da última análise (CA, CIA, sem análise) e o analista que a fez;
+  - número de análises, responsável técnico, com recurso, mudou de situação e só os que têm pasta neste PC.
+
+  A busca de texto passa a achar também nome fantasia, CNPJ, endereço, bairro e RT. Clique no título de
+  uma coluna para ordenar. Ocupação e área viraram colunas. "Copiar para planilha" leva a lista filtrada
+  inteira para colar no Google Planilhas ou no Excel. Os filtros ficam guardados neste PC.
+- **Pré-análise de reanálise** (no servidor, sem trocar o programa):
+  - vem primeiro o que interessa: as plantas novas e as substituídas, com o que foi notificado em cada uma;
+  - a partir de agora, também o que mudou no cadastro e no campo 4 desde a análise anterior;
+  - as conferências do processo inteiro ficam como observação.
+
+  A 1ª análise continua com a conferência completa.
+- **Correção no servidor:** quando um processo voltava à caixa para outra análise, ficava o JSON do SOL da
+  análise anterior. Agora ele é baixado de novo, e o anterior fica guardado para a comparação.
+
 ## 2.3.22
 
 Mudanças a partir da leitura das 4 análises de 16 e 17/10 (conversas guardadas no servidor):
