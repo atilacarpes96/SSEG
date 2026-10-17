@@ -30,6 +30,11 @@ AÇÕES
                                             editar e excluir só quem criou, quem pegou ou o admin
   escala                                  → a linha do analista no escala.json (o admin recebe tudo)
   relato <id>                             → guarda o .zip do stdin em ~/sseg-relatos/<analista>-<id>.zip
+  sol                                     → (2.3.17) a sessão do SOL no Chromium do servidor, só lendo:
+                                            {"chrome", "logado", "exp", "senha", "trava", "ultimo_login",
+                                            "caixa_lida_em", "caixa_total"}. Nunca devolve token nem senha
+  sol-caixa                     (admin)   → roda a leitura da caixa agora (sol_caixa.py, com o login
+                                            automático se a sessão caiu) → {"rc", "saida"}
   analistas                     (admin)   → lista dos cadastrados
   autorizar                     (admin)   → stdin {"analista", "chave"}: cadastra e libera a chave
   revogar <nome>                (admin)   → tira a chave e o cadastro
@@ -280,6 +285,38 @@ class Porta:
             raise SystemExit(str(e))
         raise SystemExit("ação do quadro desconhecida: %s" % acao)
 
+    # --- SOL no servidor (2.3.17): o chip do SSEG.exe
+    def sol(self):
+        import sol_caixa
+        import sol_senha
+        r = {"chrome": False, "logado": False, "exp": None, "senha": bool(sol_senha.ler()),
+             "trava": sol_senha._ler_texto(sol_senha.TRAVA), "ultimo_login": sol_senha._ler_texto(sol_senha.ULTIMO),
+             "caixa_lida_em": "", "caixa_total": None}
+        try:
+            with open(os.path.join(sol_caixa.PROCESSOS, ".caixa", "caixa.json"), encoding="utf-8") as fh:
+                c = json.load(fh)
+            r["caixa_lida_em"], r["caixa_total"] = c.get("lido_em", ""), c.get("total")
+        except (OSError, ValueError):
+            pass
+        try:
+            aba = sol_caixa.aba_do_sol()
+            if aba:
+                s = aba.avaliar(sol_caixa.SESSAO)
+                r.update(chrome=True, logado=bool(s.get("logado")), exp=s.get("exp"))
+        except (OSError, RuntimeError, ValueError):
+            pass
+        return r
+
+    def sol_caixa(self):
+        self._so_admin()
+        import contextlib
+        import io
+        import sol_caixa
+        saida = io.StringIO()
+        with contextlib.redirect_stdout(saida):
+            rc = sol_caixa.levantar()
+        return {"rc": rc, "saida": saida.getvalue()[-4000:]}
+
     # --- admin
     def _so_admin(self):
         if not self.admin:
@@ -356,6 +393,10 @@ def executar(porta, args, entrada, script):
         r = porta.escala()
     elif acao == "relato" and resto:
         r = porta.relato(resto[0], entrada())
+    elif acao == "sol":
+        r = porta.sol()
+    elif acao == "sol-caixa":
+        r = porta.sol_caixa()
     elif acao == "analistas":
         r = porta.analistas()
     elif acao == "autorizar":

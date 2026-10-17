@@ -105,12 +105,18 @@ jobs:
         run: |
           r=$(cd sseg/app && PYTHONUTF8=1 python -c "import sol_entrar as s; print(s.instalar_atalho()); print(len(s.script_js())); print('|'.join(s.conferir()))" 2>&1) || { echo "::error title=sol-entrar::$(echo "$r" | tr -d '\r' | tr '\n' '|')"; exit 1; }
           echo "::notice title=sol-entrar::$(echo "$r" | tr -d '\r' | tr '\n' '|')"
+      - name: Notas da release (seção da versão em sseg/app/NOVIDADES.md)
+        shell: bash
+        run: |
+          tr -d '\r' < sseg/app/NOVIDADES.md | awk -v v="## $V" '$0==v{f=1;next} /^## /{f=0} f' > dist/notas.md  # CRLF no checkout do Windows
+          [ -s dist/notas.md ] || echo "::warning title=notas::sem seção ## $V em sseg/app/NOVIDADES.md"
+          printf '\n---\nBaixe o SSEG.exe abaixo. Na primeira vez o Windows pode avisar "Windows protegeu o computador" (programa sem assinatura) — Mais informações > Executar assim mesmo.\n' >> dist/notas.md
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: app-v${{ env.V }}${{ github.ref_name != 'main' && '-previa' || '' }}
           name: SSEG ${{ env.V }}${{ github.ref_name != 'main' && ' (prévia)' || '' }}
           prerelease: ${{ github.ref_name != 'main' }}
-          body: Baixe o SSEG.exe abaixo. Na primeira vez o Windows pode avisar "Windows protegeu o computador" (programa sem assinatura) — Mais informações > Executar assim mesmo.
+          body_path: dist/notas.md
           files: |
             dist/SSEG.exe
             dist/previa*.png

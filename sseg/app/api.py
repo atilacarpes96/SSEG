@@ -34,6 +34,7 @@ import instalacao
 import instalar
 import processo
 import relato
+import sol_aba
 import sol_entrar
 import sseg_app as base
 
@@ -669,14 +670,19 @@ class Api:
         return processo.montar(self._clone(), self._pasta_proc(codigo))["laudo"]
 
     def abrir_sol(self, url):
-        """No Chrome do analista (é lá que está o login do SOL); sem Chrome, o navegador padrão."""
+        """Na aba do SOL em que o analista já entrou (2.3.17, sol_aba.py: aba nova cai no login).
+        Sem aba logada ou sem a depuração do Chrome, abre como antes: aba nova no Chrome."""
         if not url.startswith(processo.SOL):
             raise RuntimeError("Endereço fora do SOL.")
+        ok, msg = sol_aba.abrir(url)
+        if ok:
+            return {"aba": True, "msg": msg}
         c = sol_entrar.chrome()
         if c:
             subprocess.Popen([c, url], creationflags=base.SEM_JANELA)
         else:
             webbrowser.open(url)
+        return {"aba": False, "msg": "Aberto em aba nova (%s): vai pedir login." % msg}
 
     def abrir_pasta_processo(self, codigo):
         base.abrir(self._pasta_proc(codigo))
@@ -834,6 +840,16 @@ class Api:
         for f in acesso.preparar():
             self._log("Servidor: " + f)
         return {"codigo": acesso.mensagem_acesso(cfg["analista"])}
+
+    def servidor_sol(self):
+        """O SOL no servidor (2.3.17): logado até quando, senha gravada, trava, última leitura da caixa."""
+        return acesso.chamar_json("sol")
+
+    def servidor_sol_caixa(self):
+        """Lê a caixa agora no servidor (só o administrador); a sincronização continua no chip Servidor."""
+        r = acesso.chamar_json("sol-caixa", timeout=900)
+        self._log("SOL no servidor: leitura da caixa%s." % ("" if r.get("rc") == 0 else " com problema (saída %s)" % r.get("rc")))
+        return r
 
     def servidor_analistas(self):
         return acesso.chamar_json("analistas")

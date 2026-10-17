@@ -439,6 +439,7 @@ body.sem-pc #sem-pc { display: block; }
     <button class="chip carregando" id="e-programas" data-ir="config">Programas</button>
     <button class="chip carregando" id="e-pastas" data-ir="config">Pastas</button>
     <button class="chip carregando" id="e-servidor">Servidor</button>
+    <button class="chip carregando" id="e-sol" hidden>SOL</button>
     <button class="chip carregando" id="e-github">GitHub</button>
     <button class="chip novo so-pc" id="e-versao" hidden>Nova versão</button>
   </div>
@@ -897,6 +898,21 @@ $("#b-srv-liberar").onclick = async ev => {
 };
 
 // ---- barra de estado
+// Mouse em cima (2.3.17): primeiro o que o chip é, depois o estado de agora. Quem atualiza o chip grava
+// só o estado no title; o observador põe a explicação na frente.
+const EXPLICA = {
+  "e-programas": "PROGRAMAS — Git, Python, Poppler e Claude Code neste PC (sem eles os scripts e o chat não rodam).",
+  "e-pastas": "PASTAS — o clone do SSEG e a pasta dos processos deste PC (testa se dá para gravar).",
+  "e-servidor": "SERVIDOR — sincronização dos processos entre este PC e o servidor (o que desce, o que sobe).",
+  "e-sol": "SOL — a sessão do SOL no servidor, que lê a caixa e baixa JSON, Marcos e CIAs às 8h, 12h e 16h.",
+  "e-github": "GITHUB — o clone deste PC em dia com o repositório (skills, normas, scripts).",
+  "e-versao": "NOVA VERSÃO — há SSEG.exe mais novo no GitHub: clique para atualizar.",
+};
+const _obsChip = new MutationObserver(ms => ms.forEach(m => {
+  const c = m.target, ex = EXPLICA[c.id];
+  if (ex && !c.title.startsWith(ex)) c.title = ex + (c.title ? "\n\n" + c.title : "");
+}));
+for (const id in EXPLICA) { const c = document.getElementById(id); if (c) { _obsChip.observe(c, { attributes: true, attributeFilter: ["title"] }); c.title = c.title || ""; c.title = EXPLICA[id] + (c.title ? "\n\n" + c.title : ""); } }
 function chip(id, classe, texto, n) {
   const c = $(id);
   c.className = "chip " + classe;
@@ -943,6 +959,40 @@ async function estadoServidor() {
     c.title = "O servidor não respondeu: " + String(e.message || e).slice(-300) + "\nClique para tentar de novo.";
   } finally { SRV_CONFERINDO = false; }
 }
+// Chip do SOL no servidor (2.3.17): a sessão que lê a caixa e baixa JSON, Marcos e CIAs. Só lendo, sem Claude.
+// Verde = logado · amarelo = caída, mas o login automático entra na próxima leitura · vermelho = trava ou Chrome fora.
+const hm = t => new Date(t * 1000).toLocaleTimeString().slice(0, 5);
+const dataCaixa = t => (t || "").replace(/^\d{4}-(\d\d)-(\d\d) /, "$2/$1 às ");
+let SOL_SRV = null;
+async function estadoSol() {
+  const c = $("#e-sol");
+  if (!(await api("estado_servidor")).configurado) { c.hidden = true; return; }
+  c.hidden = false;
+  try {
+    const s = SOL_SRV = await window.pywebview.api.servidor_sol();
+    const caixa = s.caixa_lida_em ? "Caixa lida em " + dataCaixa(s.caixa_lida_em) + (s.caixa_total != null ? " (" + s.caixa_total + " processos)" : "") : "";
+    if (!s.chrome) { chip("#e-sol", "alerta", "SOL: Chrome fora"); c.title = "O Chrome do servidor não respondeu (~/rotinas/sol-chrome.sh iniciar).\n" + caixa; return; }
+    if (s.trava) { chip("#e-sol", "alerta", "SOL: login travado"); c.title = "O login automático falhou e parou: " + s.trava + "\nEntre pelo celular (VNC) e grave a senha de novo (sol_senha.py gravar).\n" + caixa; return; }
+    if (s.logado) { chip("#e-sol", "ok", "SOL"); c.title = "Servidor logado no SOL até " + hm(s.exp) + ".\n" + caixa + "\nClique para ler a caixa agora."; return; }
+    chip("#e-sol", "pendente", "SOL: caído");
+    c.title = (s.senha ? "Sessão caída: o login automático entra na próxima leitura (ou clique para ler agora)."
+      : "Sessão caída e sem senha gravada: entre pelo celular (VNC).") + "\n" + caixa;
+  } catch (e) { chip("#e-sol", "alerta", "SOL: ?"); c.title = "Não consegui perguntar ao servidor: " + String(e.message || e).slice(-200); }
+}
+$("#e-sol").onclick = async () => {
+  const s = SOL_SRV || {}, admin = ((await api("servidor_acesso", [false])).quem || {}).papel === "admin";
+  const linhas = [s.logado ? "Servidor logado no SOL até " + hm(s.exp) + "." : s.chrome === false ? "Chrome do servidor fora do ar." : "Sessão do SOL caída.",
+    s.senha ? "Login automático: ligado" + (s.trava ? " — TRAVADO: " + s.trava : "") + (s.ultimo_login ? " · último em " + s.ultimo_login : "") : "Login automático: sem senha gravada.",
+    s.caixa_lida_em ? "Última leitura da caixa: " + dataCaixa(s.caixa_lida_em) + (s.caixa_total != null ? " · " + s.caixa_total + " processos" : "") : ""].filter(Boolean).join("\n");
+  modal("SOL no servidor", "A sessão que lê a caixa, o JSON, os Marcos e as CIAs (8h, 12h e 16h). Sem Claude.",
+    el("div", { class: "lista" }, linhas),
+    [...(admin ? [["Ler a caixa agora", async b => {
+      const r = await api("servidor_sol_caixa", [], b); fechar();
+      modal("Leitura da caixa", r.rc === 0 ? "Pronto. Os arquivos novos descem pelo chip Servidor." : "A leitura não terminou bem (saída " + r.rc + ").",
+        el("div", { class: "lista", style: "max-height:380px" }, r.saida || "(sem saída)"), [["Fechar", fechar]]);
+      estadoSol(); estadoServidor();
+    }, true]] : []), ["Fechar", fechar]]);
+};
 // Todos os chips de cima se reconferem sozinhos a cada 10 min, por script (2.3.6): verde funciona,
 // amarelo tem pendência, vermelho não funciona. Na hora em que a janela volta a ter foco, também.
 const agoraHM = () => new Date().toLocaleTimeString().slice(0, 5);
@@ -950,7 +1000,7 @@ let CHIPS_EM = 0;
 function reconferirChips() {
   if (Date.now() - CHIPS_EM < 60 * 1000) return;  // não repetir em rajada (foco indo e vindo)
   CHIPS_EM = Date.now();
-  estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub();
+  estadoProgramas(); estadoPastas(); estadoServidor(); estadoSol(); estadoGithub();
 }
 if (!ESPELHO) { setInterval(reconferirChips, 10 * 60 * 1000); window.addEventListener("focus", reconferirChips); }
 async function estadoGithub() {
@@ -2107,9 +2157,12 @@ $("#cv-voltar").onclick = () => ir("inicio");
 $("#pr-pasta").onclick = () => api("abrir_pasta_processo", [PR.codigo]);
 // Os botões do SOL são link direto (2.3.5, pedido do Átila): abrem no navegador padrão, sem passar pelo
 // chat. No celular (espelho), abre no próprio celular.
-function abrirNoSol(url) {
-  if (ESPELHO) window.open(url, "_blank", "noopener");
-  else api("abrir_url", [url]);
+// 2.3.17: no PC, leva a aba do SOL em que você já entrou ao processo (aba nova cai no login); o Chrome
+// pode pedir "Permitir" na primeira vez. No celular (espelho) continua abrindo aba nova.
+async function abrirNoSol(url) {
+  if (ESPELHO) return window.open(url, "_blank", "noopener");
+  const r = await api("abrir_sol", [url]);
+  avisar((r.aba ? "✓ " : "") + r.msg);
 }
 // sem o id do processo no SOL, o licenciamento cai na consulta; sem a análise direta, na caixa de análise
 $("#pr-sol-lic").onclick = () => abrirNoSol(PR.dados.sol.licenciamento);
@@ -2250,7 +2303,7 @@ setInterval(() => { if (!ESPELHO && $("#t-config").classList.contains("ativa")) 
 window.addEventListener("pywebviewready", async () => {
   const info = await carregarInicio();
   SSEG.log(["SSEG " + info.versao + "."]);
-  CHIPS_EM = Date.now(); estadoProgramas(); estadoPastas(); estadoServidor(); estadoGithub(); estadoVersao(); estadoEspelho();
+  CHIPS_EM = Date.now(); estadoProgramas(); estadoPastas(); estadoServidor(); estadoSol(); estadoGithub(); estadoVersao(); estadoEspelho();
   if (!ESPELHO && (info.instalacao || info.primeira_vez)) ir("instalar");
   else if (!ESPELHO) estadoAnalista(true);
   try { const v = sessionStorage.getItem("sseg-atualizou"); if (v) { sessionStorage.removeItem("sseg-atualizou"); avisar("✓ O PC voltou atualizado: versão " + v + "."); } } catch (e) {}
