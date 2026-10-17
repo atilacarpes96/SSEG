@@ -441,6 +441,18 @@ def _logar_se_caiu(aba):
     s = aba.avaliar(SESSAO)
     if s["logado"]:
         return s
+    # a caixa, a conferência de hora em hora e a base (sol_base.py) usam a mesma aba: um login por vez,
+    # e quem esperou confere de novo antes de digitar (o outro pode ter acabado de entrar)
+    import fcntl
+    with open(os.path.join(os.path.dirname(LOGIN), "sol-entrar.lock"), "w") as trava:
+        fcntl.flock(trava, fcntl.LOCK_EX)
+        s = aba.avaliar(SESSAO)
+        if s["logado"]:
+            return s
+        return _entrar_e_conferir(aba, s)
+
+
+def _entrar_e_conferir(aba, s):
     ok, txt = entrar(aba)
     print(("Sessão do SOL: %s." if ok else "Login automático não feito: %s.") % txt)
     return aba.avaliar(SESSAO) if ok else s

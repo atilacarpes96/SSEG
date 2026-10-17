@@ -4,6 +4,19 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.3.18
+
+- **Aba nova "Processos"**, com todos os processos do SOL da região (uns 6,8 mil). Dá para buscar por
+  código, razão social, cidade ou analista, e filtrar por situação. Cada linha mostra a última análise
+  (data, resultado e quem fez) e a data de protocolo. O botão "SOL" leva a aba do SOL em que você já
+  entrou até o licenciamento.
+- **"Mudaram de situação"**: os processos que mudaram desde a coleta anterior, por exemplo um
+  notificado que voltou para análise.
+- **Início só com os vivos.** Processo com alvará, extinto ou rascunho no SOL sai da lista (a não ser
+  que esteja na sua caixa). Ele continua na aba Processos, e o aviso no título leva até lá.
+- A base vem do servidor, que lê o SOL às 8h20, 12h20 e 16h20 nos dias úteis e confere tudo de novo
+  a cada duas semanas.
+
 ## 2.3.17
 
 - **Botões "SOL: análise" e "SOL: licenciamento" sem login de novo.** Antes abriam aba nova, e aba

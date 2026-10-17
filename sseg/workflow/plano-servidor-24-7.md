@@ -148,6 +148,13 @@ Cuidados:
   fora do Git). Uma tentativa por queda: falhou, liga a trava `sol-login-falhou` e põe cartão no
   Quadro; só volta com novo `gravar`. As chaves dos analistas são `restrict` e não leem o arquivo;
   as sessões do Claude no servidor leem.
+- **Base de todos os processos do SOL** (`sol_base.py`, 8h20/12h20/16h20 nos dias úteis; `--completo`
+  domingo 3h nas semanas pares). Liberada em 17/10/2026: o Sgt Magalhães entrou no projeto com o
+  aval, e a chefia foi avisada. Lógica do coletor dele (ColetaSOLCBM) com a sessão do `sol_caixa.py`.
+  A lista inteira (~6,8 mil PPCI, 7 consultas) e o detalhe (licenciamento, Marcos, histórico e texto
+  das CIAs) dos vivos e de quem mudou de situação. Encerrado (alvará, extinto, rascunho) só volta no
+  completo ou se mudar. Dados em `~/sseg-base-sol/` (fora do Git e de `processos/`). O SSEG.exe lê só
+  o `indice.json`, pelo porta.py `base`. Primeira rodada: 3.296 processos em ~1h30.
 
 ## Rotinas propostas
 

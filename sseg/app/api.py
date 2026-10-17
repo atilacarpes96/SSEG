@@ -10,6 +10,7 @@ O quadro da 1.x virou "Detalhes": log() manda a linha para a tela e guarda para 
 
 import base64
 import json
+import gzip
 import os
 import re
 import secrets
@@ -844,6 +845,31 @@ class Api:
     def servidor_sol(self):
         """O SOL no servidor (2.3.17): logado até quando, senha gravada, trava, última leitura da caixa."""
         return acesso.chamar_json("sol")
+
+    def base_sol(self, forcar=False):
+        """Aba Processos (2.3.18): o índice de todos os processos do SOL que o servidor coleta (sol_base.py).
+        Guardado ao lado da config; de 20 em 20 min (ou `forcar`) pergunta ao servidor se mudou. Sem servidor,
+        fica com o que tiver."""
+        arq = os.path.join(os.path.dirname(base.arquivo_config()), "base-sol.json")
+        tem = _ler(arq)
+        try:
+            velho = time.time() - os.path.getmtime(arq) > 20 * 60
+        except OSError:
+            velho = True
+        if (forcar or velho) and _tem_servidor():
+            try:
+                r = acesso.chamar_json("base", tem.get("gerado_em", ""), timeout=120)
+                if r.get("gz"):
+                    tem = json.loads(gzip.decompress(base64.b64decode(r["gz"])))
+                    with open(arq + ".tmp", "w", encoding="utf-8") as fh:
+                        json.dump(tem, fh, ensure_ascii=False)
+                    os.replace(arq + ".tmp", arq)
+                elif r.get("igual"):
+                    os.utime(arq)
+            except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as e:
+                if not tem:
+                    raise RuntimeError("Não li a base do servidor: %s" % e)
+        return tem
 
     def servidor_sol_caixa(self):
         """Lê a caixa agora no servidor (só o administrador); a sincronização continua no chip Servidor."""

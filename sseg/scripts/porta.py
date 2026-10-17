@@ -307,6 +307,22 @@ class Porta:
             pass
         return r
 
+    def base(self, gerado_em=""):
+        """Índice da base do SOL (sol_base.py) para a aba Processos. Igual ao que o PC já tem: só avisa.
+        Vai comprimido (uns 7 mil processos, 2 MB em texto)."""
+        import base64
+        import gzip
+        import sol_base
+        try:
+            with open(sol_base.INDICE, "rb") as fh:
+                bruto = fh.read()
+        except OSError:
+            return {"vazio": True}
+        g = json.loads(bruto).get("gerado_em", "")
+        if gerado_em and gerado_em == g:
+            return {"igual": True, "gerado_em": g}
+        return {"gerado_em": g, "gz": base64.b64encode(gzip.compress(bruto)).decode()}
+
     def sol_caixa(self):
         self._so_admin()
         import contextlib
@@ -395,6 +411,8 @@ def executar(porta, args, entrada, script):
         r = porta.relato(resto[0], entrada())
     elif acao == "sol":
         r = porta.sol()
+    elif acao == "base":
+        r = porta.base(resto[0] if resto else "")
     elif acao == "sol-caixa":
         r = porta.sol_caixa()
     elif acao == "analistas":

@@ -305,6 +305,9 @@ details.medida .itens { padding: 0 9px 8px; }
 .t-proc td.razao > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
 .t-proc td.ocup-c, .t-proc td.quando, .t-proc td.arqs { white-space: nowrap; }
 .t-proc .tag.sit { white-space: nowrap; display: inline-block; margin: 1px 4px 1px 0; }
+.todos-filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
+.todos-filtros input { flex: 1 1 260px; min-width: 0; }
+.t-proc td.cidade { white-space: nowrap; }
 .t-proc .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .rola-x { overflow-x: auto; }
 .ck .ok-tag { color: var(--ok); font-weight: 700; }
@@ -449,6 +452,7 @@ body.sem-pc #sem-pc { display: block; }
 <div id="corpo">
   <nav id="menu">
     <button data-tela="inicio" class="ativo">Início</button>
+    <button data-tela="todos">Processos</button>
     <button data-tela="quadro">Quadro</button>
     <button data-tela="busca">Buscar normas</button>
     <button data-tela="instalar">Instalação</button>
@@ -468,6 +472,20 @@ body.sem-pc #sem-pc { display: block; }
       <div id="fluxos"></div>
     </section>
 
+
+    <section class="tela" id="t-todos">
+      <h2>Todos os processos do SOL</h2>
+      <p class="sub">A base que o servidor coleta do SOL: a lista inteira três vezes por dia, o detalhe de quem está vivo ou mudou de situação, e tudo de novo a cada duas semanas. Encerrado = alvará vigente ou vencido, extinto e rascunho; o Início não mostra esses. "Voltou" = mudou de situação desde a coleta anterior.</p>
+      <div class="todos-filtros">
+        <input id="todos-busca" type="search" placeholder="Código, razão social, cidade ou analista">
+        <select id="todos-sit"></select>
+        <span class="discreto" id="todos-info"></span>
+        <button class="bt link" id="todos-atualizar">atualizar</button>
+      </div>
+      <div class="cartao rola-x"><table class="t-proc"><thead><tr><th>Processo</th><th>Razão social</th><th>Cidade</th><th>Situação no SOL</th><th>Última análise</th><th>Protocolo</th><th></th></tr></thead>
+        <tbody id="todos"><tr><td class="vazio" colspan="7">Carregando…</td></tr></tbody></table></div>
+      <p style="text-align:center"><button class="bt" id="todos-mais" hidden>mostrar mais</button></p>
+    </section>
 
     <section class="tela" id="t-quadro">
       <h2>Quadro</h2>
@@ -765,6 +783,7 @@ function ir(tela) {
   if (tela === "config") { carregarConfig(); estadoEspelho(); conferirChrome().catch(() => {}); carregarAcesso(false); }
   if (tela === "inicio") carregarProcessos();
   if (tela === "quadro") carregarQuadro();
+  if (tela === "todos") carregarTodos();
   if (tela === "instalar") carregarInstalacao();
   if (matchMedia("(max-width: 700px)").matches) $("#menu").classList.remove("aberto");  // menu por cima, no celular
 }
@@ -1303,7 +1322,12 @@ function pintarProcessos() {
   const corpo = $("#processos"), def = FILTRO && CARDS.cards.find(c => c.id === FILTRO);
   $("#filtro").replaceChildren(...(def ? [el("span", { class: "filtro-chip k-" + def.cor }, def.nome,
     el("button", { title: "Tirar o filtro", on: { click: () => { FILTRO = null; pintarProcessos(); } } }, "✕"))] : []));
-  const lst = ordemProcessos(def ? PROCS.filter(regra(def)) : PROCS).slice(0, def ? 999 : 40);
+  // 2.3.18: só os vivos — o que a base do SOL diz encerrado (alvará, extinto) sai daqui, salvo se ainda está na caixa
+  const enc = p => p.estado !== "caixa" && (BASE_COD[p.codigo] || {}).vivo === false;
+  const fora = PROCS.filter(enc).length;
+  if (fora) $("#filtro").append(el("span", { class: "filtro-chip k-cinza", title: "Alvará vigente ou vencido, extinto ou rascunho no SOL. Estão na aba Processos." },
+    fora + " encerrado(s) no SOL fora da lista", el("button", { title: "Ver na aba Processos", on: { click: () => { TODOS_SIT = "encerrados"; ir("todos"); } } }, "→")));
+  const lst = ordemProcessos((def ? PROCS.filter(regra(def)) : PROCS).filter(p => !enc(p))).slice(0, def ? 999 : 40);
   if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 8 },
     def ? "Nenhum processo neste card." : "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
   const h = isoLocal(new Date());
@@ -1327,7 +1351,74 @@ async function carregarProcessos() {
   try { [PROCS, CARDS] = await Promise.all([api("processos"), api("cards")]); } catch (e) { return; }
   ESTADO.analista = (CARDS.meta_info || {}).analista || "";
   pintarProcessos();
+  if (!BASE) carregarBase().then(() => { if (BASE) pintarProcessos(); });
 }
+// ---- aba Processos (2.3.18): todos os processos do SOL, pela base que o servidor coleta (sol_base.py)
+let BASE = null, BASE_COD = {}, TODOS_SIT = "vivos", TODOS_N = 200;
+const SITUACOES = { ALVARA_VIGENTE: "Alvará vigente", ALVARA_VENCIDO: "Alvará vencido", CA: "CA", NCA: "CIA (NCA)",
+  EXTINGUIDO: "Extinto", CIV: "CIV", EM_ANALISE: "Em análise", AGUARDANDO_DISTRIBUICAO: "Aguardando distribuição",
+  AGUARDANDO_PAGAMENTO: "Aguardando pagamento", AGUARDANDO_CIENCIA: "Aguardando ciência", RASCUNHO: "Rascunho",
+  EM_VISTORIA: "Em vistoria", AGUARDANDO_ACEITE: "Aguardando aceite", AGUARDANDO_ACEITES_EXTINCAO: "Aguardando aceites da extinção",
+  RECURSO_EM_ANALISE_1_CIA: "Recurso da CIA (1ª)", RECURSO_EM_ANALISE_2_CIA: "Recurso da CIA (2ª)" };
+const dataAno = iso => iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/" + iso.slice(2, 4) : "";
+const nomeSit = s => SITUACOES[s] || (s || "—").replace(/_/g, " ").toLowerCase().replace(/^./, c => c.toUpperCase());
+const corSit = s => /^ALVARA_VIG/.test(s) ? "k-verde" : /EXTING|RASCUNHO|ALVARA_VEN/.test(s) ? "k-cinza" : /^NCA|^CIV/.test(s) ? "k-laranja"
+  : /RECURSO|EM_ANALISE|DISTRIBUI/.test(s) ? "k-roxo" : "k-azul";
+async function carregarBase(forcar) {
+  try { BASE = await api("base_sol", [!!forcar]); } catch (e) { avisar(String(e.message || e), true); return; }
+  BASE_COD = {};
+  for (const p of (BASE && BASE.processos) || []) BASE_COD[p.numero] = p;
+}
+async function carregarTodos(forcar) {
+  if (!BASE || forcar) await carregarBase(forcar);
+  pintarTodos();
+}
+function pintarTodos() {
+  const corpo = $("#todos"), ps = (BASE && BASE.processos) || [];
+  if (!ps.length) { $("#todos-info").textContent = ""; return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 7 },
+    "A base ainda não chegou do servidor (sem servidor neste PC, ou a primeira coleta não terminou)."))); }
+  const r = BASE.rodada || {};
+  $("#todos-info").textContent = BASE.total + " processos, " + BASE.vivos + " vivos · base de " + dataCaixa(BASE.gerado_em)
+    + (r.resultado === "em andamento" ? " · coleta em andamento" : "");
+  // situações com contagem, as mais comuns primeiro
+  const cont = {};
+  ps.forEach(p => cont[p.situacao] = (cont[p.situacao] || 0) + 1);
+  const sel = $("#todos-sit");
+  sel.replaceChildren(el("option", { value: "vivos" }, "Vivos (" + BASE.vivos + ")"), el("option", { value: "voltou" }, "Mudaram de situação"),
+    el("option", { value: "encerrados" }, "Encerrados (" + (BASE.total - BASE.vivos) + ")"), el("option", { value: "" }, "Todos (" + BASE.total + ")"),
+    ...Object.keys(cont).sort((a, b) => cont[b] - cont[a]).map(s => el("option", { value: "s:" + s }, nomeSit(s) + " (" + cont[s] + ")")));
+  sel.value = TODOS_SIT;
+  const q = $("#todos-busca").value.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const meusCod = new Set(PROCS.map(p => p.codigo));
+  let lst = ps.filter(p => TODOS_SIT === "vivos" ? p.vivo : TODOS_SIT === "encerrados" ? !p.vivo : TODOS_SIT === "voltou" ? !!p.mudou_em
+    : TODOS_SIT.startsWith("s:") ? p.situacao === TODOS_SIT.slice(2) : true);
+  if (q) lst = lst.filter(p => [p.numero, p.razao, p.cidade, (p.ultima || {}).quem].join(" ").toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "").includes(q));
+  if (TODOS_SIT === "voltou") lst.sort((a, b) => (b.mudou_em || "").localeCompare(a.mudou_em || ""));
+  $("#todos-mais").hidden = lst.length <= TODOS_N;
+  if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 7 }, "Nenhum processo com esse filtro.")));
+  corpo.replaceChildren(...lst.slice(0, TODOS_N).map(p => {
+    const u = p.ultima, meu = meusCod.has(p.numero);
+    return el("tr", {},
+      el("td", { class: "cod" }, p.numero, meu ? el("span", { class: "tag", style: "margin-left:6px", title: "Tem pasta neste PC" }, "seu") : null),
+      el("td", { class: "razao", title: p.razao || "" }, el("span", {}, p.razao || "—")),
+      el("td", { class: "cidade" }, p.cidade || ""),
+      el("td", {}, el("span", { class: "tag sit " + corSit(p.situacao) }, nomeSit(p.situacao)),
+        p.mudou_em ? el("span", { class: "tag sit k-vermelho", title: "Era " + nomeSit(p.anterior) + "; mudou na coleta de " + dataCaixa(p.mudou_em) }, "voltou · era " + nomeSit(p.anterior)) : null,
+        p.recursos ? el("span", { class: "tag sit k-azul" }, p.recursos + " recurso(s)") : null),
+      el("td", {}, u ? [el("span", {}, dataAno(u.data) + " · " + u.resultado), el("div", { class: "discreto" }, (u.quem || "").toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase()) + (p.analises > 1 ? " · " + p.analises + " análises" : ""))]
+        : el("span", { class: "discreto", title: p.coletado_em ? "" : "Detalhe ainda não coletado" }, p.coletado_em ? "nenhuma" : "…")),
+      el("td", { class: "quando" }, p.protocolo ? dataAno(p.protocolo) : ""),
+      el("td", { style: "text-align:right;white-space:nowrap" },
+        meu ? el("button", { class: "bt link", on: { click: () => abrirProcesso(p.numero) } }, "abrir") : null,
+        el("button", { class: "bt link", title: "Licenciamento no SOL (na aba em que você já entrou)", on: { click: () => abrirNoSol("https://solcbm.rs.gov.br/solcbm/adm/#/licenciamento/consulta/" + p.id) } }, "SOL")));
+  }));
+}
+$("#todos-sit").onchange = e => { TODOS_SIT = e.target.value; TODOS_N = 200; pintarTodos(); };
+let _todosT;
+$("#todos-busca").oninput = () => { clearTimeout(_todosT); _todosT = setTimeout(() => { TODOS_N = 200; pintarTodos(); }, 200); };
+$("#todos-mais").onclick = () => { TODOS_N += 300; pintarTodos(); };
+$("#todos-atualizar").onclick = () => carregarTodos(true);
 // ---- tela Quadro (2.1.14): os processos entram sozinhos pela caixa; as tarefas soltas (pendência de trabalho
 // que sobrou de uma conversa, fiscalização, reunião) moram em quadro.json na pasta dos processos.
 let QUADRO = null, NOMES_ESCALA = [];
