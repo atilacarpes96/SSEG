@@ -600,7 +600,7 @@ class Api:
         return self._reg().ler(self._pasta_proc(codigo))
 
     def processo_marcar(self, codigo, grupo, chave, valor):
-        if grupo not in ("passos", "itens"):
+        if grupo not in ("passos", "itens", "marcas"):
             raise RuntimeError("grupo inválido")
         return self._reg().marcar(self._pasta_proc(codigo), grupo, chave, valor)
 

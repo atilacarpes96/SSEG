@@ -1801,12 +1801,21 @@ function pintarChecklist() {
   const auto = d.auto || {};
   if (d.pre_analise) {
     const pa = d.pre_analise, cor = l => l.startsWith("XX") ? "var(--verm)" : l.startsWith("!!") ? "var(--creme-txt)" : "var(--suave)";
-    out.push(el("div", { class: "bloco" }, el("b", {}, "Pré-análise documental (script)"),
+    const mandar = () => { fechar(); chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto);
+      api("processo_marcar", [PR.codigo, "marcas", "pre_analise", pa.data]).then(recarregarRegistro); };
+    const conteudo = [
       pa.velha ? el("p", { class: "sub", style: "color:var(--verm)" }, "O JSON do SOL mudou depois da pré-análise: rodar de novo (pre_analise.py).") : null,
       pa.marcas.length ? el("div", { class: "pre-marcas" }, ...pa.marcas.map(l => el("div", { style: "color:" + cor(l) }, l)))
         : el("p", { class: "sub" }, "Nenhum ponto marcado."),
       el("button", { class: "bt link", on: { click: () => modal("Pré-análise documental", "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
-        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", () => { fechar(); chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto); }], ["Fechar", fechar]]) } }, "ver tudo")));
+        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", mandar], ["Fechar", fechar]]) } }, "ver tudo")];
+    // já mandada ao Claude (2.3.16): encolhe numa linha; pré-análise refeita (data nova) volta aberta
+    if ((r.marcas || {}).pre_analise === pa.data)
+      out.push(el("details", { class: "bloco discreto" }, el("summary", {}, el("b", {}, "Pré-análise documental (script)"),
+        " · mandada ao Claude · " + pa.marcas.length + " ponto(s)"), ...conteudo));
+    else out.push(el("div", { class: "bloco" }, el("b", {}, "Pré-análise documental (script)"), ...conteudo,
+      el("button", { class: "bt link", title: "Encolhe sem mandar (já mandada antes da 2.3.16)",
+        on: { click: () => api("processo_marcar", [PR.codigo, "marcas", "pre_analise", pa.data]).then(recarregarRegistro) } }, "recolher")));
   }
   // fluxo
   const feitos = new Set([...Object.keys(r.passos), ...Object.keys(auto)]);

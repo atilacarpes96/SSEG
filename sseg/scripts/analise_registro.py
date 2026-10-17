@@ -36,6 +36,7 @@ def ler(pasta):
     d.setdefault("pendencias", [])   # {id, texto, origem, resposta, feita, quando}
     d.setdefault("exigencias", [])   # {id, medida, rascunho, final, fundamento, origem, quando}
     d.setdefault("chat", {})         # {sessao, pct_5h}
+    d.setdefault("marcas", {})       # "pre_analise": data da pré-análise mandada ao Claude (o quadro encolhe)
     return d
 
 
@@ -110,7 +111,8 @@ def remover(pasta, colecao, id_):
 
 
 def marcar(pasta, grupo, chave, valor):
-    """grupo "passos" (chave = nº do passo) ou "itens" (chave = "medida|item"). valor None desmarca."""
+    """grupo "passos" (chave = nº do passo), "itens" (chave = "medida|item") ou "marcas" (estado da
+    janela, ex.: "pre_analise"). valor None desmarca."""
     d = ler(pasta)
     if valor in (None, False, ""):
         d[grupo].pop(str(chave), None)

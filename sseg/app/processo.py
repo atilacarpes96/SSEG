@@ -121,7 +121,7 @@ def montar(clone, pasta):
         with open(pa, encoding="utf-8") as fh:
             texto = fh.read()
         velha = bool(arq) and os.path.getmtime(pa) < os.path.getmtime(arq)
-        pre = {"texto": texto, "velha": velha,
+        pre = {"texto": texto, "velha": velha, "data": int(os.path.getmtime(pa)),
                "marcas": [l for l in texto.splitlines() if l.startswith(("XX", "!!", "??"))]}
         if not velha:
             auto["4"] = "pré-análise documental (script, sem Claude): pre-analise.txt"

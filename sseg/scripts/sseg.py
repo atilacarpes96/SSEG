@@ -17,7 +17,8 @@ FAZ (trabalho deterministico, sempre igual):
 
 NAO FAZ (por regra fixa do projeto):
   - NAO conta medidas por extracao automatica de PDF. Se a linha nao estiver conferida,
-    responde NAO CONFERIDO e manda pedir a imagem da tabela.
+    responde NAO CONFERIDO; quando a contagem for necessaria, o modelo renderiza a pagina do PDF
+    (pdftoppm) e le a linha na imagem — nao pede ao analista.
   - NAO cria fundamento normativo. Item/subitem sai do PDF oficial, conferido a olho.
   - NAO decide nada: tudo que sai daqui e insumo para o analista.
 
@@ -396,8 +397,9 @@ def definidora(p, s=None):
 
     for div, tab, col in faltando:
         s.pergunta("  %s -> Tabela %s, coluna %s: NAO CONFERIDO. Contagem de medidas nunca sai "
-                   "de extracao de PDF. Mandar a IMAGEM dessa linha da tabela para eu ler celula "
-                   "a celula e registrar em dados/tabelas_conferidas.json." % (div, tab, col))
+                   "de extracao de PDF. So para fechar este desempate: renderizar a pagina da tabela "
+                   "(pdftoppm, normas/pdf/), ler a linha celula a celula com as notas e registrar em "
+                   "dados/tabelas_conferidas.json — sem pedir a imagem ao analista." % (div, tab, col))
 
     if contagens and not faltando:
         vencedor = max(contagens, key=contagens.get)
@@ -588,7 +590,8 @@ def travas(p, s=None):
                               "se veio de laudo/opcao do RT, o fundamento nao e a tabela." % nao)
         else:
             s.pergunta("Linha da tabela nao conferida para %s / %s — nao da para cruzar as "
-                       "medidas exigidas com o campo 4. Mandar a imagem da tabela."
+                       "medidas exigidas com o campo 4. Quando for cruzar: renderizar a pagina da tabela "
+                       "(pdftoppm, normas/pdf/) e ler a linha — sem pedir a imagem ao analista."
                        % (div, coluna_altura(h)))
     return s
 
@@ -987,8 +990,9 @@ def main():
                 s.ok("Linha CONFERIDA: Tabela %s, %s, %s = %d medidas exigidas."
                      % (ln["tabela"], ln["divisao"], ln["coluna"], ln["total_medidas"]))
             else:
-                s.pergunta("Linha NAO CONFERIDA para %s na coluna %s. Pedir a IMAGEM da tabela — "
-                           "contagem nunca sai de extracao de PDF." % (div, coluna_altura(h)))
+                s.pergunta("Linha NAO CONFERIDA para %s na coluna %s. Contagem nunca sai de extracao de "
+                           "PDF: quando ela for necessaria, renderizar a pagina da tabela (pdftoppm) e "
+                           "ler a linha — sem pedir a imagem ao analista." % (div, coluna_altura(h)))
     if args.cmd in ("check", "normas"):
         confere_normas(p, s)
     if args.cmd in ("check", "travas"):
