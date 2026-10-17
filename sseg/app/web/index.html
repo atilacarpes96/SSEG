@@ -1190,7 +1190,7 @@ function regra(c) {
 }
 function subtexto(c, l) {
   const h = isoLocal(new Date());
-  if (c.regra === "caixa") { const v = l.map(p => p.vence).filter(Boolean).sort()[0]; return v ? "o mais antigo vence " + dataBR(v) : "prazo de " + CARDS.prazo + " dias corridos"; }
+  if (c.regra === "caixa") { const v = l.map(p => p.vence).filter(Boolean).sort()[0]; return v ? "prazo mais próximo: " + dataBR(v) : "prazo de " + CARDS.prazo + " dias corridos"; }
   if (c.regra === "vence") { const v = l.filter(p => p.vence < h).length; return v ? v + " vencido(s)" : "em até " + c.dias + " dia(s)"; }
   if (c.regra === "fila") return "prazo ainda não corre";
   if (c.regra === "ct") { const d = l.flatMap(p => meus(p.cts, "minuta").map(i => i.data).concat(p.ct && p.ct >= h ? [p.ct] : [])).filter(x => x && x >= h).sort()[0];
@@ -1294,8 +1294,10 @@ function tagEstado(p) {
   if (p.estado === "fila") return el("span", { class: "tag sit k-cinza" }, "Na fila");
   if (p.estado === "caixa") {
     const f = diasAte(p.vence);
-    return el("span", { class: "tag sit " + (f < 0 ? "k-vermelho" : f <= 3 ? "k-vermelho" : "k-laranja"), title: "Distribuído em " + dataBR(p.distribuido) + ", vence " + dataBR(p.vence) },
-      f < 0 ? "Vencido há " + -f + " dia(s)" : f === 0 ? "Vence hoje" : "Na caixa · faltam " + f);
+    // 2.3.19: "faltam 8" era lido como 8 processos; agora diz que é o prazo da seção e até quando
+    return el("span", { class: "tag sit " + (f < 0 ? "k-vermelho" : f <= 3 ? "k-vermelho" : "k-laranja"),
+      title: "Prazo da seção: distribuído em " + dataBR(p.distribuido) + " + " + ((CARDS || {}).prazo || 10) + " dias corridos = " + dataBR(p.vence) },
+      f < 0 ? "Prazo vencido há " + -f + " dia(s)" : f === 0 ? "Prazo vence hoje" : "Prazo " + dataBR(p.vence) + " · " + f + (f === 1 ? " dia" : " dias"));
   }
   if (p.estado === "concluido") return el("span", { class: "tag sit " + (p.no_prazo === false ? "k-vermelho" : "k-azul"),
     title: p.dias != null ? p.dias + " dia(s) na caixa" : "" }, (p.resultado || "Concluído") + " " + dataBR(p.concluido) + (p.no_prazo === false ? " · fora do prazo" : ""));
@@ -1338,7 +1340,7 @@ function pintarProcessos() {
     el("td", { class: "razao", title: p.razao || "" }, el("span", {}, p.razao || "—")),
     el("td", { class: "ocup-c", title: p.ocupacao || "" }, siglaOcupacao(p.ocupacao) || el("span", { class: "discreto" }, "—")),
     el("td", { class: "num" }, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""),
-    el("td", {}, tagEstado(p), p.estado === "caixa" && p.dias_sol != null ? el("span", { class: "tag sit " + (p.dias_sol > 30 ? "k-vermelho" : "k-cinza"), title: "Dias em análise, como na caixa do SOL" }, p.dias_sol + " dias no SOL") : null, p.ct && p.ct >= h ? el("span", { class: "tag sit k-roxo" }, "CT " + dataBR(p.ct)) : null,
+    el("td", {}, tagEstado(p), p.estado === "caixa" && p.dias_sol != null ? el("span", { class: "tag sit " + (p.dias_sol > 30 ? "k-vermelho" : "k-cinza"), title: "Dias em análise contados pelo próprio SOL (o mesmo número da caixa do SOL). Não é o prazo da seção." }, p.dias_sol + " dias no SOL") : null, p.ct && p.ct >= h ? el("span", { class: "tag sit k-roxo" }, "CT " + dataBR(p.ct)) : null,
       ...meus(p.cts, "minuta").map(i => el("span", { class: "tag sit k-roxo", title: [i.fact, i.modalidade, i.hora].filter(Boolean).join(" · ") }, "CT" + (i.data ? " " + dataBR(i.data) : ""))),
       ...meus(p.cts, "chefia").map(() => el("span", { class: "tag sit k-cinza" }, "CT com a chefia")),
       ...meus(p.recursos, "minuta").map(i => el("span", { class: "tag sit k-azul", title: i.objeto || "" }, i.tipo || "Recurso")),

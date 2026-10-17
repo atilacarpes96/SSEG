@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.3.20
+
+- **Prazo mais claro no Início.** "Na caixa · faltam 8" (8 dias, não 8 processos) virou
+  "Prazo 25/10 · 8 dias". O prazo é o da seção: distribuído + 10 dias corridos. Os "dias no SOL" são
+  contados pelo próprio SOL, por isso são outro número. O card diz "prazo mais próximo".
+
 ## 2.3.19
 
 - **Número da análise na página do processo**, ao lado do código, como no Início. Vem da planilha de
