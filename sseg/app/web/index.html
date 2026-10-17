@@ -1295,7 +1295,8 @@ function tagEstado(p) {
   if (p.estado === "caixa") {
     const f = diasAte(p.vence);
     // 2.3.19: "faltam 8" era lido como 8 processos; agora diz que é o prazo da seção e até quando
-    return el("span", { class: "tag sit " + (f < 0 ? "k-vermelho" : f <= 3 ? "k-vermelho" : "k-laranja"),
+    // cor pelos dias na caixa (2.3.21, pedido do Átila): até 7 verde (o comum), 8 a 10 laranja, passou de 10 vermelho
+    return el("span", { class: "tag sit " + (f < 0 ? "k-vermelho" : f <= 2 ? "k-laranja" : "k-verde"),
       title: "Prazo da seção: distribuído em " + dataBR(p.distribuido) + " + " + ((CARDS || {}).prazo || 10) + " dias corridos = " + dataBR(p.vence) },
       f < 0 ? "Prazo vencido há " + -f + " dia(s)" : f === 0 ? "Prazo vence hoje" : "Prazo " + dataBR(p.vence) + " · " + f + (f === 1 ? " dia" : " dias"));
   }

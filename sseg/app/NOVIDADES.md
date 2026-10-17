@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.3.21
+
+- **Cor do prazo pelos dias na caixa:** verde até o 7º dia (o comum), laranja do 8º ao 10º e vermelho
+  depois do 10º.
+
 ## 2.3.20
 
 - **Prazo mais claro no Início.** "Na caixa · faltam 8" (8 dias, não 8 processos) virou
