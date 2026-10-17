@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.3.19
+
+- **Número da análise na página do processo**, ao lado do código, como no Início. Vem da planilha de
+  distribuição; quando o processo não está nela, vem dos Marcos do SOL. Nas duas telas aparece por
+  extenso: "1ª análise", "2ª análise" (antes o Início mostrava "ANÁLISE", "2º").
+
 ## 2.3.18
 
 - **Aba nova "Processos"**, com todos os processos do SOL da região (uns 6,8 mil). Dá para buscar por

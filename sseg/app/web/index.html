@@ -1304,6 +1304,8 @@ function tagEstado(p) {
 // Ordem da tabela (2.3.7, pedido do Átila): 1) na caixa, há mais dias primeiro (distribuído mais antigo);
 // 2) concluídos com CIA; 3) concluídos com CA — os dois pelo mais recente; 4) o resto (fila, sem dados), mais mexido primeiro.
 // "J-1 a J-4 - Armazéns gerais…" → "J-1 a J-4"; o nome inteiro fica no title da célula
+// tipo da planilha ("ANÁLISE" = 1ª, "2º", "3º"…) → "1ª análise", "2ª análise"
+const nomeAnalise = t => /^\s*AN[AÁ]LISE\s*$/i.test(t || "") ? "1ª análise" : (t || "").replace(/^\s*(\d+)\s*[ºª°o]?\s*$/, "$1ª análise");
 const siglaOcupacao = t => ((t || "").match(/^\s*([A-M]-\d+(?:\.\d+)?(?:\s*a\s*[A-M]-\d+)?)/) || [])[1] || (t || "").split(" - ")[0];
 function ordemProcessos(lst) {
   const grupo = p => p.estado === "caixa" ? 0 : p.estado === "concluido" && p.resultado === "CIA" ? 1
@@ -1332,7 +1334,7 @@ function pintarProcessos() {
     def ? "Nenhum processo neste card." : "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
   const h = isoLocal(new Date());
   corpo.replaceChildren(...lst.map(p => el("tr", {},
-    el("td", { class: "cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null),
+    el("td", { class: "cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, nomeAnalise(p.tipo)) : null),
     el("td", { class: "razao", title: p.razao || "" }, el("span", {}, p.razao || "—")),
     el("td", { class: "ocup-c", title: p.ocupacao || "" }, siglaOcupacao(p.ocupacao) || el("span", { class: "discreto" }, "—")),
     el("td", { class: "num" }, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""),
@@ -1527,7 +1529,7 @@ function cartaoProcesso(p) {
   const parar = fn => ev => { ev.stopPropagation(); fn(); };
   const no = el("div", { class: "qc qc-proc" + (aguarda ? " aguarda" : ""), draggable: "true",
       title: "Processo: clique para abrir. ✎ ou arrastar muda o lugar e a situação.", on: { click: () => abrirProcesso(p.codigo) } },
-    el("div", { class: "qc-tit cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, p.tipo) : null),
+    el("div", { class: "qc-tit cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, nomeAnalise(p.tipo)) : null),
     p.razao ? el("div", { class: "qc-razao" }, p.razao) : null,
     p.ocupacao || p.area ? el("div", { class: "qc-orig" }, [p.ocupacao, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""].filter(Boolean).join(" · ")) : null,
     el("div", { style: "margin-top:5px" }, tagEstado(p)),
@@ -1849,7 +1851,9 @@ async function abrirProcesso(codigo) {
 }
 function renderProcesso(d) {
   PR.codigo = d.codigo; PR.dados = d; PR.reg = d.analise; PR.alterado = d.analise.alterado || 0;
-  $("#pr-cod").textContent = d.codigo;
+  // nº da análise ao lado do código, como no Início (2.3.18): o da planilha; sem ela, as distribuições dos Marcos
+  const nAn = nomeAnalise((d.caixa || {}).tipo) || ((d.marcos || {}).analise ? d.marcos.analise + "ª análise" : "");
+  $("#pr-cod").replaceChildren(d.codigo, nAn ? el("span", { class: "tag", style: "margin-left:6px", title: (d.caixa || {}).tipo ? "Da planilha de distribuição" : "Contado nos Marcos do SOL" }, nAn) : "");
   const an = (ESTADO.info && ESTADO.info.fluxos || []).find(f => f.id === "analise");
   PR.fluxo = an || { modelo: "claude-sonnet-5-5", esforco: "high", modelo_texto: "Sonnet 5.5 alto" };
   $("#pr-modelo").textContent = "· " + PR.fluxo.modelo_texto;
