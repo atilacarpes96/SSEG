@@ -182,3 +182,15 @@ def conferir_barrados(clone, python):
         return sorted(json.loads(p.stdout or "{}"))
     except ValueError:
         return []
+
+
+def trazer(clone):
+    """Só traz: fetch e pull --ff-only quando o GitHub está à frente. Não commita nem envia (rodada horária, 2.5.6)."""
+    _git(clone, "fetch", "--quiet", "origin")
+    _, atras = _git(clone, "rev-list", "--count", "HEAD..origin/main")
+    if not int(atras or 0):
+        return []
+    rc, txt = _git(clone, "pull", "--ff-only", "origin", "main", timeout=300)
+    if rc:
+        raise RuntimeError("o git pull não saiu: " + txt[-300:])
+    return ["✓ GitHub trazido para o PC (%s atualização(ões))" % atras]

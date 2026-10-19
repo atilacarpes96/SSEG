@@ -192,7 +192,7 @@ class Api:
 
     # ---------------------------------------------------------------- sincronização automática (2.5.5)
     def _auto_sinc_laco(self):
-        """De hora em hora, sem janela: GitHub (pull, commit com as travas, push) e servidor (processos).
+        """De hora em hora, sem janela: só traz (GitHub e servidor). O envio é quando um processo termina.
         Só o chip pisca de leve. Desliga com "auto_sinc": false no config do SSEG.exe."""
         time.sleep(120)
         while True:
@@ -202,37 +202,42 @@ class Api:
                 self._registro.append("Sincronização automática: " + str(e)[:200])
             time.sleep(3600)
 
-    def auto_sincronizar(self):
-        """Uma rodada. Cada parte que para explica o motivo no title do chip; nada abre janela."""
-        if not self._auto_trava.acquire(blocking=False):
+    def auto_sincronizar(self, enviar=False):
+        """Uma rodada, sem janela. De hora em hora só TRAZ (GitHub e servidor). `enviar` (quando um processo termina,
+        2.5.6) também commita e envia ao GitHub e sobe os processos ao servidor. O que para explica o motivo no
+        title do chip."""
+        if not self._auto_trava.acquire(blocking=enviar, timeout=300 if enviar else -1):
             return
         try:
             cfg = self._cfg()
             if cfg.get("auto_sinc", True) is False:
                 return
             if base.eh_clone(cfg["clone"]):
-                self._auto_github(cfg)
+                self._auto_github(enviar)
             if _tem_servidor():
-                self._auto_servidor()
+                self._auto_servidor(enviar)
         finally:
             self._auto_trava.release()
 
     def _auto_aviso(self, alvo, estado, msg=""):
         self._emitir("autoSinc", alvo, estado, msg)
 
-    def _auto_github(self, cfg):
+    def _auto_github(self, enviar):
         clone = self._clone()
         py = instalar.localizar().get("python")
         self._auto_aviso("github", "rodando")
         msg = ""
         try:
-            info = git_sinc.conferir(clone, py)
-            quando = [os.path.getmtime(os.path.join(clone, a)) for _, a in info["itens"] if os.path.exists(os.path.join(clone, a))]
-            if quando and time.time() - max(quando) < 600:
-                msg = "arquivo mexido há menos de 10 min: fica para a próxima rodada"
-            elif info["atras"] or info["frente"] or info["itens"]:
-                texto = info["mensagem"] or "Atualiza arquivos do SSEG"
-                linhas = git_sinc.sincronizar(clone, "Sincronização automática: " + texto, py, "", "")
+            if enviar:
+                info = git_sinc.conferir(clone, py)
+                if info["atras"] or info["frente"] or info["itens"]:
+                    texto = info["mensagem"] or "Atualiza arquivos do SSEG"
+                    linhas = git_sinc.sincronizar(clone, "Processo concluído: " + texto, py, "", "")
+                else:
+                    linhas = []
+            else:
+                linhas = git_sinc.trazer(clone)
+            if linhas:
                 self._registro.append("— GitHub (automático) —")
                 self._registro.extend(linhas)
         except (RuntimeError, OSError, subprocess.SubprocessError) as e:
@@ -241,21 +246,44 @@ class Api:
         self._dados_git = None
         self._auto_aviso("github", "fim", msg)
 
-    def _auto_servidor(self):
+    def _auto_servidor(self, enviar):
         self._auto_aviso("servidor", "rodando")
         msg = ""
         try:
             plano = self.servidor_planejar()
             if plano["conflito"]:
                 msg = "%d arquivo(s) mudaram dos dois lados: clique no chip para escolher" % len(plano["conflito"])
-            elif plano["sobe"] or plano["desce"]:
+            elif enviar and (plano["sobe"] or plano["desce"]):
                 linhas = self.servidor_aplicar({})
-                self._registro.append("— Servidor (automático) —")
-                self._registro.extend(linhas)
+                self._registro.extend(["— Servidor (automático) —", *linhas])
+            elif plano["desce"]:
+                self._registro.extend(["— Servidor (automático) —", *self._sseg_py("trazer").strip().splitlines()])
         except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
             msg = "parou: " + str(e).strip().splitlines()[0][:200]
             self._registro.append("Servidor (automático) " + msg)
         self._auto_aviso("servidor", "fim", msg)
+
+    def _checar_conclusao(self, lista):
+        """Processo que terminou (CA ou CIA lançados, ou marcado concluído) dispara o envio: commit e push no GitHub e
+        subida dos processos ao servidor. A primeira vez só grava a referência; ela vive ao lado do config."""
+        arq = os.path.join(os.path.dirname(base.arquivo_config()), "concluidos-vistos.json")
+        agora = sorted(x["codigo"] for x in lista if x["estado"] == "concluido")
+        try:
+            with open(arq, encoding="utf-8") as fh:
+                antes = set(json.load(fh))
+        except (OSError, ValueError):
+            antes = None
+        if antes is not None and set(agora) == antes:
+            return
+        try:
+            with open(arq, "w", encoding="utf-8") as fh:
+                json.dump(agora, fh)
+        except OSError:
+            return
+        novos = set(agora) - (antes if antes is not None else set(agora))
+        if novos:
+            self._registro.append("Concluído: %s — enviando." % ", ".join(sorted(novos)))
+            threading.Thread(target=lambda: self.auto_sincronizar(enviar=True), daemon=True).start()
 
     def _pagina_carregou(self):
         guardado, self._antes_da_pagina = self._antes_da_pagina or [], None
@@ -509,6 +537,10 @@ class Api:
                             recursos=_ler(os.path.join(p, "recurso.json")).get("itens") or [],
                             cia=any(re.match(r"CIA \d+", os.path.basename(a)) for a in arqs)))
         out.sort(key=lambda x: -x["quando"])
+        try:
+            self._checar_conclusao(out)
+        except Exception:  # noqa: BLE001 — a lista do Início nunca depende do envio
+            pass
         return out  # todos: os cards contam tudo; a tabela mostra os 30 primeiros sem filtro
 
     def processo_pre_analise(self, codigo):
