@@ -1159,9 +1159,11 @@ $("#b-atualizar").onclick = async ev => {
   b.disabled = true;
   try {
     info.textContent = "Lendo a caixa do SOL no servidor…";
-    const admin = ((await api("servidor_acesso", [false])).quem || {}).papel === "admin";
     let aviso = "";
-    if (admin) { const r = await window.pywebview.api.servidor_sol_caixa(); if (r.rc !== 0) aviso = " A leitura da caixa não terminou bem (saída " + r.rc + "); veja o chip SOL."; }
+    try {  // quem pode ler a caixa é o servidor decidir (só o administrador): os outros analistas só sincronizam
+      const r = await window.pywebview.api.servidor_sol_caixa();
+      if (r.rc !== 0) aviso = " A leitura da caixa não terminou bem (saída " + r.rc + "); veja o chip SOL.";
+    } catch (e) { if (!/administrador/.test(String(e.message || e))) aviso = " Não li a caixa: " + String(e.message || e).slice(-160); }
     info.textContent = "Baixando o que mudou…";
     const plano = await window.pywebview.api.servidor_planejar();
     if (plano.conflito.length) { telaServidor(plano); }

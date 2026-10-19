@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.5.3
+
+- **Atualizar lê a caixa mesmo quando o programa ainda não sabe que você é administrador.** Antes, num PC onde o "Testar conexão" não tinha rodado,
+  o botão só sincronizava e não relia a caixa do SOL; os lançados ficavam no topo.
+
 ## 2.5.2
 
 - **Os chips do topo viraram um só.** O chip **Sistema** mostra o pior estado dos cinco (Programas, Pastas, Servidor, SOL e GitHub), com o número de pendências.
