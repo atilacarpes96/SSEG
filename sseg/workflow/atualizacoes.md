@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/10/2026 — SSEG.exe 2.5.5: sincronização automática de hora em hora
+
+- O SSEG.exe roda sozinho, a cada hora (a primeira, 2 min depois de abrir): GitHub (`git_sinc.sincronizar`: pull --ff-only, add sem -f, commit pelas travas, push) e servidor (`servidor_planejar` → `servidor_aplicar({})`).
+  Conflito e arquivo mexido há menos de 10 min ficam para a próxima rodada / para o clique. Desliga com `"auto_sinc": false` no config.
+
+### Prompt para atualizar
+
+```
+Faça git pull no clone do SSEG. Só código do SSEG.exe mudou: nenhuma skill nem as Instruções.
+```
+
 ## 19/10/2026 — SSEG.exe 2.5.4: botão Refazer pré-análise
 
 - Janela do processo: **Refazer pré-análise** chama `pre_analise.py <código> --forcar --pasta <pasta dos processos>` (script novo `--pasta`). Sem modelo.

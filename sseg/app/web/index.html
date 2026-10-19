@@ -54,6 +54,7 @@ header { background: var(--cartao); border-bottom: 3px solid var(--verm); displa
 .chip.alerta { border-color: var(--verm); color: var(--verm); background: var(--rosa); font-weight: 600; }
 .chip.alerta::before { background: var(--verm); }
 .chip.carregando::before { background: var(--amarelo); animation: pisca 1s infinite; }
+.chip.sinc::before { animation: pisca 2.2s ease-in-out infinite; }  /* sincronização automática: só o ponto, devagar */
 .chip .n { background: var(--verm); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; }
 .chip.novo { border-color: var(--laranja); color: var(--creme-txt); background: var(--creme); font-weight: 600; }
 .chip.novo::before { background: var(--laranja); }
@@ -921,7 +922,21 @@ function avisar(texto, erro) {
   a.textContent = texto; a.classList.toggle("erro", !!erro); a.classList.add("mostrar");
   clearTimeout(avisar.t); avisar.t = setTimeout(() => a.classList.remove("mostrar"), erro ? 6000 : 3500);
 }
+let SINC_N = 0;
 const SSEG = window.SSEG = {
+  // Sincronização automática (2.5.5): só o ponto do chip pulsa de leve; no fim, reconfere o que mudou e atualiza as telas.
+  autoSinc(alvo, estado, msg) {
+    const c = $(alvo === "github" ? "#e-github" : "#e-servidor");
+    SINC_N += estado === "rodando" ? 1 : -1;
+    $("#e-resumo").classList.toggle("sinc", SINC_N > 0);  // os chips de baixo ficam na lista recolhida: pulsa o "Sistema"
+    if (estado === "rodando") { c.classList.add("sinc"); return; }
+    c.classList.remove("sinc");
+    (alvo === "github" ? estadoGithub() : estadoServidor()).finally(() => {
+      if (msg) c.title = "Sincronização automática: " + msg + "\n\n" + c.title;
+      if (alvo === "servidor") { estadoSol(); if (!$("#t-inicio").hidden && $("#t-inicio").classList.contains("ativa")) carregarProcessos(); }
+      else estadoVersao();
+    });
+  },
   log(linhas) {
     if (ESPELHO) { const u = linhas.filter(l => l.trim()).pop(); if (u) avisar(u, /^✗/.test(u)); }
     const pre = $("#log");
@@ -1204,7 +1219,7 @@ function resumirChips() {
   const ruins = cs.filter(c => ["alerta", "pendente"].includes(estado(c)));
   const pior = ORDEM_CHIP.find(k => cs.some(c => estado(c) === k)) || "carregando";
   const r = $("#e-resumo");
-  r.className = "chip " + pior;
+  r.className = "chip " + pior + (SINC_N > 0 ? " sinc" : "");
   r.replaceChildren("Sistema", ...(ruins.length ? [" ", el("span", { class: "n" }, ruins.length)] : []), " ", el("span", { class: "seta" }, "▾"));
   r.title = "Programas, pastas, servidor, SOL e GitHub. Clique para ver cada um.\n\n" + cs.map(c => c.textContent.replace(/\s+/g, " ").trim() + " — " + (estado(c) === "ok" ? "ok" : estado(c) === "carregando" ? "conferindo" : estado(c) === "pendente" ? "pendência" : "problema")).join("\n");
 }

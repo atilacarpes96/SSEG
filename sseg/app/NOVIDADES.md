@@ -4,6 +4,15 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.5.5
+
+- **Sincronização automática, de hora em hora.** O programa faz sozinho, sem abrir janela, o que o chip GitHub e o chip Servidor fazem ao clique:
+  traz o GitHub, faz o commit (com as mesmas travas: dado de processo nunca entra) e envia; e sincroniza os processos com o servidor.
+  A primeira rodada vem 2 minutos depois de abrir o programa. Só o ponto do chip **Sistema** pulsa de leve enquanto roda.
+- No fim, as bolinhas e a lista do Início se atualizam. Se algo parar (conflito, falta de login, arquivo mexido há menos de 10 minutos), o motivo fica no
+  texto que aparece ao passar o mouse no chip, sem aviso na tela. Conflito de arquivo continua sendo escolha sua: clique no chip.
+- Para desligar: `"auto_sinc": false` no arquivo de configuração do programa.
+
 ## 2.5.4
 
 - **Botão "Refazer pré-análise" na janela do processo.** Roda o script de pré-análise agora, neste PC, sem Claude (menos de um segundo) e atualiza a tela.

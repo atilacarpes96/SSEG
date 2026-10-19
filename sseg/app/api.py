@@ -181,12 +181,81 @@ class Api:
         self._espelho = None
         self._tunel = None   # SSH de saída até o servidor: o caminho do celular (fase 2)
         self._pasta_web = None
+        self._auto_trava = threading.Lock()
         self._antes_da_pagina = None  # lista enquanto a janela do PC não carregou (web_app liga e solta)
 
     # ---------------------------------------------------------------- infraestrutura
     def _ligar(self, janela):
         self._janela = janela
         self._antes_da_pagina = []
+        threading.Thread(target=self._auto_sinc_laco, daemon=True).start()
+
+    # ---------------------------------------------------------------- sincronização automática (2.5.5)
+    def _auto_sinc_laco(self):
+        """De hora em hora, sem janela: GitHub (pull, commit com as travas, push) e servidor (processos).
+        Só o chip pisca de leve. Desliga com "auto_sinc": false no config do SSEG.exe."""
+        time.sleep(120)
+        while True:
+            try:
+                self.auto_sincronizar()
+            except Exception as e:  # noqa: BLE001 — o laço nunca morre
+                self._registro.append("Sincronização automática: " + str(e)[:200])
+            time.sleep(3600)
+
+    def auto_sincronizar(self):
+        """Uma rodada. Cada parte que para explica o motivo no title do chip; nada abre janela."""
+        if not self._auto_trava.acquire(blocking=False):
+            return
+        try:
+            cfg = self._cfg()
+            if cfg.get("auto_sinc", True) is False:
+                return
+            if base.eh_clone(cfg["clone"]):
+                self._auto_github(cfg)
+            if _tem_servidor():
+                self._auto_servidor()
+        finally:
+            self._auto_trava.release()
+
+    def _auto_aviso(self, alvo, estado, msg=""):
+        self._emitir("autoSinc", alvo, estado, msg)
+
+    def _auto_github(self, cfg):
+        clone = self._clone()
+        py = instalar.localizar().get("python")
+        self._auto_aviso("github", "rodando")
+        msg = ""
+        try:
+            info = git_sinc.conferir(clone, py)
+            quando = [os.path.getmtime(os.path.join(clone, a)) for _, a in info["itens"] if os.path.exists(os.path.join(clone, a))]
+            if quando and time.time() - max(quando) < 600:
+                msg = "arquivo mexido há menos de 10 min: fica para a próxima rodada"
+            elif info["atras"] or info["frente"] or info["itens"]:
+                texto = info["mensagem"] or "Atualiza arquivos do SSEG"
+                linhas = git_sinc.sincronizar(clone, "Sincronização automática: " + texto, py, "", "")
+                self._registro.append("— GitHub (automático) —")
+                self._registro.extend(linhas)
+        except (RuntimeError, OSError, subprocess.SubprocessError) as e:
+            msg = "parou: " + str(e).strip().splitlines()[0][:200]
+            self._registro.append("GitHub (automático) " + msg)
+        self._dados_git = None
+        self._auto_aviso("github", "fim", msg)
+
+    def _auto_servidor(self):
+        self._auto_aviso("servidor", "rodando")
+        msg = ""
+        try:
+            plano = self.servidor_planejar()
+            if plano["conflito"]:
+                msg = "%d arquivo(s) mudaram dos dois lados: clique no chip para escolher" % len(plano["conflito"])
+            elif plano["sobe"] or plano["desce"]:
+                linhas = self.servidor_aplicar({})
+                self._registro.append("— Servidor (automático) —")
+                self._registro.extend(linhas)
+        except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
+            msg = "parou: " + str(e).strip().splitlines()[0][:200]
+            self._registro.append("Servidor (automático) " + msg)
+        self._auto_aviso("servidor", "fim", msg)
 
     def _pagina_carregou(self):
         guardado, self._antes_da_pagina = self._antes_da_pagina or [], None
