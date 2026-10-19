@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/10/2026 — SSEG.exe 2.5.2: chips do topo juntados em um só
+
+- Os chips Programas, Pastas, Servidor, SOL e GitHub ficam dentro de um chip **Sistema**, que mostra o pior estado e abre a lista ao clicar.
+
+### Prompt para atualizar
+
+```
+Faça git pull no clone do SSEG. Só a tela do SSEG.exe mudou: nenhuma skill nem as Instruções.
+```
+
 ## 19/10/2026 — SSEG.exe 2.5.1: botão Atualizar no Início e processo lançado desce da lista
 
 - **Início → Atualizar** (administrador): lê a caixa do SOL agora no servidor, sincroniza e reordena. O de cima da caixa leva a etiqueta "Próximo".

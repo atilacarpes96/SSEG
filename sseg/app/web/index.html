@@ -41,7 +41,12 @@ header { background: var(--cartao); border-bottom: 3px solid var(--verm); displa
 .marca img { width: 38px; height: 38px; }
 .marca b { font-size: 20px; letter-spacing: .06em; color: var(--verm); line-height: 1; }
 .marca small { display: block; font-size: 10.5px; color: var(--suave); letter-spacing: .08em; text-transform: uppercase; }
-#estado { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+#estado-topo { margin-left: auto; display: flex; gap: 6px; align-items: center; position: relative; }
+#estado { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; display: flex; flex-direction: column; gap: 6px; align-items: stretch;
+          background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 10px; min-width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,.14); }
+#estado[hidden] { display: none; }
+#estado .chip { justify-content: flex-start; }
+#e-resumo .seta { font-size: 10px; opacity: .6; margin-left: 2px; }
 .chip { border: 1px solid var(--linha); background: var(--cartao); border-radius: 999px; padding: 3px 11px 3px 9px;
         font-size: 12.5px; color: var(--suave); display: inline-flex; align-items: center; gap: 6px; }
 .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ponto); }
@@ -418,7 +423,7 @@ body.sem-pc #sem-pc { display: block; }
   .marca small { display: none; }
   .marca img { width: 30px; height: 30px; }
   .marca b { font-size: 17px; }
-  #estado { gap: 4px; margin-left: 0; width: 100%; justify-content: flex-start; }
+  #estado { min-width: 190px; }
   .chip { font-size: 11px; padding: 1px 7px 1px 6px; gap: 4px; }
   nav { position: absolute; top: 0; bottom: 0; left: 0; z-index: 5; box-shadow: var(--sombra); }
   main { padding: 12px 12px 18px; }
@@ -574,13 +579,16 @@ footer { color: var(--suave); }
   <button id="b-menu" title="Menu">☰</button>
   <div class="marca"><img src="brasao.png" alt=""><div><b>SSEG</b><small>CBMRS · Seção de Segurança</small></div></div>
   <button id="b-recarregar" class="so-espelho" title="Recarregar a página" aria-label="Recarregar a página">↻</button>
-  <div id="estado">
-    <button class="chip carregando" id="e-programas" data-ir="config">Programas</button>
-    <button class="chip carregando" id="e-pastas" data-ir="config">Pastas</button>
-    <button class="chip carregando" id="e-servidor">Servidor</button>
-    <button class="chip carregando" id="e-sol" hidden>SOL</button>
-    <button class="chip carregando" id="e-github">GitHub</button>
+  <div id="estado-topo">
     <button class="chip novo so-pc" id="e-versao" hidden>Nova versão</button>
+    <button class="chip carregando" id="e-resumo" aria-expanded="false" aria-controls="estado">Sistema <span class="seta">▾</span></button>
+    <div id="estado" hidden>
+      <button class="chip carregando" id="e-programas" data-ir="config">Programas</button>
+      <button class="chip carregando" id="e-pastas" data-ir="config">Pastas</button>
+      <button class="chip carregando" id="e-servidor">Servidor</button>
+      <button class="chip carregando" id="e-sol" hidden>SOL</button>
+      <button class="chip carregando" id="e-github">GitHub</button>
+    </div>
   </div>
 </header>
 
@@ -1186,6 +1194,30 @@ function chip(id, classe, texto, n) {
   c.className = "chip " + classe;
   c.replaceChildren(texto, ...(n ? [" ", el("span", { class: "n" }, n)] : []));
 }
+// Chip único (2.5.2): "Sistema" resume os cinco de baixo (pior estado manda) e, ao clicar, abre a lista com cada um.
+const ORDEM_CHIP = ["alerta", "pendente", "carregando", "ok"];
+function resumirChips() {
+  const cs = [...document.querySelectorAll("#estado .chip")].filter(c => !c.hidden);
+  const estado = c => ORDEM_CHIP.find(k => c.classList.contains(k)) || "";
+  const ruins = cs.filter(c => ["alerta", "pendente"].includes(estado(c)));
+  const pior = ORDEM_CHIP.find(k => cs.some(c => estado(c) === k)) || "carregando";
+  const r = $("#e-resumo");
+  r.className = "chip " + pior;
+  r.replaceChildren("Sistema", ...(ruins.length ? [" ", el("span", { class: "n" }, ruins.length)] : []), " ", el("span", { class: "seta" }, "▾"));
+  r.title = "Programas, pastas, servidor, SOL e GitHub. Clique para ver cada um.\n\n" + cs.map(c => c.textContent.replace(/\s+/g, " ").trim() + " — " + (estado(c) === "ok" ? "ok" : estado(c) === "carregando" ? "conferindo" : estado(c) === "pendente" ? "pendência" : "problema")).join("\n");
+}
+function listaChips(abrir) {
+  const l = $("#estado");
+  l.hidden = abrir === undefined ? !l.hidden : !abrir;
+  $("#e-resumo").setAttribute("aria-expanded", String(!l.hidden));
+}
+$("#e-resumo").onclick = ev => { ev.stopPropagation(); listaChips(); };
+$("#estado").addEventListener("click", () => setTimeout(() => listaChips(false), 0));  // o chip clicado abre a janela dele
+document.addEventListener("click", ev => { if (!ev.target.closest("#estado-topo")) listaChips(false); });
+document.addEventListener("keydown", ev => { if (ev.key === "Escape") listaChips(false); });
+new MutationObserver(resumirChips).observe($("#estado"), { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "hidden"] });
+resumirChips();
+
 async function estadoProgramas() {
   try {
     const p = await api("estado_programas");
