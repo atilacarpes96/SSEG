@@ -50,6 +50,7 @@ analista: o que muda na tela e no dia a dia, sem nome de função.
   - o que depende de você (entrar no Claude, escolher seu nome, ligar a depuração do Chrome, servidor) aparece um de cada vez, com a instrução, e a tela avança sozinha quando você termina.
 - **Node.js entra na instalação.** Antes ficava de fora e travava o "Chrome para o Claude"; agora é instalado e o `npx` já funciona sem reabrir o programa.
 - **"SOL no servidor" sem conexão.** Quando o PC ainda não foi autorizado no servidor, a janela diz "Sem conexão com o servidor" em vez de "sem senha gravada".
+- **Chat que saía com \"Claude Code saiu (código 1)\".** Processo analisado em outro PC guarda uma conversa que não existe neste; o chat tentava retomá-la a cada mensagem e falhava. Agora avisa e começa uma conversa nova (análise, pendências e passos salvos continuam).
 
 ## 2.4.0
 

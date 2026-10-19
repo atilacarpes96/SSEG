@@ -297,7 +297,7 @@ def main():
                     recusa.append(1)
             pt.executar(adm3, ["sol-senha-apagar"], lambda: b"", "p")
             caso("porta: sol-senha-gravar guarda em 600, solta a trava, nunca devolve a senha; só admin grava/apaga; apagar remove",
-                 r == {"ok": True, "matricula": "123"} and modo == "0o600" and gravou and "s3gr3d0" not in saida
+                 r == {"ok": True, "matricula": "123"} and (modo == "0o600" or os.name == "nt") and gravou and "s3gr3d0" not in saida  # Windows não tem modo 600
                  and not os.path.exists(_ss.TRAVA) and vazio == [1] and len(recusa) == 3 and _ss.ler() is None,
                  str((r, modo, gravou, vazio, recusa)))
         finally:

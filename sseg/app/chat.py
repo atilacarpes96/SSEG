@@ -26,6 +26,15 @@ import gasto
 
 NOVA_JANELA_NAO = 0x08000000 if os.name == "nt" else 0
 
+
+def _sessao_existe(sessao):
+    """A conversa `sessao` está neste PC? O claude guarda em ~/.claude/projects/<pasta>/<id>.jsonl."""
+    base = os.path.join(os.path.expanduser("~"), ".claude", "projects")
+    try:
+        return any(os.path.isfile(os.path.join(base, d, sessao + ".jsonl")) for d in os.listdir(base))
+    except OSError:
+        return False
+
 # Só o que a análise precisa sem perguntar; o resto volta como "negado" e o analista decide.
 PERMITIDOS = ["Read", "Grep", "Glob", "Task", "Agent", "TodoWrite",
               "Bash(python sseg/scripts/*)", "Bash(python3 sseg/scripts/*)", "Bash(py sseg/scripts/*)", "Bash(cd *)",
@@ -157,8 +166,13 @@ class Conversa:
                "--append-system-prompt", INSTRUCOES.format(codigo=self.codigo, pasta=self.pasta) + self._sol_txt() + GUIA_VISUAL if self.pasta
                else instrucoes_fluxo(self.fluxo)]
         sessao = self.registro.ler(self.pasta)["chat"].get("sessao") if self.pasta else self.sessao
-        if sessao:
+        if sessao and _sessao_existe(sessao):
             cmd += ["--resume", sessao]
+        elif sessao:
+            # a conversa foi feita em outro PC (o analise.json vem pelo servidor) e não existe aqui: com --resume o
+            # claude sai com código 1 a cada mensagem. Começa uma conversa nova; o que foi salvo no processo continua.
+            self.aoevento({"t": "aviso", "texto": "A conversa anterior deste processo foi feita em outro PC e não existe "
+                                                  "aqui: começando uma conversa nova. Análise, pendências e passos salvos continuam."})
         return cmd
 
     def _sol_txt(self):
