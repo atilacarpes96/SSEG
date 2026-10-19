@@ -2232,23 +2232,47 @@ const BLOCOS = {
         el("button", { class: "bt", on: { click: () => copiar(d.texto || "") } }, "Copiar"),
         el("span", { class: "discreto", style: "margin-left:auto;" + (n > 1950 ? "color:var(--verm);font-weight:700" : "") }, n + " / 2000")));
   },
+  // 2.6.1: pergunta fechada (opcoes, ou tipo "simnao") vira botões; quando todas do bloco são fechadas, o clique na
+  // última já manda as respostas e o Claude segue, sem digitar nada. "Conferir na planta" vem num bloco só.
   "sseg-perguntas": (d, ctx) => {
-    const qs = (d.perguntas || []).map((q, i) => ({ id: q.id || "q" + (i + 1), texto: q.texto || "", dica: q.dica || "" }));
-    const campos = qs.map(q => el("input", { type: "text", placeholder: q.dica || "sua resposta" }));
+    const qs = (d.perguntas || []).map((q, i) => ({ id: q.id || "q" + (i + 1), texto: q.texto || "", dica: q.dica || "",
+      opcoes: Array.isArray(q.opcoes) && q.opcoes.length ? q.opcoes.map(String) : q.tipo === "simnao" ? ["Sim", "Não"] : null }));
+    const resp = qs.map(() => "");
     const processo = ctx && /^A\d{8}/.test(ctx.chave);
     if (processo) api("processo_perguntas", [ctx.chave, qs]).then(recarregarRegistro).catch(() => {});
-    return el("div", { class: "perguntas" },
-      el("b", {}, processo ? "Perguntas (vão também para o checklist)" : "Perguntas"),
-      ...qs.flatMap((q, i) => [el("label", {}, (i + 1) + ". " + q.texto), campos[i]]),
+    const fechadas = qs.every(q => q.opcoes);
+    let enviado = false;
+    const mandar = () => {
+      const r = qs.map((q, i) => [q, resp[i]]).filter(x => x[1]);
+      if (!r.length) return SSEG.log(["✗ Responda ao menos uma pergunta."]);
+      if (enviado) return;
+      enviado = true;
+      caixa.querySelectorAll("button,input").forEach(x => x.disabled = true);
+      if (processo) api("processo_responder", [ctx.chave, r.map(([q, v]) => [q.texto, v])]).then(recarregarRegistro).catch(() => {});
+      chatEnviar(ctx, "Respostas" + (d.titulo ? " (" + d.titulo + ")" : "") + ":\n" + r.map(([q, v]) => "- " + q.texto + " → " + v).join("\n") + "\nSiga.");
+    };
+    const linhas = qs.flatMap((q, i) => {
+      const rot = el("label", {}, (i + 1) + ". " + q.texto);
+      if (!q.opcoes) {
+        const c = el("input", { type: "text", placeholder: q.dica || "sua resposta" });
+        c.addEventListener("input", () => resp[i] = c.value.trim());
+        return [rot, c];
+      }
+      const bts = q.opcoes.map(o => el("button", { class: "bt", type: "button", on: { click: ev => {
+        resp[i] = o;
+        bts.forEach(x => x.classList.toggle("p", x === ev.currentTarget));
+        if (fechadas && resp.every(Boolean)) mandar();
+      } } }, o));
+      return [rot, el("div", { class: "linha-bts", style: "margin:2px 0 6px;flex-wrap:wrap" }, ...bts, q.dica ? el("span", { class: "discreto" }, q.dica) : null)];
+    });
+    const caixa = el("div", { class: "perguntas" },
+      el("b", {}, (d.titulo || "Perguntas") + (processo ? " " : ""), processo ? el("span", { class: "discreto" }, "(vão também para o checklist)") : null),
+      ...linhas,
       el("div", { class: "linha-bts", style: "margin-top:8px" },
-        el("button", { class: "bt p", on: { click: ev => {
-          const r = qs.map((q, i) => [q, campos[i].value.trim()]).filter(x => x[1]);
-          if (!r.length) return SSEG.log(["✗ Responda ao menos uma pergunta."]);
-          ev.currentTarget.disabled = true;
-          if (processo) api("processo_responder", [ctx.chave, r.map(([q, v]) => [q.texto, v])]).then(recarregarRegistro).catch(() => {});
-          chatEnviar(ctx, "Respostas:\n" + r.map(([q, v]) => "- " + q.texto + " → " + v).join("\n"));
-        } } }, "Mandar respostas"),
+        fechadas ? el("span", { class: "discreto" }, "Clique na resposta: quando todas estiverem marcadas, vai sozinho.") :
+          el("button", { class: "bt p", on: { click: mandar } }, "Mandar respostas"),
         processo ? el("button", { class: "bt", on: { click: () => api("abrir_pasta_processo", [ctx.chave]) } }, "Abrir a pasta do processo") : null));
+    return caixa;
   },
 };
 
@@ -2682,8 +2706,16 @@ $("#pr-congelar").onclick = async ev => {
 };
 $("#pr-salvar").onclick = async ev => {
   const b = ev.currentTarget;
-  aviso2(await api("processo_salvar", [PR.codigo], b));
-  recarregarRegistro();
+  const salvar = async bt => { aviso2(await api("processo_salvar", [PR.codigo], bt)); recarregarRegistro(); };
+  // 2.6.1: pendência aberta não fica esquecida ao fechar o processo
+  const abertas = ((PR.reg || {}).pendencias || []).filter(p => !p.feita);
+  if (!abertas.length) return salvar(b);
+  modal("Pendências abertas", abertas.length + " pendência(s) sem resposta neste processo. Resolva antes de salvar, ou salve assim.",
+    el("div", { class: "lista" }, abertas.map(p => "• " + p.texto).join("\n")),
+    [["Marcar como resolvidas e salvar", async bt => {
+      for (const p of abertas) await api("processo_atualizar", [PR.codigo, "pendencias", p.id, { feita: true }]);
+      fechar(); await salvar(b);
+    }, true], ["Salvar assim", async () => { fechar(); await salvar(b); }], ["Voltar", fechar]]);
 };
 $("#pr-sol-lic").onclick = () => abrirNoSol(PR.dados.sol.licenciamento);
 $("#pr-sol-an").onclick = () => abrirNoSol(PR.dados.sol.analise);
@@ -2787,7 +2819,7 @@ SSEG.tour = async passo => {
       "```sseg-status", JSON.stringify({ estado: "parado", texto: "Parado: preciso de você", processo: fake.codigo, criterio: "critério (b) do 5.1.2" }), "```",
       "```sseg-dados", JSON.stringify({ itens: [{ rotulo: "Área", valor: "3.605,26 m²" }, { rotulo: "Altura", valor: "4,85 m" }, { rotulo: "População", valor: "470" }, { rotulo: "Protocolo", valor: "27/08/2026" }] }), "```",
       "```sseg-definidora", JSON.stringify({ titulo: "Definidora: empate no (a), I-1 marcada pelo RT", hipoteses: [{ ocupacao: "I-1", nota: "risco baixo", tabela: "6I.1", medidas: 8, efeito: "nenhum", ok: true }, { ocupacao: "J-2", nota: "risco baixo", tabela: "6J.1", medidas: 8, efeito: "nenhum", ok: true }], conclusao: "As 8 medidas são as mesmas nas duas: a definidora não muda o campo 4.", norma: { rotulo: "RT 01/2024, item 5.1.2", consulta: "definidora" } }), "```",
-      "```sseg-perguntas", JSON.stringify({ perguntas: [{ id: "q1", texto: "O depósito é da mesma empresa?", dica: "ex.: sim, mesma razão social" }, { id: "q2", texto: "Há atendimento ao público no térreo?", dica: "ex.: não, só funcionários" }] }), "```"].join("\n") });
+      "```sseg-perguntas", JSON.stringify({ titulo: "Conferir na planta", perguntas: [{ id: "q1", texto: "O depósito é da mesma empresa?", tipo: "simnao" }, { id: "q2", texto: "Acionador a até 5 m do acesso principal?", opcoes: ["Ok", "Não"] }] }), "```"].join("\n") });
     SSEG.chat(fake.codigo, { t: "sub_ini", id: "x1", tipo: "localizador-normas", desc: "itens da RT 11 sobre largura", modelo: "claude-haiku-5-5" });
     trabalhando(ctx, true);
     document.querySelector("#t-processo details.medida").open = true;

@@ -12,6 +12,19 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/10/2026 — SSEG.exe 2.6.1 e skill ppci-analise-processo: perguntas com botão, sem pedir licença para ler
+
+Feito depois de revisar o registro das 7 análises de 16 a 19/10 (`analise.json`: 83 a 261 mil tokens; até 23 pendências numa análise, um terço repetida; perguntas sobre o que já estava na pasta).
+
+- **SSEG.exe:** o bloco `sseg-perguntas` aceita `"tipo": "simnao"` e `"opcoes"`; o clique responde e, com o bloco todo marcado, manda sozinho com "Siga.". `"titulo": "Conferir na planta"` agrupa o que é para olhar na planta. Conversa nova de processo recebe o `sseg.py resumo` junto da 1ª mensagem. "Salvar processo" lista as pendências abertas.
+- **Skill `ppci-analise-processo`** (seção "Na janela do processo"): perguntas fechadas com botão, um bloco só para a planta, não pedir licença para ler nem para marcar passo, não refazer o resumo.
+
+### Prompt para atualizar
+
+```
+Faça git pull no clone do SSEG. Mudou a skill ppci-analise-processo (seção "Na janela do processo do SSEG.exe": perguntas com botão Sim/Não, "Conferir na planta" num bloco só, não pedir licença para ler nem para marcar passo). Rode a skill sseg-sincronizar-skills para instalar a versão nova na minha conta (ou suba o .zip em claude.ai > Configurações > Capacidades > Skills > Substituir). Depois atualize o SSEG.exe pelo chip "Nova versão".
+```
+
 ## 19/10/2026 — SSEG.exe 2.6.0: Guardar memorial e Salvar processo
 
 - Janela do processo: **Guardar memorial** (`porta.py sol-congelar` → `sol_snapshot.py congelar`: `memorial N.pdf` e `licenciamento N.json`, N = análise em andamento nos Marcos) e **Salvar processo** (`sol-salvar`: baixa a CIA, grava `CIA N.pdf` sem sobrescrever, sincroniza). Só leitura do SOL; só o administrador (a sessão do SOL é dele).

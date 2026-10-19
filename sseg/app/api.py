@@ -813,7 +813,7 @@ class Api:
         for q in perguntas or []:
             t = (q.get("texto") or "").strip()
             if t and re.sub(r"\s+", " ", t).lower() not in existentes:
-                reg.pendencia(pasta, t, origem="claude")
+                reg.pendencia(pasta, t, origem="claude")   # a parecida com uma já registrada não entra (2.3.22)
                 existentes.add(re.sub(r"\s+", " ", t).lower())
 
     def processo_responder(self, codigo, pares):
@@ -940,10 +940,31 @@ class Api:
             c = chat.Conversa(self._clone(), pasta, codigo, fluxo, claude, subs, aoevento,
                               self._reg(), {"ler": self._cota_ler, "gravar": self._cota_gravar}, sol=links)
             self._conversas[chave] = c
+            c.contexto = self._contexto_pasta(pasta) if pasta and not (self._reg().ler(pasta).get("chat") or {}).get("sessao") else ""
         ev = {"t": "eu", "texto": texto, "de": de}
         self._guardar(chave, ev)
         self._emitir("chat", chave, ev)
-        c.enviar(texto)
+        extra, c.contexto = getattr(c, "contexto", ""), ""
+        c.enviar(texto + extra)
+
+    def _contexto_pasta(self, pasta):
+        """2.6.1: a conversa NOVA de um processo já recebe o `sseg.py resumo` junto da 1ª mensagem (o analista não vê).
+        Poupa a chamada do Claude para ler a pasta e as perguntas sobre o que já está nela."""
+        py = instalar.localizar().get("python")
+        script = os.path.join(self._clone(), "sseg", "scripts", "sseg.py")
+        if not py or not os.path.exists(script):
+            return ""
+        try:
+            p = subprocess.run([py, script, "resumo", "--pasta", pasta], capture_output=True, text=True, encoding="utf-8",
+                               errors="replace", timeout=60, creationflags=base.SEM_JANELA, stdin=subprocess.DEVNULL,
+                               env={**os.environ, "PYTHONUTF8": "1"})
+        except (OSError, subprocess.SubprocessError):
+            return ""
+        r = (p.stdout or "").strip()
+        if p.returncode or not r:
+            return ""
+        return ("\n\n[O programa já leu a pasta (sseg.py resumo) — não rode o resumo de novo nem pergunte o que está aqui:]\n"
+                + r[:6000])
 
     def processo_criar(self, codigo):
         """Pasta do processo na pasta dos processos (para abrir a janela de um processo novo)."""

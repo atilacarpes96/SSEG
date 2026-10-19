@@ -83,6 +83,19 @@ linhas. Tabela de medidas e lista de normas só se algo divergiu ou se o analist
 análise (CA); **deferir/indeferir** é de recurso, laudo de inviabilidade e CT — não trocar. Passo 15
 ("Atualizar a pasta") na janela: só marcar; o `arquivar` é do fluxo antigo.
 
+**Perguntas com botão (19/10/2026).** Na janela, pergunta ao analista é fechada sempre que der: no
+bloco `sseg-perguntas`, `"tipo": "simnao"` ou `"opcoes": ["Ok", "Não"]`. O analista só clica; quando
+todas têm resposta, elas chegam com "Siga." e o trabalho continua sem nova confirmação. O que é para
+olhar na planta vai **num bloco só**, `"titulo": "Conferir na planta"`, um item por linha (no
+A00022658AA002 foram 23 pendências soltas, um terço repetida).
+
+**Não pedir licença para ler (19/10/2026).** Ler a pasta, o SOL pela API, o PDF de CIA ou de norma, e
+marcar passo ou resolver pendência: fazer direto. Pergunta é só para decisão do analista ou para o que
+só a planta mostra ("Posso baixar o PDF da CIA?", "Posso marcar o passo 13?" e "Consegue mandar a
+imagem da tabela?" atrasaram as análises de 16 e 17/10). A conversa nova já começa com o `resumo` da
+pasta, mandado pelo programa junto da 1ª mensagem: não rodar de novo nem perguntar o que está nele
+(19/10: a data de protocolo foi perguntada estando nos Marcos).
+
 **Tamanho de cada resposta = tamanho da novidade.** Veredito em uma linha; tabela só quando muda alguma
 coisa; não repetir o quadro inteiro a cada turno. Nas 4 análises as respostas tiveram de 1.300 a 3.500
 caracteres por turno, a maioria repetindo o turno anterior.

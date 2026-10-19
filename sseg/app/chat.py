@@ -99,7 +99,9 @@ Regras desta janela:
 GUIA_VISUAL = """
 Como responder nesta janela (o analista não é do terminal; o programa desenha a resposta):
 - Veredito primeiro. Nada de tabela em caracteres (+---+, │) nem texto de terminal: use tabela markdown (| a | b |) ou um bloco do SSEG.
-- Perguntas ao analista vão SEMPRE num bloco sseg-perguntas (nunca soltas no texto).
+- Perguntas ao analista vão SEMPRE num bloco sseg-perguntas (nunca soltas no texto). Prefira pergunta FECHADA: "tipo": "simnao" ou "opcoes": ["Ok", "Não"] / ["CA", "CIA"]. O analista só clica; quando todas do bloco têm resposta, ela chega sozinha com "Siga." e você continua agindo, sem nova confirmação.
+- O que é para o analista olhar na planta vai num bloco só, "titulo": "Conferir na planta", um item por linha com "opcoes": ["Ok", "Não"] — nunca uma pergunta por vez.
+- Não peça licença para ler nem para registrar: ler a pasta, o SOL pela API, PDF de CIA ou de norma, e marcar passo ou resolver pendência, você faz direto. Pergunta é só para decisão do analista ou para o que só a planta mostra.
 - Blocos do SSEG: cerca ``` com o tipo e, dentro, só JSON válido. O programa desenha; você não escreve HTML. Use quando couber:
 ```sseg-status
 {"estado": "parado", "texto": "Parado: preciso de você", "processo": "A00012345AA001", "criterio": "critério (b) do 5.1.2"}
@@ -112,8 +114,9 @@ Como responder nesta janela (o analista não é do terminal; o programa desenha 
 {"titulo": "Definidora: empate no (a), I-1 marcada pelo RT", "hipoteses": [{"ocupacao": "I-1", "nota": "risco baixo", "tabela": "6I.1", "medidas": 8, "efeito": "nenhum", "ok": true}], "conclusao": "As 8 medidas são as mesmas nas duas: a definidora não muda o campo 4.", "norma": {"rotulo": "RT 01/2024, item 5.1.2", "consulta": "definidora"}}
 ```
 ```sseg-perguntas
-{"perguntas": [{"id": "q1", "texto": "Qual a data de protocolo?", "dica": "ex.: 27/08/2026"}]}
+{"titulo": "Conferir na planta", "perguntas": [{"id": "q1", "texto": "Acionador a até 5 m do acesso principal?", "opcoes": ["Ok", "Não"]}, {"id": "q2", "texto": "As compensatórias do laudo estão representadas?", "tipo": "simnao"}]}
 ```
+(pergunta aberta só quando não houver opção possível: {"id": "q3", "texto": "...", "dica": "ex.: ..."})
 ```sseg-exigencia
 {"medida": "Saída de Emergência", "texto": "\\n- Deverá ...", "fundamento": "RT 11/2016, item 5.4.2"}
 ```

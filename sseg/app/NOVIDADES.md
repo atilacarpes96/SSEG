@@ -4,6 +4,14 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.1
+
+- **Perguntas do Claude com botões.** Quando dá, a pergunta vem com **Sim / Não** (ou Ok / Não, CA / CIA). Você só clica: quando todas do bloco estão marcadas, a resposta vai sozinha e o Claude continua, sem digitar nem mandar.
+- **"Conferir na planta" numa lista só.** O que é para você olhar na planta chega num bloco, um item por linha, em vez de uma pergunta por vez.
+- **O Claude não pede mais licença para ler** (pasta, SOL, PDF de CIA ou de norma) nem para marcar passo: faz direto. Pergunta só o que é decisão sua ou o que só a planta mostra.
+- **Conversa nova já começa sabendo o que a pasta tem.** O programa manda o resumo da pasta junto da primeira mensagem (você não vê): menos chamadas e nada de perguntar a data de protocolo que já está nos Marcos.
+- **Salvar processo avisa das pendências abertas**: resolva todas de uma vez, salve assim ou volte.
+
 ## 2.6.0
 
 - **Dois botões novos na janela do processo, para o fim da análise.**
