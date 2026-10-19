@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.5.4
+
+- **Botão "Refazer pré-análise" na janela do processo.** Roda o script de pré-análise agora, neste PC, sem Claude (menos de um segundo) e atualiza a tela.
+  Serve depois de pôr arquivos na pasta ou quando o aviso diz que o JSON do SOL mudou. Quando o processo ainda não tem pré-análise, o botão a cria.
+
 ## 2.5.3
 
 - **Atualizar lê a caixa mesmo quando o programa ainda não sabe que você é administrador.** Antes, num PC onde o "Testar conexão" não tinha rodado,

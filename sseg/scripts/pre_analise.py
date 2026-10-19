@@ -21,6 +21,7 @@ USO
 ---
   python3 sseg/scripts/pre_analise.py                 # todos os processos da caixa (.caixa/caixa.json)
   python3 sseg/scripts/pre_analise.py A00024749AA002  # só estes
+  python3 sseg/scripts/pre_analise.py A00024749AA002 --forcar --pasta <pasta dos processos>  # refaz já (botão do SSEG.exe)
 """
 
 import argparse
@@ -306,8 +307,11 @@ if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("codigos", nargs="*", help="processos (padrão: os da caixa)")
-    ap.add_argument("--forcar", action="store_true")
+    ap.add_argument("--forcar", action="store_true", help="refaz mesmo se pre-analise.txt estiver em dia")
+    ap.add_argument("--pasta", help="pasta dos processos (padrão: sseg/processos do clone); o SSEG.exe passa a dele")
     a = ap.parse_args()
+    if a.pasta:
+        PROCESSOS = os.path.abspath(a.pasta)
     cods = a.codigos or da_caixa()
     if not cods:
         print("Nenhum processo: caixa vazia ou ainda não lida (sol_caixa.py).")

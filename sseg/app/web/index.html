@@ -2336,16 +2336,21 @@ function pintarChecklist() {
   out.push(pend);
   // pré-análise documental (2.3.8): o que o script já leu, para não refazer
   const auto = d.auto || {};
+  const refazerPre = el("button", { class: "bt link", title: "Roda o script de novo agora (sem Claude): use depois de pôr arquivos na pasta ou de o SOL mudar",
+    on: { click: async ev => { const b = ev.currentTarget; await api("processo_pre_analise", [PR.codigo], b); renderProcesso(await api("processo_abrir", [PR.codigo])); avisar("✓ Pré-análise refeita."); } } }, "Refazer pré-análise");
+  if (!d.pre_analise && d.json_sol) out.push(el("div", { class: "bloco" }, el("b", {}, "Pré-análise documental (script)"),
+    el("p", { class: "sub" }, "Ainda não feita para este processo."), refazerPre));
   if (d.pre_analise) {
     const pa = d.pre_analise, cor = l => l.startsWith("XX") ? "var(--verm)" : l.startsWith("!!") ? "var(--creme-txt)" : "var(--suave)";
     const mandar = () => { fechar(); chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto);
       api("processo_marcar", [PR.codigo, "marcas", "pre_analise", pa.data]).then(recarregarRegistro); };
     const conteudo = [
-      pa.velha ? el("p", { class: "sub", style: "color:var(--verm)" }, "O JSON do SOL mudou depois da pré-análise: rodar de novo (pre_analise.py).") : null,
+      pa.velha ? el("p", { class: "sub", style: "color:var(--verm)" }, "O JSON do SOL mudou depois da pré-análise: clique em Refazer pré-análise.") : null,
       pa.marcas.length ? el("div", { class: "pre-marcas" }, ...pa.marcas.map(l => el("div", { style: "color:" + cor(l) }, l)))
         : el("p", { class: "sub" }, "Nenhum ponto marcado."),
       el("button", { class: "bt link", on: { click: () => modal("Pré-análise documental", "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
-        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", mandar], ["Fechar", fechar]]) } }, "ver tudo")];
+        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", mandar], ["Fechar", fechar]]) } }, "ver tudo"),
+      refazerPre];
     // já mandada ao Claude (2.3.16): encolhe numa linha; pré-análise refeita (data nova) volta aberta
     if ((r.marcas || {}).pre_analise === pa.data)
       out.push(el("details", { class: "bloco discreto" }, el("summary", {}, el("b", {}, "Pré-análise documental (script)"),

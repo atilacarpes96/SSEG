@@ -442,6 +442,25 @@ class Api:
         out.sort(key=lambda x: -x["quando"])
         return out  # todos: os cards contam tudo; a tabela mostra os 30 primeiros sem filtro
 
+    def processo_pre_analise(self, codigo):
+        """Refaz a pré-análise documental deste processo agora, pelo script (sem Claude, uns segundos)."""
+        pasta = self._pasta_proc(codigo)
+        cfg = self._cfg()
+        py = instalar.localizar().get("python")
+        script = os.path.join(cfg["clone"], "sseg", "scripts", "pre_analise.py")
+        if not py or not os.path.exists(script):
+            raise RuntimeError("Falta o Python ou o SSEG nesta pasta (Configuração).")
+        if not os.path.isdir(pasta):
+            raise RuntimeError("Não há pasta %s na pasta dos processos." % codigo)
+        p = subprocess.run([py, script, codigo, "--forcar", "--pasta", cfg["processos"]], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=300, creationflags=base.SEM_JANELA,
+                           stdin=subprocess.DEVNULL, env={**os.environ, "PYTHONUTF8": "1"})
+        saida = (p.stdout or "").strip()
+        if p.returncode or " erro " in saida or "sem-json" in saida:
+            raise RuntimeError((saida or p.stderr or "a pré-análise não rodou").strip()[-400:])
+        self._log("Pré-análise refeita: " + saida)
+        return saida
+
     def processo_situacao(self, codigo, campos):
         """Janela do processo: distribuído, concluído, resultado e CT à mão (quando a planilha não tem)."""
         livres = {k: v for k, v in (campos or {}).items() if k in ("distribuido", "concluido", "resultado", "ct")}

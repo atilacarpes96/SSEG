@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/10/2026 — SSEG.exe 2.5.4: botão Refazer pré-análise
+
+- Janela do processo: **Refazer pré-análise** chama `pre_analise.py <código> --forcar --pasta <pasta dos processos>` (script novo `--pasta`). Sem modelo.
+- A pré-análise lê `api-*.json`, `anterior-api-*.json`, `marcos-resumo.json` e `cia-ultima.txt`. Arquivo solto na pasta (PDF, planta) não entra nela.
+
+### Prompt para atualizar
+
+```
+Faça git pull no clone do SSEG. Só código do SSEG.exe e do pre_analise.py mudou: nenhuma skill nem as Instruções.
+```
+
 ## 19/10/2026 — SSEG.exe 2.5.3: Atualizar relê a caixa sem depender do "Testar conexão"
 
 - O botão Atualizar decidia "sou administrador?" pelo último "Testar conexão"; sem ele, pulava a leitura da caixa. Agora pede ao servidor, que recusa quem não é admin.
