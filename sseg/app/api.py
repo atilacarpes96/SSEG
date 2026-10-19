@@ -562,6 +562,34 @@ class Api:
         self._log("Pré-análise refeita: " + saida)
         return saida
 
+    def processo_congelar(self, codigo, refazer=False):
+        """Guarda o memorial como está no SOL agora (memorial N.pdf e licenciamento N.json), no servidor, e traz para este PC.
+        Só lê o SOL. Fazer antes de lançar a CIA: depois que o RT corrige, o memorial do SOL já é outro."""
+        self._pasta_proc(codigo)
+        r = acesso.chamar_json("sol-congelar", codigo, *(["--refazer"] if refazer else []), timeout=300)
+        if r.get("ok"):
+            self._trazer_processo()
+        self._log("Memorial congelado %s: %s" % (codigo, ", ".join(r.get("arquivos") or []) or "; ".join(r.get("avisos") or [])))
+        return r
+
+    def processo_salvar(self, codigo):
+        """Depois de emitir a CIA no SOL: baixa a CIA (CIA N.pdf), confere o memorial congelado e sincroniza tudo com o
+        servidor e com a pasta dos prints deste PC."""
+        self._pasta_proc(codigo)
+        r = acesso.chamar_json("sol-salvar", codigo, timeout=300)
+        if r.get("ok"):
+            try:
+                self._trazer_processo()
+                self.servidor_aplicar({})
+            except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
+                r.setdefault("avisos", []).append("sincronização: " + str(e)[:200])
+        self._log("Processo salvo %s: %s" % (codigo, ", ".join(r.get("arquivos") or []) or "; ".join(r.get("avisos") or [])))
+        return r
+
+    def _trazer_processo(self):
+        """Desce do servidor o que ele tem de mais novo (não sobe nada)."""
+        return self._sseg_py("trazer")
+
     def processo_situacao(self, codigo, campos):
         """Janela do processo: distribuído, concluído, resultado e CT à mão (quando a planilha não tem)."""
         livres = {k: v for k, v in (campos or {}).items() if k in ("distribuido", "concluido", "resultado", "ct")}

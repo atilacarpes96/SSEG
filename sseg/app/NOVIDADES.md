@@ -4,6 +4,13 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.0
+
+- **Dois botões novos na janela do processo, para o fim da análise.**
+  - **Guardar memorial** (antes de lançar a CIA): guarda o memorial como está no SOL agora (`memorial N.pdf`) e o JSON do licenciamento no mesmo instante (`licenciamento N.json`), no servidor e neste PC. É o que vai servir de comparação quando o RT entregar o projeto corrigido. Só lê o SOL.
+  - **Salvar processo** (depois de emitir a CIA no SOL): baixa a CIA (`CIA N.pdf`), avisa se não há memorial guardado daquela análise e sincroniza com o servidor e com a pasta dos prints. Nunca sobrescreve uma CIA que você já guardou.
+- Falta ainda o botão de **lançar a notificação no SOL** (preencher e parar antes de emitir): vem em outra versão.
+
 ## 2.5.7
 
 - **Chat não sai mais com "O Claude Code saiu (código 1)".** Um processo analisado em outro PC guarda uma conversa que não existe neste;

@@ -317,6 +317,27 @@ def main():
         caso("app: processo que saiu da caixa vira concluído com o resultado dos Marcos; análise velha não conta; na caixa fica",
              ficou == "caixa" and (e1["estado"], e1["resultado"], e1["concluido"], e1["dias"]) == ("concluido", "CA", "2026-10-19", 9)
              and (e2["estado"], e2["resultado"]) == ("concluido", ""), str((ficou, e1, e2)))
+    # 11b4. memorial e CIA congelados (2.6.0): nomes dentro da lista do enviar, código validado, só admin
+    import sol_snapshot as _snap
+    import enviar as _env
+    erros = []
+    for c in ("../x", "A123", ""):
+        try:
+            _snap._pasta(c)
+        except ValueError:
+            erros.append(1)
+    caso("snapshot: nomes memorial N.pdf, licenciamento N.json e CIA N.pdf sobem ao servidor; código estranho é barrado",
+         _env.selecionar(["memorial 4.pdf", "licenciamento 4.json", "CIA 4.pdf", "R00-planta.pdf"]) ==
+         (["CIA 4.pdf", "licenciamento 4.json", "memorial 4.pdf"], ["R00-planta.pdf"]) and len(erros) == 3,
+         str((_env.selecionar(["memorial 4.pdf", "licenciamento 4.json", "CIA 4.pdf"]), erros)))
+    adm5 = pt.Porta(None, raiz=tempfile.gettempdir(), acesso=os.devnull, chaves=os.devnull)
+    adm5.admin = False
+    try:
+        adm5.sol_snapshot("congelar", "A00000001AA001")
+        barrou = False
+    except SystemExit:
+        barrou = True
+    caso("porta: sol-congelar e sol-salvar são só do administrador", barrou)
     # 11c. pedido de acesso (2.2.1): mensagem pronta para o servidor 24/7; o "Liberar acesso" lê a mensagem inteira
     sys.path.insert(0, os.path.join(AQUI, "..", "app"))
     import acesso as _ac

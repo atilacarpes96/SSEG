@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/10/2026 — SSEG.exe 2.6.0: Guardar memorial e Salvar processo
+
+- Janela do processo: **Guardar memorial** (`porta.py sol-congelar` → `sol_snapshot.py congelar`: `memorial N.pdf` e `licenciamento N.json`, N = análise em andamento nos Marcos) e **Salvar processo** (`sol-salvar`: baixa a CIA, grava `CIA N.pdf` sem sobrescrever, sincroniza). Só leitura do SOL; só o administrador (a sessão do SOL é dele).
+- Os nomes já estavam na lista do `enviar.py`: sobem ao servidor e descem ao PC. As plantas (R00-….pdf) continuam fora.
+
+### Prompt para atualizar
+
+```
+Faça git pull no clone do SSEG (e no clone do servidor, se houver). Só código do SSEG.exe e dos scripts do servidor mudou: nenhuma skill nem as Instruções.
+```
+
 ## 19/10/2026 — SSEG.exe 2.5.6: de hora em hora só traz; envia quando um processo termina
 
 - Rodada horária: `git_sinc.trazer` (pull --ff-only) e `sseg.py trazer` (só desce do servidor). Envio (commit pelas travas + push, e `servidor_aplicar`) só quando `processos()` vê um código novo em "concluído" (referência em `concluidos-vistos.json`, ao lado do config). Desliga com `"auto_sinc": false`.
