@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/10/2026 — SSEG.exe 2.6.2: janelas do programa usam a skill do clone, não a da conta
+
+- `chat.py`: a janela do processo passa a apontar `sseg/skills/ppci-analise-processo/SKILL.md`; as janelas de fluxo, o SKILL.md do clone. As duas proíbem as skills da conta (`anthropic-skills:ppci-*` etc.), que só mudam com o upload do .zip.
+- Consequência: dentro do SSEG.exe, skill nova vale na próxima rodada de hora em hora, sem upload. O .zip na conta continua só para o claude.ai (site, app, Cowork).
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 19/10/2026 — SSEG.exe 2.6.1 e skill ppci-analise-processo: perguntas com botão, sem pedir licença para ler
 
 Feito depois de revisar o registro das 7 análises de 16 a 19/10 (`analise.json`: 83 a 261 mil tokens; até 23 pendências numa análise, um terço repetida; perguntas sobre o que já estava na pasta).

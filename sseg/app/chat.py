@@ -53,6 +53,7 @@ INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe 
 
 Regras desta janela:
 - Abrir a janela não é pedido. Faça só o que o analista pedir em cada mensagem; não rode o fluxo inteiro sozinho.
+- Skill desta janela: leia e siga `sseg/skills/ppci-analise-processo/SKILL.md` do clone (é a versão do GitHub). Nunca use as skills da conta (anthropic-skills:ppci-*, sol-cbmrs-navegador etc.): podem estar velhas. Vale para toda skill citada: sempre o arquivo em sseg/skills/<nome>/SKILL.md.
 - Comandos prontos (não precisa de --help):
   - tudo o que a pasta já tem (cadastro do SOL, Marcos, CIAs em texto, CT, recurso): `python sseg/scripts/sseg.py resumo --pasta "{pasta}"`
   - conferências: `python sseg/scripts/sseg.py check --json "{pasta}\\pre-analise.json"` (também: tabela, definidora, normas, travas)
@@ -136,8 +137,10 @@ def _pasta_paginas():
 
 
 def instrucoes_fluxo(fluxo):
-    skill = ("\n- Quando o pedido for deste tipo de trabalho, siga a skill %s (sseg/skills/%s/SKILL.md)."
-             % (fluxo["skill"], fluxo["skill"])) if fluxo.get("skill") else ""
+    skill = ("\n- Quando o pedido for deste tipo de trabalho, leia e siga sseg/skills/%s/SKILL.md do clone (a versão do GitHub)."
+             % fluxo["skill"]) if fluxo.get("skill") else ""
+    skill += ("\n- Skills: sempre o arquivo em sseg/skills/<nome>/SKILL.md. Nunca as skills da conta (anthropic-skills:ppci-*, "
+              "sol-cbmrs-navegador etc.): podem estar velhas.")
     return INSTRUCOES_FLUXO.format(titulo=fluxo["titulo"], skill=skill) + GUIA_VISUAL
 
 

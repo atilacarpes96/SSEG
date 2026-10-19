@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.2
+
+- **Dentro do programa, a skill é sempre a do GitHub.** As janelas do processo e dos fluxos mandam o Claude ler a skill no clone (que se atualiza sozinho), nunca a cópia instalada na sua conta. Para quem só usa o SSEG.exe, skill nova não precisa mais de upload do .zip; ele continua valendo só para o Claude pelo site, app ou Cowork.
+
 ## 2.6.1
 
 - **Perguntas do Claude com botões.** Quando dá, a pergunta vem com **Sim / Não** (ou Ok / Não, CA / CIA). Você só clica: quando todas do bloco estão marcadas, a resposta vai sozinha e o Claude continua, sem digitar nem mandar.
