@@ -4,7 +4,7 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
-## (próxima)
+## 2.5.0
 
 - **Login do SOL pelo programa.** Em Configuração há um campo novo, "Login do SOL": você digita a matrícula e a senha uma vez e o
   programa grava nos dois lugares (neste PC, no cofre do Windows, e no servidor, para ele entrar sozinho quando a sessão cair).
