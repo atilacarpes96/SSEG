@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.5.7
+
+- **Chat não sai mais com "O Claude Code saiu (código 1)".** Um processo analisado em outro PC guarda uma conversa que não existe neste;
+  o chat tentava retomá-la a cada mensagem e falhava, sem ajuda do "tenta de novo". Agora avisa e começa uma conversa nova
+  (análise, pendências e passos salvos continuam; só a memória da conversa antiga não vem).
+
 ## 2.5.6
 
 - **De hora em hora o programa só traz; o envio é quando um processo termina.** A rodada horária traz as atualizações do GitHub e os arquivos novos do servidor.
@@ -50,7 +56,6 @@ analista: o que muda na tela e no dia a dia, sem nome de função.
   - o que depende de você (entrar no Claude, escolher seu nome, ligar a depuração do Chrome, servidor) aparece um de cada vez, com a instrução, e a tela avança sozinha quando você termina.
 - **Node.js entra na instalação.** Antes ficava de fora e travava o "Chrome para o Claude"; agora é instalado e o `npx` já funciona sem reabrir o programa.
 - **"SOL no servidor" sem conexão.** Quando o PC ainda não foi autorizado no servidor, a janela diz "Sem conexão com o servidor" em vez de "sem senha gravada".
-- **Chat que saía com \"Claude Code saiu (código 1)\".** Processo analisado em outro PC guarda uma conversa que não existe neste; o chat tentava retomá-la a cada mensagem e falhava. Agora avisa e começa uma conversa nova (análise, pendências e passos salvos continuam).
 
 ## 2.4.0
 
