@@ -57,6 +57,17 @@ def gravar():
     if getpass.getpass("Repita a senha: ") != senha:
         print("Nada gravado: as senhas não conferem.")
         return 1
+    salvar(matricula, senha)
+    print("Gravado (matrícula %s). O sol_caixa.py entra sozinho quando a sessão cair." % matricula)
+    return 0
+
+
+def salvar(matricula, senha):
+    """Grava matrícula e senha (600) e solta a trava de falha. Quem chama é o `gravar` do terminal ou a
+    porta.py (ação sol-senha-gravar, só admin, com o SSEG.exe mandando pela entrada padrão do SSH)."""
+    matricula, senha = str(matricula or "").strip(), str(senha or "")
+    if not matricula or not senha:
+        raise ValueError("matrícula e senha são obrigatórias")
     os.makedirs(PASTA, mode=0o700, exist_ok=True)
     tmp = ARQUIVO + ".tmp"
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
@@ -65,9 +76,6 @@ def gravar():
     os.replace(tmp, ARQUIVO)
     if os.path.exists(TRAVA):
         os.remove(TRAVA)
-        print("Trava de falha apagada.")
-    print("Gravado (matrícula %s). O sol_caixa.py entra sozinho quando a sessão cair." % matricula)
-    return 0
 
 
 def estado():
@@ -79,10 +87,14 @@ def estado():
     return 0
 
 
-def apagar():
+def remover():
     for arq in (ARQUIVO, TRAVA):
         if os.path.exists(arq):
             os.remove(arq)
+
+
+def apagar():
+    remover()
     print("Senha apagada. O login automático fica desligado.")
     return 0
 

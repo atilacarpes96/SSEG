@@ -6,6 +6,11 @@ analista: o que muda na tela e no dia a dia, sem nome de função.
 
 ## (próxima)
 
+- **Login do SOL pelo programa.** Em Configuração há um campo novo, "Login do SOL": você digita a matrícula e a senha uma vez e o
+  programa grava nos dois lugares (neste PC, no cofre do Windows, e no servidor, para ele entrar sozinho quando a sessão cair).
+  Também dá para trocar e apagar ali. A senha não passa pelo chat nem pelo GitHub.
+- **Segundo computador do administrador.** No PC novo, "Pedir acesso" com o seu nome; no PC principal, "Liberar acesso" com o código.
+  Antes o servidor recusava o nome do administrador.
 - Saiu o ponto vermelho ao lado do nome SSEG no topo.
 - **Instalação guiada, passo a passo.** A tela Instalação mostra uma barra de progresso e o passo de agora em destaque:
   - o programa faz sozinho o que dá (programa, Git, Python, Poppler, Node.js, Claude Code, pastas e a ligação do Chrome ao Claude), em sequência, com um clique;

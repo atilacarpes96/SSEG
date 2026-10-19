@@ -877,6 +877,51 @@ class Api:
         """O SOL no servidor (2.3.17): logado até quando, senha gravada, trava, última leitura da caixa."""
         return acesso.chamar_json("sol")
 
+    def servidor_sol_senha(self):
+        """Login do SOL (2.5.0): a matrícula guardada neste PC (cofre do Windows) e o que o servidor diz."""
+        import cofre
+        r = {"pc": cofre.matricula(), "cofre": cofre.disponivel(), "servidor": None, "trava": "", "ultimo_login": ""}
+        try:
+            s = acesso.chamar_json("sol")
+            r.update(servidor=bool(s.get("senha")), trava=s.get("trava") or "", ultimo_login=s.get("ultimo_login") or "")
+        except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
+            r["erro"] = str(e)
+        return r
+
+    def servidor_sol_gravar(self, matricula, senha):
+        """Grava a matrícula e a senha do SOL nos dois lugares: no servidor (ação sol-senha-gravar, só admin, pela
+        entrada padrão do SSH) e neste PC (cofre do Windows). A senha não entra em log nem em mensagem de erro."""
+        import cofre
+        matricula, senha = (matricula or "").strip(), senha or ""
+        if not matricula or not senha:
+            raise RuntimeError("Preencha a matrícula e a senha.")
+        r = {"servidor": False, "pc": False, "motivo": ""}
+        try:
+            acesso.chamar_json("sol-senha-gravar", entrada=json.dumps({"matricula": matricula, "senha": senha}).encode("utf-8"))
+            r["servidor"] = True
+        except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
+            r["motivo"] = "Servidor: " + ("só o administrador grava a senha no servidor." if "administrador" in str(e) else str(e).replace(senha, "***"))
+        try:
+            r["pc"] = cofre.gravar(matricula, senha)
+            if not r["pc"]:
+                r["motivo"] = (r["motivo"] + " " if r["motivo"] else "") + "Este PC não é Windows: a cópia local não foi gravada."
+        except RuntimeError as e:
+            r["motivo"] = (r["motivo"] + " " if r["motivo"] else "") + str(e)
+        self._log("Login do SOL (matrícula %s): %s%s." % (matricula, "servidor" if r["servidor"] else "sem servidor",
+                                                          " + este PC" if r["pc"] else ""))
+        return r
+
+    def servidor_sol_apagar(self):
+        import cofre
+        r = {"servidor": False, "pc": cofre.apagar()}
+        try:
+            acesso.chamar_json("sol-senha-apagar")
+            r["servidor"] = True
+        except (RuntimeError, ValueError, OSError, subprocess.SubprocessError):
+            pass
+        self._log("Login do SOL apagado%s." % (" do servidor" if r["servidor"] else ""))
+        return r
+
     def base_sol(self, forcar=False):
         """Aba Processos (2.3.18): o índice de todos os processos do SOL que o servidor coleta (sol_base.py).
         Guardado ao lado da config; de 20 em 20 min (ou `forcar`) pergunta ao servidor se mudou. Sem servidor,

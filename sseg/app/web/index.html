@@ -758,9 +758,23 @@ footer { color: var(--suave); }
         <div id="srv-admin" hidden style="margin-top:14px">
           <b>Analistas com acesso</b> <span class="sub">(você é o administrador)</span>
           <div id="srv-lista" class="lista" style="margin:6px 0 10px"></div>
-          <label class="campo" for="srv-codigo">Pedido de acesso recebido (a mensagem inteira, ou só a linha SSEG-ACESSO|…)</label>
+          <label class="campo" for="srv-codigo">Pedido de acesso recebido (a mensagem inteira, ou só a linha SSEG-ACESSO|…). Outro PC seu: peça o acesso nele com o seu próprio nome e cole aqui.</label>
           <textarea id="srv-codigo" rows="3" placeholder="Cole aqui o que o analista mandou"></textarea>
           <div class="linha-bts" style="margin-top:8px"><button class="bt p" id="b-srv-liberar">Liberar acesso</button></div>
+        </div>
+      </div>
+      <h2>Login do SOL</h2>
+      <div class="cartao">
+        <p class="sub" style="margin:0 0 10px">Matrícula e senha do SOL, gravadas uma vez: neste PC (cofre do Windows) e no servidor, para ele entrar sozinho quando a sessão cair.
+          A senha só passa por este campo e pelo SSH; não vai para o chat, o Git nem o log.</p>
+        <p id="sol-estado" class="sub" style="margin:0 0 8px">…</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <input type="text" id="sol-mat" placeholder="Matrícula" autocomplete="off" style="max-width:180px">
+          <input type="password" id="sol-senha" placeholder="Senha do SOL" autocomplete="new-password" style="max-width:220px">
+        </div>
+        <div class="linha-bts">
+          <button class="bt p" id="b-sol-gravar">Gravar</button>
+          <button class="bt link" id="b-sol-apagar">Apagar</button>
         </div>
       </div>
       <h2 class="so-pc">Usar pelo celular</h2>
@@ -937,7 +951,7 @@ function ir(tela) {
   document.querySelector("main").classList.toggle("processo", tela === "processo" || tela === "conversa");
   document.querySelectorAll(".tela").forEach(t => t.classList.toggle("ativa", t.id === "t-" + tela));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
-  if (tela === "config") { carregarConfig(); estadoEspelho(); conferirChrome().catch(() => {}); carregarAcesso(false); }
+  if (tela === "config") { carregarConfig(); estadoEspelho(); conferirChrome().catch(() => {}); carregarAcesso(false); pintarSolSenha(); }
   if (tela === "inicio") carregarProcessos();
   if (tela === "quadro") carregarQuadro();
   if (tela === "todos") carregarTodos();
@@ -1109,6 +1123,26 @@ $("#b-srv-liberar").onclick = async ev => {
     }, true], ["Cancelar", fechar]]);
 };
 
+// ---- login do SOL (2.5.0): matrícula e senha nos dois lugares, por este campo
+async function pintarSolSenha() {
+  let r;
+  try { r = await api("servidor_sol_senha"); } catch (e) { return; }
+  const pc = r.pc ? "este PC: matrícula " + r.pc : r.cofre ? "este PC: nada gravado" : "este PC: sem cofre (não é Windows)";
+  const srv = r.servidor === null ? "servidor: sem conexão" : r.servidor ? "servidor: gravada" + (r.trava ? " — TRAVADA (" + r.trava + "); grave de novo para soltar" : "") + (r.ultimo_login ? " · último login automático " + r.ultimo_login : "") : "servidor: nada gravado";
+  $("#sol-estado").textContent = "Gravado em " + pc + " · " + srv + ".";
+  if (r.pc && !$("#sol-mat").value) $("#sol-mat").value = r.pc;
+}
+$("#b-sol-gravar").onclick = async ev => {
+  const senha = $("#sol-senha");
+  const r = await api("servidor_sol_gravar", [$("#sol-mat").value, senha.value], ev.currentTarget);
+  senha.value = "";
+  pintarSolSenha(); estadoSol();
+  const onde = [r.servidor && "servidor", r.pc && "este PC"].filter(Boolean).join(" e ");
+  avisar(onde ? "✓ Login do SOL gravado: " + onde + "." + (r.motivo ? " " + r.motivo : "") : "✗ " + (r.motivo || "não gravou"), !onde);
+};
+$("#b-sol-apagar").onclick = () => modal("Apagar o login do SOL", "Remove a matrícula e a senha deste PC e do servidor. O servidor deixa de entrar sozinho.", [],
+  [["Apagar", async b => { await api("servidor_sol_apagar", [], b); $("#sol-mat").value = ""; fechar(); pintarSolSenha(); estadoSol(); avisar("✓ Login do SOL apagado."); }, true], ["Cancelar", fechar]]);
+
 // ---- barra de estado
 // Mouse em cima (2.3.17): primeiro o que o chip é, depois o estado de agora. Quem atualiza o chip grava
 // só o estado no title; o observador põe a explicação na frente.
@@ -1184,7 +1218,7 @@ async function estadoSol() {
     const s = SOL_SRV = await window.pywebview.api.servidor_sol();
     const caixa = s.caixa_lida_em ? "Caixa lida em " + dataCaixa(s.caixa_lida_em) + (s.caixa_total != null ? " (" + s.caixa_total + " processos)" : "") : "";
     if (!s.chrome) { chip("#e-sol", "alerta", "SOL: Chrome fora"); c.title = "O Chrome do servidor não respondeu (~/rotinas/sol-chrome.sh iniciar).\n" + caixa; return; }
-    if (s.trava) { chip("#e-sol", "alerta", "SOL: login travado"); c.title = "O login automático falhou e parou: " + s.trava + "\nEntre pelo celular (VNC) e grave a senha de novo (sol_senha.py gravar).\n" + caixa; return; }
+    if (s.trava) { chip("#e-sol", "alerta", "SOL: login travado"); c.title = "O login automático falhou e parou: " + s.trava + "\nGrave a senha de novo em Configuração → Login do SOL.\n" + caixa; return; }
     if (s.logado) { chip("#e-sol", "ok", "SOL"); c.title = "Servidor logado no SOL até " + hm(s.exp) + ".\n" + caixa + "\nClique para ler a caixa agora."; return; }
     chip("#e-sol", "pendente", "SOL: caído");
     c.title = (s.senha ? "Sessão caída: o login automático entra na próxima leitura (ou clique para ler agora)."

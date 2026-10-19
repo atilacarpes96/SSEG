@@ -36,7 +36,11 @@ AÇÕES
   sol-caixa                     (admin)   → roda a leitura da caixa agora (sol_caixa.py, com o login
                                             automático se a sessão caiu) → {"rc", "saida"}
   analistas                     (admin)   → lista dos cadastrados
-  autorizar                     (admin)   → stdin {"analista", "chave"}: cadastra e libera a chave
+  autorizar                     (admin)   → stdin {"analista", "chave"}: cadastra e libera a chave; com o
+                                            nome do próprio admin, a chave entra como OUTRO PC dele (admin-chave)
+  admin-chave                   (admin)   → stdin {"chave", "rotulo"}: mais um PC do administrador (sem restrição)
+  sol-senha-gravar              (admin)   → stdin {"matricula", "senha"}: grava o login do SOL do servidor
+  sol-senha-apagar              (admin)   → remove a senha do SOL do servidor
   revogar <nome>                (admin)   → tira a chave e o cadastro
   atribuir <código> <nome>      (admin)   → muda o responsável de um processo fora da planilha
 """
@@ -352,7 +356,7 @@ class Porta:
         if not CHAVE_OK.match(chave):
             raise SystemExit("chave pública inválida")
         if norm(nome) == norm(self.acesso["admin"]):
-            raise SystemExit("esse é o administrador: ele já entra com a chave dele")
+            return self.admin_chave({"chave": chave, "rotulo": pedido.get("rotulo") or "pc"})
         for n, a in self.acesso["analistas"].items():
             if a["chave"] == chave and norm(n) != norm(nome):
                 raise SystemExit("essa chave já é de %s" % n)
@@ -361,6 +365,47 @@ class Porta:
         _gravar_json(self.arq_acesso, self.acesso)
         _reescrever_chaves(self.acesso, self.arq_chaves, script)
         return {"ok": True, "analista": nome}
+
+    def admin_chave(self, pedido):
+        """Mais um PC do administrador: a chave entra no authorized_keys SEM restrição (como a primeira dele).
+        Fica fora do cadastro dos analistas e sobrevive ao _reescrever_chaves (que só mexe nas linhas com MARCA)."""
+        self._so_admin()
+        chave = " ".join((pedido.get("chave") or "").split()[:2])
+        rotulo = re.sub(r"[^\w.-]", "-", str(pedido.get("rotulo") or "pc"))[:30] or "pc"
+        if not CHAVE_OK.match(chave):
+            raise SystemExit("chave pública inválida")
+        try:
+            velhas = open(self.arq_chaves, encoding="utf-8").read().splitlines()
+        except OSError:
+            velhas = []
+        corpo = chave.split()[1]
+        if any(corpo in l for l in velhas):
+            return {"ok": True, "ja_estava": True}
+        os.makedirs(os.path.dirname(self.arq_chaves), exist_ok=True)
+        if os.path.exists(self.arq_chaves):
+            import shutil
+            shutil.copy2(self.arq_chaves, self.arq_chaves + ".bak-porta")
+        tmp = self.arq_chaves + ".porta-tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(velhas + ["%s sseg-admin-%s" % (chave, rotulo)]) + "\n")
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, self.arq_chaves)
+        return {"ok": True, "ja_estava": False}
+
+    def sol_senha_gravar(self, d):
+        self._so_admin()
+        import sol_senha
+        try:
+            sol_senha.salvar(d.get("matricula"), d.get("senha"))
+        except ValueError as e:
+            raise SystemExit(str(e))
+        return {"ok": True, "matricula": str(d.get("matricula")).strip()}
+
+    def sol_senha_apagar(self):
+        self._so_admin()
+        import sol_senha
+        sol_senha.remover()
+        return {"ok": True}
 
     def revogar(self, nome, script):
         self._so_admin()
@@ -419,6 +464,12 @@ def executar(porta, args, entrada, script):
         r = porta.analistas()
     elif acao == "autorizar":
         r = porta.autorizar(json.loads(entrada() or b"{}"), script)
+    elif acao == "admin-chave":
+        r = porta.admin_chave(json.loads(entrada() or b"{}"))
+    elif acao == "sol-senha-gravar":
+        r = porta.sol_senha_gravar(json.loads(entrada() or b"{}"))
+    elif acao == "sol-senha-apagar":
+        r = porta.sol_senha_apagar()
     elif acao == "revogar" and resto:
         r = porta.revogar(" ".join(resto), script)
     elif acao == "atribuir" and len(resto) >= 2:

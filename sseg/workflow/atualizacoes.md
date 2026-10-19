@@ -12,6 +12,25 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/10/2026 — SSEG.exe: campo "Login do SOL" e segundo PC do administrador em um clique
+
+- **Configuração → Login do SOL:** matrícula e senha digitadas uma vez no programa. O Gravar manda ao servidor
+  (`porta.py sol-senha-gravar`, só admin, pela entrada padrão do SSH, arquivo 600, solta a trava) e guarda a cópia
+  deste PC no Gerenciador de Credenciais do Windows (`app/cofre.py`). Apagar remove dos dois. A senha não vai para
+  log, chat nem Git.
+- **Segundo PC do administrador:** no PC novo, "Pedir acesso" com o nome do próprio administrador; no PC dele, "Liberar
+  acesso" com o código. O `porta.py autorizar` com o nome do admin não recusa mais: acrescenta a chave como outro PC
+  dele (`admin-chave`, sem restrição, uma vez só, sobrevive ao regravar das chaves de analista).
+- **Scripts:** `porta.py` (ações `admin-chave`, `sol-senha-gravar`, `sol-senha-apagar`), `sol_senha.py` (`salvar`, `remover`).
+
+### Prompt para atualizar
+
+```
+Faça git pull no clone do SSEG. Mudou só código do SSEG.exe e dos scripts do servidor (nenhuma skill nem as
+Instruções). Se o servidor tiver clone próprio, rode git pull lá também. Depois, em Configuração → Login do SOL,
+grave a matrícula e a senha (eu digito).
+```
+
 ## 17/10/2026 — SSEG.exe 2.3.22 e skill ppci-analise-processo: menos pergunta, menos trava, reanálise focada
 
 Feito depois de ler as conversas das 4 análises de 16 e 17/10 (guardadas no servidor, fora do Git).

@@ -251,6 +251,57 @@ def main():
              and pt.pedido(["--analista", "Sgt Fulano"], "bash -i") == ("Sgt Fulano", [])
              and pt.pedido(["listar"]) == (None, ["listar"])
              and json.loads(pt.executar(adm, ["remoto-listar"], lambda: b"", "p")) == adm.listar())
+    # 11b2. outro PC do administrador e senha do SOL pelo SSEG.exe (2.5.0)
+    with tempfile.TemporaryDirectory() as d:
+        chaves, acesso = os.path.join(d, "authorized_keys"), os.path.join(d, "acesso.json")
+        open(chaves, "w").write("ssh-ed25519 AAAAadmin atila@casa\n")
+        k_pc2, k_fulano = "ssh-ed25519 " + "C" * 68, "ssh-ed25519 " + "A" * 68
+        P2 = lambda nome=None: pt.Porta(nome, raiz=os.path.join(d, "proc"), acesso=acesso, chaves=chaves,
+                                        escala=os.path.join(d, "esc.json"), relatos=os.path.join(d, "rel"))
+        adm2 = P2()
+        r1 = adm2.autorizar({"analista": "Sd Carpes", "chave": k_pc2 + " carpes-pc2", "rotulo": "pc2"}, "p")   # nome do admin
+        r2 = adm2.admin_chave({"chave": k_pc2, "rotulo": "pc2"})
+        adm2.autorizar({"analista": "Sgt Fulano", "chave": k_fulano}, "SSEG/sseg/scripts/porta.py")   # regrava as linhas de analista
+        linhas = open(chaves).read().splitlines()
+        adm2.revogar("Sgt Fulano", "p")
+        depois = open(chaves).read().splitlines()
+        caso("porta: nome do admin em autorizar vira outro PC dele, sem restrição, uma vez só, e sobrevive ao regravar",
+             r1 == {"ok": True, "ja_estava": False} and r2["ja_estava"] and linhas[0] == "ssh-ed25519 AAAAadmin atila@casa"
+             and linhas[1].startswith(k_pc2) and linhas[1].endswith("sseg-admin-pc2") and "command=" not in linhas[1]
+             and depois == linhas[:2] and "Sd Carpes" not in pt.ler_acesso(acesso)["analistas"], str(linhas))
+    with tempfile.TemporaryDirectory() as d:
+        import sol_senha as _ss
+        _a, _t = _ss.ARQUIVO, _ss.TRAVA
+        _ss.PASTA, _ss.ARQUIVO, _ss.TRAVA = d, os.path.join(d, "sol-login.json"), os.path.join(d, "sol-login-falhou")
+        try:
+            chaves, acesso = os.path.join(d, "ak"), os.path.join(d, "ac.json")
+            open(_ss.TRAVA, "w").write("falhou")
+            adm3 = pt.Porta(None, raiz=d, acesso=acesso, chaves=chaves, escala=os.path.join(d, "e.json"), relatos=os.path.join(d, "r"))
+            r = json.loads(pt.executar(adm3, ["sol-senha-gravar"], lambda: json.dumps({"matricula": " 123 ", "senha": "s3gr3d0"}).encode(), "p"))
+            modo = oct(os.stat(_ss.ARQUIVO).st_mode & 0o777)
+            gravou = _ss.ler() == {"matricula": "123", "senha": "s3gr3d0"}
+            saida = json.dumps(r)
+            vazio = []
+            try:
+                pt.executar(adm3, ["sol-senha-gravar"], lambda: b'{"matricula":"1","senha":""}', "p")
+            except SystemExit:
+                vazio.append(1)
+            adm3.autorizar({"analista": "Sgt Fulano", "chave": k_fulano}, "SSEG/sseg/scripts/porta.py")
+            recusa = []
+            F = lambda: pt.Porta("Sgt Fulano", raiz=d, acesso=acesso, chaves=chaves, escala=os.path.join(d, "e.json"), relatos=os.path.join(d, "r"))
+            for f in (lambda: F().sol_senha_gravar({"matricula": "1", "senha": "x"}),
+                      lambda: F().sol_senha_apagar(), lambda: F().admin_chave({"chave": k_pc2})):
+                try:
+                    f()
+                except SystemExit:
+                    recusa.append(1)
+            pt.executar(adm3, ["sol-senha-apagar"], lambda: b"", "p")
+            caso("porta: sol-senha-gravar guarda em 600, solta a trava, nunca devolve a senha; só admin grava/apaga; apagar remove",
+                 r == {"ok": True, "matricula": "123"} and modo == "0o600" and gravou and "s3gr3d0" not in saida
+                 and not os.path.exists(_ss.TRAVA) and vazio == [1] and len(recusa) == 3 and _ss.ler() is None,
+                 str((r, modo, gravou, vazio, recusa)))
+        finally:
+            _ss.ARQUIVO, _ss.TRAVA = _a, _t
     # 11c. pedido de acesso (2.2.1): mensagem pronta para o servidor 24/7; o "Liberar acesso" lê a mensagem inteira
     sys.path.insert(0, os.path.join(AQUI, "..", "app"))
     import acesso as _ac
