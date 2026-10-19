@@ -194,6 +194,22 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 .passo.opcional:not(.ok) .marca { color: var(--sub, #999); }
 .passo .sub { margin: 2px 0 0; overflow-wrap: anywhere; }
 @media (max-width: 700px) { .passo { grid-template-columns: 24px 1fr; } .passo .bt { grid-column: 2; justify-self: start; } }
+/* instalação guiada (2.5.0) */
+.inst-progresso { height: 8px; border-radius: 4px; background: var(--linha); overflow: hidden; }
+#inst-barra { height: 100%; width: 0; background: var(--ok); transition: width .3s ease; }
+.inst-atual { display: grid; grid-template-columns: 56px 1fr; gap: 14px; align-items: center; margin: 12px 0 16px; padding: 16px;
+              border: 2px solid var(--verm); border-radius: var(--raio); background: var(--rosa); }
+.inst-atual.feito { grid-template-columns: 1fr; border-color: var(--ok); background: var(--fundo2); color: var(--ok); }
+.inst-atual.rodando { border-style: dashed; }
+.inst-atual.rodando .inst-icone { animation: inst-pulsa 1s ease-in-out infinite; }
+@keyframes inst-pulsa { 50% { transform: scale(1.12); opacity: .7; } }
+.inst-icone { font-size: 40px; text-align: center; }
+.inst-atual small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--verm); }
+.inst-atual b { font-size: 16px; }
+.inst-atual .bt { margin-top: 10px; }
+.inst-grupo { margin: 14px 0 2px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); }
+.passo.atual { font-weight: 600; }
+.passo:not(.ok):not(.atual) .marca { color: var(--ponto); }
 label.campo { display: block; font-size: 12px; color: var(--suave); margin: 8px 0 3px; }
 .campo-linha { display: flex; gap: 8px; }
 .campo-linha input { flex: 1; padding: 7px 9px; border: 1px solid var(--linha); border-radius: 6px; }
@@ -688,12 +704,14 @@ footer { color: var(--suave); }
 
     <section class="tela" id="t-instalar">
       <h2>Instalação</h2>
-      <p class="sub">Tudo de que o SSEG precisa neste PC, na ordem. Sem administrador e sem PowerShell: o programa faz e confere.
-        O que tem ✗ também aparece em alerta na barra de cima.</p>
+      <p class="sub">Tudo de que o SSEG precisa neste PC, um passo de cada vez. O programa faz sozinho o que puder;
+        quando precisar de você, diz exatamente o quê e confere sozinho quando você terminar. Sem administrador e sem PowerShell.</p>
       <div class="cartao">
+        <div class="inst-progresso"><div id="inst-barra"></div></div>
+        <p class="sub" id="inst-contagem"></p>
+        <div id="inst-atual"></div>
         <div class="passos" id="passos"></div>
         <div class="linha-bts" style="margin-top:14px">
-          <button class="bt p" id="b-inst-tudo">Instalar tudo</button>
           <button class="bt" id="b-inst-conf">Conferir de novo</button>
         </div>
       </div>
@@ -967,40 +985,76 @@ function quemSou(a) {
 }
 $("#b-analista").addEventListener("click", async () => { try { quemSou(await api("analista")); } catch (e) {} });
 
-// ---- Instalação (2.2.0): os passos na ordem, cada um com o seu botão
+// ---- Instalação guiada (2.5.0): o programa faz sozinho o que pode; o resto vem um de cada vez, com a instrução,
+// e a tela confere sozinha (a cada 3 s) quando o analista termina.
+const ICONE_INST = { programa: "💾", programas: "🧰", pastas: "📁", chrome_registro: "🔗", claude: "🔑", analista: "🪪", chrome_debug: "🌐", servidor: "🛰️" };
+const PASSOS_AUTO = ["programa", "programas", "pastas", "chrome_registro"];
+let INST_ROD = "", INST_ESPERA = 0;
 async function carregarInstalacao() {
   let passos;
   try { passos = await api("instalacao_passos"); } catch (e) { return []; }
-  $("#passos").replaceChildren(...passos.map(p => el("div", { class: "passo" + (p.ok ? " ok" : "") + (p.opcional ? " opcional" : "") },
-    el("span", { class: "marca" }, p.ok ? "✓" : p.opcional ? "○" : "✗"),
-    el("div", {}, el("b", {}, p.titulo), el("p", { class: "sub" }, p.detalhe)),
-    p.ok ? el("span") : el("button", { class: "bt", on: { click: ev => passoInstalacao(p.id, ev.currentTarget) } }, p.acao))));
-  $("#b-inst-tudo").disabled = passos.filter(p => !p.opcional).every(p => p.ok);
+  const obrig = passos.filter(p => !p.opcional), feitos = obrig.filter(p => p.ok).length;
+  const atual = passos.find(p => !p.ok && !p.opcional) || passos.find(p => !p.ok);
+  $("#inst-barra").style.width = Math.round(100 * feitos / obrig.length) + "%";
+  $("#inst-contagem").textContent = feitos === obrig.length ? "Tudo pronto: pode usar o SSEG." : feitos + " de " + obrig.length + " passos prontos";
+  $("#inst-atual").replaceChildren(!atual ? el("div", { class: "inst-atual feito" }, el("b", {}, "✓ Instalação completa"))
+    : el("div", { class: "inst-atual" + (INST_ROD === atual.id ? " rodando" : "") },
+      el("div", { class: "inst-icone" }, ICONE_INST[atual.id] || "•"),
+      el("div", {},
+        el("small", {}, INST_ROD === atual.id ? "Fazendo agora…" : atual.auto ? "O programa faz sozinho" : atual.opcional ? "Opcional" : "Sua vez"),
+        el("b", {}, atual.titulo),
+        el("p", { class: "sub" }, (atual.auto ? atual.detalhe : atual.instrucao || atual.detalhe)),
+        INST_ROD ? el("span") : el("button", { class: "bt p", on: { click: ev => atual.auto ? iniciarInstalacao() : passoInstalacao(atual.id, ev.currentTarget) } },
+          atual.auto ? "Começar a instalação" : atual.acao))));
+  let grupo = "";
+  const linhas = [];
+  for (const p of passos) {
+    const g = p.auto ? "O programa faz sozinho" : "Com você";
+    if (g !== grupo) { grupo = g; linhas.push(el("h4", { class: "inst-grupo" }, g)); }
+    linhas.push(el("div", { class: "passo" + (p.ok ? " ok" : "") + (p.opcional ? " opcional" : "") + (atual && p.id === atual.id ? " atual" : "") },
+      el("span", { class: "marca" }, p.ok ? "✓" : INST_ROD === p.id ? "⏳" : p.opcional ? "○" : "●"),
+      el("div", {}, el("b", {}, p.titulo), el("p", { class: "sub" }, p.detalhe)), el("span")));
+  }
+  $("#passos").replaceChildren(...linhas);
+  clearTimeout(INST_ESPERA);
+  if (atual && !atual.auto && !atual.opcional && !INST_ROD && $("#t-instalar").classList.contains("ativa"))
+    INST_ESPERA = setTimeout(() => { carregarInstalacao(); estadoProgramas(); }, 3000);
   return passos;
 }
 async function passoInstalacao(id, b) {
   if (ESPELHO) return avisar("A instalação se faz na janela do PC.", true);
   if (id === "programa") { const r = await api("instalacao_programa", [], b); if (r.reabrindo) return avisar("Abrindo o SSEG instalado…"); }
   if (id === "programas") { $("#detalhes").classList.add("aberto"); await api("instalar_tudo", [], b); estadoProgramas(); }
-  if (id === "claude") { await api("entrar_claude", [], b); avisar("Entre pelo navegador e depois clique em Conferir de novo."); }
+  if (id === "claude") { await api("entrar_claude", [], b); avisar("Entre pelo navegador: esta tela avança sozinha."); }
   if (id === "pastas") { const p = await api("estado_pastas"); await api("criar_pastas", [p.clone, p.processos], b); estadoPastas(); estadoGithub(); }
+  if (id === "chrome_registro") await api("chrome_registrar", [], b);
+  if (id === "chrome_debug") { await api("chrome_inspect", [], b); avisar("Marque \"Allow remote debugging\" no Chrome: esta tela avança sozinha."); }
   if (id === "analista") quemSou(await api("analista"));
-  if (id === "servidor") { $("#b-srv-pedir").hidden = false; await $("#b-srv-pedir").onclick({ currentTarget: b }); }
+  if (id === "servidor") {
+    const s = await api("servidor_acesso", [false]);
+    if (s.chave && s.apelido) {
+      const t = await api("servidor_acesso", [true], b); estadoServidor();
+      avisar(t.quem ? "✓ Conectado como " + t.quem.analista + "." : "O servidor ainda não reconhece este PC: o administrador precisa autorizar o código.", !t.quem);
+    } else { $("#b-srv-pedir").hidden = false; await $("#b-srv-pedir").onclick({ currentTarget: b }); }
+  }
   return carregarInstalacao();
 }
-$("#b-inst-conf").onclick = async ev => { ev.currentTarget.disabled = true; try { await carregarInstalacao(); estadoProgramas(); estadoPastas(); } finally { ev.currentTarget.disabled = false; } };
-$("#b-inst-tudo").onclick = async ev => {
-  const b = ev.currentTarget;
-  b.disabled = true;
+// Faz em sequência tudo que é automático; para no primeiro que falhar (o motivo vai nos Detalhes).
+async function iniciarInstalacao() {
+  if (ESPELHO) return avisar("A instalação se faz na janela do PC.", true);
+  if (INST_ROD) return;
   try {
-    for (const id of ["programa", "programas", "pastas", "analista", "claude"]) {
-      const p = (await carregarInstalacao()).find(x => x.id === id);
-      if (!p || p.ok) continue;
-      await passoInstalacao(id, b);
-      if (id === "programa" || id === "analista" || id === "claude") break;  // reabre, ou espera o analista responder
+    for (const id of PASSOS_AUTO) {
+      const antes = (await api("instalacao_passos")).find(x => x.id === id);
+      if (!antes || antes.ok) continue;
+      INST_ROD = id; await carregarInstalacao();
+      await passoInstalacao(id, null);  // "programa" reabre o SSEG instalado e fecha esta janela
+      const depois = (await api("instalacao_passos")).find(x => x.id === id);
+      if (depois && !depois.ok) { $("#detalhes").classList.add("aberto"); avisar("✗ " + depois.titulo + ": veja os Detalhes, embaixo.", true); break; }
     }
-  } catch (e) {} finally { carregarInstalacao(); }
-};
+  } catch (e) {} finally { INST_ROD = ""; carregarInstalacao(); estadoProgramas(); }
+}
+$("#b-inst-conf").onclick = async ev => { ev.currentTarget.disabled = true; try { await carregarInstalacao(); estadoProgramas(); estadoPastas(); } finally { ev.currentTarget.disabled = false; } };
 
 // ---- servidor com vários analistas (2.2.0)
 function pintarAcesso(r) {
@@ -1135,10 +1189,12 @@ async function estadoSol() {
     chip("#e-sol", "pendente", "SOL: caído");
     c.title = (s.senha ? "Sessão caída: o login automático entra na próxima leitura (ou clique para ler agora)."
       : "Sessão caída e sem senha gravada: entre pelo celular (VNC).") + "\n" + caixa;
-  } catch (e) { chip("#e-sol", "alerta", "SOL: ?"); c.title = "Não consegui perguntar ao servidor: " + String(e.message || e).slice(-200); }
+  } catch (e) { SOL_SRV = null; chip("#e-sol", "alerta", "SOL: ?"); c.title = "Não consegui perguntar ao servidor: " + String(e.message || e).slice(-200); }
 }
 $("#e-sol").onclick = async () => {
-  const s = SOL_SRV || {}, admin = ((await api("servidor_acesso", [false])).quem || {}).papel === "admin";
+  if (!SOL_SRV) return modal("SOL no servidor", "Sem conexão com o servidor.",
+    el("div", { class: "lista" }, "Não consegui perguntar ao servidor, então não dá para dizer se a sessão do SOL está logada nem se a senha está gravada.\nCausa comum num PC novo: o administrador ainda não autorizou o código de acesso deste PC (Configuração → Servidor → Testar conexão)."), [["Fechar", fechar]]);
+  const s = SOL_SRV, admin = ((await api("servidor_acesso", [false])).quem || {}).papel === "admin";
   const linhas = [s.logado ? "Servidor logado no SOL até " + hm(s.exp) + "." : s.chrome === false ? "Chrome do servidor fora do ar." : "Sessão do SOL caída.",
     s.senha ? "Login automático: ligado" + (s.trava ? " — TRAVADO: " + s.trava : "") + (s.ultimo_login ? " · último em " + s.ultimo_login : "") : "Login automático: sem senha gravada.",
     s.caixa_lida_em ? "Última leitura da caixa: " + dataCaixa(s.caixa_lida_em) + (s.caixa_total != null ? " · " + s.caixa_total + " processos" : "") : ""].filter(Boolean).join("\n");
@@ -2644,7 +2700,7 @@ window.addEventListener("pywebviewready", async () => {
   const info = await carregarInicio();
   SSEG.log(["SSEG " + info.versao + "."]);
   CHIPS_EM = Date.now(); estadoProgramas(); estadoPastas(); estadoServidor(); estadoSol(); estadoGithub(); estadoVersao(); estadoEspelho();
-  if (!ESPELHO && (info.instalacao || info.primeira_vez)) ir("instalar");
+  if (!ESPELHO && (info.instalacao || info.primeira_vez)) { ir("instalar"); if (info.continuar) iniciarInstalacao(); }
   else if (!ESPELHO) estadoAnalista(true);
   try { const v = sessionStorage.getItem("sseg-atualizou"); if (v) { sessionStorage.removeItem("sseg-atualizou"); avisar("✓ O PC voltou atualizado: versão " + v + "."); } } catch (e) {}
   if (ESPELHO && /^#tour-\w+$/.test(location.hash)) SSEG.tour(location.hash.slice(6));  // foto do build em largura de celular

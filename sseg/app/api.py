@@ -223,30 +223,55 @@ class Api:
             fluxos = []
         return {"versao": base.VERSAO, "painel": base.PAINEL_URL, "config": cfg, "fluxos": fluxos,
                 "primeira_vez": not base.eh_clone(cfg["clone"]) or not os.path.isdir(cfg["processos"]),
-                "instalacao": "--instalacao" in sys.argv or not instalacao.rodando_instalado()}
+                "instalacao": "--instalacao" in sys.argv or not instalacao.rodando_instalado(),
+                "continuar": "--instalacao" in sys.argv and instalacao.rodando_instalado()}
 
     # ---------------------------------------------------------------- instalação (2.2.0)
     def instalacao_passos(self):
-        """Os passos da tela Instalação, na ordem, cada um com ok e o que falta."""
+        """Os passos da tela Instalação, na ordem. `auto`: o programa faz sozinho; os outros pedem o analista
+        (`instrucao` diz o quê, e a tela confere sozinha até o passo ficar ok)."""
         cfg, ins, prog, pas = self._cfg(), instalacao.estado(), self.estado_programas(), self.estado_pastas()
         sem_prog = [i["nome"] for i in prog["itens"] if not i["ok"] and "falta entrar" not in i["nome"]]
         srv = self.servidor_acesso(False)
+        reg = chrome_devtools.registrado()
+        reg_ok = bool(reg) and "--autoConnect" in (reg.get("args") or [])
+        _porta, depuracao = chrome_devtools.porta_depuracao()
+        if srv["quem"]:
+            det_srv = "Conectado como %s." % srv["quem"]["analista"]
+        elif srv["chave"] and srv["apelido"]:
+            det_srv = ("O código de acesso já foi gerado. Falta o administrador autorizar: mande o código a ele e "
+                       "clique em Testar conexão.")
+        else:
+            det_srv = "Guarda os seus processos e prepara a caixa. Peça o acesso ao administrador."
         return [
-            {"id": "programa", "titulo": "SSEG instalado neste PC", "ok": ins["aberto_daqui"] and ins["atalho_mesa"],
+            {"id": "programa", "auto": True, "titulo": "SSEG instalado neste PC", "ok": ins["aberto_daqui"] and ins["atalho_mesa"],
              "detalhe": "Em %s, com atalho na Área de Trabalho e no Menu Iniciar." % ins["pasta"]
              if ins["frozen"] else "Rodando pelo .py (desenvolvimento).", "acao": "Instalar e reabrir"},
-            {"id": "programas", "titulo": "Git, Python, Poppler e Claude Code", "ok": not sem_prog,
-             "detalhe": "Falta: " + ", ".join(sem_prog) if sem_prog else "Tudo instalado.", "acao": "Instalar o que falta"},
-            {"id": "claude", "titulo": "Entrar no Claude Code", "ok": prog["logado"],
-             "detalhe": "Com a sua conta do Claude, pelo navegador, uma vez." if not prog["logado"] else "Logado.",
-             "acao": "Entrar"},
-            {"id": "pastas", "titulo": "Pasta do SSEG e pasta dos processos", "ok": pas["ok"],
+            {"id": "programas", "auto": True, "titulo": "Git, Python, Poppler, Node.js e Claude Code",
+             "ok": not sem_prog, "detalhe": "Falta: " + ", ".join(sem_prog) if sem_prog else "Tudo instalado.",
+             "acao": "Instalar o que falta"},
+            {"id": "pastas", "auto": True, "titulo": "Pasta do SSEG e pasta dos processos", "ok": pas["ok"],
              "detalhe": "%s e %s" % (pas["clone"], pas["processos"]), "acao": "Criar"},
+            {"id": "chrome_registro", "auto": True, "titulo": "Chrome ligado ao Claude Code", "ok": reg_ok,
+             "detalhe": "Registrado." if reg_ok else "O Claude vai ler o SOL pelo Chrome que você já usa.",
+             "acao": "Registrar"},
+            {"id": "claude", "titulo": "Entrar no Claude Code", "ok": prog["logado"],
+             "detalhe": "Logado." if prog["logado"] else "Com a sua conta do Claude, pelo navegador, uma vez.",
+             "instrucao": "Vai abrir uma janela com um link. Entre com a sua conta do Claude no navegador; esta tela avança sozinha.",
+             "acao": "Entrar"},
             {"id": "analista", "titulo": "Quem é você", "ok": bool(cfg.get("analista")),
-             "detalhe": cfg.get("analista") or "O nome como está na escala.", "acao": "Escolher"},
+             "detalhe": cfg.get("analista") or "O nome como está na escala.",
+             "instrucao": "Escolha o seu nome na lista.", "acao": "Escolher"},
+            {"id": "chrome_debug", "titulo": "Liberar o Chrome para o Claude", "ok": depuracao,
+             "detalhe": "Depuração remota ligada." if depuracao else
+             "Uma vez só: ligar a depuração remota do Chrome.",
+             "instrucao": "Vai abrir o chrome://inspect. Marque \"Allow remote debugging\" e deixe a aba aberta; "
+                          "esta tela avança sozinha. Na primeira conversa o Chrome pergunta \"Permitir\".",
+             "acao": "Abrir chrome://inspect"},
             {"id": "servidor", "titulo": "Servidor (opcional)", "ok": bool(srv["quem"]), "opcional": True,
-             "detalhe": ("Conectado como %s." % srv["quem"]["analista"]) if srv["quem"]
-             else "Guarda os seus processos e prepara a caixa. Peça o acesso ao administrador.", "acao": "Pedir acesso"},
+             "chave": bool(srv["chave"] and srv["apelido"]), "detalhe": det_srv,
+             "instrucao": "Pedir acesso gera o código; mande-o ao administrador. Depois, Testar conexão.",
+             "acao": "Testar conexão" if srv["chave"] and srv["apelido"] else "Pedir acesso"},
         ]
 
     def instalacao_programa(self):

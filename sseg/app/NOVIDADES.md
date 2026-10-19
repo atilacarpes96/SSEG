@@ -7,6 +7,12 @@ analista: o que muda na tela e no dia a dia, sem nome de função.
 ## (próxima)
 
 - Saiu o ponto vermelho ao lado do nome SSEG no topo.
+- **Instalação guiada, passo a passo.** A tela Instalação mostra uma barra de progresso e o passo de agora em destaque:
+  - o programa faz sozinho o que dá (programa, Git, Python, Poppler, Node.js, Claude Code, pastas e a ligação do Chrome ao Claude), em sequência, com um clique;
+  - depois de reabrir pelo instalador, ele continua sozinho;
+  - o que depende de você (entrar no Claude, escolher seu nome, ligar a depuração do Chrome, servidor) aparece um de cada vez, com a instrução, e a tela avança sozinha quando você termina.
+- **Node.js entra na instalação.** Antes ficava de fora e travava o "Chrome para o Claude"; agora é instalado e o `npx` já funciona sem reabrir o programa.
+- **"SOL no servidor" sem conexão.** Quando o PC ainda não foi autorizado no servidor, a janela diz "Sem conexão com o servidor" em vez de "sem senha gravada".
 
 ## 2.4.0
 

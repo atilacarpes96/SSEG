@@ -4,13 +4,13 @@
 instalar.py — confere e instala no PC (Windows) o que o SSEG precisa, sem o analista abrir o
 PowerShell. Usado pelo SSEG.exe; roda sozinho no build do GitHub como teste num Windows limpo.
 
-Programas: Git, Python 3.12, Poppler (pdftotext, pdftoppm) e Claude Code de linha de comando.
+Programas: Git, Python 3.12, Poppler (pdftotext, pdftoppm), Node.js LTS e Claude Code de linha de comando.
 Instala pelo winget no modo do usuário (sem administrador; se o pacote não aceitar, tenta o
 modo padrão) e o Claude Code pelo instalador oficial (https://claude.ai/install.ps1).
 
 Depois faz os ajustes do CLAUDE.md ("Pré-requisitos no PC") que antes eram à mão:
   - python3.exe ao lado do python.exe (o "python3" do Windows cai no atalho da Store);
-  - PATH do usuário com Python, Poppler e Claude Code;
+  - PATH do usuário com Python, Poppler, Node.js e Claude Code (e no processo aberto: o npx já roda sem reabrir);
   - no ~/.bashrc do Git Bash, Poppler e Python ANTES do /usr/bin do Git (o pdftotext do Git é
     Xpdf, sem acento) — num bloco marcado que o programa reescreve;
   - PYTHONUTF8=1 (sem isso o verificador lê o pdftotext como cp1252 e quebra).
@@ -39,12 +39,14 @@ PROGRAMAS = [
     ("git", "Git", "Git.Git"),
     ("python", "Python", "Python.Python.3.12"),
     ("poppler", "Poppler", "oschwartz10612.Poppler"),
+    ("node", "Node.js", "OpenJS.NodeJS.LTS"),  # o servidor do Chrome DevTools (npx) pede Node 20.19+
     ("claude", "Claude Code", None),
 ]
 BAIXAR_A_MAO = {
     "git": "https://git-scm.com/download/win",
     "python": "https://www.python.org/downloads/windows/",
     "poppler": "https://github.com/oschwartz10612/poppler-windows/releases",
+    "node": "https://nodejs.org (versão LTS)",
     "claude": "PowerShell: irm https://claude.ai/install.ps1 | iex",
 }
 INICIO_BLOCO, FIM_BLOCO = "# >>> SSEG (programa) >>>", "# <<< SSEG (programa) <<<"
@@ -78,6 +80,9 @@ def localizar(which=shutil.which):
                                   j(pf, "Python3*", "python" + exe)),
         "poppler": which("pdftoppm") or _primeiro(
             j(loc, "Microsoft", "WinGet", "Packages", "oschwartz10612.Poppler*", "**", "bin", "pdftoppm" + exe)),
+        "node": which("node") or _primeiro(j(loc, "Microsoft", "WinGet", "Links", "node" + exe),
+                                           j(loc, "Microsoft", "WinGet", "Packages", "OpenJS.NodeJS*", "**", "node" + exe),
+                                           j(loc, "Programs", "nodejs", "node" + exe), j(pf, "nodejs", "node" + exe)),
         "claude": which("claude") or _primeiro(j(casa, ".local", "bin", "claude" + exe)),
     }
 
@@ -85,7 +90,7 @@ def localizar(which=shutil.which):
 # Teste de que o programa RODA, não só existe (2.3.6): comando curto e o que a saída precisa ter.
 # pdftoppm -v: o Poppler responde "pdftoppm version"; o Xpdf que vem com o Git não tem pdftoppm.
 TESTE = {"git": (["--version"], "git version"), "python": (["-c", "import sys; print(sys.version)"], ""),
-         "poppler": (["-v"], "pdftoppm version")}
+         "poppler": (["-v"], "pdftoppm version"), "node": (["-v"], "v")}
 
 
 def roda(chave, exe):
@@ -165,6 +170,8 @@ def ajustar(achados, escrever=print):
         pastas += [d, os.path.join(d, "Scripts")]
     if achados.get("poppler"):
         pastas.append(os.path.dirname(achados["poppler"]))
+    if achados.get("node"):
+        pastas.append(os.path.dirname(achados["node"]))
     if achados.get("claude"):
         pastas.append(os.path.dirname(achados["claude"]))
     if achados.get("git"):
