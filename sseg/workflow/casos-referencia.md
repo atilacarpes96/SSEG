@@ -86,6 +86,10 @@ contra predominantes de risco médio: fecha no critério (a), sem contagem. Grau
 
 ## 3. Campo 3 — dados gerais
 
+- **Data de protocolo para a 1ª análise (vigência, RT 01/2024 4.3.3).** É a data do marco
+  **"Número do licenciamento gerado"** na aba Marcos do SOL — decisão do analista, 19/10/2026. Não usar
+  a do rascunho, do pagamento da taxa nem do encaminhamento para análise. O `marcos.py` já lê esse
+  marco (`marcos-resumo.json`, campo `protocolo`) e a pré-análise o mostra: não perguntar.
 - **Altura e pavimento de maior população (RT 02/2014, 4.20 e 4.30).**
   - Edificação térrea tem alturas 0 e pavimento de maior população **0/0**, porque o único
     pavimento é o de descarga. Isso está correto, **não notificar**. Quando vem preenchido,
