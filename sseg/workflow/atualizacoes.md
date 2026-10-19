@@ -12,6 +12,18 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/10/2026 — SSEG.exe 2.5.1: botão Atualizar no Início e processo lançado desce da lista
+
+- **Início → Atualizar** (administrador): lê a caixa do SOL agora no servidor, sincroniza e reordena. O de cima da caixa leva a etiqueta "Próximo".
+- **Servidor:** `sol_caixa.py` marca `saiu_em` no `sol-caixa.json` do processo que estava na caixa na leitura anterior e não está mais
+  (CA ou CIA lançados) e atualiza os Marcos dele uma vez. O app mostra esse processo como concluído, com o resultado dos Marcos, até a planilha de distribuição trazer o concluído.
+
+### Prompt para atualizar
+
+```
+Faça git pull no clone do SSEG (e no clone do servidor, se houver). Só código do SSEG.exe e do sol_caixa.py mudou: nenhuma skill nem as Instruções.
+```
+
 ## 19/10/2026 — SSEG.exe: campo "Login do SOL" e segundo PC do administrador em um clique
 
 - **Configuração → Login do SOL:** matrícula e senha digitadas uma vez no programa. O Gravar manda ao servidor

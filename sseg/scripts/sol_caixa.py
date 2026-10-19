@@ -458,6 +458,28 @@ def _entrar_e_conferir(aba, s):
     return aba.avaliar(SESSAO) if ok else s
 
 
+def marcar_saida(aba, codigo):
+    """Processo que estava na caixa e saiu (CA ou CIA lançados no SOL, 2.5.1): atualiza os Marcos uma vez, para a
+    pasta saber o resultado, e grava saiu_em no sol-caixa.json. O SSEG.exe usa isso para descer o processo da lista."""
+    arq = os.path.join(PROCESSOS, str(codigo), "sol-caixa.json")
+    try:
+        with open(arq, encoding="utf-8") as fh:
+            d = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    if d.get("saiu_em"):
+        return None
+    if d.get("id"):
+        try:
+            marcos_proc(aba, d["id"], codigo, {})
+        except RuntimeError:
+            pass  # sem os Marcos o processo desce igual, só sem o resultado
+    d["saiu_em"] = time.strftime("%Y-%m-%d")
+    with open(arq, "w", encoding="utf-8") as fh:
+        json.dump(d, fh, ensure_ascii=False, indent=1)
+    return d["saiu_em"]
+
+
 def levantar(forcar=False):
     aba = aba_do_sol()
     if aba is None:
@@ -530,6 +552,14 @@ def levantar(forcar=False):
                 linha["aviso"] = "marcos: %s" % e
             baixar_cias(aba, codigo, linha)  # a CIA anterior chega pronta: o Claude não baixa mais no chat
         resumo.append(linha)
+    sairam = []
+    if estavam is not None and itens:  # caixa vazia na leitura = leitura suspeita: não marca ninguém como saído
+        atuais = {r["codigo"] for r in resumo if r.get("codigo")}
+        for cod in sorted(c for c in estavam - atuais if c):
+            if marcar_saida(aba, cod):
+                sairam.append(cod)
+    if sairam:
+        print("saíram da caixa: %s" % ", ".join(sairam))
     agora = time.strftime("%Y-%m-%d %H:%M")
     with open(os.path.join(caixa, "caixa.json"), "w", encoding="utf-8") as fh:
         json.dump({"lido_em": agora, "total": len(itens), "itens": resumo}, fh, ensure_ascii=False, indent=1)

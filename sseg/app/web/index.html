@@ -600,7 +600,9 @@ footer { color: var(--suave); }
       <h2>Semana</h2>
       <div class="cards" id="cards"></div>
       <h2>Processos em andamento<span id="filtro"></span></h2>
-      <p class="sub">Sua caixa primeiro, pelos dias em análise no SOL; depois os que saíram com CIA e com CA. "Abrir" mostra conversa, checklist e CIA — o Claude só trabalha quando você pede.</p>
+      <p class="sub">Sua caixa primeiro, pelos dias em análise no SOL; depois os que saíram com CIA e com CA. "Abrir" mostra conversa, checklist e CIA — o Claude só trabalha quando você pede.
+        Lançou CA ou CIA no SOL? <b>Atualizar</b> lê a caixa de novo e desce os lançados; o de cima é o próximo.</p>
+      <div class="linha-bts" style="margin:0 0 8px"><button class="bt p" id="b-atualizar">Atualizar</button><span class="sub" id="atualizar-info" style="align-self:center"></span></div>
       <div class="cartao rola-x"><table class="t-proc"><thead><tr><th>Processo</th><th>Razão social</th><th>Ocupação</th><th class="num">Área</th><th>Situação</th><th>Mexido em</th><th></th><th></th></tr></thead>
         <tbody id="processos"><tr><td class="vazio" colspan="8">Carregando…</td></tr></tbody></table></div>
       <h2>Iniciar conversa</h2>
@@ -1143,6 +1145,26 @@ $("#b-sol-gravar").onclick = async ev => {
 $("#b-sol-apagar").onclick = () => modal("Apagar o login do SOL", "Remove a matrícula e a senha deste PC e do servidor. O servidor deixa de entrar sozinho.", [],
   [["Apagar", async b => { await api("servidor_sol_apagar", [], b); $("#sol-mat").value = ""; fechar(); pintarSolSenha(); estadoSol(); avisar("✓ Login do SOL apagado."); }, true], ["Cancelar", fechar]]);
 
+// Atualizar (2.5.1): lê a caixa do SOL agora (administrador), baixa o que mudou e reordena a lista.
+$("#b-atualizar").onclick = async ev => {
+  const info = $("#atualizar-info"), b = ev.currentTarget;
+  b.disabled = true;
+  try {
+    info.textContent = "Lendo a caixa do SOL no servidor…";
+    const admin = ((await api("servidor_acesso", [false])).quem || {}).papel === "admin";
+    let aviso = "";
+    if (admin) { const r = await window.pywebview.api.servidor_sol_caixa(); if (r.rc !== 0) aviso = " A leitura da caixa não terminou bem (saída " + r.rc + "); veja o chip SOL."; }
+    info.textContent = "Baixando o que mudou…";
+    const plano = await window.pywebview.api.servidor_planejar();
+    if (plano.conflito.length) { telaServidor(plano); }
+    else if (plano.desce.length || plano.sobe.length) await window.pywebview.api.servidor_aplicar({});
+    await carregarProcessos(); estadoServidor(); estadoSol();
+    const prox = (ordemProcessos(PROCS).find(p => p.estado === "caixa") || {}).codigo;
+    info.textContent = "Atualizado às " + agoraHM() + (prox ? " · próximo: " + prox : " · caixa vazia") + aviso;
+  } catch (e) { info.textContent = ""; avisar(String(e.message || e).slice(-300), true); }
+  finally { b.disabled = false; }
+};
+
 // ---- barra de estado
 // Mouse em cima (2.3.17): primeiro o que o chip é, depois o estado de agora. Quem atualiza o chip grava
 // só o estado no title; o observador põe a explicação na frente.
@@ -1565,8 +1587,9 @@ function pintarProcessos() {
   if (!lst.length) return corpo.replaceChildren(el("tr", {}, el("td", { class: "vazio", colspan: 8 },
     def ? "Nenhum processo neste card." : "Nenhuma pasta de processo (A000…) na pasta dos processos.")));
   const h = isoLocal(new Date());
+  const proximo = !def && lst[0] && lst[0].estado === "caixa" ? lst[0].codigo : "";  // 2.5.1: o de cima da caixa é o próximo
   corpo.replaceChildren(...lst.map(p => el("tr", {},
-    el("td", { class: "cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, nomeAnalise(p.tipo)) : null),
+    el("td", { class: "cod" }, p.codigo, p.codigo === proximo ? el("span", { class: "tag sit k-verde", style: "margin-left:6px", title: "Maior tempo em análise no SOL entre os que ainda estão na sua caixa" }, "Próximo") : null, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, nomeAnalise(p.tipo)) : null),
     el("td", { class: "razao", title: p.razao || "" }, el("span", {}, p.razao || "—")),
     el("td", { class: "ocup-c", title: p.ocupacao || "" }, siglaOcupacao(p.ocupacao) || el("span", { class: "discreto" }, "—")),
     el("td", { class: "num" }, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""),

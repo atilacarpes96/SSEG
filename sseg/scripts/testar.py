@@ -302,6 +302,21 @@ def main():
                  str((r, modo, gravou, vazio, recusa)))
         finally:
             _ss.ARQUIVO, _ss.TRAVA = _a, _t
+    # 11b3. processo que saiu da caixa do SOL (2.5.1): desce da lista com o resultado dos Marcos
+    sys.path.insert(0, os.path.join(AQUI, "..", "app"))
+    import api as _api
+    with tempfile.TemporaryDirectory() as d:
+        w = lambda n, o: open(os.path.join(d, n), "w", encoding="utf-8").write(json.dumps(o))
+        e0 = _api.estado_caixa({"codigo": "A1", "distribuido": "2026-10-10"}, {}, 10, __import__("datetime").date(2026, 10, 19))
+        ficou = _api._saiu_da_caixa(dict(e0), d)["estado"]
+        w("sol-caixa.json", {"id": 1, "saiu_em": "2026-10-19"})
+        w("marcos-resumo.json", {"analises": [{"data": "2026-09-01", "resultado": "CIA"}, {"data": "2026-10-18", "resultado": "CA"}]})
+        e1 = _api._saiu_da_caixa(dict(e0), d)
+        w("marcos-resumo.json", {"analises": [{"data": "2026-09-01", "resultado": "CIA"}]})   # análise velha: não vale
+        e2 = _api._saiu_da_caixa(dict(e0), d)
+        caso("app: processo que saiu da caixa vira concluído com o resultado dos Marcos; análise velha não conta; na caixa fica",
+             ficou == "caixa" and (e1["estado"], e1["resultado"], e1["concluido"], e1["dias"]) == ("concluido", "CA", "2026-10-19", 9)
+             and (e2["estado"], e2["resultado"]) == ("concluido", ""), str((ficou, e1, e2)))
     # 11c. pedido de acesso (2.2.1): mensagem pronta para o servidor 24/7; o "Liberar acesso" lê a mensagem inteira
     sys.path.insert(0, os.path.join(AQUI, "..", "app"))
     import acesso as _ac

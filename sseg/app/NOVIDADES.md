@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.5.1
+
+- **Botão Atualizar no Início.** Lançou CA ou CIA no SOL? Clique em Atualizar: o programa lê a caixa do SOL de novo no servidor, baixa o que mudou
+  e reordena a lista. Os processos lançados descem para depois da caixa, com o resultado (CA ou CIA), e o de cima ganha a etiqueta
+  **Próximo**, o que tem mais dias em análise no SOL. Antes, o processo lançado ficava no topo até a próxima leitura automática.
+
 ## 2.5.0
 
 - **Login do SOL pelo programa.** Em Configuração há um campo novo, "Login do SOL": você digita a matrícula e a senha uma vez e o

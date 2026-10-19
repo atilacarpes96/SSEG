@@ -106,6 +106,25 @@ def estado_caixa(dist, reg, prazo=10, hoje=None):
     return e
 
 
+def _saiu_da_caixa(e, pasta):
+    """2.5.1: o processo estava na caixa e o servidor viu que saiu (CA ou CIA lançados no SOL): sol-caixa.json ganha
+    saiu_em e os Marcos dão o resultado. A planilha, quando atualizar, manda por cima (ela já traz o concluído)."""
+    if e["estado"] != "caixa":
+        return e
+    saiu = _ler(os.path.join(pasta, "sol-caixa.json")).get("saiu_em")
+    if not saiu:
+        return e
+    ultima = max(_ler(os.path.join(pasta, "marcos-resumo.json")).get("analises") or [{}], key=lambda a: a.get("data") or "")
+    res = ultima.get("resultado") if (ultima.get("data") or "") >= e["distribuido"] else ""
+    e.update(estado="concluido", concluido=saiu, resultado=res if res in ("CA", "CIA") else "", fonte="sol")
+    try:
+        import datetime
+        e["dias"] = (datetime.date.fromisoformat(saiu) - datetime.date.fromisoformat(e["distribuido"])).days
+    except ValueError:
+        pass
+    return e
+
+
 _IDENT = {}  # caminho do api-<ID>.json → (mtime, dados): ler 30 KB por pasta a cada atualização da tabela pesa
 
 
@@ -414,7 +433,7 @@ class Api:
             quando = max([os.path.getmtime(a) for a in arqs] + [os.path.getmtime(p)])
             reg = os.path.join(p, "analise.json")
             dist = _ler(os.path.join(p, "distribuicao.json"))
-            out.append(dict(estado_caixa(dist, _ler(reg), self._cfg().get("prazo_caixa", 10)),
+            out.append(dict(_saiu_da_caixa(estado_caixa(dist, _ler(reg), self._cfg().get("prazo_caixa", 10)), p),
                             **identificacao(p, os.listdir(p), dist),
                             codigo=n, quando=quando, arquivos=len(arqs), analise=os.path.exists(reg),
                             cts=_ler(os.path.join(p, "ct.json")).get("itens") or [],
