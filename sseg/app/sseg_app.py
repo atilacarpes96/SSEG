@@ -46,9 +46,8 @@ import gasto
 import git_sinc
 import instalar
 import relato
-import sol_entrar
 
-VERSAO = "2.6.2"
+VERSAO = "2.6.3"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO
@@ -445,11 +444,6 @@ def janela():
     botao(lin, "Painel SSEG · manual", lambda: webbrowser.open(PAINEL_URL)).pack(side="left")
     botao(lin, "Pasta dos processos", lambda: abrir(campos["processos"].get()), primario=False).pack(side="left", padx=8)
     botao(lin, "Pasta do SSEG", lambda: abrir(campos["clone"].get()), primario=False).pack(side="left")
-    lin_sol = tk.Frame(atal, bg=CARTAO)
-    lin_sol.pack(fill="x", pady=(8, 0))
-    tk.Label(lin_sol, text="SOL sem teclado (opcional):", font=F(9), fg=SUAVE, bg=CARTAO).pack(side="left")
-    botao(lin_sol, "Atalho Abrir SOL", lambda: rodar(criar_atalho_sol), primario=False).pack(side="left", padx=8)
-    botao(lin_sol, "Tampermonkey", lambda: passos_tampermonkey(), primario=False).pack(side="left")
 
     # Registro e rodapé (fixos embaixo)
     reg = tk.Text(baixo, height=5, font=("Consolas", 9), bg="#FBF9F8", fg=TEXTO, relief="solid", bd=1,
@@ -711,31 +705,6 @@ def janela():
     def copiar(texto):
         raiz.clipboard_clear()
         raiz.clipboard_append(texto)
-
-    # ---- SOL Entrar (sseg/ferramentas/sol-entrar): atalho + script do Tampermonkey
-    def criar_atalho_sol():
-        lnk = sol_entrar.instalar_atalho()
-        return lambda: escrever("✓ Atalho criado: " + lnk, *sol_entrar.conferir())
-
-    def passos_tampermonkey():
-        try:
-            copiar(sol_entrar.script_js())
-        except OSError as e:
-            escrever("✗ Script do SOL Entrar não encontrado: %s" % e)
-            return
-        sol_entrar.abrir_tampermonkey()
-        jan, m, r = dialogo("Tampermonkey (SOL Entrar)", "O script já está copiado. Só com o mouse, no Chrome:")
-        for i, t in enumerate(sol_entrar.PASSOS, 1):
-            tk.Label(m, text="%d. %s" % (i, t), font=F(10), fg=TEXTO, bg=CARTAO, justify="left",
-                     wraplength=540).pack(anchor="w", pady=3)
-        tk.Label(m, text="Depois: dois cliques em \"Abrir SOL\" na Área de Trabalho. Aparece uma contagem de 5 s "
-                 "no topo da página — clique nela para cancelar.", font=F(9), fg=SUAVE, bg=CARTAO,
-                 justify="left", wraplength=540).pack(anchor="w", pady=(8, 0))
-        botao(r, "Copiar o script de novo", lambda: (copiar(sol_entrar.script_js()), escrever("Script copiado.")),
-              primario=False).pack(side="left")
-        botao(r, "Abrir a página de novo", sol_entrar.abrir_tampermonkey, primario=False).pack(side="left", padx=8)
-        botao(r, "Fechar", jan.destroy, primario=False).pack(side="left")
-        escrever("Script do SOL Entrar copiado; siga os 3 passos da janela.", *sol_entrar.conferir())
 
     # ---- Busca nas normas e no banco (1.2)
     def ver_pdf(pdf, q, texto):
@@ -1006,7 +975,7 @@ def janela():
         passos = [("janela", None), ("busca", lambda: (consulta.set('extintor "5 m"'), buscar_normas())),
                   ("subagentes", lambda: ver_subagentes()()), ("gasto", lambda: ver_gasto()()),
                   ("bug", reportar_bug), ("conversa", lambda: iniciar_fluxo(estado["fluxos"][1])),
-                  ("github", lambda: tela_git(git_falso, None)), ("sol", passos_tampermonkey)]
+                  ("github", lambda: tela_git(git_falso, None))]
 
         def passo(i):
             try:

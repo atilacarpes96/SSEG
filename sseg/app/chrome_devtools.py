@@ -161,14 +161,15 @@ def remover(claude):
     return "Registro removido."
 
 
-def abrir_inspect():
-    """Abre chrome://inspect/#remote-debugging no Chrome (o Chrome não deixa outro programa ligar isso)."""
+def abrir_inspect(endereco=INSPECT):
+    """Abre chrome://inspect/#remote-debugging (ou outra página do Chrome) no Chrome (o Chrome não deixa outro programa
+    ligar isso). Algumas versões abrem só uma aba nova: quem chama deixa o endereço copiado para o analista colar."""
     c = chrome_exe()
     if not c:
-        raise RuntimeError("Chrome não encontrado neste PC.")
+        raise RuntimeError("O Google Chrome não está instalado neste PC (Instalação → Instalar o Google Chrome).")
     if os.environ.get("SSEG_TESTE_FOTO"):
         return
-    subprocess.Popen([c, INSPECT], creationflags=SEM_JANELA)
+    subprocess.Popen([c, endereco], creationflags=SEM_JANELA)
 
 
 def testar(timeout=75):

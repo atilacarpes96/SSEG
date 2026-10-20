@@ -4,6 +4,19 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.3
+
+- **A lista do Início segue a caixa do SOL, não só a planilha.** O que está na sua caixa do SOL aparece como "na caixa" mesmo antes de a planilha da distribuição trazer (ela entra uma vez por dia, às 7h47). Enquanto a planilha não chega, a etiqueta diz "Na caixa do SOL", sem prazo. Foi o que fez sumir da lista, na manhã de 20/10, quatro processos distribuídos na véspera.
+- **Atualizar lê a caixa de qualquer analista.** Quem não é o administrador tem a caixa lida no próprio Chrome, na aba do SOL em que já entrou (a mesma ligação que o Claude usa). A razão social não fica mais "—" e o processo novo já chega com o JSON do SOL, os Marcos, a CIA anterior e a pré-análise. Se o SOL não estiver aberto, o Atualizar diz isso e oferece abrir.
+- **Conflito não trava mais o Atualizar.** Arquivo que vem do SOL ou da planilha (caixa, Marcos, JSON, CIA anterior, pré-análise) e mudou dos dois lados fica com a versão do servidor, sem perguntar. O que sobrar de conflito aparece depois, com o resto já atualizado.
+- **Todo erro tem o botão "Reportar ao Claude".** Um clique abre o relato com o erro e o print da janela; "Enviar" manda ao servidor com o registro do programa, e o relato entra no Quadro da seção. Em Ajuda → **Meus relatos** dá para ver o andamento. Sem servidor (começo da instalação), o relato fica numa pasta e o texto vai copiado para mandar pelo WhatsApp.
+- **Instalação mais fácil.**
+  - O passo do Chrome confere antes se há Chrome e se ele é novo o bastante. Chrome antigo: o botão abre "Sobre o Google Chrome" para atualizar.
+  - O endereço chrome://inspect aparece na tela e já vai copiado: se o Chrome não abrir a página, é só colar.
+  - Passo que dá erro mostra o motivo, "Tentar de novo" e "Reportar ao Claude" ali mesmo.
+  - Pedido de acesso ao servidor: botão "Mandar pelo WhatsApp" com a mensagem pronta. A tela percebe sozinha quando o administrador libera.
+- **Saíram o atalho "Abrir SOL" e o Tampermonkey.** O Chrome ligado ao Claude faz o que eles faziam; nenhuma extensão é necessária. O atalho que já estiver na Área de Trabalho pode ir para a lixeira.
+
 ## 2.6.2
 
 - **Dentro do programa, a skill é sempre a do GitHub.** As janelas do processo e dos fluxos mandam o Claude ler a skill no clone (que se atualiza sozinho), nunca a cópia instalada na sua conta. Para quem só usa o SSEG.exe, skill nova não precisa mais de upload do .zip; ele continua valendo só para o Claude pelo site, app ou Cowork.

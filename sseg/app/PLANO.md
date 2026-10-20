@@ -337,6 +337,15 @@ shell: a chave dele só roda a `scripts/porta.py`.
 - [ ] Teste do Átila: baixar o SSEG.exe do release num PC sem SSEG (ou numa conta nova do Windows) e seguir a tela Instalação
 - [ ] Publicar: push → `git pull` no servidor ANTES de soltar o .exe novo (o programa avisa "servidor sem a porta" se faltar)
 - [ ] Espelho no celular para analista: porta própria por analista (`permitlisten`) e `tailscale serve` de cada uma — depois
+- [x] **2.6.3** (pedido do Átila, 20/10/2026: "o usuário médio é leigo e não vai saber resolver os bugs"; caixa do Sgt Magalhães sem atualizar e a do Átila na manhã de 20/10):
+  - Causa da manhã de 20/10: o Atualizar das 07:47 leu a caixa (07:47:06) e baixou antes de o Painel do Dia gravar a planilha (07:47:51); o Início dependia da planilha para dizer "na caixa", e os 4 distribuídos no dia 19 ficaram de fora. Agora a caixa do SOL manda (`api._na_caixa_do_sol`: leitura mais recente deste PC, sem saiu_em → caixa, prazo em branco até a planilha)
+  - Caixa de quem não é admin: `scripts/caixa_pc.py` no Chrome do analista (`sol_aba.na_aba_logada`, a conexão que já existia para os botões do SOL); mesmos arquivos do `sol_caixa.py`, sem cartão no Quadro. Admin continua no servidor; servidor falhou, cai para o PC
+  - `sincronizar.py`: GERADO (sol-caixa, marcos, api, cia-*, pré-análise, distribuição, ct, recurso) mudado dos dois lados desce; o Atualizar aplica o resto e só depois mostra conflito
+  - "Reportar ao Claude" em todo aviso de erro, no Atualizar e na Instalação; relato com print automático; porta.py `relato` põe cartão no Quadro e `relatos` devolve o andamento (`estado.txt`/`resposta.txt` na pasta do relato); Ajuda → Meus relatos
+  - [ ] Disparar o Claude do servidor sozinho a cada relato (sessão em segundo plano corrigindo num ramo): barrado pelo classificador de segurança em 20/10 — decisão do Átila
+  - Instalação: passo do Chrome com Chrome ausente/antigo (versão do registro, `chrome://settings/help`), endereço copiado e à vista, erro persistente com "Tentar de novo", WhatsApp no pedido de acesso, servidor conferido a cada 20 s enquanto espera o admin
+  - Saíram `sol_entrar.py`, `ferramentas/sol-entrar` (atalho Abrir SOL e Tampermonkey) e o passo do build que criava o atalho
+  - [ ] Teste no PC do Sgt Magalhães: Chrome 144+, depuração ligada, SOL aberto → Atualizar traz a caixa dele
 - [ ] Quadro (`quadro.json`) e a caixa do SOL (`sol_caixa.py`) por analista — depois
 
 ### Ideia a amadurecer — "Ponte SOL" (pedido do Átila, 12/10/2026; NÃO construir sem confirmar)

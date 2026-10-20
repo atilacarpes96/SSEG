@@ -197,12 +197,13 @@ def buscar(aba, caminho):
     return json.loads(r["corpo"])
 
 
-def baixar_cias(aba, codigo, linha):
+def baixar_cias(aba, codigo, linha, raiz=None):
     """PDF e texto de cada CIA anterior: cia-<id>.pdf, cia-<id>.txt e cia-ultima.txt (os nomes do
     `analise_registro.py sol-pdf`, que o Claude usava no chat). Ids do marcos-resumo.json; só baixa o
-    que ainda não tem. Erro vira aviso e não para a caixa: tenta de novo na próxima leitura."""
+    que ainda não tem. Erro vira aviso e não para a caixa: tenta de novo na próxima leitura.
+    raiz: pasta dos processos (padrão: a do servidor; o caixa_pc.py passa a do PC)."""
     import marcos
-    pasta = os.path.join(PROCESSOS, str(codigo))
+    pasta = os.path.join(raiz or PROCESSOS, str(codigo))
     try:
         with open(os.path.join(pasta, marcos.RESUMO), encoding="utf-8") as fh:
             r = json.load(fh)
@@ -223,7 +224,8 @@ def baixar_cias(aba, codigo, linha):
             pdf = os.path.join(pasta, "cia-%s.pdf" % ident)
             with open(pdf, "wb") as fh:
                 fh.write(dados)
-            subprocess.run(["pdftotext", "-layout", pdf, txt], check=True, timeout=60)
+            subprocess.run(["pdftotext", "-layout", pdf, txt], check=True, timeout=60,
+                           creationflags=0x08000000 if os.name == "nt" else 0)  # no PC (caixa_pc.py): sem janela preta
             if not os.path.getsize(txt):
                 raise RuntimeError("PDF sem texto (imagem): ler com pdftoppm")
             linha["cias"] = linha.get("cias", 0) + 1
@@ -294,12 +296,13 @@ def motivos_marcos(r):
     return m
 
 
-def marcos_proc(aba, ident, codigo, linha):
+def marcos_proc(aba, ident, codigo, linha, raiz=None, gatilho=True):
     """Baixa os Marcos, grava marcos.json e marcos-resumo.json e dispara o gatilho de recurso/marco novo:
     linha na saída e UM cartão por processo no Quadro da seção (~/sseg-quadro, o mesmo da porta.py; o
-    quadro.py cria a pasta). Só depois que o cartão existe o motivo vai a .caixa/gatilhos-quadro.json."""
+    quadro.py cria a pasta). Só depois que o cartão existe o motivo vai a .caixa/gatilhos-quadro.json.
+    No PC (caixa_pc.py): raiz = pasta dos processos do PC e gatilho=False (o Quadro da seção é do servidor)."""
     import marcos
-    pasta = os.path.join(PROCESSOS, str(codigo))
+    pasta = os.path.join(raiz or PROCESSOS, str(codigo))
     for nome, caminho, opcional in ((marcos.ARQUIVO, "%s/%s/marcos" % (LICENCIAMENTO, ident), False),
                                     (marcos.HISTORICO, "%s/%s" % (HISTORICO, ident), True),  # resultado dos recursos
                                     (marcos.FACTS, "%s/%s" % (FACTS, ident), True)):         # consultas técnicas (CT)
@@ -313,7 +316,7 @@ def marcos_proc(aba, ident, codigo, linha):
         with open(os.path.join(pasta, nome), "w", encoding="utf-8") as fh:
             json.dump(dados, fh, ensure_ascii=False)
     r = marcos.resumir_pasta(pasta)
-    if not r or not r["gatilho"]:
+    if not r or not r["gatilho"] or not gatilho:
         return
     motivos = motivos_marcos(r)
     linha["gatilho"] = list(motivos.values())
@@ -458,10 +461,22 @@ def _entrar_e_conferir(aba, s):
     return aba.avaliar(SESSAO) if ok else s
 
 
-def marcar_saida(aba, codigo):
+def gravar_sol_caixa(pasta, it, ident, id_analise):
+    """<código>/sol-caixa.json: o que a linha da caixa do SOL mostra. lido_em = hoje: o SSEG.exe considera na caixa
+    os processos da leitura mais recente (2.6.3). Mesmo formato no servidor e no PC (caixa_pc.py)."""
+    os.makedirs(pasta, exist_ok=True)
+    with open(os.path.join(pasta, "sol-caixa.json"), "w", encoding="utf-8") as fh:
+        json.dump({"lido_em": time.strftime("%Y-%m-%d"), "id": ident, "id_analise": id_analise,
+                   "razao_social": it.get("razaoSocial"), "ocupacao": it.get("ocupacaoPredominante"),
+                   "area": it.get("area"), "tipo": it.get("tipo"), "dias_analise": it.get("qtdDiasAnalise"),
+                   "solicitacao": it.get("dataSolicitacao"), "prioridade": it.get("prioridade")},
+                  fh, ensure_ascii=False, indent=1)
+
+
+def marcar_saida(aba, codigo, raiz=None):
     """Processo que estava na caixa e saiu (CA ou CIA lançados no SOL, 2.5.1): atualiza os Marcos uma vez, para a
     pasta saber o resultado, e grava saiu_em no sol-caixa.json. O SSEG.exe usa isso para descer o processo da lista."""
-    arq = os.path.join(PROCESSOS, str(codigo), "sol-caixa.json")
+    arq = os.path.join(raiz or PROCESSOS, str(codigo), "sol-caixa.json")
     try:
         with open(arq, encoding="utf-8") as fh:
             d = json.load(fh)
@@ -471,7 +486,7 @@ def marcar_saida(aba, codigo):
         return None
     if d.get("id"):
         try:
-            marcos_proc(aba, d["id"], codigo, {})
+            marcos_proc(aba, d["id"], codigo, {}, raiz=raiz, gatilho=raiz is None)
         except RuntimeError:
             pass  # sem os Marcos o processo desce igual, só sem o resultado
     d["saiu_em"] = time.strftime("%Y-%m-%d")
@@ -537,14 +552,7 @@ def levantar(forcar=False):
         else:
             linha["erro"] = "id ou código não achados no item (ver .caixa/item-exemplo.json)"
         if codigo:  # o que a tela do SOL mostra, para o SSEG.exe (tabela do Início e link da análise)
-            pasta = os.path.join(PROCESSOS, str(codigo))
-            os.makedirs(pasta, exist_ok=True)
-            with open(os.path.join(pasta, "sol-caixa.json"), "w", encoding="utf-8") as fh:
-                json.dump({"lido_em": time.strftime("%Y-%m-%d"), "id": ident, "id_analise": linha["id_analise"],
-                           "razao_social": it.get("razaoSocial"), "ocupacao": it.get("ocupacaoPredominante"),
-                           "area": it.get("area"), "tipo": it.get("tipo"), "dias_analise": it.get("qtdDiasAnalise"),
-                           "solicitacao": it.get("dataSolicitacao"), "prioridade": it.get("prioridade")},
-                          fh, ensure_ascii=False, indent=1)
+            gravar_sol_caixa(os.path.join(PROCESSOS, str(codigo)), it, ident, linha["id_analise"])
         if ident and codigo:  # Marcos (2.3.13): protocolo, análises, recursos — a cada leitura, porque mudam
             try:
                 marcos_proc(aba, ident, codigo, linha)

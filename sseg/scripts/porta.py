@@ -29,7 +29,10 @@ AÇÕES
                                             remover, restaurar. Todos criam, pegam e comentam; mover,
                                             editar e excluir só quem criou, quem pegou ou o admin
   escala                                  → a linha do analista no escala.json (o admin recebe tudo)
-  relato <id>                             → guarda o .zip do stdin em ~/sseg-relatos/<analista>-<id>.zip
+  relato <id>                             → guarda o .zip do stdin em ~/sseg-relatos/<analista>-<id>.zip e (2.6.3)
+                                            põe um cartão no Quadro da seção, para o administrador ver na hora
+  relatos                                 → os relatos dele (o admin vê todos), com o andamento: recebido,
+                                            trabalhando ou pronto, e a resposta para o analista
   sol                                     → (2.3.17) a sessão do SOL no Chromium do servidor, só lendo:
                                             {"chrome", "logado", "exp", "senha", "trava", "ultimo_login",
                                             "caixa_lida_em", "caixa_total"}. Nunca devolve token nem senha
@@ -248,7 +251,41 @@ class Porta:
         nome = "%s-%s.zip" % (norm(self.analista).replace(" ", "_"), ident)
         with open(os.path.join(self.relatos, nome), "wb") as fh:
             fh.write(dados)
+        try:  # 2.6.3: cartão no Quadro da seção com a 1ª linha do relato (o texto já vem limpo do PC)
+            import io
+            import zipfile
+            with zipfile.ZipFile(io.BytesIO(dados)) as z:
+                txt = z.read("relato.md").decode("utf-8", "replace")
+            linha = next((l.strip() for l in txt.split("**O que aconteceu**", 1)[-1].splitlines() if l.strip()), "")
+            qd.adicionar(self.quadro_raiz, ("Relato de %s: %s" % (self.analista, linha))[:200],
+                         origem="Reportar ao Claude do SSEG.exe — ~/sseg-relatos/%s" % nome, autor=self.analista)
+        except Exception:  # noqa: BLE001 — o relato já está guardado; o cartão é aviso
+            pass
         return {"ok": True, "arquivo": nome}
+
+    def relatos_lista(self):
+        """Os relatos deste analista (admin: todos), do mais novo ao mais velho. Na pasta ~/sseg-relatos/<nome>/,
+        quem trabalha no relato deixa estado.txt (trabalhando|pronto) e resposta.txt (o que dizer ao analista)."""
+        if not os.path.isdir(self.relatos):
+            return {"relatos": []}
+        meu = norm(self.analista).replace(" ", "_") + "-"
+        out = []
+        for z in sorted((n for n in os.listdir(self.relatos) if n.endswith(".zip")), key=lambda n: n[-19:], reverse=True):
+            if not (self.admin or z.startswith(meu)):
+                continue
+            pasta = os.path.join(self.relatos, z[:-4])
+
+            def ler(n):
+                try:
+                    with open(os.path.join(pasta, n), encoding="utf-8", errors="replace") as fh:
+                        return fh.read().strip()
+                except OSError:
+                    return ""
+            out.append({"id": z[-19:-4], "arquivo": z, "estado": ler("estado.txt") or "recebido",
+                        "resposta": ler("resposta.txt")[:2000]})
+            if len(out) >= 20:
+                break
+        return {"relatos": out}
 
     # --- Quadro da seção (2.3.0)
     def quadro(self):
@@ -464,6 +501,8 @@ def executar(porta, args, entrada, script):
         r = porta.escala()
     elif acao == "relato" and resto:
         r = porta.relato(resto[0], entrada())
+    elif acao == "relatos":
+        r = porta.relatos_lista()
     elif acao == "sol":
         r = porta.sol()
     elif acao == "base":

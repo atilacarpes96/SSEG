@@ -189,6 +189,14 @@ def main():
         r = sc.aplicar(ppci, Falso(), {cod + "/CIA 1.pdf": "servidor"})
         caso("sincronizar: escolha 'servidor' resolve o conflito",
              open(os.path.join(ppci, cod, "CIA 1.pdf")).read() == "cia srv" and not r["conflito_pendente"], str(r))
+        gravar(os.path.join(ppci, cod, "sol-caixa.json"), "pc")           # gerado pelo SOL dos dois lados
+        gravar(os.path.join(srv, cod, "sol-caixa.json"), "srv")
+        p = sc.comparar(sc.manifesto(ppci, clone_proc), Falso().listar(), {})
+        caso("sincronizar: arquivo gerado (sol-caixa, marcos, api…) mudado dos dois lados desce sem conflito",
+             cod + "/sol-caixa.json" in p["desce"] and cod + "/sol-caixa.json" not in p["conflito"]
+             and sc.gerado(cod + "/api-123.json") and sc.gerado("cia-ultima.txt") and not sc.gerado(cod + "/analise.json"), str(p))
+        os.remove(os.path.join(ppci, cod, "sol-caixa.json"))
+        os.remove(os.path.join(srv, cod, "sol-caixa.json"))
         os.remove(os.path.join(ppci, cod, "1.json"))
         p = sc.comparar(sc.manifesto(ppci, clone_proc), Falso().listar(), sc._ler_base())
         caso("sincronizar: apagado no PC não volta nem some do servidor",
@@ -251,6 +259,25 @@ def main():
              and pt.pedido(["--analista", "Sgt Fulano"], "bash -i") == ("Sgt Fulano", [])
              and pt.pedido(["listar"]) == (None, ["listar"])
              and json.loads(pt.executar(adm, ["remoto-listar"], lambda: b"", "p")) == adm.listar())
+    # 11b1. Reportar ao Claude (2.6.3): o relato vira cartão no Quadro da seção e cada um vê só os seus
+    with tempfile.TemporaryDirectory() as d:
+        import zipfile as _zf, io as _io
+        acesso = os.path.join(d, "acesso.json")
+        json.dump({"admin": "Sd Carpes", "analistas": {"Sgt Fulano": {"chave": "x"}}}, open(acesso, "w"))
+        R = lambda nome=None: pt.Porta(nome, raiz=os.path.join(d, "proc"), acesso=acesso, chaves=os.path.join(d, "k"),
+                                       escala=os.path.join(d, "e.json"), relatos=os.path.join(d, "rel"), quadro=os.path.join(d, "quadro"))
+        buf = _io.BytesIO()
+        with _zf.ZipFile(buf, "w") as z:
+            z.writestr("relato.md", "**O que aconteceu**\nO Atualizar não trouxe a caixa\n\n**Programa:** SSEG.exe 9")
+        r = R("Sgt Fulano").relato("20261020-080000", buf.getvalue())
+        os.makedirs(os.path.join(d, "rel", "sgt_fulano-20261020-080000"))
+        open(os.path.join(d, "rel", "sgt_fulano-20261020-080000", "estado.txt"), "w").write("pronto\n")
+        meus, adm_l = R("Sgt Fulano").relatos_lista()["relatos"], R().relatos_lista()["relatos"]
+        cart = pt.qd.ler(os.path.join(d, "quadro"))["cartoes"]
+        caso("porta: relato guarda o .zip, vira cartão no Quadro e aparece com o andamento só para quem mandou e o admin",
+             r["ok"] and len(cart) == 1 and "Sgt Fulano" in cart[0]["titulo"] and "Atualizar" in cart[0]["titulo"]
+             and [(x["id"], x["estado"]) for x in meus] == [("20261020-080000", "pronto")] and len(adm_l) == 1
+             and pt.executar(R("Sgt Fulano"), ["relatos"], lambda: b"", "p").startswith(b'{"relatos"'), str((r, cart, meus)))
     # 11b2. outro PC do administrador e senha do SOL pelo SSEG.exe (2.5.0)
     with tempfile.TemporaryDirectory() as d:
         chaves, acesso = os.path.join(d, "authorized_keys"), os.path.join(d, "acesso.json")
@@ -317,6 +344,20 @@ def main():
         caso("app: processo que saiu da caixa vira concluído com o resultado dos Marcos; análise velha não conta; na caixa fica",
              ficou == "caixa" and (e1["estado"], e1["resultado"], e1["concluido"], e1["dias"]) == ("concluido", "CA", "2026-10-19", 9)
              and (e2["estado"], e2["resultado"]) == ("concluido", ""), str((ficou, e1, e2)))
+    # 11b3b. a caixa do SOL manda sobre a planilha (2.6.3; caso de 20/10/2026: distribuídos na véspera sumiram do Início)
+    E0 = lambda dist: _api.estado_caixa(dist, {}, 10, __import__("datetime").date(2026, 10, 20))
+    S = lambda e, sc, ult="2026-10-20": _api._na_caixa_do_sol(e, sc, ult)
+    hoje_sol = {"lido_em": "2026-10-20", "id": 1}
+    a = S(E0({"codigo": "A1"}), hoje_sol)                                                         # planilha: na fila
+    b = S(E0({"codigo": "A1", "distribuido": "2026-10-15", "concluido": "2026-10-19", "resultado": "CA"}), hoje_sol)
+    c = S(E0({"codigo": "A1", "distribuido": "2026-10-15", "concluido": "2026-10-20", "resultado": "CA"}), hoje_sol)
+    d_ = S(E0({}), {"lido_em": "2026-10-16"})                                                     # leitura velha
+    e_ = S(E0({}), dict(hoje_sol, saiu_em="2026-10-20"))
+    f_ = S(E0({"codigo": "A1", "distribuido": "2026-10-19"}), hoje_sol)                           # já na caixa: fica igual
+    caso("app: na caixa do SOL vale mais que a planilha atrasada; conclusão no mesmo dia, leitura velha e saída não",
+         (a["estado"], a["vence"], a["fonte"]) == ("caixa", "", "sol") and (b["estado"], b["resultado"]) == ("caixa", "")
+         and c["estado"] == "concluido" and d_["estado"] == "sem" and e_["estado"] == "sem"
+         and (f_["estado"], f_["vence"], f_["fonte"]) == ("caixa", "2026-10-29", "planilha"), str([a, b, c, d_, e_, f_]))
     # 11b4. memorial e CIA congelados (2.6.0): nomes dentro da lista do enviar, código validado, só admin
     import sol_snapshot as _snap
     import enviar as _env

@@ -12,6 +12,21 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 20/10/2026 — SSEG.exe 2.6.3: caixa do SOL manda no Início, caixa lida no Chrome de cada analista, "Reportar ao Claude" em todo erro
+
+- **Caixa:** a lista do Início considera "na caixa" o que está na leitura mais recente da caixa do SOL (`sol-caixa.json`), mesmo antes da planilha das 7h47. Caso de 20/10/2026: o Atualizar das 07:47 leu a caixa antes de a planilha gravar os distribuídos do dia 19, e quatro processos sumiram.
+- **Analista que não é o administrador:** o Atualizar lê a caixa no Chrome do próprio PC (`scripts/caixa_pc.py`, pela depuração do Chrome DevTools MCP), com JSON, Marcos, CIA anterior e pré-análise. Resolve a caixa do Sgt Magalhães, que só mudava pela planilha e ficava sem razão social.
+- **Sincronizar:** arquivo gerado pelo SOL ou pela planilha que mudou dos dois lados desce do servidor sem virar conflito; conflito não segura mais o Atualizar.
+- **Erros:** todo aviso de erro traz "Reportar ao Claude" (relato com erro, print e registro; vai ao servidor e vira cartão no Quadro). Ajuda → Meus relatos mostra o andamento.
+- **Instalação:** passo do Chrome confere se há Chrome e a versão (144+), endereço copiado para colar, erro com "Tentar de novo", pedido de acesso pelo WhatsApp e a tela avança sozinha quando o administrador libera.
+- **Saíram** o atalho "Abrir SOL", o Tampermonkey (`ferramentas/sol-entrar`) e a dependência da extensão Claude in Chrome no programa.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Depois: Configuração → Chrome para o Claude deve estar todo verde (se não, a tela Instalação mostra o passo). Abra o SOL no Chrome, entre, e clique em Atualizar no Início: a sua caixa do SOL tem de aparecer com a razão social. Se tiver o atalho "Abrir SOL" na Área de Trabalho, pode apagar. Nada a instalar na conta.
+```
+
 ## 19/10/2026 — SSEG.exe 2.6.2: janelas do programa usam a skill do clone, não a da conta
 
 - `chat.py`: a janela do processo passa a apontar `sseg/skills/ppci-analise-processo/SKILL.md`; as janelas de fluxo, o SKILL.md do clone. As duas proíbem as skills da conta (`anthropic-skills:ppci-*` etc.), que só mudam com o upload do .zip.

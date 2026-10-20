@@ -200,6 +200,17 @@ def _gravar_base(base):
         json.dump(base, fh, ensure_ascii=False, indent=1, sort_keys=True)
 
 
+# Arquivos que ninguém edita à mão: saem do SOL, da planilha ou de script (2.6.3). Mudou dos dois lados = duas
+# leituras do mesmo SOL; vale a do servidor, sem perguntar. Antes isso virava conflito, e o conflito segurava o
+# Atualizar inteiro (nada descia até o analista escolher).
+GERADO = re.compile(r"^(sol-caixa|marcos|marcos-resumo|historico|facts|pre-analise|distribuicao|ct|recurso)\.(json|txt)$"
+                    r"|^(anterior-)?api-\d+\.json$|^cia-(\d+|ultima)\.(pdf|txt)$")
+
+
+def gerado(k):
+    return bool(GERADO.match(k.rsplit("/", 1)[-1]))
+
+
 def comparar(local, remoto_m, base):
     """Plano de três vias: {sobe, desce, conflito, apagado_pc, apagado_servidor, iguais}."""
     p = {"sobe": [], "desce": [], "conflito": [], "apagado_pc": [], "apagado_servidor": [], "iguais": 0}
@@ -213,7 +224,7 @@ def comparar(local, remoto_m, base):
             p["apagado_servidor" if L == B else "sobe"].append(k)
         elif R == B:
             p["sobe"].append(k)
-        elif L == B:
+        elif L == B or gerado(k):
             p["desce"].append(k)
         else:
             p["conflito"].append(k)

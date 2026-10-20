@@ -155,6 +155,67 @@ def _ir(c, url):
     return False, "a aba do SOL aberta não está logada"
 
 
+class AbaLogada:
+    """A aba do SOL logada, para os scripts do clone que falam com o SOL (caixa_pc.py, 2.6.3): mesma interface
+    do sol_caixa.Aba — avaliar(js) roda o script na página (com await) e devolve o JSON que ele retornou."""
+
+    def __init__(self, c, sessao):
+        self.c, self.sessao = c, sessao
+
+    def avaliar(self, js):
+        r = self.c.pedir("Runtime.evaluate", {"expression": js, "awaitPromise": True, "returnByValue": True}, self.sessao)
+        if r.get("exceptionDetails"):
+            raise RuntimeError("Erro na página: " + json.dumps(r["exceptionDetails"], ensure_ascii=False)[:300])
+        return json.loads(r["result"]["value"])
+
+
+class _DoScript(Exception):
+    def __init__(self, e):
+        super().__init__(str(e))
+        self.e = e
+
+
+def _com_aba(c, fn):
+    abas = [t for t in c.pedir("Target.getTargets")["targetInfos"] if t.get("type") == "page" and SOL in t.get("url", "")]
+    if not abas:
+        raise LookupError("O SOL não está aberto no Chrome. Abra o SOL, entre com a sua senha e clique de novo.")
+    for t in abas:
+        sessao = c.pedir("Target.attachToTarget", {"targetId": t["targetId"], "flatten": True})["sessionId"]
+        try:
+            if c.pedir("Runtime.evaluate", {"expression": LOGADA, "returnByValue": True}, sessao)["result"].get("value"):
+                c.s.settimeout(120)  # uma leitura de caixa inteira (PDF de CIA em base64) passa dos 20 s do padrão
+                try:
+                    return fn(AbaLogada(c, sessao))
+                except Exception as e:  # noqa: BLE001 — erro do script não é conexão caída: não tenta de novo
+                    raise _DoScript(e)
+                finally:
+                    c.s.settimeout(20)
+        finally:
+            try:
+                c.pedir("Target.detachFromTarget", {"sessionId": sessao})
+            except (OSError, RuntimeError):
+                pass
+    raise LookupError("A aba do SOL no Chrome está na tela de login (a sessão caiu). Entre de novo e clique outra vez.")
+
+
+def na_aba_logada(fn):
+    """Roda fn(aba) na aba do SOL em que o analista já entrou e devolve o que fn devolver.
+    LookupError: sem aba do SOL ou sem login (mensagem pronta para o analista). OSError: Chrome sem depuração."""
+    global _CONEXAO
+    with _TRAVA:
+        for tentativa in (1, 2):  # a conexão guardada pode ter caído (Chrome fechado e aberto de novo)
+            try:
+                return _com_aba(_conectar(), fn)
+            except _DoScript as e:
+                raise e.e
+            except (OSError, ValueError, KeyError) as e:
+                if _CONEXAO:
+                    _CONEXAO.fechar()
+                _CONEXAO = None
+                if tentativa == 2:
+                    raise OSError("Não consegui falar com o Chrome (%s). Confira em Configuração → Chrome para o Claude." % e)
+
+
 def abrir(url):
     """(True, msg) se levou a aba logada ao endereço; (False, motivo) para quem chama abrir do jeito antigo."""
     global _CONEXAO

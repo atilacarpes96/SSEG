@@ -4,7 +4,7 @@ api.py — a ponte da interface HTML (SSEG.exe 2.0, pywebview) com a lógica que
 
 Cada método público é chamado pelo JavaScript (window.pywebview.api.<nome>) numa thread própria
 e devolve dados simples (dict, list, str). Nada de regra nova aqui: tudo vem dos módulos da 1.x
-(instalar, git_sinc, claude_local, busca, gasto, relato, sol_entrar) e das funções de sseg_app.
+(instalar, git_sinc, claude_local, busca, gasto, relato) e das funções de sseg_app.
 O quadro da 1.x virou "Detalhes": log() manda a linha para a tela e guarda para o Reportar bug.
 """
 
@@ -36,7 +36,6 @@ import instalar
 import processo
 import relato
 import sol_aba
-import sol_entrar
 import sseg_app as base
 
 CODIGO = re.compile(r"^A\d{8}[A-Z]{2}\d{3}$")
@@ -123,6 +122,20 @@ def _saiu_da_caixa(e, pasta):
     except ValueError:
         pass
     return e
+
+
+def _na_caixa_do_sol(e, sc, ultima_leitura):
+    """2.6.3: a caixa do SOL manda sobre a planilha. A planilha entra uma vez por dia (7h47); a caixa do SOL é lida a
+    cada Atualizar (no servidor ou no Chrome deste PC) e grava sol-caixa.json em cada processo dela. Processo da
+    leitura mais recente (lido_em = a última data lida neste PC), sem saiu_em, está na caixa, mesmo que a planilha ainda
+    não o tenha distribuído ou o dê como concluído antes dessa leitura. Sem a distribuição da planilha, o prazo fica em
+    branco até ela chegar. Caso de 20/10/2026: quatro processos distribuídos no dia 19 sumiram do Início."""
+    lido = sc.get("lido_em") or ""
+    if not lido or sc.get("saiu_em") or lido != ultima_leitura or e["estado"] == "caixa":
+        return e
+    if e["estado"] == "concluido" and lido <= (e["concluido"] or ""):
+        return e
+    return dict(e, estado="caixa", fonte="sol", distribuido="", concluido="", resultado="", vence="", dias=None, no_prazo=None)
 
 
 _IDENT = {}  # caminho do api-<ID>.json → (mtime, dados): ler 30 KB por pasta a cada atualização da tabela pesa
@@ -348,7 +361,14 @@ class Api:
         (`instrucao` diz o quê, e a tela confere sozinha até o passo ficar ok)."""
         cfg, ins, prog, pas = self._cfg(), instalacao.estado(), self.estado_programas(), self.estado_pastas()
         sem_prog = [i["nome"] for i in prog["itens"] if not i["ok"] and "falta entrar" not in i["nome"]]
-        srv = self.servidor_acesso(False)
+        # 2.6.3: esperando o administrador liberar, confere de verdade a cada 20 s — a tela avança sozinha
+        esperando = acesso.chave_publica() and acesso.tem_apelido() and not self._cfg().get("servidor_quem")
+        agora = time.time()
+        if esperando and agora - getattr(self, "_srv_teste_t", 0) > 20:
+            self._srv_teste_t = agora
+            srv = self.servidor_acesso(True)
+        else:
+            srv = self.servidor_acesso(False)
         reg = chrome_devtools.registrado()
         reg_ok = bool(reg) and "--autoConnect" in (reg.get("args") or [])
         _porta, depuracao = chrome_devtools.porta_depuracao()
@@ -378,17 +398,56 @@ class Api:
             {"id": "analista", "titulo": "Quem é você", "ok": bool(cfg.get("analista")),
              "detalhe": cfg.get("analista") or "O nome como está na escala.",
              "instrucao": "Escolha o seu nome na lista.", "acao": "Escolher"},
-            {"id": "chrome_debug", "titulo": "Liberar o Chrome para o Claude", "ok": depuracao,
-             "detalhe": "Depuração remota ligada." if depuracao else
-             "Uma vez só: ligar a depuração remota do Chrome.",
-             "instrucao": "Vai abrir o chrome://inspect. Marque \"Allow remote debugging\" e deixe a aba aberta; "
-                          "esta tela avança sozinha. Na primeira conversa o Chrome pergunta \"Permitir\".",
-             "acao": "Abrir chrome://inspect"},
+            self._passo_chrome(depuracao),
             {"id": "servidor", "titulo": "Servidor (opcional)", "ok": bool(srv["quem"]), "opcional": True,
              "chave": bool(srv["chave"] and srv["apelido"]), "detalhe": det_srv,
-             "instrucao": "Pedir acesso gera o código; mande-o ao administrador. Depois, Testar conexão.",
+             "instrucao": "Pedir acesso gera uma mensagem pronta; mande ao administrador (o botão abre o WhatsApp). "
+                          "Quando ele liberar, esta tela percebe sozinha.",
              "acao": "Testar conexão" if srv["chave"] and srv["apelido"] else "Pedir acesso"},
         ]
+
+    def _passo_chrome(self, depuracao):
+        """Liberar o Chrome para o Claude (2.6.3): antes de mandar ao chrome://inspect, confere se há Chrome e se ele é
+        novo o bastante — no Chrome antigo a opção não existe e o analista ficava perdido (Sgt Magalhães, 20/10/2026)."""
+        p = {"id": "chrome_debug", "titulo": "Liberar o Chrome para o Claude", "ok": depuracao, "modo": "inspect",
+             "endereco": chrome_devtools.INSPECT,
+             "detalhe": "Ligado: o SSEG lê a sua caixa do SOL e o Claude lê o SOL pelo seu Chrome." if depuracao else
+             "Uma vez só: deixar o SSEG e o Claude lerem o SOL no Chrome em que você entra.",
+             "instrucao": "1. Clique no botão: abre o Chrome (o endereço já fica copiado).\n"
+                          "2. Se a página não abrir sozinha, clique na barra de endereço do Chrome, cole (Ctrl+V) e aperte Enter.\n"
+                          "3. Marque a caixa \"Allow remote debugging\" (Permitir depuração remota) e deixe a aba aberta.\n"
+                          "Esta tela avança sozinha. Depois, quando o Chrome perguntar \"Permitir\", clique em Permitir.",
+             "acao": "Abrir no Chrome"}
+        if depuracao or os.name != "nt":
+            return p
+        v = chrome_devtools.versao_chrome()
+        if not chrome_devtools.chrome_exe():
+            p.update(titulo="Instalar o Google Chrome", modo="baixar", detalhe="O SSEG lê o SOL pelo Google Chrome, e ele não está neste PC.",
+                     instrucao="Clique no botão: abre a página do Chrome. Baixe, instale e abra o Chrome. Esta tela avança sozinha.",
+                     acao="Baixar o Chrome")
+        elif v and v < chrome_devtools.CHROME_MINIMO:
+            p.update(titulo="Atualizar o Chrome", modo="atualizar",
+                     detalhe="O Chrome deste PC é a versão %d; o SSEG precisa da %d ou mais nova." % (v, chrome_devtools.CHROME_MINIMO),
+                     instrucao="1. Clique no botão: abre a tela \"Sobre o Google Chrome\", que procura a atualização sozinha.\n"
+                               "2. Quando aparecer \"Reiniciar\", clique (as abas voltam abertas).\n"
+                               "Se a página não abrir, cole o endereço (já copiado) na barra do Chrome. Se o Chrome disser que "
+                               "a atualização é bloqueada pelo administrador do PC, clique em Reportar ao Claude.",
+                     acao="Atualizar o Chrome", endereco="chrome://settings/help")
+        return p
+
+    def chrome_abrir_passo(self, modo):
+        """Botão do passo do Chrome: abre a página certa e deixa o endereço copiado (o Chrome às vezes não abre
+        endereço chrome:// vindo de outro programa, e o analista cola)."""
+        if modo == "baixar":
+            webbrowser.open("https://www.google.com/chrome/")
+            return
+        endereco = "chrome://settings/help" if modo == "atualizar" else chrome_devtools.INSPECT
+        try:
+            self.copiar(endereco)
+        except (OSError, subprocess.SubprocessError):
+            pass
+        chrome_devtools.abrir_inspect(endereco)
+        self._log("Abri %s no Chrome (o endereço está copiado: se não abriu, cole na barra de endereço)." % endereco)
 
     def instalacao_programa(self):
         """Copia o .exe para a pasta de programas, cria os atalhos e reabre de lá (esta janela fecha)."""
@@ -519,18 +578,19 @@ class Api:
         raiz = self._cfg()["processos"]
         out = []
         try:
-            nomes = os.listdir(raiz)
+            nomes = [n for n in os.listdir(raiz) if CODIGO.match(n) and os.path.isdir(os.path.join(raiz, n))]
         except OSError:
             return out
+        caixa_sol = {n: _ler(os.path.join(raiz, n, "sol-caixa.json")) for n in nomes}
+        ultima = self._ultima_caixa = max([s.get("lido_em") or "" for s in caixa_sol.values()] + [""])
         for n in nomes:
             p = os.path.join(raiz, n)
-            if not (os.path.isdir(p) and CODIGO.match(n)):
-                continue
             arqs = [os.path.join(p, a) for a in os.listdir(p)]
             quando = max([os.path.getmtime(a) for a in arqs] + [os.path.getmtime(p)])
             reg = os.path.join(p, "analise.json")
             dist = _ler(os.path.join(p, "distribuicao.json"))
-            out.append(dict(_saiu_da_caixa(estado_caixa(dist, _ler(reg), self._cfg().get("prazo_caixa", 10)), p),
+            e = _saiu_da_caixa(estado_caixa(dist, _ler(reg), self._cfg().get("prazo_caixa", 10)), p)
+            out.append(dict(_na_caixa_do_sol(e, caixa_sol[n], ultima),
                             **identificacao(p, os.listdir(p), dist),
                             codigo=n, quando=quando, arquivos=len(arqs), analise=os.path.exists(reg),
                             cts=_ler(os.path.join(p, "ct.json")).get("itens") or [],
@@ -780,7 +840,8 @@ class Api:
             raise RuntimeError("Não há pasta %s na pasta dos processos." % codigo)
         d = processo.montar(self._clone(), pasta)
         dist = _ler(os.path.join(pasta, "distribuicao.json"))
-        d["caixa"] = estado_caixa(dist, d["analise"], self._cfg().get("prazo_caixa", 10))
+        d["caixa"] = _na_caixa_do_sol(_saiu_da_caixa(estado_caixa(dist, d["analise"], self._cfg().get("prazo_caixa", 10)), pasta),
+                                      _ler(os.path.join(pasta, "sol-caixa.json")), getattr(self, "_ultima_caixa", ""))
         # cabeçalho enxuto (2.3.13): código, razão social, medidas; CT e recurso só quando existem
         d["razao"] = identificacao(pasta, os.listdir(pasta), dist)["razao"]
         d["cts"] = _ler(os.path.join(pasta, "ct.json")).get("itens") or []
@@ -876,7 +937,7 @@ class Api:
         ok, msg = sol_aba.abrir(url)
         if ok:
             return {"aba": True, "msg": msg}
-        c = sol_entrar.chrome()
+        c = chrome_devtools.chrome_exe()
         if c:
             subprocess.Popen([c, url], creationflags=base.SEM_JANELA)
         else:
@@ -1141,6 +1202,63 @@ class Api:
         self._log("SOL no servidor: leitura da caixa%s." % ("" if r.get("rc") == 0 else " com problema (saída %s)" % r.get("rc")))
         return r
 
+    def _scripts_do_clone(self, *nomes):
+        """Módulos de sseg/scripts do clone, recarregados (a regra muda pelo GitHub sem .exe novo)."""
+        import importlib
+        pasta = os.path.join(self._clone(), "sseg", "scripts")
+        if pasta not in sys.path:
+            sys.path.insert(0, pasta)
+        mods = []
+        for n in nomes:
+            m = importlib.import_module(n)
+            if os.path.dirname(os.path.abspath(getattr(m, "__file__", "") or "")) == os.path.abspath(pasta):
+                m = importlib.reload(m)
+            mods.append(m)
+        return mods
+
+    def caixa_no_pc(self):
+        """Lê a caixa do SOL na aba em que o analista já entrou, no Chrome deste PC (2.6.3, caixa_pc.py)."""
+        _m, _s, caixa_pc = self._scripts_do_clone("marcos", "sol_caixa", "caixa_pc")
+        pop = instalar.localizar().get("poppler")  # o pdftotext das CIAs anteriores
+        if pop and os.path.dirname(pop) not in os.environ.get("PATH", ""):
+            os.environ["PATH"] = os.path.dirname(pop) + os.pathsep + os.environ.get("PATH", "")
+        raiz = self._cfg()["processos"]
+        try:
+            r = sol_aba.na_aba_logada(lambda aba: caixa_pc.levantar(aba, raiz))
+        except PermissionError:
+            raise LookupError("O SOL recusou a leitura: a sessão da aba caiu. Entre de novo no SOL e clique outra vez.")
+        for c in r["novos"]:
+            try:
+                self.processo_pre_analise(c)
+            except (RuntimeError, OSError, subprocess.SubprocessError) as e:
+                r["avisos"].append("%s: pré-análise não rodou (%s)" % (c, str(e)[-120:]))
+        self._log("Caixa do SOL lida neste PC: %d processo(s)%s%s." % (
+            r["total"], "; novos: " + ", ".join(r["novos"]) if r["novos"] else "",
+            "; saíram: " + ", ".join(r["sairam"]) if r["sairam"] else ""), *("  ! " + a for a in r["avisos"]))
+        return r
+
+    def caixa_atualizar(self):
+        """Botão Atualizar (2.6.3). Administrador: a caixa é lida no servidor, com marcos, CIAs e pré-análise.
+        Os outros analistas (ou o servidor fora do ar): no Chrome deste PC, na aba do SOL em que o analista entrou.
+        Devolve {onde, ok, msg, acao}; acao = "sol" (abrir o SOL para entrar) ou "chrome" (ligar o Chrome)."""
+        motivo = ""
+        try:
+            r = self.servidor_sol_caixa()
+            if r.get("rc") == 0:
+                return {"onde": "servidor", "ok": True, "msg": "caixa lida no servidor"}
+            motivo = "a leitura no servidor não terminou bem (saída %s)" % r.get("rc")
+        except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as e:
+            if "administrador" not in str(e):
+                motivo = "servidor: " + str(e)[-160:]
+        try:
+            r = self.caixa_no_pc()
+        except LookupError as e:
+            return {"onde": "pc", "ok": False, "msg": str(e), "acao": "sol"}
+        except OSError as e:
+            return {"onde": "pc", "ok": False, "msg": str(e), "acao": "chrome"}
+        msg = "caixa lida no seu Chrome: %d processo(s)" % r["total"] + (" (%s)" % motivo if motivo else "")
+        return {"onde": "pc", "ok": True, "msg": msg, "avisos": r["avisos"]}
+
     def servidor_analistas(self):
         return acesso.chamar_json("analistas")
 
@@ -1184,19 +1302,6 @@ class Api:
         linhas = saida.strip().splitlines()
         self._log("— Processos —", *linhas)
         return linhas
-
-    # ---------------------------------------------------------------- SOL sem teclado
-    def sol_atalho(self):
-        lnk = sol_entrar.instalar_atalho()
-        self._log("✓ Atalho criado: " + lnk, *sol_entrar.conferir())
-        return sol_entrar.conferir()
-
-    def sol_tampermonkey(self):
-        sol_entrar.abrir_tampermonkey()
-        return {"script": sol_entrar.script_js(), "passos": sol_entrar.PASSOS}
-
-    def sol_conferir(self):
-        return sol_entrar.conferir()
 
     # ---------------------------------------------------------------- Chrome para o Claude (DevTools MCP)
     def _claude_exe(self):
@@ -1281,6 +1386,10 @@ class Api:
         base.abrir(pasta)
         self._log("Relato %s salvo em %s: mande o .zip por outro meio (tem imagens; não vai ao GitHub)." % (ident, destino))
         return {"id": ident, "onde": "pc"}
+
+    def relatos(self):
+        """Ajuda → Meus relatos (2.6.3): os relatos deste analista no servidor, com o andamento."""
+        return acesso.chamar_json("relatos")
 
     def abrir_issue(self, descricao, anexo=None):
         cfg = self._cfg()

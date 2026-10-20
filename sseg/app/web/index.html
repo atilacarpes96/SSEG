@@ -403,6 +403,9 @@ details.medida .itens { padding: 0 9px 8px; }
          font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20; }
 #aviso.mostrar { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 #aviso.erro { background: var(--verm); color: #fff; }
+#aviso .bt-relatar { margin-left: 10px; background: #fff; color: var(--verm); border: 0; border-radius: 6px; padding: 3px 10px; font-weight: 600; cursor: pointer; }
+.erro-txt { color: var(--verm); }
+.bt-relatar-linha { color: var(--verm); font-weight: 600; }
 
 /* ---- espelho no celular (2.4): a mesma página no navegador; o que só existe no PC some */
 .abas-proc { display: none; }
@@ -809,14 +812,9 @@ footer { color: var(--suave); }
           <button class="bt" id="b-esp-copiar" hidden>Copiar endereço do celular</button>
         </div>
       </div>
-      <h2>SOL sem teclado (opcional)</h2>
+      <h2>Chrome para o Claude</h2>
       <div class="cartao">
-        <p class="sub" style="margin:0 0 10px">Atalho "Abrir SOL" e o script do Tampermonkey: entra com a senha que o Chrome já guarda.</p>
-        <div class="linha-bts"><button class="bt" id="b-sol">Atalho Abrir SOL</button><button class="bt" id="b-tamper">Tampermonkey</button></div>
-      </div>
-      <h2>Chrome para o Claude (opcional)</h2>
-      <div class="cartao">
-        <p class="sub" style="margin:0 0 10px">Deixa o Claude ler e operar uma página que já está aberta e logada no seu Chrome (SOL, por exemplo) pelo DOM, console e rede, sem print. A senha continua sendo sua.
+        <p class="sub" style="margin:0 0 10px">Com isso ligado, o botão Atualizar lê a sua caixa do SOL e o Claude lê o SOL na aba em que você já entrou, sem extensão e sem print. A senha continua sendo sua.
           <b>Ligado, o Claude enxerga todas as janelas do perfil do Chrome</b>; desligue a depuração em chrome://inspect quando terminar.</p>
         <div class="prog" id="c-chrome"></div>
         <div class="linha-bts">
@@ -834,7 +832,8 @@ footer { color: var(--suave); }
       <div class="cartao linha-bts">
         <button class="bt p" id="b-painel">Painel SSEG · manual</button>
         <button class="bt" id="b-procurar">Procurar atualização</button>
-        <button class="bt" id="b-bug">Reportar bug</button>
+        <button class="bt" id="b-bug">Reportar ao Claude</button>
+        <button class="bt" id="b-relatos">Meus relatos</button>
         <button class="bt" id="b-subs">Subagentes</button>
         <button class="bt" id="b-gasto">Gasto</button>
       </div>
@@ -919,11 +918,20 @@ const COR = m => /haiku/i.test(m) ? "var(--haiku)" : /opus/i.test(m) ? "var(--op
 window.onerror = (msg, src, lin, col, err) => { try { window.pywebview.api.erro_js(msg + " @" + lin + ":" + col); } catch (e) {} };
 window.addEventListener("unhandledrejection", ev => { try { window.pywebview.api.erro_js("promessa: " + (ev.reason && ev.reason.message || ev.reason)); } catch (e) {} });
 
+// Erro sempre traz "Reportar ao Claude" (2.6.3, pedido do Átila: o analista leigo não precisa saber o que fazer com o erro;
+// um clique e o relato vai ao servidor com o erro, o log e o print). O erro fica na tela até sair o mouse.
 function avisar(texto, erro) {
   const a = $("#aviso");
-  a.textContent = texto; a.classList.toggle("erro", !!erro); a.classList.add("mostrar");
-  clearTimeout(avisar.t); avisar.t = setTimeout(() => a.classList.remove("mostrar"), erro ? 6000 : 3500);
+  a.replaceChildren(texto);
+  if (erro && !ESPELHO) a.append(el("button", { class: "bt-relatar", on: { click: () => { a.classList.remove("mostrar"); abrirRelato(texto); } } }, "Reportar ao Claude"));
+  a.classList.toggle("erro", !!erro); a.classList.add("mostrar");
+  const some = () => { clearTimeout(avisar.t); avisar.t = setTimeout(() => a.classList.remove("mostrar"), erro ? 12000 : 3500); };
+  a.onmouseenter = () => clearTimeout(avisar.t); a.onmouseleave = some;
+  some();
 }
+// botão discreto para as mensagens de erro que ficam na própria tela (Atualizar, Instalação…)
+const botaoReportar = contexto => ESPELHO ? el("span") :
+  el("button", { class: "bt link bt-relatar-linha", on: { click: () => abrirRelato(contexto) } }, "Reportar ao Claude");
 let SINC_N = 0;
 const SSEG = window.SSEG = {
   // Sincronização automática (2.5.5): só o ponto do chip pulsa de leve; no fim, reconfere o que mudou e atualiza as telas.
@@ -1030,7 +1038,7 @@ $("#b-analista").addEventListener("click", async () => { try { quemSou(await api
 // e a tela confere sozinha (a cada 3 s) quando o analista termina.
 const ICONE_INST = { programa: "💾", programas: "🧰", pastas: "📁", chrome_registro: "🔗", claude: "🔑", analista: "🪪", chrome_debug: "🌐", servidor: "🛰️" };
 const PASSOS_AUTO = ["programa", "programas", "pastas", "chrome_registro"];
-let INST_ROD = "", INST_ESPERA = 0;
+let INST_ROD = "", INST_ESPERA = 0, INST_ERRO = null;
 async function carregarInstalacao() {
   let passos;
   try { passos = await api("instalacao_passos"); } catch (e) { return []; }
@@ -1044,9 +1052,15 @@ async function carregarInstalacao() {
       el("div", {},
         el("small", {}, INST_ROD === atual.id ? "Fazendo agora…" : atual.auto ? "O programa faz sozinho" : atual.opcional ? "Opcional" : "Sua vez"),
         el("b", {}, atual.titulo),
-        el("p", { class: "sub" }, (atual.auto ? atual.detalhe : atual.instrucao || atual.detalhe)),
-        INST_ROD ? el("span") : el("button", { class: "bt p", on: { click: ev => atual.auto ? iniciarInstalacao() : passoInstalacao(atual.id, ev.currentTarget) } },
-          atual.auto ? "Começar a instalação" : atual.acao))));
+        el("p", { class: "sub", style: "white-space:pre-line" }, (atual.auto ? atual.detalhe : atual.instrucao || atual.detalhe)),
+        // endereço do Chrome à vista e com cópia (2.6.3): quando o Chrome não abre a página, o analista cola
+        atual.endereco && !atual.ok && atual.modo !== "baixar" ? el("div", { class: "campo-linha", style: "margin:6px 0" },
+          el("code", { style: "font-size:15px;padding:6px 10px;border:1px solid var(--linha);border-radius:6px;user-select:all" }, atual.endereco),
+          el("button", { class: "bt link", on: { click: () => copiar(atual.endereco).then(() => avisar("✓ Endereço copiado: cole na barra do Chrome.")) } }, "copiar")) : el("span"),
+        INST_ERRO && INST_ERRO.id === atual.id ? el("p", { class: "erro-txt" }, "Não deu certo: " + INST_ERRO.msg + " ",
+          botaoReportar("Instalação, passo \"" + atual.titulo + "\": " + INST_ERRO.msg)) : el("span"),
+        INST_ROD ? el("span") : el("button", { class: "bt p", on: { click: ev => atual.auto ? iniciarInstalacao() : passoInstalacao(atual.id, ev.currentTarget, atual) } },
+          INST_ERRO && INST_ERRO.id === atual.id ? "Tentar de novo" : atual.auto ? "Começar a instalação" : atual.acao))));
   let grupo = "";
   const linhas = [];
   for (const p of passos) {
@@ -1058,18 +1072,30 @@ async function carregarInstalacao() {
   }
   $("#passos").replaceChildren(...linhas);
   clearTimeout(INST_ESPERA);
-  if (atual && !atual.auto && !atual.opcional && !INST_ROD && $("#t-instalar").classList.contains("ativa"))
-    INST_ESPERA = setTimeout(() => { carregarInstalacao(); estadoProgramas(); }, 3000);
+  // confere sozinho enquanto espera o analista; no servidor, enquanto espera o administrador liberar (2.6.3)
+  const esperaSrv = atual && atual.id === "servidor" && atual.chave;
+  if (atual && !atual.auto && (!atual.opcional || esperaSrv) && !INST_ROD && $("#t-instalar").classList.contains("ativa"))
+    INST_ESPERA = setTimeout(() => { carregarInstalacao(); estadoProgramas(); }, esperaSrv ? 10000 : 3000);
   return passos;
 }
-async function passoInstalacao(id, b) {
+async function passoInstalacao(id, b, passo) {
   if (ESPELHO) return avisar("A instalação se faz na janela do PC.", true);
+  INST_ERRO = null;
+  try { await fazerPasso(id, b, passo); }
+  catch (e) { INST_ERRO = { id, msg: String((e && e.message) || e).slice(-300) }; }
+  return carregarInstalacao();
+}
+async function fazerPasso(id, b, passo) {
   if (id === "programa") { const r = await api("instalacao_programa", [], b); if (r.reabrindo) return avisar("Abrindo o SSEG instalado…"); }
   if (id === "programas") { $("#detalhes").classList.add("aberto"); await api("instalar_tudo", [], b); estadoProgramas(); }
   if (id === "claude") { await api("entrar_claude", [], b); avisar("Entre pelo navegador: esta tela avança sozinha."); }
   if (id === "pastas") { const p = await api("estado_pastas"); await api("criar_pastas", [p.clone, p.processos], b); estadoPastas(); estadoGithub(); }
   if (id === "chrome_registro") await api("chrome_registrar", [], b);
-  if (id === "chrome_debug") { await api("chrome_inspect", [], b); avisar("Marque \"Allow remote debugging\" no Chrome: esta tela avança sozinha."); }
+  if (id === "chrome_debug") {
+    const modo = (passo && passo.modo) || "inspect";
+    await api("chrome_abrir_passo", [modo], b);
+    avisar(modo === "baixar" ? "Instale o Chrome e abra: esta tela avança sozinha." : modo === "atualizar" ? "Atualize e clique em Reiniciar no Chrome." : "Marque \"Allow remote debugging\" no Chrome: esta tela avança sozinha.");
+  }
   if (id === "analista") quemSou(await api("analista"));
   if (id === "servidor") {
     const s = await api("servidor_acesso", [false]);
@@ -1078,7 +1104,6 @@ async function passoInstalacao(id, b) {
       avisar(t.quem ? "✓ Conectado como " + t.quem.analista + "." : "O servidor ainda não reconhece este PC: o administrador precisa autorizar o código.", !t.quem);
     } else { $("#b-srv-pedir").hidden = false; await $("#b-srv-pedir").onclick({ currentTarget: b }); }
   }
-  return carregarInstalacao();
 }
 // Faz em sequência tudo que é automático; para no primeiro que falhar (o motivo vai nos Detalhes).
 async function iniciarInstalacao() {
@@ -1091,7 +1116,10 @@ async function iniciarInstalacao() {
       INST_ROD = id; await carregarInstalacao();
       await passoInstalacao(id, null);  // "programa" reabre o SSEG instalado e fecha esta janela
       const depois = (await api("instalacao_passos")).find(x => x.id === id);
-      if (depois && !depois.ok) { $("#detalhes").classList.add("aberto"); avisar("✗ " + depois.titulo + ": veja os Detalhes, embaixo.", true); break; }
+      if (depois && !depois.ok) {
+        if (!INST_ERRO) INST_ERRO = { id, msg: depois.detalhe || "o passo não terminou" };
+        $("#detalhes").classList.add("aberto"); break;
+      }
     }
   } catch (e) {} finally { INST_ROD = ""; carregarInstalacao(); estadoProgramas(); }
 }
@@ -1135,8 +1163,9 @@ $("#b-srv-pedir").onclick = async ev => {
   carregarAcesso(false); estadoServidor();
   modal("Pedido de acesso", "Já está copiado: é uma mensagem pronta. Mande ao administrador do servidor (WhatsApp ou e-mail), inteira.",
     [el("div", { class: "lista", style: "word-break:break-all;white-space:pre-wrap;max-height:240px;overflow:auto" }, r.codigo),
-     el("p", { class: "sub" }, "Leva o seu nome e a chave pública deste PC (a secreta não sai daqui) e o comando para o servidor liberar. Quando ele avisar que liberou, clique em Testar conexão.")],
-    [["Copiar de novo", () => copiar(r.codigo).then(() => avisar("✓ Copiado."))], ["Fechar", fechar, true]]);
+     el("p", { class: "sub" }, "Leva o seu nome e a chave pública deste PC (a secreta não sai daqui) e o comando para o servidor liberar. \"Mandar pelo WhatsApp\" abre o WhatsApp com a mensagem pronta: escolha o administrador e envie. Quando ele liberar, a tela Instalação percebe sozinha.")],
+    [["Mandar pelo WhatsApp", () => api("abrir_url", ["https://wa.me/?text=" + encodeURIComponent(r.codigo)])],
+     ["Copiar de novo", () => copiar(r.codigo).then(() => avisar("✓ Copiado."))], ["Fechar", fechar, true]]);
 };
 $("#b-srv-liberar").onclick = async ev => {
   const texto = $("#srv-codigo").value;
@@ -1170,25 +1199,34 @@ $("#b-sol-gravar").onclick = async ev => {
 $("#b-sol-apagar").onclick = () => modal("Apagar o login do SOL", "Remove a matrícula e a senha deste PC e do servidor. O servidor deixa de entrar sozinho.", [],
   [["Apagar", async b => { await api("servidor_sol_apagar", [], b); $("#sol-mat").value = ""; fechar(); pintarSolSenha(); estadoSol(); avisar("✓ Login do SOL apagado."); }, true], ["Cancelar", fechar]]);
 
-// Atualizar (2.5.1): lê a caixa do SOL agora (administrador), baixa o que mudou e reordena a lista.
+// Atualizar (2.5.1; 2.6.3): lê a caixa do SOL agora — no servidor (administrador) ou no Chrome deste PC, na aba do SOL
+// em que o analista entrou —, baixa o que mudou e reordena a lista. Conflito não segura mais o resto: desce e sobe o
+// que dá e só depois mostra a tela de escolha.
 $("#b-atualizar").onclick = async ev => {
   const info = $("#atualizar-info"), b = ev.currentTarget;
   b.disabled = true;
   try {
-    info.textContent = "Lendo a caixa do SOL no servidor…";
-    let aviso = "";
-    try {  // quem pode ler a caixa é o servidor decidir (só o administrador): os outros analistas só sincronizam
-      const r = await window.pywebview.api.servidor_sol_caixa();
-      if (r.rc !== 0) aviso = " A leitura da caixa não terminou bem (saída " + r.rc + "); veja o chip SOL.";
-    } catch (e) { if (!/administrador/.test(String(e.message || e))) aviso = " Não li a caixa: " + String(e.message || e).slice(-160); }
-    info.textContent = "Baixando o que mudou…";
-    const plano = await window.pywebview.api.servidor_planejar();
-    if (plano.conflito.length) { telaServidor(plano); }
-    else if (plano.desce.length || plano.sobe.length) await window.pywebview.api.servidor_aplicar({});
+    info.replaceChildren("Lendo a caixa do SOL… (se o Chrome perguntar, clique em Permitir)");
+    const cx = await window.pywebview.api.caixa_atualizar();
+    info.replaceChildren("Baixando o que mudou…");
+    let plano = null, falhaSinc = "";
+    try {
+      plano = await window.pywebview.api.servidor_planejar();
+      if (plano.desce.length || plano.sobe.length) await window.pywebview.api.servidor_aplicar({});
+    } catch (e) { falhaSinc = String(e.message || e); }
     await carregarProcessos(); estadoServidor(); estadoSol();
     const prox = (ordemProcessos(PROCS).find(p => p.estado === "caixa") || {}).codigo;
-    info.textContent = "Atualizado às " + agoraHM() + (prox ? " · próximo: " + prox : " · caixa vazia") + aviso;
-  } catch (e) { info.textContent = ""; avisar(String(e.message || e).slice(-300), true); }
+    const partes = ["Atualizado às " + agoraHM() + (prox ? " · próximo: " + prox : " · caixa vazia")];
+    if (cx.ok) partes.push(" · " + cx.msg);
+    info.replaceChildren(...partes);
+    if (!cx.ok) {
+      const bt = cx.acao === "sol" ? el("button", { class: "bt link", on: { click: () => api("abrir_sol", ["https://www.solcbm.rs.gov.br/solcbm/adm/"]) } }, "abrir o SOL")
+        : el("button", { class: "bt link", on: { click: () => ir("instalar") } }, "ligar o Chrome");
+      info.append(el("br"), el("span", { class: "erro-txt" }, "Não li a caixa do SOL: " + cx.msg + " "), bt, " ", botaoReportar("Atualizar: " + cx.msg));
+    }
+    if (falhaSinc && !/acesso|chave|servidor ainda/i.test(falhaSinc)) info.append(el("br"), el("span", { class: "erro-txt" }, "Sincronização: " + falhaSinc.slice(-200) + " "), botaoReportar("Atualizar/sincronizar: " + falhaSinc));
+    if (plano && plano.conflito.length) telaServidor(await window.pywebview.api.servidor_planejar());  // só os conflitos sobraram
+  } catch (e) { info.replaceChildren(); avisar(String(e.message || e).slice(-300), true); }
   finally { b.disabled = false; }
 };
 
@@ -1481,7 +1519,7 @@ function regra(c) {
   return {
     fila: p => p.estado === "fila",
     caixa: p => p.estado === "caixa",
-    vence: p => p.estado === "caixa" && p.vence <= mais,
+    vence: p => p.estado === "caixa" && !!p.vence && p.vence <= mais,
     fora_prazo: p => (p.estado === "caixa" && p.no_prazo === false) || (conc(p) && p.no_prazo === false),
     ct: p => (p.ct && p.ct >= h) || meus(p.cts, "minuta").length > 0,
     ct_chefia: p => meus(p.cts, "chefia").length > 0,
@@ -1594,6 +1632,9 @@ function editarCard(c) {
 function tagEstado(p) {
   const h = isoLocal(new Date());
   if (p.estado === "fila") return el("span", { class: "tag sit k-cinza" }, "Na fila");
+  // 2.6.3: na caixa do SOL e a planilha ainda não trouxe a distribuição (ela entra às 7h47 dos dias úteis): sem prazo
+  if (p.estado === "caixa" && !p.vence) return el("span", { class: "tag sit k-verde",
+    title: "Está na sua caixa do SOL (última leitura). A planilha da distribuição ainda não trouxe a data; o prazo aparece quando ela chegar." }, "Na caixa do SOL");
   if (p.estado === "caixa") {
     const f = diasAte(p.vence);
     // 2.3.19: "faltam 8" era lido como 8 processos; agora diz que é o prazo da seção e até quando
@@ -2040,16 +2081,6 @@ $("#b-pastas").onclick = async ev => {
 };
 $("#b-abrir-proc").onclick = () => api("abrir_pasta", ["processos"]);
 $("#b-abrir-clone").onclick = () => api("abrir_pasta", ["clone"]);
-$("#b-sol").onclick = async ev => { const l = await api("sol_atalho", [], ev.currentTarget); modal("Atalho Abrir SOL", "", el("div", { class: "lista" }, l.join("\n")), [["Fechar", fechar]]); };
-$("#b-tamper").onclick = async ev => {
-  const t = await api("sol_tampermonkey", [], ev.currentTarget);
-  await copiar(t.script);
-  modal("Tampermonkey (SOL Entrar)", "O script já está copiado. Só com o mouse, no Chrome:",
-    [el("ol", {}, ...t.passos.map(p => el("li", { style: "margin:6px 0" }, p))),
-     el("p", { class: "sub" }, "Depois: dois cliques em \"Abrir SOL\" na Área de Trabalho. Aparece uma contagem de 5 s no topo da página — clique nela para cancelar.")],
-    [["Copiar o script de novo", async () => { await copiar(t.script); SSEG.log(["Script copiado."]); }], ["Fechar", fechar]]);
-};
-
 // ---- Chrome para o Claude (DevTools MCP)
 function pintarChrome(passos) {
   $("#c-chrome").replaceChildren(...passos.map(p => el("span", { class: p.ok ? "ok" : "", title: p.detalhe || "" }, p.titulo)));
@@ -2064,7 +2095,7 @@ const conferirChrome = async b => pintarChrome(await api("chrome_conferir", [], 
 $("#b-chrome-conf").onclick = ev => conferirChrome(ev.currentTarget);
 $("#b-chrome-reg").onclick = async ev => { pintarChrome(await api("chrome_registrar", [], ev.currentTarget)); avisar("✓ Registrado. Abra uma conversa nova do Claude para ele aparecer."); };
 $("#b-chrome-rem").onclick = async ev => pintarChrome(await api("chrome_remover", [], ev.currentTarget));
-$("#b-chrome-insp").onclick = ev => api("chrome_inspect", [], ev.currentTarget);
+$("#b-chrome-insp").onclick = ev => api("chrome_abrir_passo", ["inspect"], ev.currentTarget).then(() => avisar("Marque \"Allow remote debugging\". Se a página não abriu, cole o endereço (já copiado) na barra do Chrome."));
 $("#b-chrome-teste").onclick = async ev => {
   avisar("Testando… se o Chrome pedir, clique em Permitir.");
   const r = await api("chrome_testar", [], ev.currentTarget);
@@ -2088,10 +2119,15 @@ $("#b-gasto").onclick = async ev => {
   const t = await api("gasto", [], ev.currentTarget);
   modal("Gasto do Claude Code", "Conversas do Claude Code na pasta do SSEG neste PC, em tokens.", el("div", { class: "lista", style: "max-height:380px" }, t), [["Copiar", () => copiar(t)], ["Fechar", fechar]]);
 };
-$("#b-bug").onclick = async () => {
+// Reportar ao Claude (2.6.3; antes "Reportar bug"): um botão principal. O relato (texto limpo, log limpo e prints) vai ao
+// servidor pela porta e vira cartão no Quadro da seção; o andamento aparece em Ajuda → Meus relatos. Sem servidor neste PC
+// (instalação no começo), fica numa pasta e o texto vai copiado para mandar ao administrador.
+$("#b-bug").onclick = () => abrirRelato("");
+function abrirRelato(erro) {
   const imgs = [];
-  const desc = el("textarea", { rows: 4, placeholder: "O que você clicou, o que esperava, o que apareceu" });
-  const prev = el("div", { class: "lista", style: "max-height:160px" });
+  const desc = el("textarea", { rows: 4, placeholder: "O que você estava fazendo e o que esperava que acontecesse (pode ser curto)" });
+  if (erro) desc.value = "Apareceu o erro: " + erro + "\n\nEu estava: ";
+  const prev = el("div", { class: "lista", style: "max-height:120px" });
   const galeria = el("div", { style: "display:flex;gap:8px;flex-wrap:wrap;margin-top:6px" });
   const pintar = () => galeria.replaceChildren(...imgs.map((u, i) => el("div", { style: "position:relative" },
     el("img", { src: u, style: "height:70px;border:1px solid var(--linha);border-radius:5px" }),
@@ -2103,28 +2139,48 @@ $("#b-bug").onclick = async () => {
   zona.addEventListener("drop", ev => { ev.preventDefault(); ler(ev.dataTransfer.files); });
   const colar = ev => { if ($("#fundo-modal").classList.contains("aberto")) ler([...(ev.clipboardData || {}).items || []].map(i => i.getAsFile()).filter(Boolean)); };
   document.addEventListener("paste", colar);
-  const atualizar = async () => { prev.textContent = await api("relato", [desc.value]); };
+  const atualizar = async () => { try { prev.textContent = await api("relato", [desc.value]); } catch (e) {} };
   desc.addEventListener("input", () => { clearTimeout(desc._t); desc._t = setTimeout(atualizar, 300); });
   const printar = async b => {
     const fm = $("#fundo-modal"); fm.style.visibility = "hidden";
     await new Promise(r => setTimeout(r, 250));
     try { imgs.push(await api("print_janela", [], b)); pintar(); } finally { fm.style.visibility = ""; }
   };
-  const enviar = async (b, modo) => {
+  const sair = () => { document.removeEventListener("paste", colar); fechar(); };
+  const enviar = async b => {
     const anexo = await api("relato_enviar", [desc.value, imgs], b);
     document.removeEventListener("paste", colar);
-    if (modo === "issue") await api("abrir_issue", [desc.value, anexo]);
-    else { await copiar((await api("relato", [desc.value])) + "\nAnexos: relato " + anexo.id + (anexo.onde === "servidor" ? " (no servidor)" : " (salvo no PC)")); SSEG.log(["Relato copiado: cole na conversa do servidor."]); }
-    fechar();
+    if (anexo.onde === "servidor") return modal("Relato enviado", "", [el("p", {}, "Recebido no servidor (relato " + anexo.id + "). Ele entra no Quadro da seção, com o print e o registro do programa, para a correção. Quando ela sair, chega sozinha pelo GitHub ou como versão nova do programa (aviso \"Nova versão\" no topo)."),
+      el("p", { class: "sub" }, "O andamento fica em Ajuda → Meus relatos.")], [["Ok", fechar, true]]);
+    const txt = (await api("relato", [desc.value])) + "\nAnexos: relato " + anexo.id + " (salvo neste PC)";
+    await copiar(txt);
+    modal("Relato salvo neste PC", "", [el("p", {}, "Este PC ainda não fala com o servidor, então o relato ficou na pasta Documentos\\SSEG-relatos (ela abriu) e o texto já está copiado."),
+      el("p", {}, "Cole numa mensagem de WhatsApp para o Átila e anexe o .zip da pasta.")], [["Ok", fechar, true]]);
   };
-  modal("Reportar bug", "O texto vai limpo (sem código de processo, pasta ou nome de arquivo). Imagens e o log do programa vão ao servidor por SSH, ou ficam numa pasta do PC — nunca ao GitHub, porque o repositório é público.",
-    [desc, zona, el("div", { class: "linha-bts", style: "margin-top:6px" }, el("button", { class: "bt", on: { click: ev => printar(ev.currentTarget) } }, "Tirar print da janela")), galeria,
-     el("label", { class: "campo" }, "Texto que vai à issue (já limpo):"), prev,
-     el("p", { class: "discreto" }, "Junto, sozinho: o log do programa (Detalhes, eventos das conversas, erros e versão), também limpo.")], [
-      ["Abrir issue no GitHub", b => enviar(b, "issue"), true],
-      ["Copiar para a conversa", b => enviar(b, "conversa")],
-      ["Cancelar", () => { document.removeEventListener("paste", colar); fechar(); }]]);
+  // quando já veio de um erro, o print da janela vai junto sem pedir
+  if (erro && !ESPELHO) setTimeout(async () => {
+    const fm = $("#fundo-modal"); fm.style.visibility = "hidden";
+    await new Promise(r => setTimeout(r, 250));
+    try { imgs.push(await window.pywebview.api.print_janela()); pintar(); } catch (e) {} finally { fm.style.visibility = ""; }
+  }, 300);
+  modal("Reportar ao Claude", "Conte em poucas palavras. Vão junto, sozinhos: o registro do programa e o print da janela. Código de processo, pasta e nome de arquivo saem do texto antes de enviar.",
+    [desc, zona, el("div", { class: "linha-bts", style: "margin-top:6px" }, el("button", { class: "bt so-pc", on: { click: ev => printar(ev.currentTarget) } }, "Tirar print da janela")), galeria,
+     el("details", {}, el("summary", { class: "sub" }, "Ver o texto que vai"), prev)], [
+      ["Enviar", b => enviar(b), true],
+      ["Abrir issue no GitHub", async b => { const anexo = await api("relato_enviar", [desc.value, imgs], b); await api("abrir_issue", [desc.value, anexo]); sair(); }],
+      ["Cancelar", sair]]);
   atualizar();
+}
+$("#b-relatos").onclick = async ev => {
+  let r;
+  try { r = await api("relatos", [], ev.currentTarget); } catch (e) { return; }
+  const NOME = { recebido: "recebido", trabalhando: "o Claude está trabalhando", pronto: "pronto" };
+  const l = r.relatos || [];
+  modal("Meus relatos", "Os últimos que você mandou pelo Reportar ao Claude.",
+    l.length ? l.map(x => el("div", { class: "cartao", style: "margin:6px 0" },
+      el("b", {}, x.id.replace(/^(\d{4})(\d\d)(\d\d)-(\d\d)(\d\d).*/, "$3/$2 $4:$5")), " · ", el("span", { class: "tag sit " + (x.estado === "pronto" ? "k-verde" : "k-cinza") }, NOME[x.estado] || x.estado),
+      x.resposta ? el("p", { style: "white-space:pre-wrap;margin:6px 0 0" }, x.resposta) : null))
+    : [el("p", { class: "sub" }, "Nenhum relato ainda.")], [["Fechar", fechar, true]]);
 };
 
 
@@ -2325,7 +2381,7 @@ function pintarSituacao(e) {
   const partes = [tagEstado(e)];
   if (e.fonte === "planilha") {  // as datas da planilha ficam no title da situação (2.3.13)
     partes[0].title = (e.distribuido ? "Distribuído " + dataBR(e.distribuido) + " · vence " + dataBR(e.vence) : "Protocolo " + dataBR(e.protocolo)) + " · da planilha de distribuição";
-  } else {
+  } else if (e.fonte !== "sol") {  // lido da caixa do SOL (2.5.1, 2.6.3): só mostra
     const res = el("select", { title: "Resultado da análise" }, ...["", "CIA", "CA"].map(k => el("option", { value: k }, k || "resultado")));
     res.value = e.resultado || "";
     res.addEventListener("change", () => salvar({ resultado: res.value }));
