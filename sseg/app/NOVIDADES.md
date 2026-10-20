@@ -4,6 +4,18 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.5
+
+- **Lançar no SOL pelo programa, sem copiar e colar e sem gastar token.** Na janela do processo, coluna CIA, botão **"lançar no SOL"**:
+  - junta as exigências salvas de cada medida (como o "copiar a medida") e mostra, para cada uma, o item do SOL para onde vai, o status atual lá, a contagem dos 2.000 caracteres e o texto;
+  - avisa quando o item está **Aprovado** (lançar muda para Reprovado) e quando o "Outros" **já tem texto**, que será substituído (dá para ver o que está lá);
+  - elemento gráfico com nome estranho no SOL ("plantabaixac"): escolha o item na lista;
+  - você marca o que vai e clica em **Lançar os marcados**. O programa grava no campo "Outros", lê de volta e confere se ficou igual;
+  - "Demais inconformidades" também vai.
+- **A CIA não é emitida pelo programa.** Concluir e emitir continua sendo você, no SOL.
+- A exigência lançada ganha "✓ lançado no SOL em …". Se você mudar o texto depois, aparece "mudou depois de lançado: lance de novo".
+- Quem lança é o próprio programa, pela aba do SOL em que você entrou (com o seu login), não o Claude.
+
 ## 2.6.4
 
 - **Print do memorial do SOL, sozinho, em cada análise.** Quando o processo cai na caixa, o programa guarda `memorial SOL <N>.pdf` com tudo o que a página do licenciamento mostra:

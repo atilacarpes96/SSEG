@@ -693,7 +693,7 @@ footer { color: var(--suave); }
           <div class="rola" id="pr-check"></div>
         </div>
         <div class="coluna" data-col="cia">
-          <h2>CIA em construção <button class="bt link" id="pr-copiar-cia">copiar a CIA</button></h2>
+          <h2>CIA em construção <button class="bt link" id="pr-copiar-cia">copiar a CIA</button> <button class="bt link so-pc" id="pr-lancar" title="Grava as exigências salvas no campo Outros de cada item no SOL, pela sua aba do SOL. Mostra tudo antes; não emite a CIA.">lançar no SOL</button></h2>
           <div class="rola" id="pr-cia"></div>
         </div>
       </div>
@@ -2620,7 +2620,9 @@ function pintarCIA() {
         CIA_VISTA.compacto ? el("button", { class: "bt link", title: "voltar a uma linha", on: { click: () => { CIA_ABERTOS.delete(e.id); pintarCIA(); } } }, "fechar") : null,
         el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "exigencias", e.id]).then(recarregarRegistro) } }, "excluir"),
         conta),
-      temFinal ? el("div", { class: "discreto salvo" }, "✓ texto final salvo") : null,
+      temFinal ? el("div", { class: "discreto salvo" }, "✓ texto final salvo",
+        e.lancado ? (e.lancado_final === e.final ? " · ✓ lançado no SOL em " + e.lancado + (e.lancado_conferido === false ? " (sem conferência: veja na tela do SOL)" : "")
+          : " · ⚠ mudou depois de lançado no SOL (" + e.lancado + "): lance de novo") : "") : null,
       alca(ta, 1, () => Infinity, h => h ? CIA_ALTURA.set(e.id, h) : CIA_ALTURA.delete(e.id))));
   });
   if (CIA_VISTA.agrupar && r.exigencias.length > 1) {
@@ -2654,6 +2656,69 @@ let largCIA = 0;
 new ResizeObserver(([o]) => { const w = Math.round(o.contentRect.width); if (w === largCIA) return; largCIA = w;
   // no quadro seguinte: mexer na altura dentro do callback gera o aviso "ResizeObserver loop", que o build trata como erro
   requestAnimationFrame(() => { const a = $("#pr-cia"), top = a.scrollTop; for (const t of a.querySelectorAll(".exig textarea")) autoAltura(t); a.scrollTop = top; }); }).observe($("#pr-cia"));
+// ---- Lançar no SOL (2.6.5, autorizado pelo Átila em 20/10/2026). Script do programa, sem Claude e sem token: grava no
+// campo "Outros" de cada item, pela aba do SOL em que você entrou, e lê de volta para conferir. Uma caixa por item do
+// SOL (as exigências salvas da mesma medida vão juntas, como o "copiar a medida"). Nunca conclui a análise.
+$("#pr-lancar").onclick = async ev => {
+  const medidas = (PR.dados && PR.dados.medidas || []).map(m => m.nome);
+  const grupos = new Map();
+  for (const e of PR.reg.exigencias.filter(e => (e.final || "").trim())) {
+    const m = e.medida || ""; if (!grupos.has(m)) grupos.set(m, []); grupos.get(m).push(e);
+  }
+  if (!grupos.size) return avisar("Nenhuma exigência com texto salvo para lançar.", true);
+  const ordem = m => { const k = medidas.indexOf(m); return m ? (k < 0 ? 900 : k) : 999; };
+  const lista = [...grupos.entries()].sort((a, b) => ordem(a[0]) - ordem(b[0]))
+    .map(([m, l]) => ({ medida: m, ids: l.map(e => e.id), texto: textoSOL(l.map(e => e.final)), ja: l.every(e => e.lancado && e.lancado_final === e.final) }));
+  avisar("Lendo os itens no SOL… (se o Chrome perguntar, clique em Permitir)");
+  let planos;
+  try { planos = await api("sol_lancar_plano", [PR.codigo, lista.map(g => ({ medida: g.medida, texto: g.texto }))], ev.currentTarget); } catch (e) { return; }
+  const linhas = lista.map((g, i) => {
+    const p = planos[i];
+    const sel = el("select", { style: "max-width:100%" }, el("option", { value: "" }, "— item do SOL —"),
+      ...(p.opcoes || []).map(o => el("option", { value: o, selected: o === p.item }, o)));
+    const marca = el("input", { type: "checkbox", checked: !!p.ok && !g.ja });
+    const info = el("div", { class: "sub" });
+    const pintar = q => {
+      const av = [];
+      if (q.status === "Aprovado") av.push("⚠ está APROVADO no SOL: lançar muda para Reprovado");
+      if (q.status === "Reprovado") av.push("já está Reprovado no SOL");
+      if (q.ja_outros) av.push("⚠ o \"Outros\" já tem texto, que será SUBSTITUÍDO por este");
+      if (q.outras) av.push(q.outras + " opção(ões) pronta(s) do SOL já marcada(s) ficam como estão");
+      if (g.ja) av.push("já lançada por este programa em " + (PR.reg.exigencias.find(e => e.id === g.ids[0]) || {}).lancado);
+      if (q.aviso) av.push("✗ " + q.aviso);
+      info.replaceChildren(av.join(" · ") || "Status no SOL: " + (q.status || "—"),
+        q.ja_outros ? el("details", {}, el("summary", {}, "ver o texto que está lá"), el("div", { class: "lista", style: "white-space:pre-wrap;max-height:120px" }, q.ja_outros)) : "");
+    };
+    pintar(p);
+    sel.addEventListener("change", async () => {  // o analista escolheu outro item do SOL: refaz o plano só dele
+      if (!sel.value) { marca.checked = false; return; }
+      try { const [q] = await api("sol_lancar_plano", [PR.codigo, [{ medida: sel.value, texto: g.texto }]]); pintar(q); marca.checked = !!q.ok; } catch (e) {}
+    });
+    const n = g.texto.length;
+    return { g, sel, marca, no: el("div", { class: "cartao", style: "margin:6px 0;padding:8px" },
+      el("label", { style: "display:flex;gap:8px;align-items:center;font-weight:600" }, marca, (g.medida || "Sem medida escolhida") + " · " + g.ids.length + " exigência(s)"),
+      el("div", { style: "display:flex;gap:8px;align-items:center;margin:4px 0" }, el("span", { class: "sub" }, "vai para:"), sel,
+        el("span", { class: n > 2000 ? "alto" : "discreto" }, n + " / 2000")),
+      info,
+      el("details", {}, el("summary", { class: "sub" }, "ver o texto que vai"), el("div", { class: "lista", style: "white-space:pre-wrap;max-height:160px" }, g.texto))) };
+  });
+  modal("Lançar no SOL", "Cada caixa marcada vai para o campo \"Outros\" do item escolhido, como você faria em Reprovar → Outros → Reprovar. Depois o programa lê de volta e confere. A CIA não é emitida: isso continua sendo você, no SOL.",
+    linhas.map(l => l.no), [
+      ["Lançar os marcados", async b => {
+        const vao = linhas.filter(l => l.marca.checked && l.sel.value);
+        if (!vao.length) return avisar("Nada marcado.", true);
+        b.disabled = true; b.textContent = "Lançando…";
+        let res;
+        try { res = await api("sol_lancar", [PR.codigo, vao.map(l => ({ item: l.sel.value, texto: l.g.texto, ids: l.g.ids }))]); }
+        catch (e) { b.disabled = false; b.textContent = "Lançar os marcados"; return; }
+        recarregarRegistro();
+        const ok = res.filter(r => r.ok).length;
+        modal("Lançar no SOL", ok === res.length ? "✓ Tudo gravado e conferido. Confira na tela do SOL e emita a CIA quando estiver pronto." : "Algumas não foram (veja abaixo).",
+          el("div", { class: "lista" }, res.map(r => (r.ok ? "✓ " : "✗ ") + r.item + (r.ok ? " — gravado e conferido" : " — " + (r.aviso || "falhou"))).join("\n")),
+          [["Fechar", fechar, true], ...(ok < res.length ? [["Reportar ao Claude", () => abrirRelato("Lançar no SOL: " + res.filter(r => !r.ok).map(r => r.item + ": " + r.aviso).join(" | "))]] : [])]);
+      }, true],
+      ["Cancelar", fechar]]);
+};
 $("#pr-copiar-cia").onclick = async () => {
   const fin = PR.reg.exigencias.filter(e => (e.final || "").trim());
   await copiar(fin.map(e => e.final.trim()).join("\n\n"));

@@ -927,6 +927,55 @@ class Api:
         campos = {k: v for k, v in (campos or {}).items() if k in livres}
         return self._reg().atualizar(self._pasta_proc(codigo), colecao, id_, **campos)
 
+    # ---- Lançar no SOL (2.6.5, autorizado pelo Átila em 20/10/2026): script, sem Claude. Grava no "Outros" do item pela
+    # aba do SOL logada do analista (sol_lancar.py), lê de volta e confere. Nunca conclui a análise nem emite a CIA.
+    def _id_analise(self, codigo):
+        i = _ler(os.path.join(self._pasta_proc(codigo), "sol-caixa.json")).get("id_analise")
+        if not i:
+            raise RuntimeError("Não sei o id da análise deste processo no SOL: clique em Atualizar no Início (ele lê a caixa) e tente de novo.")
+        return i
+
+    def sol_lancar_plano(self, codigo, grupos):
+        """Só lê o SOL: para cada {medida, texto}, o item que casa, status atual, o que já está no Outros e as opções."""
+        _s, sol_lancar = self._scripts_do_clone("sol_caixa", "sol_lancar")
+        ida = self._id_analise(codigo)
+        try:
+            return sol_aba.na_aba_logada(lambda aba: [dict(sol_lancar.plano(aba, ida, g.get("medida") or "", g.get("texto") or ""),
+                                                           medida=g.get("medida") or "") for g in grupos or []])
+        except PermissionError:
+            raise RuntimeError("O SOL recusou a leitura: a sessão da aba caiu. Entre de novo no SOL e tente outra vez.")
+
+    def sol_lancar(self, codigo, lancamentos):
+        """Grava cada {item, texto, ids} no SOL e confere. As exigências (ids) lançadas e conferidas ficam marcadas."""
+        _s, sol_lancar = self._scripts_do_clone("sol_caixa", "sol_lancar")
+        ida, pasta = self._id_analise(codigo), self._pasta_proc(codigo)
+
+        def rodar(aba):
+            out = []
+            for l in lancamentos or []:
+                try:
+                    r = sol_lancar.lancar(aba, ida, l["item"], l["texto"])
+                except PermissionError as e:
+                    out.append({"item": l["item"], "ok": False, "aviso": str(e)})
+                    break  # sessão caiu: não adianta tentar os outros
+                except (RuntimeError, LookupError, ValueError, OSError) as e:
+                    r = {"item": l["item"], "ok": False, "aviso": str(e)}
+                out.append(r)
+            return out
+        res = sol_aba.na_aba_logada(rodar)
+        agora = time.strftime("%Y-%m-%d %H:%M")
+        for l, r in zip(lancamentos or [], res):
+            self._log(("✓ Lançado no SOL e conferido: " if r.get("ok") else "✗ Lançar no SOL, ") + l["item"]
+                      + ("" if r.get("ok") else ": " + (r.get("aviso") or "falhou")))
+            if r.get("ok") or r.get("conferido") is False:  # gravou (mesmo sem conferir): marca, para não lançar duas vezes sem ver
+                reg = self._reg()
+                for eid in l.get("ids") or []:
+                    e = next((x for x in reg.ler(pasta)["exigencias"] if x["id"] == eid), None)
+                    if e:
+                        reg.atualizar(pasta, "exigencias", eid, lancado=agora, lancado_item=l["item"], lancado_final=e.get("final") or "",
+                                      lancado_conferido=bool(r.get("ok")))
+        return res
+
     def processo_remover(self, codigo, colecao, id_):
         self._reg().remover(self._pasta_proc(codigo), colecao, id_)
 

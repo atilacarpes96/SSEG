@@ -12,6 +12,20 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 20/10/2026 — SSEG.exe 2.6.5: "lançar no SOL" pelo programa (sem Claude, sem token)
+
+- Autorizado pelo Átila em 20/10/2026. `scripts/sol_lancar.py` grava no "Outros" de cada item como o botão Reprovar do SOL: `POST /analise-tecnica/editar-item`, com a lista inteira de justificativas (as opções prontas já marcadas ficam). "Demais inconformidades" vai por `PUT …/inconformidade`.
+- O formato foi lido do código da própria página do SOL e conferido com leituras reais. Depois de gravar, o programa lê de volta e confere.
+- Nunca conclui a análise nem emite a CIA. "Outras medidas" fica de fora: no SOL a ação dela é outra.
+- Na janela do processo: coluna CIA → "lançar no SOL" → tela com item, status, texto e avisos → "Lançar os marcados". A exigência fica marcada como lançada.
+- Muda o padrão da skill `sol-cbmrs-navegador` só no SSEG.exe: lá, lançar é pelo botão, não pelo navegador do Claude.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". No primeiro uso do "lançar no SOL", lance um item que você ia notificar de qualquer forma e confira na tela do SOL antes de emitir a CIA. Nada a instalar na conta.
+```
+
 ## 20/10/2026 — SSEG.exe 2.6.4: print do memorial do SOL em cada análise
 
 - `scripts/memorial_sol.py`: do JSON do licenciamento, `memorial SOL <N>.pdf` e `.txt` com tudo o que a página mostra. Inclui a norma de dimensionamento de cada medida, o laudo inteiro e a seção "Dados a verificar" (o que conferir na planta e os pontos `??`/`!!` da pré-análise). Também congela o `licenciamento <N>.json`.

@@ -374,6 +374,55 @@ def main():
          _pa.notificados_cia(cia_f) == {"PLANTA BAIXA": "Corrigir a escada.", "CORTE": "Cotar o pé-direito."}
          and pl == {("mantido-notificado", "Planta baixa"), ("novo", "corte"), ("substituido", "CORTE")}, str(pl))
     caso("sincronizar: o print do memorial é gerado (vale o do servidor)", sc.gerado("A1/memorial SOL 3.pdf") and not sc.gerado("A1/memorial 3.pdf"))
+    # 11b3c. Lançar no SOL (2.6.5): corpo igual ao do botão Reprovar, o que já estava fica, Outros substituído, confere
+    import sol_lancar as _sl
+    import re
+    class SOLFalso:
+        def __init__(s, guardar=True):
+            s.chamadas, s.guardar = [], guardar
+            s.ana = {"id": 77, "status": "EM_ANALISE", "inconformidade": "velha", "licenciamento": {
+                "envolvidos": {}, "caracteristica": {"id": 5, "ocupacoes": []}, "elemGraficos": [], "especsRiscos": [],
+                "especSeguranca": {"id": 9, "medidas": [{"id": 11, "tipo": {"nome": "Saída de Emergência", "chaveNC": "analise.medidas.saida"},
+                    "resultado": {"id": 501, "statusResultadoAtec": "REPROVADO", "justificativas": [
+                        {"id": 1, "justificativa": "pronta", "parametroNcs": {"id": 300, "valor": "Largura"}},
+                        {"id": 2, "justificativa": "texto velho", "parametroNcs": {"id": 301, "valor": "Outros"}}]}}]}}}
+        def avaliar(s, js):
+            m = re.search(r'const a = (\{.*?\});\n', js, re.S)
+            if m:  # gravação
+                a = json.loads(m.group(1)); s.chamadas.append(a)
+                if s.guardar and a["url"].endswith("/editar-item"):
+                    c = json.loads(a["corpo"]); s.ana["licenciamento"]["especSeguranca"]["medidas"][0]["resultado"] = dict(c, id=501)
+                if a["url"].endswith("/inconformidade"):
+                    s.ana["inconformidade"] = a["corpo"]
+                return {"status": 200, "corpo": "501"}
+            url = json.loads(re.search(r'fetch\(("[^"]+")', js).group(1))
+            s.chamadas.append({"metodo": "GET", "url": url})
+            corpo = [{"id": 301, "chave": "analise.medidas.saida", "valor": "Outros", "ativo": True}] if "/parametro/" in url else s.ana
+            return {"status": 200, "corpo": json.dumps(corpo)}
+    f = SOLFalso()
+    pl = _sl.plano(f, 77, "saida de emergencia", "\n- Novo.")
+    r = _sl.lancar(f, 77, "Saída de Emergência", "\n- Novo.")
+    post = [c for c in f.chamadas if c["metodo"] == "POST"]
+    corpo = json.loads(post[0]["corpo"]) if post else {}
+    caso("Lançar no SOL: plano lê o que já está; POST editar-item com a pronta mantida e o Outros novo; confere; nunca conclui",
+         (pl["status"], pl["ja_outros"], pl["outras"]) == ("Reprovado", "texto velho", 1) and r["ok"] and len(post) == 1
+         and post[0]["url"].endswith("/analise-tecnica/editar-item")
+         and (corpo["id"], corpo["idAnaliseTecnica"], corpo["idItemAnalisado"], corpo["tipoItemAnaliseTecnica"], corpo["statusResultadoAtec"]) == (501, 77, 11, "MEDIDA_SEGURANCA", "REPROVADO")
+         and [(j["parametroNcs"]["id"], j["justificativa"], j["id"]) for j in corpo["justificativas"]] == [(300, "pronta", None), (301, "\n- Novo.", None)]
+         and not any(re.search(r"deferir|indeferir|concluir", c["url"]) for c in f.chamadas), str((pl, r, corpo)))
+    f2 = SOLFalso(guardar=False)
+    r2 = _sl.lancar(f2, 77, "Saída de Emergência", "\n- Novo.")
+    f3 = SOLFalso()
+    r3 = _sl.lancar(f3, 77, "Demais inconformidades", "\n- Livre.")
+    put = [c for c in f3.chamadas if c["metodo"] == "PUT"]
+    erro = ""
+    try:
+        _sl.lancar(SOLFalso(), 77, "Saída de Emergência", "x" * 2001)
+    except ValueError as e:
+        erro = str(e)
+    caso("Lançar no SOL: leitura de volta diferente avisa; demais inconformidades por PUT texto; acima de 2.000 não grava",
+         not r2["ok"] and r2["conferido"] is False and r3["ok"] and put and put[0]["tipo"] == "text/plain"
+         and put[0]["url"].endswith("/77/inconformidade") and "2001" in erro, str((r2, r3, erro)))
     # 11b3b. a caixa do SOL manda sobre a planilha (2.6.3; caso de 20/10/2026: distribuídos na véspera sumiram do Início)
     E0 = lambda dist: _api.estado_caixa(dist, {}, 10, __import__("datetime").date(2026, 10, 20))
     S = lambda e, sc, ult="2026-10-20": _api._na_caixa_do_sol(e, sc, ult)
