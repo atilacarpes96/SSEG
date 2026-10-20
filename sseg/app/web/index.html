@@ -1709,6 +1709,7 @@ function pintarProcessos() {
 }
 async function carregarProcessos() {
   try { [PROCS, CARDS] = await Promise.all([api("processos"), api("cards")]); } catch (e) { return; }
+  PROCS = PROCS.filter(p => p.meu !== false);  // 2.6.10: PPCI de outro analista (pela planilha) não aparece aqui
   ESTADO.analista = (CARDS.meta_info || {}).analista || "";
   pintarProcessos();
   if (!BASE) carregarBase().then(() => { if (BASE) pintarProcessos(); });
@@ -1900,11 +1901,12 @@ function colunaDoProcesso(p) {
 }
 async function carregarQuadro() {
   try { [QUADRO, PROCS] = await Promise.all([api("quadro"), api("processos")]); } catch (e) { return; }
+  PROCS = PROCS.filter(p => p.meu !== false);  // 2.6.10: só os PPCI deste analista
   pintarQuadro();
   if (!NOMES_ESCALA.length) try { NOMES_ESCALA = (await api("analista")).nomes || []; } catch (e) {}
 }
 async function mexer(acao, args, botao, secao) {
-  const r = await api(secao ? "quadro_secao" : "quadro_mexer", [acao, ...args], botao);
+  const r = await api(secao === "programa" ? "quadro_programa" : secao ? "quadro_secao" : "quadro_mexer", [acao, ...args], botao);
   QUADRO = await api("quadro");
   pintarQuadro();
   return r;
@@ -1925,7 +1927,7 @@ function editarCartao(c, secao) {
   const resp = el("input", { type: "text", value: c.pegou || "", maxlength: 60, list: "q-nomes", placeholder: "ninguém" });
   const nomes = el("datalist", { id: "q-nomes" }, ...NOMES_ESCALA.map(n => el("option", { value: n })));
   const info = [c.autor ? "Criada por " + c.autor : "", c.origem ? "veio de: " + c.origem : ""].filter(Boolean).join(" · ");
-  modal(secao ? "Tarefa da seção" : "Editar tarefa", info, [el("label", { class: "campo-card" }, "Título ", tit),
+  modal(secao === "programa" ? "Tarefa do programa" : secao ? "Tarefa da seção" : "Editar tarefa", info, [el("label", { class: "campo-card" }, "Título ", tit),
     el("label", { class: "campo-card" }, "Responsável ", resp, nomes),
     el("label", { class: "campo-card", style: "align-items:flex-start" }, "Checklist ", lista),
     secao ? el("label", { class: "campo-card", style: "align-items:flex-start" }, "O que foi feito ", feito) : null], [
@@ -1940,10 +1942,13 @@ function cartaoSolto(c, secao) {
   const i = QUADRO.colunas.indexOf(c.coluna);
   const mover = d => mexer("alterar", [c.id, { coluna: QUADRO.colunas[i + d] }], null, secao);
   const feitos = (c.checklist || []).filter(x => x.feito).length;
-  const eu = ultima(QUADRO.eu), meu = !secao || QUADRO.admin || [c.autor, c.pegou].some(n => n && ultima(n) === eu);
+  const prog = secao === "programa";  // 2.6.10: quadro do Programa, só do administrador
+  const eu = ultima(QUADRO.eu), meu = !secao || prog || QUADRO.admin || [c.autor, c.pegou].some(n => n && ultima(n) === eu);
   const data = s => s ? new Date(s * 1000).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : "";
   const no = el("div", { class: "qc" + (secao ? " qc-secao" : ""), draggable: meu ? "true" : false, "data-id": c.id },
     el("div", { class: "qc-tit" }, c.titulo),
+    prog ? el("div", { class: "qc-orig" }, el("span", { class: "tag k-roxo", title: "Arrumar o SSEG: relatos e avisos dos scripts. Só você vê." }, "programa"),
+      c.autor ? " · de " + c.autor : "") :
     secao ? el("div", { class: "qc-orig" }, el("span", { class: "tag k-azul" }, "seção"), " ",
       c.pegou ? el("b", {}, "👤 " + c.pegou) : el("span", {}, "ninguém pegou"),
       c.inicio ? " · início " + data(c.inicio) : "", c.fim ? " · fim " + data(c.fim) : "") : null,
@@ -1954,8 +1959,8 @@ function cartaoSolto(c, secao) {
       el("input", { type: "checkbox", checked: x.feito, disabled: !meu, on: { change: ev => mexer("alterar", [c.id, { checklist: c.checklist.map((y, j) => j === k ? { ...y, feito: ev.target.checked } : y) }], null, secao) } }),
       " " + x.texto)), el("small", {}, feitos + "/" + c.checklist.length)) : null,
     el("div", { class: "qc-bts" },
-      secao && !c.pegou ? el("button", { class: "bt link", title: "Esta tarefa é minha", on: { click: () => mexer("pegar", [c.id], null, true) } }, "Pegar") : null,
-      secao && c.pegou && meu ? el("button", { class: "bt link", title: "Devolver para a seção", on: { click: () => mexer("soltar", [c.id], null, true) } }, "Soltar") : null,
+      secao && !prog && !c.pegou ? el("button", { class: "bt link", title: "Esta tarefa é minha", on: { click: () => mexer("pegar", [c.id], null, true) } }, "Pegar") : null,
+      secao && !prog && c.pegou && meu ? el("button", { class: "bt link", title: "Devolver para a seção", on: { click: () => mexer("soltar", [c.id], null, true) } }, "Soltar") : null,
       meu && i > 0 ? el("button", { class: "bt link", title: "Coluna anterior", on: { click: () => mover(-1) } }, "←") : null,
       meu && i < QUADRO.colunas.length - 1 ? el("button", { class: "bt link", title: "Próxima coluna", on: { click: () => mover(1) } }, "→") : null,
       meu ? el("button", { class: "bt link", title: "Editar", on: { click: () => editarCartao(c, secao) } }, "✎") : null,
@@ -1963,7 +1968,7 @@ function cartaoSolto(c, secao) {
         const r = await mexer("remover", [c.id], null, secao);
         desfazer("Tarefa excluída.", () => mexer("restaurar", [r.cartao, r.pos], null, secao));
       } } }, "✕") : null));
-  no.addEventListener("dragstart", ev => { ev.dataTransfer.setData("text/plain", (secao ? "s:" : "l:") + c.id); no.classList.add("arrastando"); });
+  no.addEventListener("dragstart", ev => { ev.dataTransfer.setData("text/plain", (prog ? "g:" : secao ? "s:" : "l:") + c.id); no.classList.add("arrastando"); });
   no.addEventListener("dragend", () => no.classList.remove("arrastando"));
   return no;
 }
@@ -2008,28 +2013,31 @@ function pintarQuadro() {
   const cols = QUADRO.colunas.map(k => {
     const procs = PROCS.filter(p => colunaDoProcesso(p) === k), soltos = QUADRO.cartoes.filter(c => c.coluna === k);
     const sec = temSecao ? QUADRO.secao.filter(c => c.coluna === k) : [];
-    const corpo = el("div", { class: "qcol-corpo" }, ...procs.map(cartaoProcesso), ...sec.map(c => cartaoSolto(c, true)), ...soltos.map(c => cartaoSolto(c, false)));
-    const destino = temSecao ? el("select", { title: "Onde a tarefa fica" }, el("option", { value: "secao" }, "Seção"), el("option", { value: "meu" }, "Só meu")) : null;
+    const prog = Array.isArray(QUADRO.programa) ? QUADRO.programa.filter(c => c.coluna === k) : [];
+    const corpo = el("div", { class: "qcol-corpo" }, ...procs.map(cartaoProcesso), ...sec.map(c => cartaoSolto(c, true)),
+      ...soltos.map(c => cartaoSolto(c, false)), ...prog.map(c => cartaoSolto(c, "programa")));
+    const destino = temSecao ? el("select", { title: "Onde a tarefa fica" }, el("option", { value: "secao" }, "Seção (todos)"), el("option", { value: "meu" }, "Só meu"),
+      Array.isArray(QUADRO.programa) ? el("option", { value: "programa" }, "Programa (arrumar o SSEG)") : null) : null;
     if (destino) try { destino.value = localStorage.getItem("sseg-quadro-destino") || "secao"; } catch (e) {}
     const col = el("div", { class: "qcol", "data-col": k },
-      el("h3", {}, QUADRO.nomes[k], el("span", { class: "tag" }, procs.length + soltos.length + sec.length)),
+      el("h3", {}, QUADRO.nomes[k], el("span", { class: "tag" }, procs.length + soltos.length + sec.length + prog.length)),
       k === "afazer" ? el("form", { class: "qc-nova", on: { submit: async ev => {
         ev.preventDefault(); const inp = ev.target.querySelector("input"); if (!inp.value.trim()) return;
-        const naSecao = !!destino && destino.value === "secao";
+        const onde = !destino ? false : destino.value === "secao" ? true : destino.value === "programa" ? "programa" : false;
         try { if (destino) localStorage.setItem("sseg-quadro-destino", destino.value); } catch (e) {}
-        await mexer("adicionar", [inp.value, "afazer"], ev.submitter, naSecao); } } },
+        await mexer("adicionar", [inp.value, "afazer"], ev.submitter, onde); } } },
         el("input", { type: "text", placeholder: "Nova tarefa…", maxlength: 200 }), destino, el("button", { class: "bt" }, "+")) : null,
       corpo);
     col.addEventListener("dragover", ev => { ev.preventDefault(); col.classList.add("alvo"); });
     col.addEventListener("dragleave", () => col.classList.remove("alvo"));
     col.addEventListener("drop", ev => { ev.preventDefault(); col.classList.remove("alvo");
-      const v = ev.dataTransfer.getData("text/plain") || "", secao = v.startsWith("s:"), id = v.slice(2);
+      const v = ev.dataTransfer.getData("text/plain") || "", secao = v.startsWith("g:") ? "programa" : v.startsWith("s:"), id = v.slice(2);
       if (v.startsWith("p:")) {
         const p = PROCS.find(x => x.codigo === id), m = p && manualDoProcesso(p);
         if (p && colunaDoProcesso(p) !== k) mexer("processo", [id, p.estado, k, k === "esperando" && m ? m.aguardando : ""], null, false);
         return;
       }
-      const c = (secao ? QUADRO.secao || [] : QUADRO.cartoes).find(x => x.id === id);
+      const c = (secao === "programa" ? QUADRO.programa || [] : secao ? QUADRO.secao || [] : QUADRO.cartoes).find(x => x.id === id);
       if (c && c.coluna !== k) mexer("alterar", [id, { coluna: k }], null, secao); });
     return col;
   });

@@ -334,7 +334,7 @@ def marcos_proc(aba, ident, codigo, linha, raiz=None, gatilho=True):
     if novos:
         textos.append(("marcos novos: " if len(novos) > 1 else "marco novo: ") + "; ".join(novos.values()))
     titulo = "Ensinar o script dos Marcos: %s — %s" % (codigo, " · ".join(textos))
-    quadro.adicionar(QUADRO_SECAO, titulo[:200],
+    quadro.adicionar(os.path.join(QUADRO_SECAO, "programa"), titulo[:200],  # 2.6.10: aviso de script é do admin, não da seção
                      origem="gatilho do sol_caixa.py: ver os marcos reais no SOL e dizer o que fazer com eles (marcos.py)",
                      autor="SSEG")
     linha["cartao"] = True
@@ -389,7 +389,7 @@ def _falhou(msg):
         fh.write("%s · %s" % (time.strftime("%d/%m/%Y %H:%M"), msg))
     try:
         import quadro
-        quadro.adicionar(QUADRO_SECAO, ("Login automático do SOL falhou: %s. Entrar pelo celular e rodar "
+        quadro.adicionar(os.path.join(QUADRO_SECAO, "programa"), ("Login automático do SOL falhou: %s. Entrar pelo celular e rodar "
                                         "sol_senha.py gravar" % msg)[:200],
                          origem="sol_caixa.py, entrar(): trava ligada, sem nova tentativa", autor="SSEG")
     except Exception as e:  # o aviso no Quadro não pode esconder a falha

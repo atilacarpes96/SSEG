@@ -295,9 +295,16 @@ def main():
         os.makedirs(os.path.join(d, "rel", "sgt_fulano-20261020-080000"))
         open(os.path.join(d, "rel", "sgt_fulano-20261020-080000", "estado.txt"), "w").write("pronto\n")
         meus, adm_l = R("Sgt Fulano").relatos_lista()["relatos"], R().relatos_lista()["relatos"]
-        cart = pt.qd.ler(os.path.join(d, "quadro"))["cartoes"]
-        caso("porta: relato guarda o .zip, vira cartão no Quadro e aparece com o andamento só para quem mandou e o admin",
-             r["ok"] and len(cart) == 1 and "Sgt Fulano" in cart[0]["titulo"] and "Atualizar" in cart[0]["titulo"]
+        cart = pt.qd.ler(os.path.join(d, "quadro", "programa"))["cartoes"]
+        secao_vazia = not pt.qd.ler(os.path.join(d, "quadro"))["cartoes"]
+        ve_prog = ("programa" in R().quadro(), "programa" in R("Sgt Fulano").quadro())
+        try:
+            R("Sgt Fulano").quadro_mexer({"acao": "adicionar", "args": ["x"], "onde": "programa"})
+            mexe = True
+        except SystemExit:
+            mexe = False
+        caso("porta: relato guarda o .zip, vira cartão no quadro do Programa (só o admin vê e mexe; a seção fica limpa) e aparece com o andamento só para quem mandou e o admin",
+             r["ok"] and len(cart) == 1 and secao_vazia and ve_prog == (True, False) and not mexe and "Sgt Fulano" in cart[0]["titulo"] and "Atualizar" in cart[0]["titulo"]
              and [(x["id"], x["estado"]) for x in meus] == [("20261020-080000", "pronto")] and len(adm_l) == 1
              and pt.executar(R("Sgt Fulano"), ["relatos"], lambda: b"", "p").startswith(b'{"relatos"'), str((r, cart, meus)))
     # 11b2. outro PC do administrador e senha do SOL pelo SSEG.exe (2.5.0)
@@ -484,6 +491,10 @@ def main():
     caso("revisão final: Aplicar troca o texto final e guarda o anterior; Ignorar não mexe no texto",
          (a1["final"], a1["final_antes_revisao"], a1["fundamento"]) == ("\n- novo", "\n- velho", "RT 11, item 5.4.2")
          and a1["revisao"].startswith("aplicada") and a2["final"] == "\n- fica" and a2["revisao"].startswith("ignorada"), str((a1, a2)))
+    # 11b3f. PPCI de outro analista não aparece (2.6.10): vale o analista da planilha, pela última palavra do nome
+    caso("app: processo é meu pelo analista da planilha; sem planilha ou sem nome no PC, conta como meu",
+         _api._e_meu({"analista": "Sd Carpes"}, "SD CARPES") and not _api._e_meu({"analista": "Sgt Magalhães"}, "Sd Carpes")
+         and _api._e_meu({"analista": "Sgt Magalhaes"}, "Sgt Magalhães") and _api._e_meu({}, "Sd Carpes") and _api._e_meu({"analista": "Sgt X"}, ""))
     # 11b3b. a caixa do SOL manda sobre a planilha (2.6.3; caso de 20/10/2026: distribuídos na véspera sumiram do Início)
     E0 = lambda dist: _api.estado_caixa(dist, {}, 10, __import__("datetime").date(2026, 10, 20))
     S = lambda e, sc, ult="2026-10-20": _api._na_caixa_do_sol(e, sc, ult)

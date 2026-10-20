@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 20/10/2026 — SSEG.exe 2.6.10: PPCI só para o seu analista; quadro "Programa" do administrador
+
+- `api.processos()` marca `meu` pelo analista do `distribuicao.json` (última palavra do nome × o analista do PC). Início e Quadro escondem o que não é meu.
+- `porta.py`: quadro do Programa em `~/sseg-quadro/programa/`. `quadro` entrega ao admin; `quadro-mexer` com `"onde": "programa"` só admin. Relatos (`porta relato`), gatilhos dos Marcos e falha do login automático (`sol_caixa.py`) vão para lá, não para a seção. Pedido do Átila: "no quadro da seção somente o que for de todos; arrumar o programa fica para o Sd Carpes".
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 20/10/2026 — SSEG.exe 2.6.9: "lançar no SOL" sem CIA aprova tudo, com confirmação
 
 - Sem exigência salva na coluna CIA, o botão "lançar no SOL" lista os itens em "Analisar" (`sol_lancar_aprovar_lista` com notificados vazio), pede confirmação e chama `sol_lancar` só com o aprovar. Exigência com rascunho e sem texto salvo bloqueia. Pedido do Átila.

@@ -130,6 +130,19 @@ def sol_caixa_buscar(aba, id_analise, sol_lancar):
     return sol_lancar.sc.buscar(aba, "%s/%s" % (sol_lancar.sc.API, id_analise))
 
 
+def _ultima_palavra(nome):
+    import unicodedata
+    s = unicodedata.normalize("NFKD", str(nome or "")).encode("ascii", "ignore").decode().lower().split()
+    return s[-1] if s else ""
+
+
+def _e_meu(dist, eu):
+    """O processo é do analista deste PC? (2.6.10, pedido do Átila: o PPCI atribuído a um analista aparece só para ele.)
+    Vale o analista da planilha (distribuicao.json); sem planilha, ou sem o nome deste PC, conta como meu."""
+    dono = dist.get("analista") or ""
+    return not dono or not eu or _ultima_palavra(dono) == _ultima_palavra(eu)
+
+
 def _na_caixa_do_sol(e, sc, ultima_leitura):
     """2.6.3: a caixa do SOL manda sobre a planilha. A planilha entra uma vez por dia (7h47); a caixa do SOL é lida a
     cada Atualizar (no servidor ou no Chrome deste PC) e grava sol-caixa.json em cada processo dela. Processo da
@@ -588,6 +601,7 @@ class Api:
         except OSError:
             return out
         caixa_sol = {n: _ler(os.path.join(raiz, n, "sol-caixa.json")) for n in nomes}
+        eu = self._cfg().get("analista") or ""
         ultima = self._ultima_caixa = max([s.get("lido_em") or "" for s in caixa_sol.values()] + [""])
         for n in nomes:
             p = os.path.join(raiz, n)
@@ -596,7 +610,7 @@ class Api:
             reg = os.path.join(p, "analise.json")
             dist = _ler(os.path.join(p, "distribuicao.json"))
             e = _saiu_da_caixa(estado_caixa(dist, _ler(reg), self._cfg().get("prazo_caixa", 10)), p)
-            out.append(dict(_na_caixa_do_sol(e, caixa_sol[n], ultima),
+            out.append(dict(_na_caixa_do_sol(e, caixa_sol[n], ultima), meu=_e_meu(dist, eu),
                             **identificacao(p, os.listdir(p), dist),
                             codigo=n, quando=quando, arquivos=len(arqs), analise=os.path.exists(reg),
                             cts=_ler(os.path.join(p, "ct.json")).get("itens") or [],
@@ -787,6 +801,8 @@ class Api:
             try:
                 s = acesso.chamar_json("quadro", timeout=20)
                 r.update(secao=s.get("cartoes") or [], eu=s.get("eu", ""), admin=s.get("admin", False))
+                if "programa" in s:  # só o administrador recebe (2.6.10)
+                    r["programa"] = s.get("programa") or []
             except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as e:
                 r["erro_secao"] = str(e)[:200]
         return r
@@ -794,6 +810,11 @@ class Api:
     def quadro_secao(self, acao, *args):
         """adicionar(titulo, coluna) · pegar(id) · soltar(id) · alterar(id, campos) · remover(id) · restaurar(cartao, pos)."""
         pedido = json.dumps({"acao": acao, "args": list(args)}, ensure_ascii=False).encode("utf-8")
+        return acesso.chamar_json("quadro-mexer", entrada=pedido, timeout=20)
+
+    def quadro_programa(self, acao, *args):
+        """Quadro do Programa (só o admin): adicionar(titulo, coluna) · alterar(id, campos) · remover(id) · restaurar(cartao, pos)."""
+        pedido = json.dumps({"acao": acao, "args": list(args), "onde": "programa"}, ensure_ascii=False).encode("utf-8")
         return acesso.chamar_json("quadro-mexer", entrada=pedido, timeout=20)
 
     def quadro_mexer(self, acao, *args):

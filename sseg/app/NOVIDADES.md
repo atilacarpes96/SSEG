@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.10
+
+- **Cada um vê só os seus PPCI.** O Início e o Quadro mostram só os processos que a planilha da distribuição atribui a você. Pasta de processo de outro analista que tenha ficado no seu PC não aparece mais. Processo fora da planilha continua aparecendo.
+- **Quadro da seção só com o que é de todos.** Os cartões automáticos de arrumar o programa saíram de lá e foram para o novo quadro **"Programa"**, que só o administrador vê e mexe (etiqueta roxa "programa"). São eles: "Relato de…" (Reportar ao Claude), avisos do script dos Marcos e login automático do SOL que falhou.
+- Ao criar uma tarefa no Quadro, a escolha é "Seção (todos)", "Só meu" ou, para o administrador, "Programa (arrumar o SSEG)".
+
 ## 2.6.9
 
 - **"Lançar no SOL" sem CIA aprova tudo, com confirmação.** Quando o processo não tem nenhuma exigência na coluna CIA (caso de CA), o botão mostra a lista dos itens que estão em "Analisar" no SOL e pergunta "Tem certeza?".

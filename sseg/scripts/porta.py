@@ -24,10 +24,12 @@ AÇÕES
   quem-sou                                → {"analista", "papel"}
   listar | receber | entregar             → as mesmas do sincronizar.py, filtradas pelo responsável
   meus                                    → os códigos dele, um por linha (Painel do Dia)
-  quadro                                  → o Quadro da seção (~/sseg-quadro/quadro.json)
+  quadro                                  → o Quadro da seção (~/sseg-quadro/quadro.json); ao admin, também o
+                                            quadro "Programa" (~/sseg-quadro/programa/: relatos, avisos dos scripts)
   quadro-mexer                            → stdin {"acao", "args"}: adicionar, pegar, soltar, alterar,
                                             remover, restaurar. Todos criam, pegam e comentam; mover,
-                                            editar e excluir só quem criou, quem pegou ou o admin
+                                            editar e excluir só quem criou, quem pegou ou o admin.
+                                            Com "onde": "programa", o quadro do Programa (só o admin)
   escala                                  → a linha do analista no escala.json (o admin recebe tudo)
   relato <id>                             → guarda o .zip do stdin em ~/sseg-relatos/<analista>-<id>.zip e (2.6.3)
                                             põe um cartão no Quadro da seção, para o administrador ver na hora
@@ -251,13 +253,13 @@ class Porta:
         nome = "%s-%s.zip" % (norm(self.analista).replace(" ", "_"), ident)
         with open(os.path.join(self.relatos, nome), "wb") as fh:
             fh.write(dados)
-        try:  # 2.6.3: cartão no Quadro da seção com a 1ª linha do relato (o texto já vem limpo do PC)
+        try:  # 2.6.3: cartão com a 1ª linha do relato (o texto já vem limpo do PC); 2.6.10: no quadro do Programa (admin)
             import io
             import zipfile
             with zipfile.ZipFile(io.BytesIO(dados)) as z:
                 txt = z.read("relato.md").decode("utf-8", "replace")
             linha = next((l.strip() for l in txt.split("**O que aconteceu**", 1)[-1].splitlines() if l.strip()), "")
-            qd.adicionar(self.quadro_raiz, ("Relato de %s: %s" % (self.analista, linha))[:200],
+            qd.adicionar(self.programa_raiz, ("Relato de %s: %s" % (self.analista, linha))[:200],
                          origem="Reportar ao Claude do SSEG.exe — ~/sseg-relatos/%s" % nome, autor=self.analista)
         except Exception:  # noqa: BLE001 — o relato já está guardado; o cartão é aviso
             pass
@@ -288,14 +290,40 @@ class Porta:
         return {"relatos": out}
 
     # --- Quadro da seção (2.3.0)
+    @property
+    def programa_raiz(self):
+        """Quadro do Programa (2.6.10, pedido do Átila): o que é de arrumar o SSEG (relatos, avisos dos scripts) é do
+        administrador, não da seção."""
+        return os.path.join(self.quadro_raiz, "programa")
+
     def quadro(self):
-        return {"cartoes": qd.ler(self.quadro_raiz)["cartoes"], "eu": self.analista, "admin": self.admin}
+        r = {"cartoes": qd.ler(self.quadro_raiz)["cartoes"], "eu": self.analista, "admin": self.admin}
+        if self.admin:
+            r["programa"] = qd.ler(self.programa_raiz)["cartoes"]
+        return r
 
     def _pode(self, c):
         return self.admin or norm(self.analista) in (norm(c.get("autor")), norm(c.get("pegou")))
 
     def quadro_mexer(self, pedido):
         acao, args = pedido.get("acao"), list(pedido.get("args") or [])
+        if pedido.get("onde") == "programa":
+            if not self.admin:
+                raise SystemExit("o quadro do Programa é só do administrador")
+            try:
+                if acao == "adicionar":
+                    return qd.adicionar(self.programa_raiz, args[0], "", args[1] if len(args) > 1 else "afazer", autor=self.analista)
+                if acao == "alterar":
+                    campos = {k: v for k, v in (args[1] if len(args) > 1 else {}).items()
+                              if k in ("coluna", "titulo", "checklist", "feito_texto", "pegou")}
+                    return qd.alterar(self.programa_raiz, args[0], **campos)
+                if acao == "remover":
+                    return qd.remover(self.programa_raiz, args[0])
+                if acao == "restaurar":
+                    return qd.restaurar(self.programa_raiz, args[0] if isinstance(args[0], dict) else {}, args[1] if len(args) > 1 else None)
+            except ValueError as e:
+                raise SystemExit(str(e))
+            raise SystemExit("ação do quadro desconhecida: %s" % acao)
         cartao = lambda: qd._achar(qd.ler(self.quadro_raiz), args[0])  # noqa: E731
         try:
             if acao == "adicionar":
