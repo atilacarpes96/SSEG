@@ -12,6 +12,21 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 20/10/2026 — SSEG.exe 2.6.6: aprovar o resto no lançamento; revisão final pelo subagente revisor-cia
+
+- **Lançar no SOL** (`sol_lancar.a_aprovar`/`aprovar_restantes`): o que está em "Analisar" e não tem exigência na coluna CIA vira Aprovado, como o botão Aprovar do SOL (`editar-item` com APROVADO). O mapeamento dos itens também mudou:
+  - RU e proprietário só entram com procurador (é quando o SOL mostra o botão), e o proprietário usa `idLicenciamentoProprietario`;
+  - isolamento de risco só entra quando o RT marcou;
+  - no fim, a aba do SOL recarrega.
+- **Revisão final:** no SSEG.exe é o subagente `revisor-cia`, na mesma janela, antes de lançar (botão "revisão final"). `sseg.py revisar-cia --pasta` lê as exigências salvas da coluna CIA, sem precisar do PDF. Saiu o fluxo "Revisar CIA" do Início; checklist passo 16 atualizado.
+- Skills mudadas: `ppci-revisao-cia` (descrição e seção do SSEG.exe) e `ppci-analise-processo` (lembrete da revisão). Agente `revisor-cia` com a entrada `--pasta`.
+
+### Prompt para atualizar
+
+```
+Faça git pull no clone do SSEG. Mudaram as skills ppci-revisao-cia e ppci-analise-processo (revisão final pelo subagente revisor-cia no SSEG.exe). Rode a skill sseg-sincronizar-skills para instalar na minha conta (ou suba os .zip em claude.ai > Configurações > Capacidades > Skills > Substituir). Depois atualize o SSEG.exe pelo chip "Nova versão".
+```
+
 ## 20/10/2026 — SSEG.exe 2.6.5: "lançar no SOL" pelo programa (sem Claude, sem token)
 
 - Autorizado pelo Átila em 20/10/2026. `scripts/sol_lancar.py` grava no "Outros" de cada item como o botão Reprovar do SOL: `POST /analise-tecnica/editar-item`, com a lista inteira de justificativas (as opções prontas já marcadas ficam). "Demais inconformidades" vai por `PUT …/inconformidade`.

@@ -4,6 +4,15 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.6
+
+- **Lançar no SOL aprova o resto.** Na tela de lançamento, a caixa "Marcar como Aprovado o que não tem exigência e não está Reprovado" vem marcada. Ela mostra quais itens vão virar Aprovado: RT, característica, ocupações, medidas, elementos gráficos e, quando há procurador, RU e proprietário.
+  - Item com exigência na coluna CIA nunca é aprovado, mesmo desmarcado ou se o lançamento dele falhar.
+  - Se alguma exigência estiver sem o item do SOL escolhido, o programa pede para escolher antes de aprovar o resto.
+- **A tela do SOL se atualiza sozinha** depois do lançamento. Não precisa mais de F5.
+- **Correção:** o proprietário com procurador agora vai para o item certo no SOL. O id dele é outro, e o programa usava o errado.
+- **Revisão final pelo subagente.** Botão "revisão final" na coluna CIA: o subagente revisor-cia (Sonnet 5.5) lê as exigências salvas de fora, sem o raciocínio da conversa, aqui mesmo e antes de lançar. Correção sugerida volta como rascunho no mesmo item. Saiu o botão grande "Revisar CIA" do Início; o passo 16 do checklist passou a dizer isso.
+
 ## 2.6.5
 
 - **Lançar no SOL pelo programa, sem copiar e colar e sem gastar token.** Na janela do processo, coluna CIA, botão **"lançar no SOL"**:

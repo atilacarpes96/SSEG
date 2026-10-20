@@ -326,22 +326,46 @@ def confere_reitero(caixas, anterior, s):
 
 # ------------------------------------------------------------------------------- cli
 
+def _da_pasta(a):
+    """--pasta <processo>: as caixas saem das exigências salvas do analise.json (uma por medida, como o "lançar no SOL"
+    junta), o JSON é o pre-analise.json (protocolo, medidas do campo 4) e a anterior é o cia-ultima.txt."""
+    import analise_registro
+    d = analise_registro.ler(a.pasta)
+    grupos = {}
+    for e in d.get("exigencias") or []:
+        if (e.get("final") or "").strip():
+            grupos.setdefault(e.get("medida") or "sem medida", []).append(e["final"].strip())
+    a.caixas = [("medida %s" % m, "\n" + "\n\n".join(l)) for m, l in grupos.items()]
+    a.texto_cia = "\n\n".join(t for _, t in a.caixas)
+    if not a.json and os.path.exists(os.path.join(a.pasta, "pre-analise.json")):
+        a.json = os.path.join(a.pasta, "pre-analise.json")
+    if not a.anterior and os.path.exists(os.path.join(a.pasta, "cia-ultima.txt")):
+        a.anterior = os.path.join(a.pasta, "cia-ultima.txt")
+
+
 def revisar(a):
     global NORMAS_PDF
     if getattr(a, "normas", None):
         NORMAS_PDF = a.normas
     s = sseg.Saida()
-    texto_cia = texto_de(a.cia)
-    s.add("", "REVISAO DA CIA — %s" % os.path.basename(a.cia))
-    if a.textos:
+    if not (a.cia or getattr(a, "pasta", None)):
+        sys.exit("informe --cia (CIA emitida) ou --pasta (coluna CIA do SSEG.exe, antes de lançar)")
+    if getattr(a, "pasta", None):  # 2.6.5: antes de lançar, pela coluna CIA do SSEG.exe (sem PDF da CIA ainda)
+        _da_pasta(a)
+    texto_cia = a.texto_cia if getattr(a, "texto_cia", None) is not None else texto_de(a.cia)
+    s.add("", "REVISAO DA CIA — %s" % (os.path.basename(a.cia) if a.cia else "coluna CIA do SSEG.exe (antes de lançar)"))
+    if getattr(a, "caixas", None) is not None:
+        caixas = a.caixas
+    elif a.textos:
         with open(a.textos, encoding="utf-8") as fh:
             caixas = [("campo %s, %s" % (c.get("campo", "?"), c.get("item", "?")), c.get("texto", ""))
                       for c in json.load(fh)]
     else:
         caixas = [("CIA inteira", texto_cia)]
         s.pergunta("Sem --textos: limite de caracteres por caixa NAO conferido.")
-    confere_forma(caixas, s, com_limite=bool(a.textos))
-    if a.textos:
+    com_caixas = bool(a.textos) or getattr(a, "caixas", None) is not None
+    confere_forma(caixas, s, com_limite=com_caixas)
+    if com_caixas:
         confere_conteudo(caixas, s)
 
     p = sseg._load(a.json) if a.json else {}
@@ -357,14 +381,15 @@ def revisar(a):
 
     if str(p.get("analise", "")) == "1" and (re.search(r"\bREITER", texto_cia) or any(re.search(r"\bREITER", t) for _, t in caixas)):
         s.erro("REITERO numa 1ª análise: não há notificação anterior para reiterar.")
-    confere_reitero(caixas if a.textos else [("CIA", x) for x in re.split(r"\n\s*\n", texto_cia)],
+    confere_reitero(caixas if (a.textos or getattr(a, "caixas", None) is not None) else [("CIA", x) for x in re.split(r"\n\s*\n", texto_cia)],
                     texto_de(a.anterior) if a.anterior else None, s)
     return s
 
 
 def args_parser(ap=None):
     ap = ap or argparse.ArgumentParser(description="Conferencias da CIA antes de fechar a analise.")
-    ap.add_argument("--cia", required=True)
+    ap.add_argument("--cia", help="PDF ou .txt da CIA emitida (ou use --pasta, antes de lançar)")
+    ap.add_argument("--pasta", help="pasta do processo: revisa as exigências salvas na coluna CIA do SSEG.exe")
     ap.add_argument("--textos")
     ap.add_argument("--json")
     ap.add_argument("--anterior")

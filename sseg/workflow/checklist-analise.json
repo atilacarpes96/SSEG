@@ -110,8 +110,8 @@
    "n": 16,
    "fase": "Fechar",
    "t": "Revisão final",
-   "d": "\"revisa a CIA do processo …\", em conversa nova",
-   "marca": "nova"
+   "d": "botão \"revisão final\" na coluna CIA: subagente revisor-cia, na mesma conversa, antes de lançar no SOL",
+   "marca": "subagente"
   }
  ]
 }

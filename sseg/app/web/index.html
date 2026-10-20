@@ -693,7 +693,7 @@ footer { color: var(--suave); }
           <div class="rola" id="pr-check"></div>
         </div>
         <div class="coluna" data-col="cia">
-          <h2>CIA em construção <button class="bt link" id="pr-copiar-cia">copiar a CIA</button> <button class="bt link so-pc" id="pr-lancar" title="Grava as exigências salvas no campo Outros de cada item no SOL, pela sua aba do SOL. Mostra tudo antes; não emite a CIA.">lançar no SOL</button></h2>
+          <h2>CIA em construção <button class="bt link" id="pr-copiar-cia">copiar a CIA</button> <button class="bt link" id="pr-revisar" title="Revisão final da CIA pelo subagente revisor-cia (Sonnet 5.5, lê a CIA de fora, sem o raciocínio desta conversa), aqui mesmo. Faça antes de lançar no SOL.">revisão final</button> <button class="bt link so-pc" id="pr-lancar" title="Grava as exigências salvas no campo Outros de cada item no SOL, pela sua aba do SOL. Mostra tudo antes; não emite a CIA.">lançar no SOL</button></h2>
           <div class="rola" id="pr-cia"></div>
         </div>
       </div>
@@ -1470,6 +1470,8 @@ $("#e-versao").onclick = () => modal("Atualizar o programa", "Baixa a versão " 
 function pintarFluxos(fluxos) {
   const g = $("#fluxos");
   if (!fluxos.length) return g.replaceChildren(el("p", { class: "vazio" }, "Atualize o SSEG desta pasta para ver os tipos de conversa (chip GitHub)."));
+  // 2.6.5 (pedido do Átila): a revisão final é o subagente revisor-cia, pelo botão "revisão final" da janela do processo
+  fluxos = fluxos.filter(f => f.id !== "revisao");
   g.replaceChildren(...fluxos.map(f => el("button", { class: "fluxo", on: { click: () => iniciarFluxo(f) } },
     el("b", {}, f.titulo),
     el("span", { class: "modelo" }, el("i", { style: "background:" + COR(f.modelo) }), f.modelo_texto),
@@ -2468,7 +2470,7 @@ function pintarChecklist() {
     // div, não label: só o quadradinho marca — clicar na linha marcava sem querer (2.3.11)
     fluxo.append(el("div", { class: "ck" + (feito ? " feito" : ""), title: porScript ? "Feito por script: " + porScript : "" },
       el("input", { type: "checkbox", checked: feito, disabled: !!porScript, on: { change: ev => api("processo_marcar", [PR.codigo, "passos", String(p.n), ev.target.checked || null]).then(recarregarRegistro) } }),
-      el("span", {}, p.n + ". " + p.t, porScript ? el("span", { class: "ok-tag", style: "margin-left:4px;font-size:10.5px" }, "auto") : null, p.marca ? el("span", { class: "marca-tag" }, p.marca === "seu" ? "seu" : p.marca === "para" ? "para e pergunta" : "conversa nova") : null, el("small", {}, p.d))));
+      el("span", {}, p.n + ". " + p.t, porScript ? el("span", { class: "ok-tag", style: "margin-left:4px;font-size:10.5px" }, "auto") : null, p.marca ? el("span", { class: "marca-tag" }, p.marca === "seu" ? "seu" : p.marca === "para" ? "para e pergunta" : p.marca === "subagente" ? "subagente" : "conversa nova") : null, el("small", {}, p.d))));
   }
   out.push(fluxo);
   // medidas
@@ -2659,6 +2661,16 @@ new ResizeObserver(([o]) => { const w = Math.round(o.contentRect.width); if (w =
 // ---- Lançar no SOL (2.6.5, autorizado pelo Átila em 20/10/2026). Script do programa, sem Claude e sem token: grava no
 // campo "Outros" de cada item, pela aba do SOL em que você entrou, e lê de volta para conferir. Uma caixa por item do
 // SOL (as exigências salvas da mesma medida vão juntas, como o "copiar a medida"). Nunca conclui a análise.
+// Revisão final (2.6.5, pedido do Átila): subagente revisor-cia na mesma conversa — ele não vê o raciocínio daqui,
+// então continua sendo uma leitura de fora, sem abrir conversa nova. A resposta chega no chat.
+$("#pr-revisar").onclick = () => {
+  const salvas = PR.reg.exigencias.filter(e => (e.final || "").trim()).length;
+  if (!salvas) return avisar("Nenhuma exigência com texto salvo para revisar.", true);
+  chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Revisão final da CIA deste processo: chame o subagente revisor-cia (Agent, subagent_type \"revisor-cia\") " +
+    "passando só o código " + PR.codigo + " e a pasta do processo, para ele rodar `python sseg/scripts/sseg.py revisar-cia --pasta \"<pasta>\"` " +
+    "e julgar as " + salvas + " exigência(s) salvas na coluna CIA, como manda a skill ppci-revisao-cia. Não passe a ele o seu raciocínio nem as suas conclusões. " +
+    "Quando ele voltar, traga a entrega dele como veio e, para cada exigência que ele mandar corrigir, grave o texto sugerido como rascunho no mesmo item (comando rascunho), sem mexer no texto final.");
+};
 $("#pr-lancar").onclick = async ev => {
   const medidas = (PR.dados && PR.dados.medidas || []).map(m => m.nome);
   const grupos = new Map();
@@ -2702,20 +2714,36 @@ $("#pr-lancar").onclick = async ev => {
       info,
       el("details", {}, el("summary", { class: "sub" }, "ver o texto que vai"), el("div", { class: "lista", style: "white-space:pre-wrap;max-height:160px" }, g.texto))) };
   });
-  modal("Lançar no SOL", "Cada caixa marcada vai para o campo \"Outros\" do item escolhido, como você faria em Reprovar → Outros → Reprovar. Depois o programa lê de volta e confere. A CIA não é emitida: isso continua sendo você, no SOL.",
-    linhas.map(l => l.no), [
+  // o resto vira Aprovado (pedido do Átila, 20/10/2026): o que não tem exigência na coluna CIA e não está Reprovado
+  const notificados = () => linhas.map(l => l.sel.value || l.g.medida).filter(Boolean);
+  const apr = el("input", { type: "checkbox", checked: true });
+  const aprLista = el("div", { class: "lista", style: "white-space:pre-wrap;max-height:140px" }, "…");
+  const aprConta = el("span", {}, "");
+  const lerAprovar = async () => { try { const l = await api("sol_lancar_aprovar_lista", [PR.codigo, notificados()]); aprConta.textContent = l.length + " item(ns)"; aprLista.textContent = l.join("\n") || "Nenhum: tudo já tem resultado ou exigência."; } catch (e) {} };
+  linhas.forEach(l => l.sel.addEventListener("change", lerAprovar));
+  lerAprovar();
+  const blocoApr = el("div", { class: "cartao", style: "margin:10px 0 0;padding:8px" },
+    el("label", { style: "display:flex;gap:8px;align-items:center;font-weight:600" }, apr, "Marcar como Aprovado o que não tem exigência e não está Reprovado: ", aprConta),
+    el("details", {}, el("summary", { class: "sub" }, "ver quais"), aprLista),
+    el("p", { class: "sub", style: "margin:4px 0 0" }, "Item com exigência na coluna CIA nunca é aprovado aqui, mesmo desmarcado acima ou se o lançamento dele falhar."));
+  modal("Lançar no SOL", "Cada caixa marcada vai para o campo \"Outros\" do item escolhido, como você faria em Reprovar → Outros → Reprovar. Depois o programa lê de volta, confere e atualiza a tela do SOL. A CIA não é emitida: isso continua sendo você, no SOL.",
+    [...linhas.map(l => l.no), blocoApr], [
       ["Lançar os marcados", async b => {
         const vao = linhas.filter(l => l.marca.checked && l.sel.value);
-        if (!vao.length) return avisar("Nada marcado.", true);
+        if (!vao.length && !apr.checked) return avisar("Nada marcado.", true);
+        // exigência sem item do SOL: não dá para saber o que não aprovar — escolher o item antes
+        if (apr.checked && linhas.some(l => !l.sel.value)) return avisar("Escolha o item do SOL de todas as exigências (mesmo as desmarcadas) antes de aprovar o resto, ou desmarque \"Marcar como Aprovado\".", true);
         b.disabled = true; b.textContent = "Lançando…";
-        let res;
-        try { res = await api("sol_lancar", [PR.codigo, vao.map(l => ({ item: l.sel.value, texto: l.g.texto, ids: l.g.ids }))]); }
+        let r;
+        try { r = await api("sol_lancar", [PR.codigo, vao.map(l => ({ item: l.sel.value, texto: l.g.texto, ids: l.g.ids })), apr.checked, notificados()]); }
         catch (e) { b.disabled = false; b.textContent = "Lançar os marcados"; return; }
         recarregarRegistro();
-        const ok = res.filter(r => r.ok).length;
-        modal("Lançar no SOL", ok === res.length ? "✓ Tudo gravado e conferido. Confira na tela do SOL e emita a CIA quando estiver pronto." : "Algumas não foram (veja abaixo).",
-          el("div", { class: "lista" }, res.map(r => (r.ok ? "✓ " : "✗ ") + r.item + (r.ok ? " — gravado e conferido" : " — " + (r.aviso || "falhou"))).join("\n")),
-          [["Fechar", fechar, true], ...(ok < res.length ? [["Reportar ao Claude", () => abrirRelato("Lançar no SOL: " + res.filter(r => !r.ok).map(r => r.item + ": " + r.aviso).join(" | "))]] : [])]);
+        const res = r.itens, ok = res.filter(x => x.ok).length, falhou = ok < res.length || r.falhas.length;
+        const txt = res.map(x => (x.ok ? "✓ " : "✗ ") + x.item + (x.ok ? " — gravado e conferido" : " — " + (x.aviso || "falhou")))
+          .concat(r.aprovados.length ? ["✓ Aprovados: " + r.aprovados.join(", ")] : [], r.falhas.map(f => "✗ " + f[0] + " — " + f[1]));
+        modal("Lançar no SOL", !falhou ? "✓ Tudo gravado e conferido, e a tela do SOL foi atualizada. Confira lá e emita a CIA quando estiver pronto." : "Algumas não foram (veja abaixo).",
+          el("div", { class: "lista" }, txt.join("\n") || "Nada a fazer."),
+          [["Fechar", fechar, true], ...(falhou ? [["Reportar ao Claude", () => abrirRelato("Lançar no SOL: " + txt.filter(t => t.startsWith("✗")).join(" | "))]] : [])]);
       }, true],
       ["Cancelar", fechar]]);
 };

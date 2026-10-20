@@ -315,6 +315,10 @@ fora dos campos 3–6 sai com `campo: "?"` e aviso) e não sobrescreve a pasta s
 para `127.0.0.1` for bloqueado pela página do SOL (erro de CSP ou "Private Network Access" no
 console), voltar ao caminho antigo e anotar o erro aqui.
 
+⭐ **No SSEG.exe, a revisão final é o subagente `revisor-cia`, na mesma janela, antes de lançar no SOL**
+(botão "revisão final" da coluna CIA; passar a ele só o código e a pasta, nunca o raciocínio desta
+conversa; correção sugerida vira rascunho no mesmo item). Fora do SSEG.exe:
+
 ⭐ **Depois de arquivar, lembrar a revisão final em uma linha, sem rodá-la aqui:**
 
 > Revisão final: abra uma conversa nova em Sonnet 5.5 alto e cole "revisa a CIA do processo <código>".

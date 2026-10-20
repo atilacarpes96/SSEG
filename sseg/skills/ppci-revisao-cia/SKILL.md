@@ -1,11 +1,25 @@
 ---
 name: "ppci-revisao-cia"
-description: "Revisão final da CIA em conversa nova, antes de fechar a análise do PPCI: roda sseg.py revisar-cia e confere cada exigência na fonte primária, com fundamentação reversa. Usar quando o usuário disser \"revisa a CIA do processo A000...\", \"revisão final\" ou colar o lembrete deixado ao atualizar a pasta."
+description: "Revisão final da CIA, lida de fora (subagente revisor-cia ou conversa nova), antes de lançar ou fechar a análise do PPCI: roda sseg.py revisar-cia e confere cada exigência na fonte primária, com fundamentação reversa. Usar quando o usuário disser \"revisa a CIA do processo A000...\", \"revisão final\", clicar em \"revisão final\" no SSEG.exe ou colar o lembrete deixado ao atualizar a pasta."
 ---
 
 # Revisão final da CIA
 
-Roda numa **conversa nova**, depois de "atualizar a pasta" no `ppci-analise-processo`. O motivo
+**No SSEG.exe (desde 20/10/2026): pelo subagente `revisor-cia`, na mesma janela do processo**, botão
+"revisão final" da coluna CIA, **antes de lançar no SOL**. O subagente não recebe o raciocínio da
+conversa, então continua sendo leitura de fora sem abrir conversa nova. Entrada: a pasta do
+processo, e o script lê as exigências salvas da coluna CIA:
+
+```
+python sseg/scripts/sseg.py revisar-cia --pasta "<pasta do processo>"
+```
+
+(uma caixa por medida, como o "lançar no SOL" junta; `pre-analise.json` dá protocolo e campo 4;
+`cia-ultima.txt` é a CIA anterior). O texto de cada exigência: `sseg.py analise --pasta "<pasta>" ver`.
+Correção sugerida volta ao chat; a conversa principal grava como rascunho no mesmo item, nunca no
+texto final. O resto desta skill vale igual.
+
+Fora do SSEG.exe, roda numa **conversa nova**, depois de "atualizar a pasta" no `ppci-analise-processo`. O motivo
 de existir é ler a CIA de fora, sem o raciocínio que a produziu: na mesma conversa o modelo
 tende a concordar com o que ele mesmo decidiu. Modelo: **Sonnet 5.5 alto**, escolhido pelo
 usuário ao abrir a conversa (desde 06/10/2026: no teste de modelos, o alto pegou todos os erros

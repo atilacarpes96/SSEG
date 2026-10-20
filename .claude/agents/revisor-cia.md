@@ -10,8 +10,11 @@ ler a CIA sem concordar com quem a escreveu.
 
 1. Ler `sseg/skills/ppci-revisao-cia/SKILL.md` inteiro e segui-lo. A doutrina está em
    `sseg/workflow/instrucoes-projeto-espelho.md` (entre os marcadores INÍCIO/FIM).
-2. Arquivos do processo: `C:\Users\55519\Desktop\Carpes\print ppci\<processo>\`. Os
-   scripts rodam direto de `sseg/scripts/`; os PDFs das normas estão em `sseg/normas/pdf/`.
+2. Arquivos do processo: `C:\Users\55519\Desktop\Carpes\print ppci\<processo>\` (ou a pasta que a
+   conversa principal passar). Os scripts rodam direto de `sseg/scripts/`; os PDFs das normas estão
+   em `sseg/normas/pdf/`. Chamado pelo SSEG.exe (botão "revisão final", antes de lançar no SOL): a CIA
+   ainda não existe — rodar `python sseg/scripts/sseg.py revisar-cia --pasta "<pasta>"`, que lê as
+   exigências salvas da coluna CIA, e o texto de cada uma com `sseg.py analise --pasta "<pasta>" ver`.
 3. Cada exigência conferida no PDF oficial, não só pelo `OK` do script.
 
 Se a CIA tiver tese nova sem modelo no banco que o analista não conferiu na fonte, fundamento

@@ -124,6 +124,11 @@ def _saiu_da_caixa(e, pasta):
     return e
 
 
+def sol_caixa_buscar(aba, id_analise, sol_lancar):
+    """A análise técnica no SOL (GET /analise-tecnica/<id>), pelo módulo do clone."""
+    return sol_lancar.sc.buscar(aba, "%s/%s" % (sol_lancar.sc.API, id_analise))
+
+
 def _na_caixa_do_sol(e, sc, ultima_leitura):
     """2.6.3: a caixa do SOL manda sobre a planilha. A planilha entra uma vez por dia (7h47); a caixa do SOL é lida a
     cada Atualizar (no servidor ou no Chrome deste PC) e grava sol-caixa.json em cada processo dela. Processo da
@@ -945,12 +950,28 @@ class Api:
         except PermissionError:
             raise RuntimeError("O SOL recusou a leitura: a sessão da aba caiu. Entre de novo no SOL e tente outra vez.")
 
-    def sol_lancar(self, codigo, lancamentos):
-        """Grava cada {item, texto, ids} no SOL e confere. As exigências (ids) lançadas e conferidas ficam marcadas."""
+    def sol_lancar_aprovar_lista(self, codigo, notificados):
+        """Só lê: os itens em "Analisar" que não estão entre os notificados (viram Aprovado no lançamento)."""
+        _s, sol_lancar = self._scripts_do_clone("sol_caixa", "sol_lancar")
+        ida = self._id_analise(codigo)
+        return sol_aba.na_aba_logada(lambda aba: [i["nome"] for i in sol_lancar.a_aprovar(
+            sol_caixa_buscar(aba, ida, sol_lancar), notificados)])
+
+    def sol_lancar(self, codigo, lancamentos, aprovar=False, notificados=None):
+        """Grava cada {item, texto, ids} no SOL e confere; com `aprovar`, aprova o que não está em `notificados` e não
+        está Reprovado (pedido do Átila, 20/10/2026); no fim recarrega a aba do SOL. {itens, aprovados, falhas}.
+        As exigências (ids) lançadas ficam marcadas."""
         _s, sol_lancar = self._scripts_do_clone("sol_caixa", "sol_lancar")
         ida, pasta = self._id_analise(codigo), self._pasta_proc(codigo)
+        extra = {"aprovados": [], "falhas": []}
 
         def rodar(aba):
+            try:
+                return _lancar_todos(aba)
+            finally:
+                sol_lancar.recarregar(aba)  # a tela do SOL não relê sozinha (relato do Átila, 20/10/2026: só com F5)
+
+        def _lancar_todos(aba):
             out = []
             for l in lancamentos or []:
                 try:
@@ -961,8 +982,17 @@ class Api:
                 except (RuntimeError, LookupError, ValueError, OSError) as e:
                     r = {"item": l["item"], "ok": False, "aviso": str(e)}
                 out.append(r)
+            if aprovar and not any("sessão" in (r.get("aviso") or "") for r in out):
+                try:
+                    extra.update(sol_lancar.aprovar_restantes(aba, ida, notificados or [l["item"] for l in lancamentos or []]))
+                except (RuntimeError, OSError, ValueError, PermissionError) as e:
+                    extra["falhas"].append(("aprovar o resto", str(e)))
             return out
         res = sol_aba.na_aba_logada(rodar)
+        if extra["aprovados"]:
+            self._log("✓ Marcados como Aprovado no SOL: " + ", ".join(extra["aprovados"]))
+        for n, m in extra["falhas"]:
+            self._log("✗ Aprovar no SOL, %s: %s" % (n, m))
         agora = time.strftime("%Y-%m-%d %H:%M")
         for l, r in zip(lancamentos or [], res):
             self._log(("✓ Lançado no SOL e conferido: " if r.get("ok") else "✗ Lançar no SOL, ") + l["item"]
@@ -974,7 +1004,7 @@ class Api:
                     if e:
                         reg.atualizar(pasta, "exigencias", eid, lancado=agora, lancado_item=l["item"], lancado_final=e.get("final") or "",
                                       lancado_conferido=bool(r.get("ok")))
-        return res
+        return {"itens": res, "aprovados": extra["aprovados"], "falhas": [list(f) for f in extra["falhas"]]}
 
     def processo_remover(self, codigo, colecao, id_):
         self._reg().remover(self._pasta_proc(codigo), colecao, id_)

@@ -57,14 +57,21 @@ def itens(analise):
     L = analise.get("licenciamento") or {}
     env, car, esp = L.get("envolvidos") or {}, L.get("caracteristica") or {}, L.get("especSeguranca") or {}
     out = []
+    # RU e proprietário só têm o botão de análise quando têm procurador; o proprietário usa idLicenciamentoProprietario
+    # (template do SOL, chunk 4). Isolamento de risco só aparece quando o RT marcou isolamento na localização.
     for tipo, lst in (("RT", env.get("rts")), ("RU", env.get("rus")), ("PROPRIETARIO", env.get("proprietarios"))):
         for p in lst or []:
-            out.append({"tipo": tipo, "id": p.get("id"), "nome": "%s: %s" % (tipo.capitalize() if tipo == "PROPRIETARIO" else tipo,
-                                                                             (p.get("nome") or "").strip()),
+            if tipo != "RT" and not p.get("procurador"):
+                continue
+            out.append({"tipo": tipo, "id": p.get("idLicenciamentoProprietario") if tipo == "PROPRIETARIO" else p.get("id"),
+                        "nome": "%s: %s" % ("Proprietário" if tipo == "PROPRIETARIO" else tipo, (p.get("nome") or "").strip()),
                         "resultado": p.get("resultado"), "chave": CHAVES[tipo]})
+    isolamento = bool((L.get("localizacao") or {}).get("isolamentoRisco"))
     for nome, tipo, campo in (("Tipo de edificação", "TIPO_EDIFICACAO", "resultadoTipoEdificacao"),
                               ("Característica geral", "GERAL", "resultadoGeral"),
                               ("Isolamento de risco", "ISOLAMENTO_RISCO", "resultadoIsolamentoRisco")):
+        if tipo == "ISOLAMENTO_RISCO" and not isolamento:
+            continue
         out.append({"tipo": tipo, "id": car.get("id"), "nome": nome, "resultado": car.get(campo), "chave": CHAVES[tipo]})
     for o in car.get("ocupacoes") or []:
         c = o.get("cnae") or {}
@@ -194,3 +201,45 @@ def lancar(aba, id_analise, nome, texto):
     return {"ok": ok, "item": it["nome"], "conferido": ok,
             "aviso": "" if ok else "gravou, mas a leitura de volta não bateu (status %s, %d texto(s)): confira na tela do SOL"
             % (r2.get("statusResultadoAtec"), len(gravado))}
+
+
+# ---- aprovar o resto (pedido do Átila, 20/10/2026): o que não foi notificado e não está Reprovado vira Aprovado, como
+# o botão Aprovar do SOL (o mesmo editar-item, statusResultadoAtec APROVADO, sem justificativa). Item com notificação
+# na coluna CIA nunca é aprovado aqui, mesmo que o lançamento dele tenha falhado.
+
+def a_aprovar(analise, notificados):
+    """Itens em "Analisar" (sem resultado) cujo nome não está em `notificados`."""
+    fora = {_chave(n) for n in notificados or []}
+    return [i for i in itens(analise) if not ((i["resultado"] or {}).get("statusResultadoAtec")) and _chave(i["nome"]) not in fora]
+
+
+def aprovar_restantes(aba, id_analise, notificados):
+    """Aprova os itens de a_aprovar() e confere. {aprovados: [...], falhas: [(nome, motivo)]}."""
+    a = sc.buscar(aba, "%s/%s" % (sc.API, id_analise))
+    if (a.get("status") or "") not in ("EM_ANALISE", ""):
+        raise RuntimeError("a análise no SOL está %s" % a.get("status"))
+    feitos, falhas = [], []
+    for it in a_aprovar(a, notificados):
+        corpo = {"id": (it["resultado"] or {}).get("id"), "idAnaliseTecnica": a.get("id"), "idItemAnalisado": it["id"],
+                 "tipoItemAnaliseTecnica": it["tipo"], "statusResultadoAtec": "APROVADO"}
+        try:
+            _gravar(aba, "POST", "%s/editar-item" % sc.API, json.dumps(corpo, ensure_ascii=False))
+            feitos.append(it["nome"])
+        except PermissionError:
+            raise
+        except (RuntimeError, OSError, ValueError) as e:
+            falhas.append((it["nome"], str(e)))
+    depois = {i["nome"]: (i["resultado"] or {}).get("statusResultadoAtec") for i in itens(sc.buscar(aba, "%s/%s" % (sc.API, id_analise)))}
+    falhas += [(n, "não ficou Aprovado na leitura de volta") for n in feitos if depois.get(n) != "APROVADO"]
+    return {"aprovados": [n for n in feitos if depois.get(n) == "APROVADO"], "falhas": falhas}
+
+
+RECARREGAR = "(() => { setTimeout(() => location.reload(), 300); return JSON.stringify(true); })()"
+
+
+def recarregar(aba):
+    """Recarrega a aba do SOL para a tela mostrar o que foi gravado (o SOL não relê sozinho; a sessão fica, é a mesma aba)."""
+    try:
+        aba.avaliar(RECARREGAR)
+    except (RuntimeError, OSError, ValueError):
+        pass

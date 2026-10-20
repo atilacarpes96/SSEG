@@ -442,9 +442,31 @@ def main():
         _sl.lancar(SOLFalso(), 77, "Saída de Emergência", "x" * 2001)
     except ValueError as e:
         erro = str(e)
+    f4 = SOLFalso()
+    L4 = f4.ana["licenciamento"]
+    L4["especSeguranca"]["medidas"].append({"id": 12, "tipo": {"nome": "Extintores", "chaveNC": "analise.medidas.ext"}, "resultado": None})
+    L4["envolvidos"] = {"rus": [{"id": 40, "nome": "Sem procurador", "resultado": None}],
+                        "proprietarios": [{"id": 41, "idLicenciamentoProprietario": 4100, "nome": "Dono", "procurador": {"id": 1}, "resultado": None}]}
+    L4["elemGraficos"] = [{"id": 60, "descricao": "planta", "situacao": "ATIVO", "resultado": None},
+                          {"id": 61, "descricao": "velha", "situacao": "INATIVO", "resultado": None}]
+    L4["caracteristica"].update(resultadoGeral={"statusResultadoAtec": "APROVADO"})
+    nomes = [i["nome"] for i in _sl.a_aprovar(f4.ana, ["planta"])]
+    caso("Lançar no SOL: aprova só o que está em Analisar, sem exigência; RU sem procurador e inativo ficam fora; proprietário pelo idLicenciamentoProprietario",
+         nomes == ["Proprietário: Dono", "Tipo de edificação", "Extintores"]
+         and [i["id"] for i in _sl.itens(f4.ana) if i["tipo"] == "PROPRIETARIO"] == [4100], str(nomes))
     caso("Lançar no SOL: leitura de volta diferente avisa; demais inconformidades por PUT texto; acima de 2.000 não grava",
          not r2["ok"] and r2["conferido"] is False and r3["ok"] and put and put[0]["tipo"] == "text/plain"
          and put[0]["url"].endswith("/77/inconformidade") and "2001" in erro, str((r2, r3, erro)))
+    # 11b3d. revisão final pela coluna CIA (2.6.5): antes de lançar, sem PDF da CIA
+    import revisar_cia as _rc, argparse as _ap
+    with tempfile.TemporaryDirectory() as d:
+        json.dump({"versao": 1, "exigencias": [{"id": "e1", "medida": "Saída de Emergência", "final": "\n- REITERO: largura da porta."},
+                                                {"id": "e2", "medida": "Saída de Emergência", "final": ""}]},
+                  open(os.path.join(d, "analise.json"), "w", encoding="utf-8"))
+        json.dump({"analise": 1, "data_protocolo": "2026-09-01", "medidas": []}, open(os.path.join(d, "pre-analise.json"), "w"))
+        saida = _rc.revisar(_ap.Namespace(cia=None, pasta=d, textos=None, json=None, anterior=None, normas=None)).texto()
+    caso("revisar-cia --pasta: lê as exigências salvas da coluna CIA (uma caixa por medida) e acusa REITERO em 1ª análise",
+         "coluna CIA do SSEG.exe" in saida and "REITERO numa 1ª análise" in saida and "Sem --textos" not in saida, saida[:800])
     # 11b3b. a caixa do SOL manda sobre a planilha (2.6.3; caso de 20/10/2026: distribuídos na véspera sumiram do Início)
     E0 = lambda dist: _api.estado_caixa(dist, {}, 10, __import__("datetime").date(2026, 10, 20))
     S = lambda e, sc, ult="2026-10-20": _api._na_caixa_do_sol(e, sc, ult)
