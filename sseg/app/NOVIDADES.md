@@ -4,6 +4,14 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.8
+
+- **A caixa do Início segue a ordem da planilha da distribuição.**
+  - Em cima, o que foi distribuído primeiro, ou seja, o que vence antes. No mesmo dia de distribuição, vale a ordem das linhas da planilha.
+  - A etiqueta **Próximo** fica no primeiro dessa ordem.
+  - O que a planilha ainda não trouxe ("Na caixa do SOL") fica no fim da caixa.
+  - Antes a ordem era pelos dias em análise no SOL, que misturava os prazos.
+
 ## 2.6.7
 
 - **Revisão final com Aplicar ou Ignorar.** O botão "revisão final" chama o subagente revisor-cia. A resposta vem num quadro, uma exigência por linha:

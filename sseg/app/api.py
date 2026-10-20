@@ -94,7 +94,8 @@ def estado_caixa(dist, reg, prazo=10, hoje=None):
     g = lambda k: (dist.get(k) or reg.get(k) or "")
     fonte = "planilha" if dist.get("codigo") else ("manual" if any(reg.get(k) for k in ("distribuido", "concluido")) else "")
     e = {"distribuido": g("distribuido"), "concluido": g("concluido"), "resultado": g("resultado"), "protocolo": dist.get("protocolo", ""),
-         "tipo": dist.get("tipo", ""), "ct": reg.get("ct", ""), "fonte": fonte, "vence": "", "dias": None, "no_prazo": None}
+         "tipo": dist.get("tipo", ""), "ct": reg.get("ct", ""), "fonte": fonte, "vence": "", "dias": None, "no_prazo": None,
+         "linha": dist.get("linha")}
     if e["distribuido"]:
         d0 = datetime.date.fromisoformat(e["distribuido"])
         e["vence"] = (d0 + datetime.timedelta(days=prazo)).isoformat()

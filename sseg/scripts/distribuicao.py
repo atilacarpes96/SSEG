@@ -127,7 +127,7 @@ def registros(linhas, analista=None, conhecidos=()):
         raise ValueError("colunas não encontradas: " + ", ".join(falta))
     alvo = (_norm(analista).split() or [""])[-1] if analista else None
     out = {}
-    for r in linhas[cab_i + 1:]:
+    for n, r in enumerate(linhas[cab_i + 1:], 1):
         g = lambda k: r[I[k]].strip() if I[k] is not None and I[k] < len(r) else ""
         cod = g("codigo").upper()
         if not CODIGO.match(cod) or (alvo is not None and alvo not in _norm(g("analista"))):
@@ -135,7 +135,8 @@ def registros(linhas, analista=None, conhecidos=()):
         quem = analista or nome_conhecido(g("analista"), conhecidos)
         res = _norm(g("resultado"))
         out[cod] = {"codigo": cod, "analista": quem, "analista_planilha": g("analista"), "protocolo": data_iso(g("protocolo")), "distribuido": data_iso(g("distribuido")), "concluido": data_iso(g("concluido")),
-                    "resultado": res if res in ("CIA", "CA") else "", "tipo": g("tipo"), "ocupacao": g("ocupacao"), "area": g("area")}
+                    "resultado": res if res in ("CIA", "CA") else "", "tipo": g("tipo"), "ocupacao": g("ocupacao"), "area": g("area"),
+                    "linha": n}  # posição na planilha: o SSEG.exe ordena a caixa como ela (2.6.8)
     return list(out.values())  # a linha mais abaixo vale (reanálise do mesmo código)
 
 

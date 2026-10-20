@@ -612,7 +612,7 @@ footer { color: var(--suave); }
       <h2>Semana</h2>
       <div class="cards" id="cards"></div>
       <h2>Processos em andamento<span id="filtro"></span></h2>
-      <p class="sub">Sua caixa primeiro, pelos dias em análise no SOL; depois os que saíram com CIA e com CA. "Abrir" mostra conversa, checklist e CIA — o Claude só trabalha quando você pede.
+      <p class="sub">Sua caixa primeiro, na ordem da planilha da distribuição (o que vence antes em cima); depois os que saíram com CIA e com CA. "Abrir" mostra conversa, checklist e CIA — o Claude só trabalha quando você pede.
         Lançou CA ou CIA no SOL? <b>Atualizar</b> lê a caixa de novo e desce os lançados; o de cima é o próximo.</p>
       <div class="linha-bts" style="margin:0 0 8px"><button class="bt p" id="b-atualizar">Atualizar</button><span class="sub" id="atualizar-info" style="align-self:center"></span></div>
       <div class="cartao rola-x"><table class="t-proc"><thead><tr><th>Processo</th><th>Razão social</th><th>Ocupação</th><th class="num">Área</th><th>Situação</th><th>Mexido em</th><th></th><th></th></tr></thead>
@@ -1662,8 +1662,16 @@ function ordemProcessos(lst) {
   return lst.slice().sort((a, b) => {
     const g = grupo(a) - grupo(b);
     if (g) return g;
-    if (grupo(a) === 0 && (a.dias_sol != null || b.dias_sol != null)) return (b.dias_sol ?? -1) - (a.dias_sol ?? -1);  // como o SOL: mais dias no topo
-    if (grupo(a) === 0) return (a.distribuido || "9999") < (b.distribuido || "9999") ? -1 : (a.distribuido || "9999") > (b.distribuido || "9999") ? 1 : 0;
+    // caixa (2.6.8, pedido do Átila com a planilha na mão): a ordem da planilha da distribuição — o que vence primeiro
+    // em cima e, no mesmo dia, a ordem das linhas dela; sem a planilha ainda ("Na caixa do SOL"), no fim, pelos dias no SOL
+    if (grupo(a) === 0) {
+      const da = a.distribuido || "9999", db = b.distribuido || "9999";
+      if (da !== db) return da < db ? -1 : 1;
+      const la = a.linha ?? 1e9, lb = b.linha ?? 1e9;
+      if (la !== lb) return la - lb;
+      if ((a.protocolo || "") !== (b.protocolo || "")) return (a.protocolo || "9999") < (b.protocolo || "9999") ? -1 : 1;
+      return (b.dias_sol ?? -1) - (a.dias_sol ?? -1);
+    }
     if (grupo(a) < 3) return (b.concluido || "") < (a.concluido || "") ? -1 : (b.concluido || "") > (a.concluido || "") ? 1 : 0;
     return (b.quando || 0) - (a.quando || 0);
   });
@@ -1684,7 +1692,7 @@ function pintarProcessos() {
   const h = isoLocal(new Date());
   const proximo = !def && lst[0] && lst[0].estado === "caixa" ? lst[0].codigo : "";  // 2.5.1: o de cima da caixa é o próximo
   corpo.replaceChildren(...lst.map(p => el("tr", {},
-    el("td", { class: "cod" }, p.codigo, p.codigo === proximo ? el("span", { class: "tag sit k-verde", style: "margin-left:6px", title: "Maior tempo em análise no SOL entre os que ainda estão na sua caixa" }, "Próximo") : null, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, nomeAnalise(p.tipo)) : null),
+    el("td", { class: "cod" }, p.codigo, p.codigo === proximo ? el("span", { class: "tag sit k-verde", style: "margin-left:6px", title: "O primeiro da sua caixa: distribuído há mais tempo (vence antes)" }, "Próximo") : null, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, nomeAnalise(p.tipo)) : null),
     el("td", { class: "razao", title: p.razao || "" }, el("span", {}, p.razao || "—")),
     el("td", { class: "ocup-c", title: p.ocupacao || "" }, siglaOcupacao(p.ocupacao) || el("span", { class: "discreto" }, "—")),
     el("td", { class: "num" }, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""),
