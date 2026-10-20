@@ -15,6 +15,7 @@ analista: o que muda na tela e no dia a dia, sem nome de função.
 - **A CIA não é emitida pelo programa.** Concluir e emitir continua sendo você, no SOL.
 - A exigência lançada ganha "✓ lançado no SOL em …". Se você mudar o texto depois, aparece "mudou depois de lançado: lance de novo".
 - Quem lança é o próprio programa, pela aba do SOL em que você entrou (com o seu login), não o Claude.
+- **Correção (relato de 20/10):** a sincronização parava inteira com "Acesso negado" quando um arquivo que ia descer estava aberto no PC (por exemplo, o print do memorial aberto no leitor de PDF). Agora os outros arquivos descem; o aberto fica como está, com o aviso "feche o arquivo", e vem na próxima sincronização. O arquivo temporário da janela do processo também não sobe mais ao servidor.
 
 ## 2.6.4
 

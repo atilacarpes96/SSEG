@@ -19,6 +19,7 @@ e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o 
 - Nunca conclui a análise nem emite a CIA. "Outras medidas" fica de fora: no SOL a ação dela é outra.
 - Na janela do processo: coluna CIA → "lançar no SOL" → tela com item, status, texto e avisos → "Lançar os marcados". A exigência fica marcada como lançada.
 - Muda o padrão da skill `sol-cbmrs-navegador` só no SSEG.exe: lá, lançar é pelo botão, não pelo navegador do Claude.
+- Correção (relato do Sd Carpes, 20/10): `sincronizar.py` não para mais com `PermissionError` quando um arquivo que desce está aberto no Windows; ele fica em `presos` e volta na próxima. Arquivo escondido (`.analise-*.json`, temporário) não sincroniza.
 
 ### Prompt para atualizar
 

@@ -51,10 +51,11 @@ quando ele liberar, "Testar conexão"."""
 # --------------------------------------------------------------------- comum aos dois lados
 
 def chave_valida(k):
-    """'<código>/<arquivo da lista>' ou '<código>.md' (registro). Barra caminho fora da pasta."""
+    """'<código>/<arquivo da lista>' ou '<código>.md' (registro). Barra caminho fora da pasta e arquivo escondido
+    (".analise-xxxx.json" é o temporário do analise_registro.py: subiu ao servidor em 20/10/2026)."""
     if "/" in k:
         cod, nome = k.split("/", 1)
-        return (bool(CODIGO.match(cod)) and nome not in ("", ".", "..") and not re.search(r"[\\/:]", nome)
+        return (bool(CODIGO.match(cod)) and nome not in ("", ".", "..") and not nome.startswith(".") and not re.search(r"[\\/:]", nome)
                 and enviar.selecionar([nome])[0] == [nome])
     return k.endswith(".md") and bool(CODIGO.match(k[:-3]))
 
@@ -94,8 +95,11 @@ def empacotar(arquivos):
     return buf.getvalue()
 
 
-def desempacotar(dados, destino_de):
-    """Grava cada arquivo do tar em destino_de(chave). Chave inválida, ou destino None, é ignorada. Devolve as gravadas."""
+def desempacotar(dados, destino_de, presos=None):
+    """Grava cada arquivo do tar em destino_de(chave). Chave inválida, ou destino None, é ignorada. Devolve as gravadas.
+    Arquivo aberto em outro programa (Windows: PDF aberto no leitor não deixa trocar) não derruba o resto: vai para
+    `presos` e fica como estava; a próxima sincronização tenta de novo (relato de 20/10/2026, memorial SOL aberto)."""
+    import time
     feitas = []
     with tarfile.open(fileobj=io.BytesIO(dados), mode="r") as tar:
         for mb in tar.getmembers():
@@ -108,7 +112,18 @@ def desempacotar(dados, destino_de):
             tmp = alvo + ".sseg-tmp"
             with tar.extractfile(mb) as src, open(tmp, "wb") as dst:
                 dst.write(src.read())
-            os.replace(tmp, alvo)
+            for tentativa in range(4):  # o leitor às vezes solta o arquivo em instantes
+                try:
+                    os.replace(tmp, alvo)
+                    break
+                except PermissionError:
+                    time.sleep(0.5)
+            else:
+                os.remove(tmp)
+                if presos is None:
+                    raise PermissionError("arquivo aberto em outro programa: %s" % alvo)
+                presos.append(mb.name)
+                continue
             os.utime(alvo, (mb.mtime, mb.mtime))
             feitas.append(mb.name)
     return feitas
@@ -257,8 +272,9 @@ def aplicar(pasta_ppci, servidor, escolhas=None, so_descer=False):
     desce = plano["desce"] + [k for k in plano["conflito"] if escolhas.get(k) == "servidor"]
     if sobe:
         servidor.receber(empacotar({k: no_pc(k) for k in sobe}))
+    presos = []
     if desce:
-        desempacotar(servidor.entregar(desce), no_pc)
+        desempacotar(servidor.entregar(desce), no_pc, presos)
     # nova base: o que ficou igual dos dois lados; apagado de um lado mantém a referência antiga
     local, remoto_m = manifesto(pasta_ppci, PROC_CLONE), servidor.listar()
     nova = {k: v for k, v in local.items() if remoto_m.get(k) == v}
@@ -267,7 +283,7 @@ def aplicar(pasta_ppci, servidor, escolhas=None, so_descer=False):
             nova[k] = base[k]
     _gravar_base(nova)
     resto = [k for k in plano["conflito"] if escolhas.get(k) not in ("pc", "servidor")]
-    return {"subiu": sobe, "desceu": desce, "conflito_pendente": resto}
+    return {"subiu": sobe, "desceu": [k for k in desce if k not in presos], "conflito_pendente": resto, "presos": presos}
 
 
 def texto_plano(p):
@@ -317,6 +333,8 @@ def principal(args, so_descer=False):
         print("  ↓ " + k)
     for k in r["subiu"]:
         print("  ↑ " + k)
+    for k in r.get("presos") or []:
+        print("  ! não atualizei %s: está aberto em outro programa (feche o arquivo; a próxima sincronização traz)" % k)
     if r["conflito_pendente"]:
         print("conflito sem escolha (nada sobrescrito): " + ", ".join(r["conflito_pendente"]))
 

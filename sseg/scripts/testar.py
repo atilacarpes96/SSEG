@@ -189,6 +189,28 @@ def main():
         r = sc.aplicar(ppci, Falso(), {cod + "/CIA 1.pdf": "servidor"})
         caso("sincronizar: escolha 'servidor' resolve o conflito",
              open(os.path.join(ppci, cod, "CIA 1.pdf")).read() == "cia srv" and not r["conflito_pendente"], str(r))
+        # arquivo aberto no PC (Windows não deixa trocar): os outros descem, ele fica para a próxima (relato de 20/10/2026)
+        gravar(os.path.join(srv, cod, "memorial SOL 2.pdf"), "print novo")
+        gravar(os.path.join(srv, cod, "memorial SOL 2.txt"), "texto novo")
+        gravar(os.path.join(ppci, cod, ".analise-abc.json"), "temporário")
+        _rep = sc.os.replace
+        def _travado(a, b):
+            if b.endswith("memorial SOL 2.pdf"):
+                raise PermissionError(13, "Acesso negado")
+            return _rep(a, b)
+        sc.os.replace = _travado
+        try:
+            import time as _t
+            _sl0, _t.sleep = _t.sleep, (lambda s: None)
+            rp = sc.aplicar(ppci, Falso())
+        finally:
+            sc.os.replace, _t.sleep = _rep, _sl0
+        caso("sincronizar: arquivo aberto no PC não derruba o resto e volta na próxima; temporário escondido não sobe",
+             rp["presos"] == [cod + "/memorial SOL 2.pdf"] and cod + "/memorial SOL 2.txt" in rp["desceu"]
+             and not os.path.exists(os.path.join(ppci, cod, "memorial SOL 2.pdf.sseg-tmp"))
+             and cod + "/memorial SOL 2.pdf" in sc.comparar(sc.manifesto(ppci, clone_proc), Falso().listar(), sc._ler_base())["desce"]
+             and not os.path.exists(os.path.join(srv, cod, ".analise-abc.json")), str(rp))
+        sc.aplicar(ppci, Falso())
         gravar(os.path.join(ppci, cod, "sol-caixa.json"), "pc")           # gerado pelo SOL dos dois lados
         gravar(os.path.join(srv, cod, "sol-caixa.json"), "srv")
         p = sc.comparar(sc.manifesto(ppci, clone_proc), Falso().listar(), {})
