@@ -622,6 +622,22 @@ class Api:
         self._log("Pré-análise refeita: " + saida)
         return saida
 
+    def processo_memorial(self, codigo):
+        """Botão "Memorial SOL" (2.6.4): abre o print do memorial da análise mais recente. Sem print na pasta, gera
+        aqui mesmo do JSON do SOL que a pasta tem (memorial_sol.py, PDF pelo Chrome/Edge deste PC)."""
+        pasta = self._pasta_proc(codigo)
+        num = lambda f: int((re.search(r"memorial SOL (\d+)\.pdf$", f) or [0, 0])[1])  # noqa: E731
+        achados = sorted((f for f in os.listdir(pasta) if num(f)), key=num)
+        if not achados:
+            memorial_sol, = self._scripts_do_clone("memorial_sol")
+            feitos = memorial_sol.gerar(pasta)
+            achados = [os.path.basename(f) for f in feitos if f.endswith(".pdf")]
+            if not achados:
+                raise RuntimeError("Não consegui gerar o print do memorial (veja Detalhes).")
+            self._log("Print do memorial gerado: " + achados[-1])
+        base.abrir(os.path.join(pasta, achados[-1]))
+        return achados[-1]
+
     def processo_congelar(self, codigo, refazer=False):
         """Guarda o memorial como está no SOL agora (memorial N.pdf e licenciamento N.json), no servidor, e traz para este PC.
         Só lê o SOL. Fazer antes de lançar a CIA: depois que o RT corrige, o memorial do SOL já é outro."""

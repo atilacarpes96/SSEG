@@ -12,6 +12,18 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 20/10/2026 — SSEG.exe 2.6.4: print do memorial do SOL em cada análise
+
+- `scripts/memorial_sol.py`: do JSON do licenciamento, `memorial SOL <N>.pdf` e `.txt` com tudo o que a página mostra. Inclui a norma de dimensionamento de cada medida, o laudo inteiro e a seção "Dados a verificar" (o que conferir na planta e os pontos `??`/`!!` da pré-análise). Também congela o `licenciamento <N>.json`.
+- Roda sozinho uma vez por análise na leitura da caixa (servidor e PC) e no "Guardar memorial". Botão "Memorial SOL" na janela do processo. O `sseg.py resumo` lista os prints, para o Claude comparar a análise anterior com a atual.
+- Já gerado para os 11 processos da caixa de 20/10/2026.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Na janela de um processo da caixa, clique em "Memorial SOL" e confira o print. Nada a instalar na conta.
+```
+
 ## 20/10/2026 — SSEG.exe 2.6.3: caixa do SOL manda no Início, caixa lida no Chrome de cada analista, "Reportar ao Claude" em todo erro
 
 - **Caixa:** a lista do Início considera "na caixa" o que está na leitura mais recente da caixa do SOL (`sol-caixa.json`), mesmo antes da planilha das 7h47. Caso de 20/10/2026: o Atualizar das 07:47 leu a caixa antes de a planilha gravar os distribuídos do dia 19, e quatro processos sumiram.

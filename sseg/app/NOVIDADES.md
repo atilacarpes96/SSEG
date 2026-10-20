@@ -4,6 +4,18 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.4
+
+- **Print do memorial do SOL, sozinho, em cada análise.** Quando o processo cai na caixa, o programa guarda `memorial SOL <N>.pdf` com tudo o que a página do licenciamento mostra:
+  - envolvidos, localização e características (áreas, pavimentos, alturas, população, característica construtiva);
+  - ocupações com carga de incêndio e grau de risco, e as áreas do memorial;
+  - **cada medida com a norma usada no dimensionamento**, inviabilidade, compartimentação e status;
+  - o laudo de inviabilidade inteiro, riscos específicos, elementos gráficos (inclusive os substituídos) e taxas;
+  - no fim, **"Dados a verificar"**: o que conferir na planta e os pontos que a pré-análise marcou.
+- Junto ficam o `licenciamento <N>.json` (a fonte do print, para comparar uma análise com a outra) e um `.txt` que o Claude lê.
+- **Botão "Memorial SOL"** na janela do processo: abre o print da análise. Se a pasta ainda não tiver, ele gera na hora.
+- **Guardar memorial** passa a guardar também o print.
+
 ## 2.6.3
 
 - **A lista do Início segue a caixa do SOL, não só a planilha.** O que está na sua caixa do SOL aparece como "na caixa" mesmo antes de a planilha da distribuição trazer (ela entra uma vez por dia, às 7h47). Enquanto a planilha não chega, a etiqueta diz "Na caixa do SOL", sem prazo. Foi o que fez sumir da lista, na manhã de 20/10, quatro processos distribuídos na véspera.

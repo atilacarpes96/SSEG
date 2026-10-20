@@ -12,6 +12,8 @@ educado do sol_caixa.py. Nunca escreve no SOL.
 
 Arquivos, na pasta do processo (todos dentro da lista do enviar.py, sobem ao servidor e descem ao PC):
   memorial <N>.pdf          o memorial descritivo (caracteristica.arquivo) da análise N
+  memorial SOL <N>.pdf/.txt o print da página do licenciamento (memorial_sol.py, 2.6.4): características, ocupações,
+                            medidas com a norma do dimensionamento, laudo, riscos, elementos gráficos e status
   licenciamento <N>.json    o JSON do licenciamento no mesmo instante (o que o RT tinha declarado)
   CIA <N>.pdf               a CIA emitida na análise N (cópia de cia-<id>.pdf)
 N = número da análise em andamento (marcos-resumo.json, "analise"): a CIA dela leva o mesmo N.
@@ -90,9 +92,10 @@ def congelar(codigo, refazer=False, aba=None):
         raise ValueError("faltam os Marcos ou o id do licenciamento na pasta: rode a leitura da caixa antes")
     out = {"ok": True, "analise": n, "arquivos": [], "avisos": []}
     mem, lic = os.path.join(pasta, "memorial %s.pdf" % n), os.path.join(pasta, "licenciamento %s.json" % n)
-    if os.path.exists(mem) and os.path.exists(lic) and not refazer:
+    prt = os.path.join(pasta, "memorial SOL %s.pdf" % n)
+    if os.path.exists(mem) and os.path.exists(lic) and os.path.exists(prt) and not refazer:
         out["avisos"].append("a análise %s já tinha memorial congelado: mantido (use refazer para trocar)" % n)
-        out["arquivos"] = [os.path.basename(mem), os.path.basename(lic)]
+        out["arquivos"] = [os.path.basename(mem), os.path.basename(lic), os.path.basename(prt)]
         return out
     aba = aba or sc.aba_do_sol()
     if aba is None:
@@ -111,6 +114,11 @@ def congelar(codigo, refazer=False, aba=None):
     with open(lic, "w", encoding="utf-8") as fh:
         json.dump(lic_json, fh, ensure_ascii=False)
     out["arquivos"].append(os.path.basename(lic))
+    try:  # o print da página, do mesmo JSON (2.6.4)
+        import memorial_sol
+        out["arquivos"] += [os.path.basename(f) for f in memorial_sol.gerar(pasta, lic, forcar=True)]
+    except (RuntimeError, OSError, ValueError) as e:
+        out["avisos"].append("print do memorial: %s" % e)
     return out
 
 

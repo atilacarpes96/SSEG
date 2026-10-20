@@ -18,6 +18,7 @@ O que grava, na pasta dos processos do PC (o mesmo que o sol_caixa.py grava no s
   <código>/api-<ID>.json       o licenciamento, só se ainda não houver
   <código>/marcos*.json, historico.json, facts.json   uma vez por dia (protocolo, análises, recursos)
   <código>/cia-*.pdf/.txt      CIAs anteriores que faltam (precisa do pdftotext)
+  <código>/memorial SOL <N>.*  o print do memorial da análise N (memorial_sol.py; PDF pelo Chrome/Edge do PC)
   .caixa/caixa.json            quem estava na caixa; quem sai ganha saiu_em no sol-caixa.json
 Tudo isso é "gerado" para o sincronizar.py: sobe ao servidor e, se mudar dos dois lados, vale o do servidor.
 
@@ -79,6 +80,7 @@ def levantar(aba, raiz, baixar=True):
                 if linha["novo"] or not _de_hoje(os.path.join(pasta, "marcos.json")):
                     sol_caixa.marcos_proc(aba, ident, codigo, linha, raiz=raiz, gatilho=False)
                 sol_caixa.baixar_cias(aba, codigo, linha, raiz=raiz)
+                sol_caixa.print_memorial(pasta, linha)  # memorial SOL <N>.pdf, uma vez por análise
             except PermissionError:
                 raise
             except (RuntimeError, OSError, ValueError) as e:

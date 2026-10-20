@@ -461,6 +461,17 @@ def _entrar_e_conferir(aba, s):
     return aba.avaliar(SESSAO) if ok else s
 
 
+def print_memorial(pasta, linha):
+    """memorial SOL <N>.pdf/.txt da análise em andamento, uma vez por análise (memorial_sol.py, 2.6.4): o memorial
+    como o RT entregou para ESTA análise, antes de ele corrigir. Falhou, vira aviso e tenta na próxima leitura."""
+    try:
+        import memorial_sol
+        if memorial_sol.gerar(pasta):
+            linha["memorial"] = True
+    except (RuntimeError, OSError, ValueError) as e:
+        linha["aviso"] = "print do memorial: %s" % e
+
+
 def gravar_sol_caixa(pasta, it, ident, id_analise):
     """<código>/sol-caixa.json: o que a linha da caixa do SOL mostra. lido_em = hoje: o SSEG.exe considera na caixa
     os processos da leitura mais recente (2.6.3). Mesmo formato no servidor e no PC (caixa_pc.py)."""
@@ -559,6 +570,7 @@ def levantar(forcar=False):
             except RuntimeError as e:
                 linha["aviso"] = "marcos: %s" % e
             baixar_cias(aba, codigo, linha)  # a CIA anterior chega pronta: o Claude não baixa mais no chat
+            print_memorial(os.path.join(PROCESSOS, str(codigo)), linha)
         resumo.append(linha)
     sairam = []
     if estavam is not None and itens:  # caixa vazia na leitura = leitura suspeita: não marca ninguém como saído

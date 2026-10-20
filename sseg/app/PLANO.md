@@ -346,6 +346,8 @@ shell: a chave dele só roda a `scripts/porta.py`.
   - Instalação: passo do Chrome com Chrome ausente/antigo (versão do registro, `chrome://settings/help`), endereço copiado e à vista, erro persistente com "Tentar de novo", WhatsApp no pedido de acesso, servidor conferido a cada 20 s enquanto espera o admin
   - Saíram `sol_entrar.py`, `ferramentas/sol-entrar` (atalho Abrir SOL e Tampermonkey) e o passo do build que criava o atalho
   - [ ] Teste no PC do Sgt Magalhães: Chrome 144+, depuração ligada, SOL aberto → Atualizar traz a caixa dele
+- [x] **2.6.4** (pedido do Átila, 20/10/2026: "o print do memorial não está sendo feito; tem que ter todas as infos, inclusive as normas do dimensionamento e os dados a verificar"; "com JSON não é melhor?"): `memorial_sol.py` gera `memorial SOL <N>.pdf/.txt` do JSON do licenciamento e congela `licenciamento <N>.json` (a fonte). Uma vez por análise, na leitura da caixa (`sol_caixa.print_memorial`, também no `caixa_pc.py`), e sempre no Guardar memorial. Botão "Memorial SOL" na janela do processo. `gerar_pdf` com perfil próprio, ao lado do PDF (o Chromium snap do servidor não lê o /tmp; no PC o Chrome do analista está aberto)
+  - [ ] Ver com o Átila se o PDF deve imitar a tela do SOL mais de perto (ordem dos campos, rótulos)
 - [ ] Quadro (`quadro.json`) e a caixa do SOL (`sol_caixa.py`) por analista — depois
 
 ### Ideia a amadurecer — "Ponte SOL" (pedido do Átila, 12/10/2026; NÃO construir sem confirmar)

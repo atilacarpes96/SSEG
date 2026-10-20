@@ -204,7 +204,7 @@ def _gravar_base(base):
 # leituras do mesmo SOL; vale a do servidor, sem perguntar. Antes isso virava conflito, e o conflito segurava o
 # Atualizar inteiro (nada descia até o analista escolher).
 GERADO = re.compile(r"^(sol-caixa|marcos|marcos-resumo|historico|facts|pre-analise|distribuicao|ct|recurso)\.(json|txt)$"
-                    r"|^(anterior-)?api-\d+\.json$|^cia-(\d+|ultima)\.(pdf|txt)$")
+                    r"|^(anterior-)?api-\d+\.json$|^cia-(\d+|ultima)\.(pdf|txt)$|^memorial SOL \d+\.(pdf|txt)$|^licenciamento \d+\.json$")
 
 
 def gerado(k):

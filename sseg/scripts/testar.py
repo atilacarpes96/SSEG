@@ -344,6 +344,23 @@ def main():
         caso("app: processo que saiu da caixa vira concluído com o resultado dos Marcos; análise velha não conta; na caixa fica",
              ficou == "caixa" and (e1["estado"], e1["resultado"], e1["concluido"], e1["dias"]) == ("concluido", "CA", "2026-10-19", 9)
              and (e2["estado"], e2["resultado"]) == ("concluido", ""), str((ficou, e1, e2)))
+    # 11b3a. print do memorial (2.6.4): norma do dimensionamento, inviabilidade, laudo, notificação e o que verificar
+    import memorial_sol as _ms
+    api_f = {"numero": "A00012345AA001", "tipo": "PPCI",
+             "caracteristica": {"areaConstruida": 1000.5, "alturaDescendente": 7, "caracteristicaConstrutiva": "Z",
+                                "ocupacoes": [{"cnae": {"divisao": "C-2", "cnae": "4744-0/99", "descricao": "Loja"}, "cargaIncendio": 800,
+                                               "grauRisco": "ALTO", "ocupacao": "PREDOMINANTE", "determinaSeguranca": True}]},
+             "especSeguranca": {"medidas": [{"tipo": {"nome": "Saída de Emergência"}, "norma": {"nome": "Resolução Técnica nº 11/2016"},
+                                             "inviabilidade": "POSSUI_PARCIAL", "compartimentacao": False,
+                                             "resultado": {"statusResultadoAtec": "REPROVADO", "justificativas": [{"justificativa": "Deverá corrigir a largura."}]}}],
+                                "laudo": {"txtClob": "<p>Rampa&nbsp;com 10%</p><p>Compensatória: fita</p>"}},
+             "elemGraficos": [{"tipo": "CORTE", "descricao": "corte", "situacao": "ATIVO"}, {"tipo": "CORTE", "descricao": "velho", "situacao": "INATIVO"}]}
+    t = _ms.texto(_ms.montar(api_f, 2, "01/09/2026", ["Linha não conferida."]))
+    caso("memorial SOL: medida com norma, inviabilidade parcial, status, notificação, laudo sem HTML, inativo à parte e o que verificar",
+         "Saída de Emergência | Resolução Técnica nº 11/2016 | Sim, parcial | Não | Reprovado" in t and "Deverá corrigir a largura." in t
+         and "Rampa com 10%\nCompensatória: fita" in t and "Substituídos" in t and "1.000,50 m²" in t
+         and "[ ] Alturas descendente" in t and "[ ] Linha não conferida." in t and "C-2 | 4744-0/99" in t, t[:3000])
+    caso("sincronizar: o print do memorial é gerado (vale o do servidor)", sc.gerado("A1/memorial SOL 3.pdf") and not sc.gerado("A1/memorial 3.pdf"))
     # 11b3b. a caixa do SOL manda sobre a planilha (2.6.3; caso de 20/10/2026: distribuídos na véspera sumiram do Início)
     E0 = lambda dist: _api.estado_caixa(dist, {}, 10, __import__("datetime").date(2026, 10, 20))
     S = lambda e, sc, ult="2026-10-20": _api._na_caixa_do_sol(e, sc, ult)

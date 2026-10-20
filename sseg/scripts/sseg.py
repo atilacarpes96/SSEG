@@ -49,6 +49,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import unicodedata
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -839,9 +840,17 @@ def gerar_pdf(html_path, out_pdf):
     if not chrome:
         raise SystemExit("Chromium nao encontrado neste ambiente.")
     url = "file:///" + os.path.abspath(html_path).replace("\\", "/").lstrip("/")
-    cmd = [chrome, "--headless", "--disable-gpu", "--no-sandbox",
+    # perfil próprio (2.6.4): no PC o Chrome do analista está aberto com o perfil padrão, e o headless no mesmo
+    # perfil pode ser entregue à janela aberta em vez de imprimir
+    # ao lado do PDF, não no /tmp: o Chromium do servidor é snap e não enxerga o /tmp
+    perfil = tempfile.mkdtemp(prefix="perfil-pdf-", dir=os.path.dirname(os.path.abspath(out_pdf)))
+    cmd = [chrome, "--headless", "--disable-gpu", "--no-sandbox", "--user-data-dir=%s" % perfil,
            "--no-pdf-header-footer", "--print-to-pdf=%s" % os.path.abspath(out_pdf), url]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=120,
+                           creationflags=0x08000000 if os.name == "nt" else 0)
+    finally:
+        shutil.rmtree(perfil, ignore_errors=True)
     if not os.path.exists(out_pdf):
         raise SystemExit("Falha ao gerar PDF.\n%s\n%s" % (r.stdout, r.stderr))
     return out_pdf
@@ -974,6 +983,10 @@ def resumo_pasta(pasta):
     cias = sorted(_g.glob(os.path.join(pasta, "cia-*.txt")))
     if cias:
         L.append("CIAs anteriores com texto (ler com Read): " + ", ".join(os.path.basename(c) for c in cias))
+    mems = sorted(_g.glob(os.path.join(pasta, "memorial SOL *.txt")))
+    if mems:  # 2.6.4: o print do memorial de cada análise; o de número menor é o que a CIA anterior notificou
+        L.append("Print do memorial do SOL por análise (ler com Read; comparar o da análise anterior com o atual): "
+                 + ", ".join(os.path.basename(m) for m in mems))
     for nome, o_que in (("pre-analise.txt", "pré-análise do script"), ("analise.json", "checklist, pendências e CIA da janela"),
                         ("ct.json", "CT em aberto (planilha)"), ("recurso.json", "recurso em aberto (planilha)"),
                         ("distribuicao.json", "distribuição (planilha)"), ("historico.json", "histórico de recurso do SOL"),

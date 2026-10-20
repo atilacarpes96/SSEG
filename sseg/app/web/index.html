@@ -671,7 +671,8 @@ footer { color: var(--suave); }
         <div class="dir">
           <button class="bt" id="pr-sol-lic" title="Abre no navegador">Licenciamento no SOL</button>
           <button class="bt" id="pr-sol-an" title="Abre no navegador">Análise técnica no SOL</button>
-          <button class="bt" id="pr-congelar" title="Antes de lançar a CIA: guarda o memorial como está no SOL agora (só lê o SOL)">Guardar memorial</button>
+          <button class="bt" id="pr-memorial" title="Abre o print do memorial do SOL desta análise: características, ocupações, medidas com a norma do dimensionamento, laudo e o que verificar">Memorial SOL</button>
+          <button class="bt" id="pr-congelar" title="Antes de lançar a CIA: guarda o memorial como está no SOL agora, com o print da página (só lê o SOL)">Guardar memorial</button>
           <button class="bt" id="pr-salvar" title="Depois de emitir a CIA no SOL: baixa a CIA, confere o memorial guardado e salva no servidor e na pasta dos prints">Salvar processo</button>
           <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
           <button class="bt link so-pc" id="pr-pasta">abrir pasta</button>
@@ -2755,6 +2756,7 @@ async function abrirNoSol(url) {
 }
 // sem o id do processo no SOL, o licenciamento cai na consulta; sem a análise direta, na caixa de análise
 const aviso2 = r => avisar((r.ok ? "✓ " : "✗ ") + ((r.arquivos || []).length ? r.arquivos.join(", ") : "") + ((r.avisos || []).length ? (r.arquivos && r.arquivos.length ? " · " : "") + r.avisos.join(" · ") : ""), !r.ok);
+$("#pr-memorial").onclick = async ev => { const f = await api("processo_memorial", [PR.codigo], ev.currentTarget); avisar("Abrindo " + f + "."); };
 $("#pr-congelar").onclick = async ev => {
   const b = ev.currentTarget;
   aviso2(await api("processo_congelar", [PR.codigo, false], b));
