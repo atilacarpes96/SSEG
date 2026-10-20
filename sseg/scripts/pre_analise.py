@@ -200,7 +200,115 @@ def _ficha_comparar(api):
     }
 
 
-def secao_reanalise(api, anterior, marcos):
+def _chave(s):
+    import unicodedata
+    s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().upper()
+    return " ".join(re.sub(r"[^A-Z0-9]+", " ", s).split())
+
+
+def notificados_cia(cia_txt):
+    """{título do elemento gráfico (como a CIA escreve): texto notificado}, da seção "Elementos Gráficos" do PDF da CIA.
+    No PDF o título vem na margem e o texto recuado; a seção acaba no próximo título de seção ou no fecho."""
+    out, atual, dentro = {}, None, False
+    for linha in (cia_txt or "").splitlines():
+        t = linha.strip()
+        if not t or RODAPE_CIA.match(linha) or re.match(r"^CBMRS \d\d/\d\d/\d{4}", t):  # rodapé de página do PDF
+            continue
+        recuo = len(linha) - len(linha.lstrip())
+        if re.match(r"^Elementos Gr[aá]ficos$", t, re.I):
+            dentro = True
+            continue
+        if not dentro:
+            continue
+        if recuo < 4 and (re.match(r"^(Demais inconformidades|Medidas de Seguran|Riscos Espec|Caracter|Envolvidos|Localiza)", t, re.I)
+                          or t.startswith("O ")):
+            break
+        if recuo < 4:
+            atual = t
+            out.setdefault(atual, [])
+        elif atual and not re.match(r"^\d+\.\s*Outros$", t):
+            out[atual].append(t)
+    return {k: " ".join(v) for k, v in out.items()}
+
+
+def plantas(api, marcos=None, cia_txt=""):
+    """Elementos gráficos desta análise × anteriores, estruturado (2.6.4; o pre-analise.txt e o memorial_sol.py usam):
+    [{estado, tipo, descricao, arquivo, incluido, inativado, notificado}]. estado:
+      novo                  incluído depois da última CIA
+      mantido               já estava antes da última CIA
+      mantido-notificado    já estava, foi notificado na última CIA e NÃO foi trocado (o SOL zera a notificação do
+                            elemento ativo; o que foi notificado sai do texto da CIA, cia-ultima.txt)
+      substituido           inativado pelo RT (o SOL guarda o que foi notificado nele)
+    Título da CIA que não casa com nenhum elemento vem com estado "notificado-sem-par"."""
+    import datetime
+    els = api.get("elemGraficos") or []
+    ativos = [e for e in els if e.get("situacao") == "ATIVO"]
+    inativos = sorted([e for e in els if e.get("situacao") != "ATIVO"], key=lambda e: e.get("dthExclusao") or 0)
+    cias = [a for a in (marcos or {}).get("analises") or [] if a.get("resultado") == "CIA" and a.get("data")]
+    if cias:  # data da última CIA (Marcos) → ms; sem Marcos, a última exclusão (heurística da 2.3.23)
+        corte = datetime.datetime.fromisoformat(max(a["data"] for a in cias)).timestamp() * 1000
+    else:
+        corte = max([e.get("dthExclusao") or 0 for e in inativos] or [0]) - 86400000
+    notif = notificados_cia(cia_txt)
+    por_chave = {_chave(k): k for k in notif}
+    usados = set()
+    out = []
+
+    def linha(e, estado, nota=""):
+        return {"estado": estado, "tipo": (e.get("tipo") or "").replace("_", " ").lower(), "descricao": " ".join(str(e.get("descricao") or "").split()),
+                "arquivo": (e.get("arquivo") or {}).get("nomeArquivo") or "", "incluido": _dia(e.get("dthInclusao")),
+                "inativado": _dia(e.get("dthExclusao")) if e.get("dthExclusao") else "", "notificado": nota}
+    for e in ativos:
+        k = _chave(e.get("descricao"))
+        antigo = corte > 0 and (e.get("dthInclusao") or 0) < corte
+        if antigo and k in por_chave:
+            usados.add(k)
+            out.append(linha(e, "mantido-notificado", notif[por_chave[k]]))
+        else:
+            out.append(linha(e, "mantido" if antigo else "novo"))
+    for e in inativos:
+        just = " | ".join(" ".join((j.get("justificativa") or "").split())
+                          for j in (e.get("justificativas") or []) + ((e.get("resultado") or {}).get("justificativas") or []))
+        usados.add(_chave(e.get("descricao")))
+        out.append(linha(e, "substituido", just))
+    for k, titulo in por_chave.items():
+        if k not in usados:
+            out.append({"estado": "notificado-sem-par", "tipo": "", "descricao": titulo, "arquivo": "", "incluido": "",
+                        "inativado": "", "notificado": notif[titulo]})
+    return out
+
+
+ESTADO_PLANTA = {"novo": "NOVO", "mantido": "mantido", "mantido-notificado": "NÃO TROCADO (notificado na última CIA)",
+                 "substituido": "substituído", "notificado-sem-par": "notificado na CIA, sem elemento com esse nome"}
+
+
+def mudancas(anterior, api):
+    """O que mudou no cadastro e no campo 4 entre duas versões do JSON do licenciamento (lista de linhas)."""
+    a, b = _ficha_comparar(anterior), _ficha_comparar(api)
+    mud = ["%s: %s → %s" % (k, a[k], b[k]) for k in b if not k.startswith("_") and a.get(k) != b[k]]
+    ma, mb = a["_medidas"], b["_medidas"]
+    mud += ["campo 4, entrou: %s (%s)" % (m, mb[m]) for m in sorted(set(mb) - set(ma))]
+    mud += ["campo 4, saiu: %s (era %s) — conferir se a definidora mudou antes de notificar a ausência" % (m, ma[m])
+            for m in sorted(set(ma) - set(mb))]
+    mud += ["campo 4, norma de %s: %s → %s" % (m, ma[m], mb[m]) for m in sorted(set(ma) & set(mb)) if ma[m] != mb[m]]
+    return mud
+
+
+def anterior_de(pasta, n):
+    """JSON do licenciamento da análise anterior: licenciamento <N-1>.json (congelado por análise, 2.6.4) ou o
+    anterior-api-<ID>.json que o sol_caixa.py guarda quando o processo volta à caixa."""
+    for arq in ([os.path.join(pasta, "licenciamento %d.json" % (n - 1))] if n and n > 1 else []) + \
+            sorted(glob.glob(os.path.join(pasta, "anterior-api-*.json")), key=os.path.getmtime, reverse=True):
+        try:
+            with open(arq, encoding="utf-8") as fh:
+                d = json.load(fh)
+            return d.get("licenciamento") if d.get("licenciamento") and not d.get("numero") else d
+        except (OSError, ValueError):
+            continue
+    return None
+
+
+def secao_reanalise(api, anterior, marcos, cia_txt=""):
     """Reanálise (2.3.23, pedido do Átila): o escopo é a última CIA mais o que mudou. Mostra as plantas trocadas
     (o SOL guarda as inativadas, com o que foi notificado nelas) e, se o servidor guardou o JSON da análise
     anterior (anterior-api-<ID>.json), o que mudou no cadastro e no campo 4."""
@@ -208,31 +316,18 @@ def secao_reanalise(api, anterior, marcos):
     L = ["REANÁLISE (%sª análise): o escopo é a última CIA e o que mudou. As conferências do processo inteiro, mais "
          "abaixo, são para observação: achado fora dos itens da CIA vai em \"Observações\", sem virar exigência sozinho." % n,
          "", "== Plantas e documentos desta análise × anteriores (elementos gráficos do SOL) =="]
-    els = api.get("elemGraficos") or []
-    ativos = [e for e in els if e.get("situacao") == "ATIVO"]
-    inativos = sorted([e for e in els if e.get("situacao") != "ATIVO"], key=lambda e: e.get("dthExclusao") or 0)
-    ult = max([e.get("dthExclusao") or 0 for e in inativos] or [0])
-    for e in ativos:
-        novo = (e.get("dthInclusao") or 0) >= ult - 86400000 and ult
-        L.append("  %s %s: %s (incluído %s)" % ("NOVO" if novo else "mantido", (e.get("tipo") or "").replace("_", " ").lower(),
-                                                 e.get("descricao"), _dia(e.get("dthInclusao"))))
-    for e in inativos:
-        just = " | ".join(" ".join((j.get("justificativa") or "").split())[:160] for j in e.get("justificativas") or [])
-        L.append("  substituído %s: %s (inativado %s)%s" % ((e.get("tipo") or "").replace("_", " ").lower(), e.get("descricao"),
-                                                           _dia(e.get("dthExclusao")), (" — notificado: " + just) if just else ""))
+    for p in plantas(api, marcos, cia_txt):
+        marca = "!! " if p["estado"] in ("mantido-notificado", "notificado-sem-par") else "  "
+        quando = (" (inativado %s)" % p["inativado"]) if p["inativado"] else (" (incluído %s)" % p["incluido"]) if p["incluido"] else ""
+        L.append("%s%s %s: %s%s%s" % (marca, ESTADO_PLANTA[p["estado"]], p["tipo"], p["descricao"], quando,
+                                      (" — notificado: " + p["notificado"][:200]) if p["notificado"] else ""))
     L += ["", "== O que mudou no cadastro e no campo 4 =="]
     if not anterior:
         L.append("  Sem o cadastro da análise anterior guardado (o servidor guarda a partir de 17/10/2026, quando o processo "
                  "volta à caixa): comparar pelos itens da CIA.")
     else:
-        a, b = _ficha_comparar(anterior), _ficha_comparar(api)
-        mud = ["  %s: %s → %s" % (k, a[k], b[k]) for k in b if not k.startswith("_") and a.get(k) != b[k]]
-        ma, mb = a["_medidas"], b["_medidas"]
-        mud += ["  campo 4, entrou: %s (%s)" % (m, mb[m]) for m in sorted(set(mb) - set(ma))]
-        mud += ["  campo 4, saiu: %s (era %s) — conferir se a definidora mudou antes de notificar a ausência" % (m, ma[m])
-                for m in sorted(set(ma) - set(mb))]
-        mud += ["  campo 4, norma de %s: %s → %s" % (m, ma[m], mb[m]) for m in sorted(set(ma) & set(mb)) if ma[m] != mb[m]]
-        L += mud or ["  Nada mudou no cadastro nem no campo 4 desde a análise anterior: a correção, se houve, está nas plantas."]
+        L += ["  " + m for m in mudancas(anterior, api)] or \
+            ["  Nada mudou no cadastro nem no campo 4 desde a análise anterior: a correção, se houve, está nas plantas."]
     return "\n".join(L) + "\n\n"
 
 
@@ -278,14 +373,12 @@ def pre_analisar(codigo, forcar=False):
            "Definidora abaixo = a que o RT marcou no SOL (determinaSeguranca), não a que vale.\n\n"
            % (codigo, os.path.basename(api_arq), linha_marcos))
     if (marcos.get("analise") or 0) >= 2:  # reanálise: o que mudou e as plantas trocadas vêm antes de tudo
-        ant = None
-        if anteriores:
-            try:
-                with open(max(anteriores, key=os.path.getmtime), encoding="utf-8") as fh:
-                    ant = json.load(fh)
-            except (OSError, ValueError):
-                pass
-        cab += secao_reanalise(api, ant, marcos)
+        try:
+            with open(cia_arq, encoding="utf-8") as fh:
+                cia_txt = fh.read()
+        except OSError:
+            cia_txt = ""
+        cab += secao_reanalise(api, anterior_de(pasta, marcos["analise"]), marcos, cia_txt)
     else:
         cab += ("1ª ANÁLISE: conferência completa do processo (definidora, tabela, normas do campo 4, travas e "
                 "o que só a planta responde).\n\n")

@@ -120,7 +120,7 @@ def _doc(v):
     return str(v or "—")
 
 
-def montar(api, n=None, protocolo=None, pontos=()):
+def montar(api, n=None, protocolo=None, pontos=(), marcos=None, cia_txt="", anterior=None):
     """Seções do print: [(título, [blocos])]; bloco = ("kv", [(rótulo, valor)]) | ("tab", cab, linhas) | ("txt", str)."""
     car = api.get("caracteristica") or {}
     esp = api.get("especSeguranca") or {}
@@ -230,20 +230,35 @@ def montar(api, n=None, protocolo=None, pontos=()):
             rs.append(["", "Notificação: " + t, ""])
     S.append(("Riscos específicos", [("tab", ["Risco", "Dados declarados", "Status"], rs) if rs else ("txt", "Nenhum declarado.")]))
 
-    eg, inativos = [], []
+    # elementos gráficos: o mesmo cruzamento da pré-análise (pre_analise.plantas): novo, mantido, substituído e o
+    # notificado na última CIA que o RT NÃO trocou (o SOL zera a notificação do ativo; vem do texto da CIA)
+    import pre_analise
+    ps = pre_analise.plantas(api, marcos, cia_txt)
+    eg = [[pre_analise.ESTADO_PLANTA[p["estado"]], p["tipo"], p["descricao"], p["arquivo"], p["incluido"], p["inativado"],
+           p["notificado"]] for p in ps if p["estado"] not in ("substituido",)]
+    sub = [[p["tipo"], p["descricao"], p["arquivo"], p["incluido"], p["inativado"], p["notificado"]]
+           for p in ps if p["estado"] == "substituido"]
+    blocos = [("tab", ["Nesta análise", "Tipo", "Descrição", "Arquivo", "Incluído", "Inativado", "Notificado na última CIA"], eg)]
     for e in api.get("elemGraficos") or []:
-        linha = [e.get("tipo") or "", _txt(e.get("descricao")), (e.get("arquivo") or {}).get("nomeArquivo") or "",
-                 _data_ms(e.get("dthInclusao")), _status(e)]
-        if e.get("situacao") == "INATIVO":
-            inativos.append(linha[:4] + [_data_ms(e.get("dthExclusao"))])
-        else:
-            eg.append(linha)
-            for t in _justificativas(e):
-                eg.append(["", "Notificação: " + t, "", "", ""])
-    blocos = [("tab", ["Tipo", "Descrição", "Arquivo", "Incluído", "Status"], eg)]
-    if inativos:
-        blocos += [("sub", "Substituídos (inativos)"), ("tab", ["Tipo", "Descrição", "Arquivo", "Incluído", "Inativado"], inativos)]
+        if e.get("situacao") != "INATIVO":
+            blocos += [("nota", "Notificação desta análise (%s): %s" % (_txt(e.get("descricao")), t)) for t in _justificativas(e)]
+    nao = [p for p in ps if p["estado"] in ("mantido-notificado", "notificado-sem-par")]
+    if nao:
+        blocos.append(("nota", "Atenção: %d elemento(s) notificado(s) na última CIA continuam os mesmos (o RT não trocou a planta)."
+                       % len(nao)))
+    if sub:
+        blocos += [("sub", "Substituídos pelo RT (inativos), com o que foi notificado neles"),
+                   ("tab", ["Tipo", "Descrição", "Arquivo", "Incluído", "Inativado", "Notificado"], sub)]
     S.append(("Elementos gráficos", blocos))
+
+    if n and n > 1:
+        if anterior:
+            mud = pre_analise.mudancas(anterior, api)
+            S.append(("O que mudou desde a análise anterior", [("item", m) for m in mud] if mud else
+                      [("txt", "Nada mudou no cadastro nem no campo 4: a correção, se houve, está nas plantas.")]))
+        else:
+            S.append(("O que mudou desde a análise anterior",
+                      [("txt", "Sem o JSON da análise anterior guardado: comparar pelos itens da CIA e pelas plantas acima.")]))
 
     tx = [[b.get("tipo") or "", (b.get("boleto") or {}).get("situacao") or "", _num((b.get("boleto") or {}).get("valorNominal")),
            _data_ms((b.get("boleto") or {}).get("dataPagamento")) if (b.get("boleto") or {}).get("dataPagamento") else "—"]
@@ -369,7 +384,13 @@ def gerar(pasta, api_arq=None, forcar=False):
     prot = resumo.get("protocolo")
     if prot:
         prot = "/".join(reversed(prot.split("-")))
-    S = montar(api, n, prot, _pontos(pasta))
+    import pre_analise
+    try:
+        with open(os.path.join(pasta, "cia-ultima.txt"), encoding="utf-8") as fh:
+            cia_txt = fh.read()
+    except OSError:
+        cia_txt = ""
+    S = montar(api, n, prot, _pontos(pasta), resumo, cia_txt, pre_analise.anterior_de(pasta, n) if n else None)
     with open(base + ".txt", "w", encoding="utf-8") as fh:
         fh.write("MEMORIAL DO SOL — %s%s\n" % (api.get("numero"), " · %sª análise" % n if n else "") + texto(S))
     feitos.append(base + ".txt")

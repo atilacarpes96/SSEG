@@ -360,6 +360,19 @@ def main():
          "Saída de Emergência | Resolução Técnica nº 11/2016 | Sim, parcial | Não | Reprovado" in t and "Deverá corrigir a largura." in t
          and "Rampa com 10%\nCompensatória: fita" in t and "Substituídos" in t and "1.000,50 m²" in t
          and "[ ] Alturas descendente" in t and "[ ] Linha não conferida." in t and "C-2 | 4744-0/99" in t, t[:3000])
+    import pre_analise as _pa
+    cia_f = ("Elementos Gráficos\n\nPLANTA BAIXA\n\n           1. Outros\n              Corrigir a escada.\n"
+             "CBMRS 25/08/2026 14:55:00            Pagina 2 de 3\nCORTE\n              Cotar o pé-direito.\n\nDemais inconformidades\n   x\n")
+    ms = lambda d: int(__import__("datetime").datetime.fromisoformat(d).timestamp() * 1000)  # noqa: E731
+    api_p = {"elemGraficos": [
+        {"tipo": "PLANTA_BAIXA", "descricao": "Planta  baixa", "situacao": "ATIVO", "dthInclusao": ms("2026-08-01")},   # notificada, ficou
+        {"tipo": "CORTE", "descricao": "corte", "situacao": "ATIVO", "dthInclusao": ms("2026-09-10")},                  # nova
+        {"tipo": "CORTE", "descricao": "CORTE", "situacao": "INATIVO", "dthInclusao": ms("2026-08-01"), "dthExclusao": ms("2026-09-10"),
+         "justificativas": [{"justificativa": "Cotar o pé-direito."}]}]}
+    pl = {(p["estado"], p["descricao"]) for p in _pa.plantas(api_p, {"analises": [{"data": "2026-08-20", "resultado": "CIA"}]}, cia_f)}
+    caso("pré-análise: planta notificada na última CIA e não trocada aparece; a trocada vira nova + substituída; rodapé não é título",
+         _pa.notificados_cia(cia_f) == {"PLANTA BAIXA": "Corrigir a escada.", "CORTE": "Cotar o pé-direito."}
+         and pl == {("mantido-notificado", "Planta baixa"), ("novo", "corte"), ("substituido", "CORTE")}, str(pl))
     caso("sincronizar: o print do memorial é gerado (vale o do servidor)", sc.gerado("A1/memorial SOL 3.pdf") and not sc.gerado("A1/memorial 3.pdf"))
     # 11b3b. a caixa do SOL manda sobre a planilha (2.6.3; caso de 20/10/2026: distribuídos na véspera sumiram do Início)
     E0 = lambda dist: _api.estado_caixa(dist, {}, 10, __import__("datetime").date(2026, 10, 20))

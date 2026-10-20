@@ -17,6 +17,7 @@ e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o 
 - `scripts/memorial_sol.py`: do JSON do licenciamento, `memorial SOL <N>.pdf` e `.txt` com tudo o que a página mostra. Inclui a norma de dimensionamento de cada medida, o laudo inteiro e a seção "Dados a verificar" (o que conferir na planta e os pontos `??`/`!!` da pré-análise). Também congela o `licenciamento <N>.json`.
 - Roda sozinho uma vez por análise na leitura da caixa (servidor e PC) e no "Guardar memorial". Botão "Memorial SOL" na janela do processo. O `sseg.py resumo` lista os prints, para o Claude comparar a análise anterior com a atual.
 - Já gerado para os 11 processos da caixa de 20/10/2026.
+- Elementos gráficos (pre_analise.plantas, usado pela pré-análise e pelo print): cada planta sai como nova, mantida, substituída (com o que foi notificado nela) ou **NÃO TROCADA**, quando foi notificada na última CIA e o RT manteve a mesma. Mais a seção "O que mudou desde a análise anterior" (cadastro e campo 4), do `licenciamento <N-1>.json`.
 
 ### Prompt para atualizar
 
