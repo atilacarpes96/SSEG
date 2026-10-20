@@ -4,6 +4,14 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.9
+
+- **"Lançar no SOL" sem CIA aprova tudo, com confirmação.** Quando o processo não tem nenhuma exigência na coluna CIA (caso de CA), o botão mostra a lista dos itens que estão em "Analisar" no SOL e pergunta "Tem certeza?".
+  - Em **Sim, aprovar**, todos ficam Aprovados, o programa confere e a tela do SOL se atualiza.
+  - Item já Reprovado fica como está.
+  - Exigência com rascunho, mas sem texto salvo, impede o "aprovar tudo" até você salvar ou excluir.
+  - O CA continua sendo emitido por você, no SOL.
+
 ## 2.6.8
 
 - **A caixa do Início segue a ordem da planilha da distribuição.**

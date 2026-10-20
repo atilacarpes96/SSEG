@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 20/10/2026 — SSEG.exe 2.6.9: "lançar no SOL" sem CIA aprova tudo, com confirmação
+
+- Sem exigência salva na coluna CIA, o botão "lançar no SOL" lista os itens em "Analisar" (`sol_lancar_aprovar_lista` com notificados vazio), pede confirmação e chama `sol_lancar` só com o aprovar. Exigência com rascunho e sem texto salvo bloqueia. Pedido do Átila.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 20/10/2026 — SSEG.exe 2.6.8: caixa na ordem da planilha da distribuição
 
 - `distribuicao.py` grava `linha` (posição na aba ANÁLISE). O Início ordena a caixa pela distribuição, depois pela linha, depois pelo protocolo; os "Na caixa do SOL" sem planilha ficam no fim, pelos dias no SOL. Antes a ordem era só pelos dias no SOL (2.3.8/2.5.1). Pedido do Átila com a planilha na mão.
