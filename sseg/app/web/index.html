@@ -2291,6 +2291,38 @@ const BLOCOS = {
         el("button", { class: "bt", on: { click: () => copiar(d.texto || "") } }, "Copiar"),
         el("span", { class: "discreto", style: "margin-left:auto;" + (n > 1950 ? "color:var(--verm);font-weight:700" : "") }, n + " / 2000")));
   },
+  // 2.6.7 (pedido do Átila): o revisor aponta e sugere; o analista decide em cada uma. Aplicar troca o texto final daquela
+  // exigência na coluna CIA (o anterior fica guardado); Ignorar só registra. Nada muda sem o clique.
+  "sseg-revisao": (d, ctx) => {
+    const processo = ctx && /^A\d{8}/.test(ctx.chave);
+    const itens = d.itens || [], ok = itens.filter(x => x.veredito === "ok"), resto = itens.filter(x => x.veredito !== "ok");
+    const atual = id => ((PR.reg && PR.codigo === (ctx && ctx.chave) && PR.reg.exigencias) || []).find(e => e.id === id);
+    const cartao = x => {
+      const ex = atual(x.id), estado = el("span", { class: "discreto", style: "margin-left:auto" });
+      const decidir = async (b, ignorar) => {
+        await api("processo_aplicar_revisao", [ctx.chave, x.id, x.sugestao || "", x.fundamento || "", ignorar], b);
+        b.parentNode.querySelectorAll("button").forEach(z => z.disabled = true);
+        estado.textContent = ignorar ? "ignorada" : "✓ aplicada na coluna CIA" + (ex && ex.lancado ? " — lance de novo no SOL" : "");
+        recarregarRegistro();
+      };
+      return el("div", { class: "cartao-exig" },
+        el("div", {}, el("b", {}, x.id + (x.medida || (ex && ex.medida) ? " · " + (x.medida || ex.medida) : "")), " ",
+          el("span", { class: "tag sit " + (x.veredito === "corrigir" ? "k-vermelho" : "k-laranja") }, x.veredito === "corrigir" ? "corrigir" : "conferir")),
+        x.problema ? el("p", { style: "margin:4px 0" }, x.problema) : null,
+        x.fundamento ? BLOCOS["sseg-norma"]({ rotulo: x.fundamento, consulta: "" }) : null,
+        x.sugestao ? el("details", { open: true }, el("summary", { class: "discreto" }, "texto sugerido (substitui o atual)"), el("div", { class: "txt" }, x.sugestao)) : null,
+        ex && x.sugestao ? el("details", {}, el("summary", { class: "discreto" }, "texto atual"), el("div", { class: "txt" }, ex.final || ex.rascunho || "")) : null,
+        processo && x.sugestao ? el("div", { class: "rod", style: "display:flex;gap:8px;align-items:center" },
+          el("button", { class: "bt p", on: { click: ev => decidir(ev.currentTarget, false) } }, "Aplicar"),
+          el("button", { class: "bt", on: { click: ev => decidir(ev.currentTarget, true) } }, "Ignorar"),
+          el("span", { class: "discreto" }, (x.sugestao || "").length + " / 2000"), estado) : null);
+    };
+    return el("div", {},
+      el("b", {}, "Revisão final: " + resto.length + " a decidir, " + ok.length + " sem problema"),
+      ok.length ? el("div", { class: "discreto" }, "✓ " + ok.map(x => x.id).join(", ") + " conferem") : null,
+      ...resto.map(cartao),
+      (d.observacoes || []).length ? el("div", { class: "discreto", style: "margin-top:6px" }, "Observações: " + d.observacoes.join(" · ")) : null);
+  },
   // 2.6.1: pergunta fechada (opcoes, ou tipo "simnao") vira botões; quando todas do bloco são fechadas, o clique na
   // última já manda as respostas e o Claude segue, sem digitar nada. "Conferir na planta" vem num bloco só.
   "sseg-perguntas": (d, ctx) => {
@@ -2669,7 +2701,9 @@ $("#pr-revisar").onclick = () => {
   chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Revisão final da CIA deste processo: chame o subagente revisor-cia (Agent, subagent_type \"revisor-cia\") " +
     "passando só o código " + PR.codigo + " e a pasta do processo, para ele rodar `python sseg/scripts/sseg.py revisar-cia --pasta \"<pasta>\"` " +
     "e julgar as " + salvas + " exigência(s) salvas na coluna CIA, como manda a skill ppci-revisao-cia. Não passe a ele o seu raciocínio nem as suas conclusões. " +
-    "Quando ele voltar, traga a entrega dele como veio e, para cada exigência que ele mandar corrigir, grave o texto sugerido como rascunho no mesmo item (comando rascunho), sem mexer no texto final.");
+    "Quando ele voltar, responda com UM bloco sseg-revisao com todas as exigências pelo id (e1, e2…): veredito ok, corrigir ou conferir; " +
+    "em corrigir, o problema em uma frase, o fundamento e a sugestão com o texto INTEIRO novo, no formato da caixa do SOL. Não grave nada (nem rascunho): " +
+    "o analista decide em cada uma com Aplicar ou Ignorar. O que não é de uma exigência vai em \"observacoes\".");
 };
 $("#pr-lancar").onclick = async ev => {
   const medidas = (PR.dados && PR.dados.medidas || []).map(m => m.nome);

@@ -4,6 +4,15 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.7
+
+- **Revisão final com Aplicar ou Ignorar.** O botão "revisão final" chama o subagente revisor-cia. A resposta vem num quadro, uma exigência por linha:
+  - as que conferem aparecem juntas, com ✓;
+  - as que pedem correção ou conferência mostram o problema, o fundamento (com o botão PDF), o **texto sugerido** e o texto atual;
+  - **Aplicar** troca o texto final daquela exigência na coluna CIA e guarda o anterior; **Ignorar** deixa como está;
+  - se a exigência já tinha sido lançada no SOL, o aviso pede para lançar de novo.
+- **O revisor não fica mais barrado.** Ele lê os arquivos e as normas pelo caminho que a janela aceita, e a janela passou a liberar comandos que só leem (`cat`, `grep`, `head`, `pdfinfo`…). Antes, os comandos de leitura dele eram bloqueados ("5 comandos foram bloqueados") e a conferência no PDF da norma ficava incompleta.
+
 ## 2.6.6
 
 - **Lançar no SOL aprova o resto.** Na tela de lançamento, a caixa "Marcar como Aprovado o que não tem exigência e não está Reprovado" vem marcada. Ela mostra quais itens vão virar Aprovado: RT, característica, ocupações, medidas, elementos gráficos e, quando há procurador, RU e proprietário.

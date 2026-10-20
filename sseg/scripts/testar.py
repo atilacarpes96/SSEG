@@ -467,6 +467,23 @@ def main():
         saida = _rc.revisar(_ap.Namespace(cia=None, pasta=d, textos=None, json=None, anterior=None, normas=None)).texto()
     caso("revisar-cia --pasta: lê as exigências salvas da coluna CIA (uma caixa por medida) e acusa REITERO em 1ª análise",
          "coluna CIA do SSEG.exe" in saida and "REITERO numa 1ª análise" in saida and "Sem --textos" not in saida, saida[:800])
+    # 11b3e. revisão final: Aplicar troca o texto final e guarda o anterior; Ignorar só registra (2.6.7)
+    import api as _api2, sseg_app as _base2
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, "proc", "A00012345AA001"))
+        json.dump({"versao": 1, "exigencias": [{"id": "e1", "medida": "Saída", "final": "\n- velho"}, {"id": "e2", "final": "\n- fica"}]},
+                  open(os.path.join(d, "proc", "A00012345AA001", "analise.json"), "w", encoding="utf-8"))
+        _v = _base2.ler_config
+        try:
+            _base2.ler_config = lambda: {"clone": RAIZ, "processos": os.path.join(d, "proc")}
+            a = _api2.Api()
+            a1 = a.processo_aplicar_revisao("A00012345AA001", "e1", "\n- novo", "RT 11, item 5.4.2")
+            a2 = a.processo_aplicar_revisao("A00012345AA001", "e2", "\n- outro", "", True)
+        finally:
+            _base2.ler_config = _v
+    caso("revisão final: Aplicar troca o texto final e guarda o anterior; Ignorar não mexe no texto",
+         (a1["final"], a1["final_antes_revisao"], a1["fundamento"]) == ("\n- novo", "\n- velho", "RT 11, item 5.4.2")
+         and a1["revisao"].startswith("aplicada") and a2["final"] == "\n- fica" and a2["revisao"].startswith("ignorada"), str((a1, a2)))
     # 11b3b. a caixa do SOL manda sobre a planilha (2.6.3; caso de 20/10/2026: distribuídos na véspera sumiram do Início)
     E0 = lambda dist: _api.estado_caixa(dist, {}, 10, __import__("datetime").date(2026, 10, 20))
     S = lambda e, sc, ult="2026-10-20": _api._na_caixa_do_sol(e, sc, ult)
@@ -645,8 +662,8 @@ def main():
             return True
         except ValueError:
             return False
-    caso("chat: os 6 blocos visuais ensinados ao Claude são JSON válido",
-         {t for t, _ in blocos} == {"sseg-status", "sseg-dados", "sseg-definidora", "sseg-perguntas", "sseg-exigencia", "sseg-norma"}
+    caso("chat: os 7 blocos visuais ensinados ao Claude são JSON válido",
+         {t for t, _ in blocos} == {"sseg-status", "sseg-dados", "sseg-definidora", "sseg-perguntas", "sseg-exigencia", "sseg-norma", "sseg-revisao"}
          and all(_json_ok(b) for _, b in blocos), str([t for t, b in blocos if not _json_ok(b)]))
     # 15b. planilha "Distribuição Análise" → <código>/distribuicao.json → estado na caixa (2.1.13)
     import distribuicao as dist, datetime as _dt, io, zipfile as _zp

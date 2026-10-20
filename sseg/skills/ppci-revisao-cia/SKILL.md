@@ -16,8 +16,11 @@ python sseg/scripts/sseg.py revisar-cia --pasta "<pasta do processo>"
 
 (uma caixa por medida, como o "lançar no SOL" junta; `pre-analise.json` dá protocolo e campo 4;
 `cia-ultima.txt` é a CIA anterior). O texto de cada exigência: `sseg.py analise --pasta "<pasta>" ver`.
-Correção sugerida volta ao chat; a conversa principal grava como rascunho no mesmo item, nunca no
-texto final. O resto desta skill vale igual.
+Ler arquivo com Read e norma com `sseg.py norma <rt> --busca`/`--pagina` (a janela barra `cat`, `|`
+e `python -c`). Entrega por exigência (id, veredito ok/corrigir/conferir, problema, fundamento e o
+texto inteiro sugerido); a conversa principal mostra num bloco `sseg-revisao` e **o analista decide
+em cada uma** com Aplicar (troca o texto final; o anterior fica guardado) ou Ignorar. Ninguém grava
+sem o clique. O resto desta skill vale igual.
 
 Fora do SSEG.exe, roda numa **conversa nova**, depois de "atualizar a pasta" no `ppci-analise-processo`. O motivo
 de existir é ler a CIA de fora, sem o raciocínio que a produziu: na mesma conversa o modelo

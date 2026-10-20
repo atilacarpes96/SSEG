@@ -47,7 +47,10 @@ PERMITIDOS = ["Read", "Grep", "Glob", "Task", "Agent", "TodoWrite",
               "mcp__chrome-devtools-live__evaluate_script", "mcp__chrome-devtools-live__list_network_requests",
               "mcp__chrome-devtools-live__get_network_request",
               "Bash(pdftotext *)", "Bash(pdftoppm *)", "PowerShell(pdftotext *)", "PowerShell(pdftoppm *)",
-              "Bash(git status*)", "Bash(git log*)", "Bash(git diff*)"]
+              "Bash(git status*)", "Bash(git log*)", "Bash(git diff*)",
+              # 2.6.7: só leitura, para o subagente revisor-cia conferir no PDF (20/10/2026: 5 comandos dele barrados)
+              "Bash(cat *)", "Bash(grep *)", "Bash(head *)", "Bash(tail *)", "Bash(ls *)", "Bash(wc *)", "Bash(tr *)",
+              "Bash(pdfinfo *)", "PowerShell(pdfinfo *)"]
 
 INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe (não no terminal). Pasta do processo: {pasta}
 
@@ -124,6 +127,10 @@ Como responder nesta janela (o analista não é do terminal; o programa desenha 
 ```sseg-norma
 {"rotulo": "RT 11/2016, item 5.4.2", "consulta": "largura porta"}
 ```
+```sseg-revisao
+{"itens": [{"id": "e3", "medida": "Saída de Emergência", "veredito": "corrigir", "problema": "REITERO sem a mesma exigência na CIA anterior", "sugestao": "\\n- Deverá ... (texto COMPLETO, como vai para o SOL)", "fundamento": "RT 11/2016, item 5.7.3.3.1"}, {"id": "e1", "veredito": "ok"}], "observacoes": ["Tabela 6J não cruzada com o campo 4"]}
+```
+(revisão final do subagente revisor-cia: um item por exigência da coluna CIA, pelo id; veredito ok | corrigir | conferir; em "corrigir", "sugestao" é o texto inteiro novo. O analista clica Aplicar ou Ignorar em cada uma; você não grava nada.)
 - O botão "Pôr na CIA" do sseg-exigencia põe o texto como rascunho; o texto final continua sendo o que o analista salvar.
 - O [PDF] do sseg-norma é montado pelo programa: você não precisa abrir PDF para isso. Um bloco por norma, e o "rotulo" com UMA norma só (o programa abre o PDF da primeira que achar no rótulo)."""
 

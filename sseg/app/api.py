@@ -1006,6 +1006,22 @@ class Api:
                                       lancado_conferido=bool(r.get("ok")))
         return {"itens": res, "aprovados": extra["aprovados"], "falhas": [list(f) for f in extra["falhas"]]}
 
+    def processo_aplicar_revisao(self, codigo, id_, texto, fundamento="", ignorar=False):
+        """Revisão final (2.6.7): o analista escolheu Aplicar (troca o texto final pela sugestão do revisor e guarda o
+        anterior em final_antes_revisao) ou Ignorar (só registra). Devolve a exigência."""
+        pasta, reg = self._pasta_proc(codigo), self._reg()
+        e = next((x for x in reg.ler(pasta)["exigencias"] if x["id"] == id_), None)
+        if not e:
+            raise RuntimeError("A exigência %s não existe mais na coluna CIA." % id_)
+        agora = time.strftime("%Y-%m-%d %H:%M")
+        if ignorar:
+            return reg.atualizar(pasta, "exigencias", id_, revisao="ignorada " + agora)
+        campos = {"final": texto.replace("\r\n", "\n").rstrip(), "final_antes_revisao": e.get("final") or "", "revisao": "aplicada " + agora}
+        if fundamento:
+            campos["fundamento"] = fundamento
+        self._log("Revisão final aplicada em %s (%s)." % (id_, e.get("medida") or "sem medida"))
+        return reg.atualizar(pasta, "exigencias", id_, **campos)
+
     def processo_remover(self, codigo, colecao, id_):
         self._reg().remover(self._pasta_proc(codigo), colecao, id_)
 

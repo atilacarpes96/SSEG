@@ -21,5 +21,20 @@ Se a CIA tiver tese nova sem modelo no banco que o analista não conferiu na fon
 lido só em `normas/md/`, ou divergência sua com o analista sobre um fundamento: dizer no topo
 da entrega que essa exigência pede revisão em Opus, e por quê.
 
-Entrega no formato da seção 3 da skill. Não alterar arquivos do processo, não lançar nada no
+**Como ler (a janela do SSEG.exe barra comando de terminal encadeado e `python -c`):**
+- arquivo da pasta (analise.json, pre-analise.txt, cia-ultima.txt, cia-<id>.txt): ferramenta **Read**, nunca `cat`;
+- as exigências com id e texto: `python sseg/scripts/sseg.py analise --pasta "<pasta>" ver`;
+- item de norma: `python sseg/scripts/sseg.py norma rt11 --busca "5.5.4"` (sem acento; devolve o trecho e a
+  página; `--listar` mostra os nomes das normas); a página em imagem, para conferir tabela ou figura:
+  `python sseg/scripts/sseg.py norma rt11 --pagina 24` e depois **Read** na imagem;
+- um comando por vez, sem `cd … &&`, sem `|`, sem gravar em /tmp.
+
+**Entrega, chamado pelo SSEG.exe:** uma linha por exigência, pelo id da coluna CIA (e1, e2…):
+veredito **ok**, **corrigir** ou **conferir** (depende do analista/da planta); em corrigir, o problema em
+uma frase, o fundamento conferido no PDF e o **texto inteiro sugerido** no formato da caixa do SOL (abre
+com quebra de linha e "- ", parágrafo numa linha só, até 1.950 caracteres). O que não é de uma
+exigência (medida exigida fora do campo 4, tabela não cruzada) vai à parte, como observação. Você não
+grava nada: o analista decide em cada uma.
+
+Fora do SSEG.exe, entrega no formato da seção 3 da skill. Não alterar arquivos do processo, não lançar nada no
 SOL, não aplicar nota de tabela sozinho.

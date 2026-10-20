@@ -12,6 +12,18 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 20/10/2026 — SSEG.exe 2.6.7: revisão final com Aplicar/Ignorar; revisor sem bloqueio
+
+- Bloco `sseg-revisao` no chat (`chat.GUIA_VISUAL`): uma linha por exigência, com id, veredito ok/corrigir/conferir, problema, fundamento e texto sugerido inteiro. Aplicar chama `api.processo_aplicar_revisao`: troca o `final`, guarda `final_antes_revisao` e marca `revisao`. Ignorar só registra.
+- Janela do processo: liberados comandos que só leem (`cat`, `grep`, `head`, `tail`, `ls`, `wc`, `tr`, `pdfinfo`). O agente `revisor-cia` passa a ler com Read e `sseg.py norma --busca/--pagina`, um comando por vez, e entrega por exigência.
+- Skill `ppci-revisao-cia`: seção do SSEG.exe atualizada.
+
+### Prompt para atualizar
+
+```
+Faça git pull no clone do SSEG. Mudou a skill ppci-revisao-cia (revisão final no SSEG.exe: o analista aplica ou ignora cada sugestão). Rode a skill sseg-sincronizar-skills (ou suba o .zip). Depois atualize o SSEG.exe pelo chip "Nova versão".
+```
+
 ## 20/10/2026 — SSEG.exe 2.6.6: aprovar o resto no lançamento; revisão final pelo subagente revisor-cia
 
 - **Lançar no SOL** (`sol_lancar.a_aprovar`/`aprovar_restantes`): o que está em "Analisar" e não tem exigência na coluna CIA vira Aprovado, como o botão Aprovar do SOL (`editar-item` com APROVADO). O mapeamento dos itens também mudou:
