@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.11
+
+- **Prazo contado como na planilha.** No Início, a etiqueta da caixa mostra os dias desde a distribuição, o mesmo número da planilha, e depois a data do prazo: "7 dias · prazo 29/10". Antes aparecia "Prazo 29/10 · 3 dias", e não dava para saber se os 3 dias eram os que faltavam ou os que tinham passado. A cor continua a mesma: verde, laranja quando faltam 2 dias ou menos, vermelho depois de vencer ("12 dias · venceu 29/10").
+
 ## 2.6.10
 
 - **Cada um vê só os seus PPCI.** O Início e o Quadro mostram só os processos que a planilha da distribuição atribui a você. Pasta de processo de outro analista que tenha ficado no seu PC não aparece mais. Processo fora da planilha continua aparecendo.

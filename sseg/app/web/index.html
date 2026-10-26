@@ -1641,10 +1641,14 @@ function tagEstado(p) {
   if (p.estado === "caixa") {
     const f = diasAte(p.vence);
     // 2.3.19: "faltam 8" era lido como 8 processos; agora diz que é o prazo da seção e até quando
+    // 2.6.11: "Prazo 29/10 · 3 dias" também confundia; o número passa a ser o da planilha da distribuição
+    // (dias corridos desde a distribuição) e o prazo vem depois, só com a data (pedido do Átila, 26/10/2026)
     // cor pelos dias na caixa (2.3.21, pedido do Átila): até 7 verde (o comum), 8 a 10 laranja, passou de 10 vermelho
+    const d = p.distribuido ? -diasAte(p.distribuido) : null;
+    const prazo = f < 0 ? "venceu " + dataBR(p.vence) : f === 0 ? "vence hoje" : "prazo " + dataBR(p.vence);
     return el("span", { class: "tag sit " + (f < 0 ? "k-vermelho" : f <= 2 ? "k-laranja" : "k-verde"),
-      title: "Prazo da seção: distribuído em " + dataBR(p.distribuido) + " + " + ((CARDS || {}).prazo || 10) + " dias corridos = " + dataBR(p.vence) },
-      f < 0 ? "Prazo vencido há " + -f + " dia(s)" : f === 0 ? "Prazo vence hoje" : "Prazo " + dataBR(p.vence) + " · " + f + (f === 1 ? " dia" : " dias"));
+      title: "Distribuído em " + dataBR(p.distribuido) + " (dias corridos, como na planilha). Prazo da seção: + " + ((CARDS || {}).prazo || 10) + " dias = " + dataBR(p.vence) },
+      d == null ? prazo[0].toUpperCase() + prazo.slice(1) : d + (d === 1 ? " dia" : " dias") + " · " + prazo);
   }
   if (p.estado === "concluido") return el("span", { class: "tag sit " + (p.no_prazo === false ? "k-vermelho" : "k-azul"),
     title: p.dias != null ? p.dias + " dia(s) na caixa" : "" }, (p.resultado || "Concluído") + " " + dataBR(p.concluido) + (p.no_prazo === false ? " · fora do prazo" : ""));

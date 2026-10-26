@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 26/10/2026 — SSEG.exe 2.6.11: prazo da caixa contado como na planilha
+
+- `tagEstado` (web/index.html): a etiqueta da caixa passa de "Prazo 29/10 · 3 dias" para "7 dias · prazo 29/10" (dias corridos desde a distribuição, o número da planilha; depois a data do prazo, "vence hoje" ou "venceu"). Cor sem mudança. Pedido do Átila: o "3 dias" não dizia se era o que faltava ou o que passou.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 20/10/2026 — SSEG.exe 2.6.10: PPCI só para o seu analista; quadro "Programa" do administrador
 
 - `api.processos()` marca `meu` pelo analista do `distribuicao.json` (última palavra do nome × o analista do PC). Início e Quadro escondem o que não é meu.
