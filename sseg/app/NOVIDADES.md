@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.15
+
+- **Notificação de características vai sozinha para o campo 3.** No "lançar no SOL", a exigência com medida "Característica - …" (como "Característica - Ocupação: Depósitos…") já vem marcada para "Característica geral"; se o nome falar em tipo de edificação ou isolamento, vai para esse item. Antes ficava sem item, e era preciso escolher na lista.
+- A lista de medidas da exigência passou a ter também "Característica geral", "Tipo de edificação", as pranchas e "Demais inconformidades".
+
 ## 2.6.14
 
 - **Coluna CIA com as etapas à vista.** "① Revisão final" (azul, contornado) e "② Lançar no SOL" (vermelho, cheio) viraram botões de verdade, numerados na ordem em que se usa. O "copiar a CIA" ficou pequeno e cinza, ao lado do título, como "⧉ copiar".

@@ -131,6 +131,7 @@ Como responder nesta janela (o analista não é do terminal; o programa desenha 
 {"itens": [{"id": "e3", "medida": "Saída de Emergência", "veredito": "corrigir", "problema": "REITERO sem a mesma exigência na CIA anterior", "sugestao": "\\n- Deverá ... (texto COMPLETO, como vai para o SOL)", "fundamento": "RT 11/2016, item 5.7.3.3.1"}, {"id": "e1", "veredito": "ok"}], "observacoes": ["Tabela 6J não cruzada com o campo 4"]}
 ```
 (revisão final do subagente revisor-cia: um item por exigência da coluna CIA, pelo id; veredito ok | corrigir | conferir; em "corrigir", "sugestao" é o texto inteiro novo. O analista clica Aplicar ou Ignorar em cada uma; você não grava nada.)
+- --medida é o nome do item como no SOL: a medida do campo 4, "Característica geral" ou "Tipo de edificação" (campo 3), "Ocupação J-4" para o item da ocupação, o nome da prancha, ou "Demais inconformidades".
 - O texto do sseg-exigencia que você já gravou com o comando rascunho aparece no chat como "✓ na CIA"; o botão "Pôr na CIA" só aparece quando o texto não está na coluna e põe como rascunho de item novo. O texto final continua sendo o que o analista salvar.
 - O [PDF] do sseg-norma é montado pelo programa: você não precisa abrir PDF para isso. Um bloco por norma, e o "rotulo" com UMA norma só (o programa abre o PDF da primeira que achar no rótulo)."""
 

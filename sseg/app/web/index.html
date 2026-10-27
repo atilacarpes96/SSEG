@@ -2819,6 +2819,8 @@ function vistaCIA(k) {
   try { localStorage.setItem("sseg-cia-vista", JSON.stringify(CIA_VISTA)); } catch (e) {}
   pintarCIA();
 }
+// itens do SOL que não são medida, para a exigência escolher (2.6.15): o campo 3 e o texto livre; as pranchas vêm do JSON
+const ITENS_SOL_FIXOS = ["Característica geral", "Tipo de edificação", "Demais inconformidades"];
 function pintarCIA() {
   const r = PR.reg, out = [], itens = new Map();
   const medidas = (PR.dados && PR.dados.medidas || []).map(m => m.nome);
@@ -2832,7 +2834,7 @@ function pintarCIA() {
     const ta = el("textarea", { "data-id": e.id, placeholder: "achado em poucas palavras (para o Claude redigir) ou o texto final da exigência" });
     ta.value = PR.sujos["e" + e.id] != null ? PR.sujos["e" + e.id] : (temFinal ? e.final : deRascunho ? e.rascunho : (e.achado || ""));
     const sel = el("select", { style: "font-size:12px;padding:3px;border:1px solid var(--linha);border-radius:5px;background:var(--campo);color:var(--texto);max-width:100%" },
-      el("option", { value: "" }, "— medida —"), ...[...new Set([...medidas, e.medida].filter(Boolean))].map(m => el("option", { value: m, selected: m === e.medida }, m)));
+      el("option", { value: "" }, "— medida —"), ...[...new Set([...medidas, ...ITENS_SOL_FIXOS, ...(PR.dados && PR.dados.elementos || []), e.medida].filter(Boolean))].map(m => el("option", { value: m, selected: m === e.medida }, m)));
     sel.addEventListener("change", () => api("processo_atualizar", [PR.codigo, "exigencias", e.id, { medida: sel.value }]).then(recarregarRegistro));
     // prancha onde está o erro (2.6.12, pedido do Átila): ao lançar, ela leva "Inconformidades já citadas acima"
     const elems = (PR.dados && PR.dados.elementos || []).filter(p => p !== e.medida), marcadas = e.pranchas || [];

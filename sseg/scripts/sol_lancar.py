@@ -104,6 +104,11 @@ def achar(analise, nome):
     iguais = [i for i in lst if _chave(i["nome"]) == k]
     if not iguais:  # "Planta Baixa" × "planta baixa"; "Ocupação F-8" × "Ocupação F-8 — Restaurantes"
         iguais = [i for i in lst if _chave(i["nome"]).startswith(k) or k.startswith(_chave(i["nome"]))]
+    if not iguais and k.startswith("caracteristica"):
+        # "Característica - Ocupação: …" (campo 3 na coluna CIA) vai para "Característica geral", salvo quando nomeia o
+        # tipo de edificação ou o isolamento (relato do Átila, 27/10/2026: não marcava sozinho)
+        tipo = "TIPO_EDIFICACAO" if "tipo de edificacao" in k else "ISOLAMENTO_RISCO" if "isolamento" in k else "GERAL"
+        iguais = [i for i in lst if i["tipo"] == tipo] or [i for i in lst if i["tipo"] == "GERAL"]
     return iguais[0] if len(iguais) == 1 else None
 
 

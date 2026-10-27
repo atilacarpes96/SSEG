@@ -428,6 +428,12 @@ def main():
             s.chamadas.append({"metodo": "GET", "url": url})
             corpo = [{"id": 301, "chave": "analise.medidas.saida", "valor": "Outros", "ativo": True}] if "/parametro/" in url else s.ana
             return {"status": 200, "corpo": json.dumps(corpo)}
+    car_a = {"licenciamento": {"envolvidos": {}, "caracteristica": {"id": 5, "ocupacoes": [{"id": 8, "cnae": {"divisao": "J-4", "descricao": "Depósitos"}}]},
+             "localizacao": {"isolamentoRisco": True}, "elemGraficos": [], "especsRiscos": [], "especSeguranca": {"medidas": []}}}
+    caso("Lançar no SOL: \"Característica - …\" da coluna CIA cai no campo 3 (geral; tipo e isolamento quando nomeados)",
+         [(_sl.achar(car_a, n) or {}).get("tipo") for n in ("Característica - Ocupação: Depósitos de mercadorias", "Características gerais",
+          "Característica - Tipo de edificação", "Característica - Isolamento de risco", "Ocupação J-4")]
+         == ["GERAL", "GERAL", "TIPO_EDIFICACAO", "ISOLAMENTO_RISCO", "OCUPACAO"])
     f = SOLFalso()
     pl = _sl.plano(f, 77, "saida de emergencia", "\n- Novo.")
     r = _sl.lancar(f, 77, "Saída de Emergência", "\n- Novo.")
