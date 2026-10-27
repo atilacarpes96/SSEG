@@ -20,7 +20,7 @@ N = número da análise em andamento (marcos-resumo.json, "analise"): a CIA dela
 
 USO
   python3 sseg/scripts/sol_snapshot.py congelar <código> [--refazer]
-  python3 sseg/scripts/sol_snapshot.py salvar <código>
+  python3 sseg/scripts/sol_snapshot.py salvar <código> [--ca]
 Saída: uma linha JSON {"ok": ..., "arquivos": [...], "avisos": [...]}.
 """
 
@@ -122,8 +122,9 @@ def congelar(codigo, refazer=False, aba=None):
     return out
 
 
-def salvar(codigo, aba=None):
-    """Depois da emissão: atualiza os Marcos, baixa a CIA e grava CIA <N>.pdf. Sem memorial congelado, avisa."""
+def salvar(codigo, aba=None, resultado="CIA"):
+    """Depois da emissão: atualiza os Marcos, baixa a CIA e grava CIA <N>.pdf. Sem memorial congelado, avisa.
+    resultado "CA" (Concluir processo, 2.6.12): confere que o SOL emitiu o CA; não há CIA para baixar."""
     pasta = _pasta(codigo)
     ident = _ident(pasta)
     out = {"ok": True, "arquivos": [], "avisos": []}
@@ -140,6 +141,16 @@ def salvar(codigo, aba=None):
         out["avisos"].append(linha["aviso"])
     resumo = _ler(os.path.join(pasta, "marcos-resumo.json"))
     ultima = max(resumo.get("analises") or [{}], key=lambda a: a.get("data") or "")
+    if resultado == "CA":
+        n_ca = len(resumo.get("analises") or [])
+        if ultima.get("resultado") != "CA":
+            out["ok"] = False
+            out["avisos"].append("a última análise do SOL é %s, não um CA: emita o CA no SOL antes de concluir" % (ultima.get("resultado") or "outra"))
+            return out
+        out["analise"] = n_ca
+        if not os.path.exists(os.path.join(pasta, "memorial %d.pdf" % n_ca)):
+            out["avisos"].append("não há memorial congelado da análise %d" % n_ca)
+        return out
     if ultima.get("resultado") != "CIA" or not ultima.get("arquivo"):
         out["ok"] = False
         out["avisos"].append("a última análise do SOL é %s, não uma CIA: emita a CIA no SOL antes de salvar (CA não tem CIA para guardar)"
@@ -171,9 +182,10 @@ if __name__ == "__main__":
     ap.add_argument("acao", choices=["congelar", "salvar"])
     ap.add_argument("codigo")
     ap.add_argument("--refazer", action="store_true")
+    ap.add_argument("--ca", action="store_true", help="salvar: a análise saiu com CA (sem CIA para baixar)")
     a = ap.parse_args()
     try:
-        r = congelar(a.codigo, a.refazer) if a.acao == "congelar" else salvar(a.codigo)
+        r = congelar(a.codigo, a.refazer) if a.acao == "congelar" else salvar(a.codigo, resultado="CA" if a.ca else "CIA")
     except (ValueError, RuntimeError, PermissionError, OSError) as e:
         r = {"ok": False, "arquivos": [], "avisos": [str(e)]}
     print(json.dumps(r, ensure_ascii=False))

@@ -668,11 +668,11 @@ class Api:
         self._log("Memorial congelado %s: %s" % (codigo, ", ".join(r.get("arquivos") or []) or "; ".join(r.get("avisos") or [])))
         return r
 
-    def processo_salvar(self, codigo):
+    def processo_salvar(self, codigo, resultado="CIA"):
         """Depois de emitir a CIA no SOL: baixa a CIA (CIA N.pdf), confere o memorial congelado e sincroniza tudo com o
-        servidor e com a pasta dos prints deste PC."""
+        servidor e com a pasta dos prints deste PC. resultado "CA": só confere que o CA saiu e sincroniza."""
         self._pasta_proc(codigo)
-        r = acesso.chamar_json("sol-salvar", codigo, timeout=300)
+        r = acesso.chamar_json("sol-salvar", codigo, *(["--ca"] if resultado == "CA" else []), timeout=300)
         if r.get("ok"):
             try:
                 self._trazer_processo()
@@ -950,7 +950,7 @@ class Api:
 
     def processo_atualizar(self, codigo, colecao, id_, campos):
         """O programa muda resposta/feita da pendência e final/fundamento da exigência. Rascunho não."""
-        livres = {"pendencias": {"resposta", "feita", "enviada"}, "exigencias": {"final", "fundamento", "medida", "achado", "pedido"}}[colecao]
+        livres = {"pendencias": {"resposta", "feita", "enviada"}, "exigencias": {"final", "fundamento", "medida", "achado", "pedido", "pranchas"}}[colecao]
         campos = {k: v for k, v in (campos or {}).items() if k in livres}
         return self._reg().atualizar(self._pasta_proc(codigo), colecao, id_, **campos)
 

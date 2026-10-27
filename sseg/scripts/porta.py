@@ -45,7 +45,7 @@ AÇÕES
                                             nome do próprio admin, a chave entra como OUTRO PC dele (admin-chave)
   admin-chave                   (admin)   → stdin {"chave", "rotulo"}: mais um PC do administrador (sem restrição)
   sol-congelar <código>         (admin)   → memorial e JSON do licenciamento como estão agora (sol_snapshot.py; só lê o SOL)
-  sol-salvar <código>           (admin)   → depois da emissão: baixa a CIA e grava CIA <N>.pdf (sol_snapshot.py)
+  sol-salvar <código> [--ca]    (admin)   → depois da emissão: baixa a CIA e grava CIA <N>.pdf; --ca só confere o CA (sol_snapshot.py)
   sol-senha-gravar              (admin)   → stdin {"matricula", "senha"}: grava o login do SOL do servidor
   sol-senha-apagar              (admin)   → remove a senha do SOL do servidor
   revogar <nome>                (admin)   → tira a chave e o cadastro
@@ -459,11 +459,11 @@ class Porta:
         os.replace(tmp, self.arq_chaves)
         return {"ok": True, "ja_estava": False}
 
-    def sol_snapshot(self, acao, codigo, refazer=False):
+    def sol_snapshot(self, acao, codigo, refazer=False, ca=False):
         self._so_admin()
         import sol_snapshot
         try:
-            return sol_snapshot.congelar(codigo, refazer) if acao == "congelar" else sol_snapshot.salvar(codigo)
+            return sol_snapshot.congelar(codigo, refazer) if acao == "congelar" else sol_snapshot.salvar(codigo, resultado="CA" if ca else "CIA")
         except (ValueError, RuntimeError, PermissionError, OSError) as e:
             return {"ok": False, "arquivos": [], "avisos": [str(e)]}
 
@@ -544,7 +544,7 @@ def executar(porta, args, entrada, script):
     elif acao == "admin-chave":
         r = porta.admin_chave(json.loads(entrada() or b"{}"))
     elif acao in ("sol-congelar", "sol-salvar") and resto:
-        r = porta.sol_snapshot(acao.split("-")[1] if acao == "sol-salvar" else "congelar", resto[0], "--refazer" in resto)
+        r = porta.sol_snapshot(acao.split("-")[1] if acao == "sol-salvar" else "congelar", resto[0], "--refazer" in resto, "--ca" in resto)
     elif acao == "sol-senha-gravar":
         r = porta.sol_senha_gravar(json.loads(entrada() or b"{}"))
     elif acao == "sol-senha-apagar":

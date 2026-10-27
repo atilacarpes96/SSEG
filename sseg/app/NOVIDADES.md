@@ -4,6 +4,13 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.12
+
+- **Cabeçalho do processo mais enxuto.** "Licenciamento no SOL", "Análise técnica no SOL" e "Memorial SOL" ficam juntos num grupo só, cada um com a sua cor (azul, laranja, roxo).
+- **"Concluir processo" no lugar de "Guardar memorial" e "Salvar processo".** Depois de emitir no SOL, clique, marque **CIA** ou **CA** e confirme. O programa guarda o memorial desta análise (se ainda não estava guardado), baixa a CIA (no CA só confere que saiu) e salva no servidor e na pasta dos prints. Pendências abertas aparecem na mesma janela, com a opção de marcar como resolvidas.
+- **Pré-análise: botão "Revisar e mandar pro chat"**, mais visível, no lugar do "ver tudo".
+- **Prancha onde está o erro.** Cada exigência tem a linha "erro na prancha:" com as pranchas ativas do SOL. Marcada a prancha, o "lançar no SOL" reprova também essa prancha, com "- Inconformidades já citadas acima.", para o RT achar onde corrigir. Se a prancha já tem exigência própria, a linha vai no fim da caixa dela. Aparece na janela de lançamento antes de confirmar, como as outras.
+
 ## 2.6.11
 
 - **Prazo contado como na planilha.** No Início, a etiqueta da caixa mostra os dias desde a distribuição, o mesmo número da planilha, e depois a data do prazo: "7 dias · prazo 29/10". Antes aparecia "Prazo 29/10 · 3 dias", e não dava para saber se os 3 dias eram os que faltavam ou os que tinham passado. A cor continua a mesma: verde, laranja quando faltam 2 dias ou menos, vermelho depois de vencer ("12 dias · venceu 29/10").

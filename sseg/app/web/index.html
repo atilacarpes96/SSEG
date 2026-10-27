@@ -86,6 +86,19 @@ h2:first-child { margin-top: 0; }
 .bt.p { background: var(--verm); color: #fff; border-color: var(--verm); font-weight: 600; }
 .bt.p:hover:not(:disabled) { background: var(--verm-claro); }
 .bt.link { border: 0; background: none; color: var(--verm); padding: 2px 4px; font-size: 12.5px; text-decoration: underline; }
+/* cabeçalho do processo (2.6.12): os três do SOL num grupo só, cada um com a sua cor; Concluir à parte */
+.bts-sol { display: inline-flex; }
+.bts-sol .bt { border-radius: 0; border-top: 3px solid var(--cor); margin-left: -1px; }
+.bts-sol .bt:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+.bts-sol .bt:last-child { border-radius: 0 6px 6px 0; }
+.bts-sol .bt:hover:not(:disabled) { background: color-mix(in srgb, var(--cor) 14%, var(--bt)); }
+.bts-sol .s-lic { --cor: var(--c-aguarda); } .bts-sol .s-an { --cor: var(--c-analise); } .bts-sol .s-mem { --cor: var(--c-ct); }
+.bt.concluir { background: var(--c-fechado); border-color: var(--c-fechado); color: #fff; font-weight: 600; }
+.bt.concluir:hover:not(:disabled) { background: color-mix(in srgb, var(--c-fechado) 85%, #000); }
+.bt.chamativo { background: var(--azul-bg); border: 1px solid var(--azul); color: var(--azul); font-weight: 600; padding: 5px 12px; font-size: 13px; text-decoration: none; }
+.bt.chamativo:hover:not(:disabled) { background: var(--azul); color: #fff; }
+.pranchas { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 12px; margin: 2px 0 4px; }
+.pranchas label { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
 .linha-bts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
 /* ---- conversas */
@@ -155,20 +168,44 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 /* ---- tela Quadro (2.1.14) */
 #t-quadro { max-width: 1700px; }  /* cartões maiores para ler do que se trata (2.3.13) */
 #t-inicio { max-width: 1400px; }  /* a tabela de processos tem 8 colunas (2.3.9) */
-.quadro { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
-.qcol { background: var(--fundo2); border: 1px solid var(--linha); border-radius: var(--raio); padding: 12px; min-height: 160px; }
+/* 2.6.12 (pedido do Átila): cartão compacto (uma ou duas linhas) que abre no clique, Feito em lista recolhida,
+   filtro Tudo / Meus / Seção no topo — para ver quantos itens há sem rolar */
+.quadro { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, .75fr); gap: 12px; align-items: start; }
+.q-filtro { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; font-size: 13px; color: var(--suave); }
+.q-filtro .bt { padding: 4px 12px; }
+.q-filtro .bt.on { background: var(--verm); border-color: var(--verm); color: #fff; }
+.qcol { background: var(--fundo2); border: 1px solid var(--linha); border-radius: var(--raio); padding: 10px; min-height: 120px; }
 .qcol.alvo { border-color: var(--verm-claro); }
-.qcol h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); display: flex; justify-content: space-between; align-items: center; }
-.qcol-corpo { display: flex; flex-direction: column; gap: 10px; }
-.qc { background: var(--cartao); border: 1px solid var(--linha); border-radius: 8px; padding: 11px 13px; box-shadow: var(--sombra); font-size: 14px; line-height: 1.4; }
+.qcol h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); display: flex; gap: 6px; align-items: center; }
+.qcol h3 .tag { margin-left: auto; }
+.qcol h3 .bt.link { font-size: 12px; padding: 0 4px; text-transform: none; letter-spacing: 0; }
+.qcol-corpo { display: flex; flex-direction: column; gap: 5px; }
+.qc { background: var(--cartao); border: 1px solid var(--linha); border-radius: 7px; padding: 6px 9px; box-shadow: var(--sombra); font-size: 13px; line-height: 1.35; cursor: pointer; }
+.qc-linha { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.qc-linha > .qc-tit, .qc-linha > .qc-razao { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+.qc.aberto .qc-linha > .qc-tit { white-space: normal; }
+.qc-linha .tag { flex: none; font-size: 11px; }
+.qc-mais { display: none; }
+.qc.aberto .qc-mais { display: block; }
+.qc-n { flex: none; font-size: 11.5px; color: var(--suave); }
+.qc-ir { flex: none; text-decoration: none; padding: 0 5px; font-size: 14px; color: var(--suave); }
+.qc-ir:hover { color: var(--verm); }
+.qc.mini { padding: 4px 8px; box-shadow: none; font-size: 12.5px; }
+.q-bloco { display: flex; gap: 8px; align-items: center; margin: 14px 0 8px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); }
+.q-bloco .bt.link { font-size: 12.5px; text-transform: none; letter-spacing: 0; padding: 0 4px; }
+.q-lista { display: flex; flex-direction: column; gap: 4px; }
+.q-lista .qc-razao { flex: 1; }
+.q-etapa, .q-dia { display: flex; gap: 6px; align-items: baseline; margin: 8px 0 2px; font-size: 12px; font-weight: 700; color: var(--suave); }
+.q-etapa span, .q-dia span { font-weight: 400; }
+.q-dia { margin: 6px 0 0; font-size: 11.5px; }
 .qc.arrastando { opacity: .5; }
 .qc-proc { cursor: pointer; border-left: 4px solid var(--verm); }
 .qc-proc:hover { border-color: var(--verm-claro); }
 .qc-proc.aguarda { border-left-color: #C98A1B; }
-.qc-tit { font-weight: 600; font-size: 14.5px; overflow-wrap: anywhere; margin-bottom: 4px; }
-.qc-tit.cod { font: 600 14px Consolas, monospace; }
+.qc-tit { font-weight: 600; font-size: 13.5px; overflow-wrap: anywhere; }
+.qc-tit.cod { font: 600 13px Consolas, monospace; flex: none; }
 .qc-orig { font-size: 12.5px; color: var(--suave); overflow-wrap: anywhere; margin-top: 2px; }
-.qc-razao { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+.qc-razao { font-size: 12.5px; color: var(--suave); }
 .qc-resp { font-size: 12.5px; margin-top: 4px; }
 .qc-aguarda { display: inline-block; margin-top: 5px; font-size: 12.5px; font-weight: 600; color: #C98A1B; background: color-mix(in srgb, #C98A1B 16%, transparent); border-radius: 6px; padding: 2px 7px; }
 .qc-check { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; font-size: 13px; }
@@ -179,6 +216,13 @@ td.cod { font-family: Consolas, monospace; font-size: 13.5px; }
 .qc-nova { display: flex; gap: 6px; margin-bottom: 8px; }
 .qc-nova input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; }
 .qc-nova .bt { padding: 4px 10px; }
+
+/* ---- ajuda de cada tela (2.6.12) */
+.b-ajuda { font-size: 12.5px; margin-left: 10px; text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--verm); }
+.aj-passos { margin: 0 0 12px; padding-left: 20px; line-height: 1.5; }
+.aj-passos li { margin-bottom: 6px; }
+.aj-leg { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.aj-leg .tag { margin-right: 4px; }
 
 /* ---- busca */
 .busca-linha { display: flex; gap: 8px; }
@@ -445,6 +489,8 @@ body.sem-pc #sem-pc { display: block; }
   .card-kpi b { font-size: 22px; }
   .card-edit { opacity: 1; }
   .quadro { grid-template-columns: 1fr; }
+  .q-lista .qc-linha { flex-wrap: wrap; }
+  .q-lista .qc-linha > .qc-razao { flex-basis: 100%; order: 9; }
   .pr-sit select, .pr-sit input { font-size: 16px; }
   .faixa .dir { margin-left: 0; width: 100%; flex-wrap: wrap; gap: 6px; }
   .faixa .dir .bt { white-space: nowrap; }
@@ -658,7 +704,10 @@ footer { color: var(--suave); }
 
     <section class="tela" id="t-quadro">
       <h2>Quadro</h2>
-      <p class="sub">Os processos entram sozinhos pela planilha de distribuição: fila em A fazer, caixa em Fazendo, concluídos da semana em Feito. Arraste ou use o ✎ para mudar. Tarefas "seção" todos veem; "só meu" fica neste PC.</p>
+      <p class="sub">Em cima, os processos em lista, por etapa (entram sozinhos pela planilha de distribuição). Embaixo, as tarefas em colunas: arraste para mudar de coluna. Clique numa linha ou cartão para ver os detalhes; ↗ abre o processo.</p>
+      <div class="q-filtro" id="q-filtro"></div>
+      <div id="q-procs"></div>
+      <h3 class="q-bloco" id="q-tarefas-tit" hidden>Tarefas</h3>
       <div class="quadro" id="quadro"></div>
     </section>
 
@@ -669,11 +718,10 @@ footer { color: var(--suave); }
         <span id="pr-tags"></span>
         <span class="pr-sit" id="pr-sit"></span>
         <div class="dir">
-          <button class="bt" id="pr-sol-lic" title="Abre no navegador">Licenciamento no SOL</button>
-          <button class="bt" id="pr-sol-an" title="Abre no navegador">Análise técnica no SOL</button>
-          <button class="bt" id="pr-memorial" title="Abre o print do memorial do SOL desta análise: características, ocupações, medidas com a norma do dimensionamento, laudo e o que verificar">Memorial SOL</button>
-          <button class="bt" id="pr-congelar" title="Antes de lançar a CIA: guarda o memorial como está no SOL agora, com o print da página (só lê o SOL)">Guardar memorial</button>
-          <button class="bt" id="pr-salvar" title="Depois de emitir a CIA no SOL: baixa a CIA, confere o memorial guardado e salva no servidor e na pasta dos prints">Salvar processo</button>
+          <div class="bts-sol" role="group" aria-label="SOL">
+            <button class="bt s-lic" id="pr-sol-lic" title="Abre no navegador">Licenciamento no SOL</button><button class="bt s-an" id="pr-sol-an" title="Abre no navegador">Análise técnica no SOL</button><button class="bt s-mem" id="pr-memorial" title="Abre o print do memorial do SOL desta análise: características, ocupações, medidas com a norma do dimensionamento, laudo e o que verificar">Memorial SOL</button>
+          </div>
+          <button class="bt concluir" id="pr-concluir" title="Depois de emitir a CIA ou o CA no SOL: guarda o memorial desta análise (se ainda não guardou), baixa a CIA e salva no servidor e na pasta dos prints">✓ Concluir processo</button>
           <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
           <button class="bt link so-pc" id="pr-pasta">abrir pasta</button>
           <button class="bt so-pc" id="pr-mais" title="Outras formas de abrir (terminal, app do Claude)">⋯</button>
@@ -837,6 +885,7 @@ footer { color: var(--suave); }
         <button class="bt" id="b-relatos">Meus relatos</button>
         <button class="bt" id="b-subs">Subagentes</button>
         <button class="bt" id="b-gasto">Gasto</button>
+        <button class="bt" id="b-rever-ajuda" title="Volta a mostrar a ajuda na primeira visita de cada tela">Rever as ajudas das telas</button>
       </div>
       <p class="aviso">Ferramenta de uso interno da SSeg — não é sistema oficial do CBMRS.</p>
     </section>
@@ -993,8 +1042,88 @@ function ir(tela) {
   if (tela === "todos") carregarTodos();
   if (tela === "instalar") carregarInstalacao();
   if (matchMedia("(max-width: 700px)").matches) $("#menu").classList.remove("aberto");  // menu por cima, no celular
+  setTimeout(() => ajudaPrimeira(tela), 600);  // 2.6.12: ajuda na primeira visita de cada tela
 }
+// ---- ajuda de cada tela (2.6.12, pedido do Átila: "tem que ser fácil pro usuário saber como usar o app").
+// Botão "? Como funciona" no título de cada tela; na primeira visita de cada tela neste PC, abre sozinha.
+// Legenda: [classe da etiqueta ("" = texto simples), exemplo, o que quer dizer]
+const AJUDA = {
+  inicio: { titulo: "Início", serve: "A sua semana e os processos que estão com você.",
+    passos: ["Os cards de cima contam os seus processos por regra (caixa, vencendo, CT…). Clique num card para filtrar a tabela; o ✎ do card muda a regra.",
+      "A tabela mostra a sua caixa primeiro, na ordem da planilha da distribuição. O de cima, marcado \"Próximo\", é o próximo a analisar.",
+      "\"abrir\" leva à página do processo (conversa, checklist e CIA). \"pasta\" abre a pasta com os arquivos.",
+      "Lançou CA ou CIA no SOL? Clique em Atualizar: o programa lê a caixa de novo e desce os que foram lançados."],
+    legenda: [["k-verde", "Próximo", "o primeiro da sua caixa"],
+      ["k-verde", "7 dias · prazo 29/10", "dias desde a distribuição (como na planilha) e a data do prazo da seção"],
+      ["k-laranja", "9 dias · prazo 29/10", "faltam 2 dias ou menos para o prazo"],
+      ["k-vermelho", "12 dias · venceu 24/10", "prazo da seção vencido"],
+      ["k-verde", "Na caixa do SOL", "está na caixa, mas a planilha ainda não trouxe a data da distribuição"],
+      ["k-cinza", "26 dias no SOL", "dias contados pelo próprio SOL (fica vermelho acima de 30)"],
+      ["k-cinza", "Na fila", "distribuído, ainda não chegou à sua caixa"],
+      ["k-azul", "CIA 26/10", "concluído (vermelho se saiu fora do prazo)"],
+      ["k-roxo", "CT 28/10", "consulta técnica com minuta sua"],
+      ["k-azul", "Recurso", "recurso com minuta sua (cinza quando está com a chefia)"]] },
+  todos: { titulo: "Processos", serve: "Todos os processos do SOL, coletados pelo servidor às 8h20, 12h20 e 16h20 dos dias úteis.",
+    passos: ["Digite qualquer coisa na busca: código, razão social, CNPJ, endereço, RT ou analista.",
+      "\"Situação\" escolhe entre os vivos, os encerrados ou todos. \"Mais filtros\" abre cidade, ocupação, área, altura, protocolo e outros. Os filtros se somam; \"limpar filtros\" volta ao começo.",
+      "Clique no título de uma coluna para ordenar. Clique no código para abrir o processo no SOL.",
+      "\"copiar para planilha\" copia a lista filtrada inteira para colar no Excel."],
+    legenda: [["k-verde", "Alvará vigente", ""], ["k-cinza", "Encerrado", "alvará vencido, extinto ou rascunho"],
+      ["k-laranja", "NCA / CIV", "notificação ou certificado pendente com o interessado"],
+      ["k-roxo", "Em análise", "distribuído, em análise ou em recurso"], ["k-azul", "Outras", "vistoria, aceite e demais situações"],
+      ["k-vermelho", "voltou · era …", "mudou de situação na última coleta"], ["k-azul", "1 recurso(s)", "processo com recurso"]] },
+  quadro: { titulo: "Quadro", serve: "Organizar o trabalho: os processos em lista, em cima, e as tarefas em colunas, embaixo.",
+    passos: ["\"Mostrar\", no topo, filtra o quadro inteiro. Tudo; Meus (os seus processos, as suas tarefas e as da seção que você pegou ou criou); Seção (as tarefas de todos); Programa (só o administrador). O número é o que está em aberto.",
+      "Processos: entram sozinhos pela planilha. A fila vai em A fazer, a caixa em Fazendo, os concluídos dos últimos 7 dias em Feito. Clique na linha para ver os detalhes. \"✎ etapa\" muda a etapa ou marca o que está esperando; ↗ abre o processo, depois de confirmar.",
+      "Tarefas: escreva em \"Nova tarefa…\", escolha se é da seção (todos veem) ou só sua e clique em +. Arraste o cartão entre as colunas. Clique nele para ver o checklist e os botões (← → ✎ ✕).",
+      "Na tarefa da seção, \"Pegar\" assume a tarefa e \"Soltar\" devolve.",
+      "Feito mostra só a quantidade. \"ver por dia\" abre a lista separada por dia."],
+    legenda: [["k-azul", "seção", "tarefa da seção: todos veem"], ["k-roxo", "prog", "arrumar o programa (só o administrador vê)"],
+      ["", "⏳ Aguardando…", "processo marcado como esperando alguma coisa"], ["", "👤 Carpes", "quem pegou a tarefa"],
+      ["", "2/5", "itens do checklist já feitos"]] },
+  processo: { titulo: "Página do processo", serve: "Tudo de um processo num lugar só: memorial, conversa com o Claude, checklist e CIA.",
+    passos: ["Memorial SOL abre o print do memorial desta análise: características, ocupações, medidas e laudo.",
+      "Na Conversa, o Claude só trabalha quando você pede. O Checklist mostra o que falta conferir.",
+      "A CIA em construção junta as exigências salvas. Antes de lançar, faça a \"revisão final\": um revisor lê a CIA de fora.",
+      "\"lançar no SOL\" (grava as exigências no campo Outros e aprova o resto; mostra tudo e pede confirmação; não emite CIA nem CA) → emitir no SOL → \"Concluir processo\", marcando CIA ou CA (guarda o memorial, baixa a CIA e salva).",
+      "Na exigência, marque a prancha onde está o erro: ao lançar, a prancha leva \"- Inconformidades já citadas acima.\"",
+      "Os botões \"Licenciamento no SOL\" e \"Análise técnica no SOL\" levam à aba do SOL em que você já entrou."],
+    legenda: [["k-vermelho", "corrigir", "a revisão final achou erro"], ["k-laranja", "conferir", "a revisão final pede para olhar de novo"],
+      ["k-verde", "Recurso deferido", ""], ["k-roxo", "FACT", "consulta técnica ligada ao processo"]] },
+  busca: { titulo: "Buscar normas", serve: "Procurar uma palavra ou um item nas normas do projeto e no banco de notificações.",
+    passos: ["Digite a palavra ou o número do item e tecle Enter.",
+      "Resultados com a borda vermelha vêm do banco de notificações: são modelos validados pela chefia.",
+      "Os outros mostram a norma e o trecho. Servem para localizar: antes de citar na CIA, confira o item no PDF oficial."], legenda: [] },
+  instalar: { titulo: "Instalação", serve: "Confere se este PC tem o que o SSEG precisa: Git, Python, Poppler, Node.js e o Claude Code.",
+    passos: ["✓ está pronto; ✗ falta. O botão instala o que falta, sem precisar de administrador.",
+      "O login do Claude é seu: o programa só abre a janela; quem entra é você."], legenda: [] },
+  config: { titulo: "Configuração", serve: "Ajustes deste PC.",
+    passos: ["Analista: quem você é na escala. Define quais PPCI são seus.",
+      "Servidor: liga este PC ao servidor, que lê a caixa do SOL e guarda os processos. O administrador autoriza o código.",
+      "Login do SOL: a senha do login automático do servidor. Quem digita é você.",
+      "Chrome para o Claude: deixa o Claude ler as abas do SOL. Quando o Chrome mostrar \"Permitir\", clique."], legenda: [] },
+};
+function mostrarAjuda(tela) {
+  const a = AJUDA[tela]; if (!a) return;
+  modal("Como funciona: " + a.titulo, a.serve, [
+    el("ol", { class: "aj-passos" }, ...a.passos.map(p => el("li", {}, p))),
+    a.legenda.length ? el("div", { class: "aj-leg" }, el("b", {}, "O que cada etiqueta quer dizer"),
+      ...a.legenda.map(([k, t, s]) => el("div", {}, k ? el("span", { class: "tag sit " + k }, t) : el("b", {}, t), s ? " " + s : ""))) : null,
+    el("p", { class: "sub" }, "Esta ajuda volta pelo botão \"? Como funciona\", no título da tela.")], [["Entendi", fechar, true]]);
+}
+function ajudaPrimeira(tela) {
+  if (!AJUDA[tela] || $("#fundo-modal").classList.contains("aberto")) return;
+  try { if (localStorage.getItem("sseg-ajuda-" + tela)) return; localStorage.setItem("sseg-ajuda-" + tela, "1"); } catch (e) { return; }
+  mostrarAjuda(tela);
+}
+Object.keys(AJUDA).forEach(tela => {
+  const sec = document.getElementById("t-" + tela); if (!sec) return;
+  const onde = tela === "processo" ? sec.querySelector(".faixa .dir") : sec.querySelector("h2");
+  if (onde) onde.append(el("button", { class: "bt link b-ajuda", title: "Como usar esta tela e o que as cores querem dizer", on: { click: () => mostrarAjuda(tela) } }, "? Como funciona"));
+});
+setTimeout(() => { if ($("#t-inicio").classList.contains("ativa")) ajudaPrimeira("inicio"); }, 2500);
 $("#b-recarregar").onclick = $("#b-recarregar2").onclick = () => location.reload();
+$("#b-rever-ajuda").onclick = () => { try { Object.keys(AJUDA).forEach(t => localStorage.removeItem("sseg-ajuda-" + t)); } catch (e) {} avisar("A ajuda de cada tela volta a abrir na próxima visita."); };
 $("#b-menu").onclick = () => $("#menu").classList.toggle("aberto");
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => ir(b.dataset.tela));
 document.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => ir(b.dataset.ir));
@@ -1942,37 +2071,50 @@ function editarCartao(c, secao) {
     }, true],
     ["Cancelar", fechar]]);
 }
-function cartaoSolto(c, secao) {
+// 2.6.12: cartão compacto. Fechado = uma linha (título, checklist x/y, responsável); o clique abre os detalhes
+// e os botões. ABERTOS guarda quais estão abertos enquanto o programa roda.
+const ABERTOS = new Set();
+function alternar(chave) { return ev => {
+  if (ev.target.closest("button, input, label, select, a, textarea")) return;
+  ABERTOS.has(chave) ? ABERTOS.delete(chave) : ABERTOS.add(chave);
+  ev.currentTarget.classList.toggle("aberto");
+}; }
+function cartaoSolto(c, secao, mini) {
   const i = QUADRO.colunas.indexOf(c.coluna);
   const mover = d => mexer("alterar", [c.id, { coluna: QUADRO.colunas[i + d] }], null, secao);
   const feitos = (c.checklist || []).filter(x => x.feito).length;
   const prog = secao === "programa";  // 2.6.10: quadro do Programa, só do administrador
   const eu = ultima(QUADRO.eu), meu = !secao || prog || QUADRO.admin || [c.autor, c.pegou].some(n => n && ultima(n) === eu);
   const data = s => s ? new Date(s * 1000).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : "";
-  const no = el("div", { class: "qc" + (secao ? " qc-secao" : ""), draggable: meu ? "true" : false, "data-id": c.id },
-    el("div", { class: "qc-tit" }, c.titulo),
-    prog ? el("div", { class: "qc-orig" }, el("span", { class: "tag k-roxo", title: "Arrumar o SSEG: relatos e avisos dos scripts. Só você vê." }, "programa"),
-      c.autor ? " · de " + c.autor : "") :
-    secao ? el("div", { class: "qc-orig" }, el("span", { class: "tag k-azul" }, "seção"), " ",
-      c.pegou ? el("b", {}, "👤 " + c.pegou) : el("span", {}, "ninguém pegou"),
-      c.inicio ? " · início " + data(c.inicio) : "", c.fim ? " · fim " + data(c.fim) : "") : null,
-    !secao && c.pegou ? el("div", { class: "qc-resp" }, el("b", {}, "👤 " + c.pegou)) : null,
-    c.origem ? el("div", { class: "qc-orig", title: c.origem }, c.origem) : null,
-    c.feito_texto ? el("div", { class: "qc-orig", title: c.feito_texto }, "✓ " + c.feito_texto) : null,
-    (c.checklist || []).length ? el("div", { class: "qc-check" }, ...c.checklist.map((x, k) => el("label", {},
-      el("input", { type: "checkbox", checked: x.feito, disabled: !meu, on: { change: ev => mexer("alterar", [c.id, { checklist: c.checklist.map((y, j) => j === k ? { ...y, feito: ev.target.checked } : y) }], null, secao) } }),
-      " " + x.texto)), el("small", {}, feitos + "/" + c.checklist.length)) : null,
-    el("div", { class: "qc-bts" },
-      secao && !prog && !c.pegou ? el("button", { class: "bt link", title: "Esta tarefa é minha", on: { click: () => mexer("pegar", [c.id], null, true) } }, "Pegar") : null,
-      secao && !prog && c.pegou && meu ? el("button", { class: "bt link", title: "Devolver para a seção", on: { click: () => mexer("soltar", [c.id], null, true) } }, "Soltar") : null,
-      meu && i > 0 ? el("button", { class: "bt link", title: "Coluna anterior", on: { click: () => mover(-1) } }, "←") : null,
-      meu && i < QUADRO.colunas.length - 1 ? el("button", { class: "bt link", title: "Próxima coluna", on: { click: () => mover(1) } }, "→") : null,
-      meu ? el("button", { class: "bt link", title: "Editar", on: { click: () => editarCartao(c, secao) } }, "✎") : null,
-      meu ? el("button", { class: "bt link", title: "Excluir", on: { click: async () => {
-        const r = await mexer("remover", [c.id], null, secao);
-        desfazer("Tarefa excluída.", () => mexer("restaurar", [r.cartao, r.pos], null, secao));
-      } } }, "✕") : null));
-  no.addEventListener("dragstart", ev => { ev.dataTransfer.setData("text/plain", (prog ? "g:" : secao ? "s:" : "l:") + c.id); no.classList.add("arrastando"); });
+  const chave = (prog ? "g:" : secao ? "s:" : "l:") + c.id;
+  const no = el("div", { class: "qc" + (secao ? " qc-secao" : "") + (mini ? " mini" : "") + (ABERTOS.has(chave) ? " aberto" : ""),
+      draggable: meu ? "true" : false, "data-id": c.id, title: "Clique para ver os detalhes", on: { click: alternar(chave) } },
+    el("div", { class: "qc-linha" },
+      prog ? el("span", { class: "tag sit k-roxo", title: "Arrumar o SSEG: relatos e avisos dos scripts. Só você vê." }, "prog") :
+      secao ? el("span", { class: "tag sit k-azul", title: "Tarefa da seção: todos veem" }, "seção") : null,
+      el("div", { class: "qc-tit" }, c.titulo),
+      (c.checklist || []).length ? el("span", { class: "qc-n", title: "Itens feitos do checklist" }, feitos + "/" + c.checklist.length) : null,
+      c.pegou ? el("span", { class: "qc-n", title: "Responsável: " + c.pegou }, "👤 " + c.pegou.split(/\s+/).pop()) : null),
+    el("div", { class: "qc-mais" },
+      secao && !prog ? el("div", { class: "qc-orig" }, c.pegou ? el("b", {}, "👤 " + c.pegou) : el("span", {}, "ninguém pegou"),
+        c.inicio ? " · início " + data(c.inicio) : "", c.fim ? " · fim " + data(c.fim) : "") : null,
+      c.autor ? el("div", { class: "qc-orig" }, "criada por " + c.autor) : null,
+      c.origem ? el("div", { class: "qc-orig" }, c.origem) : null,
+      c.feito_texto ? el("div", { class: "qc-orig" }, "✓ " + c.feito_texto) : null,
+      (c.checklist || []).length ? el("div", { class: "qc-check" }, ...c.checklist.map((x, k) => el("label", {},
+        el("input", { type: "checkbox", checked: x.feito, disabled: !meu, on: { change: ev => mexer("alterar", [c.id, { checklist: c.checklist.map((y, j) => j === k ? { ...y, feito: ev.target.checked } : y) }], null, secao) } }),
+        " " + x.texto))) : null,
+      el("div", { class: "qc-bts" },
+        secao && !prog && !c.pegou ? el("button", { class: "bt link", title: "Esta tarefa é minha", on: { click: () => mexer("pegar", [c.id], null, true) } }, "Pegar") : null,
+        secao && !prog && c.pegou && meu ? el("button", { class: "bt link", title: "Devolver para a seção", on: { click: () => mexer("soltar", [c.id], null, true) } }, "Soltar") : null,
+        meu && i > 0 ? el("button", { class: "bt link", title: "Coluna anterior", on: { click: () => mover(-1) } }, "←") : null,
+        meu && i < QUADRO.colunas.length - 1 ? el("button", { class: "bt link", title: "Próxima coluna", on: { click: () => mover(1) } }, "→") : null,
+        meu ? el("button", { class: "bt link", title: "Editar", on: { click: () => editarCartao(c, secao) } }, "✎") : null,
+        meu ? el("button", { class: "bt link", title: "Excluir", on: { click: async () => {
+          const r = await mexer("remover", [c.id], null, secao);
+          desfazer("Tarefa excluída.", () => mexer("restaurar", [r.cartao, r.pos], null, secao));
+        } } }, "✕") : null)));
+  no.addEventListener("dragstart", ev => { ev.dataTransfer.setData("text/plain", chave); no.classList.add("arrastando"); });
   no.addEventListener("dragend", () => no.classList.remove("arrastando"));
   return no;
 }
@@ -1993,58 +2135,113 @@ function editarProcesso(p) {
     ["Voltar ao automático", async b => { await mexer("processo", [p.codigo, p.estado, "", ""], b, false); fechar(); }],
     ["Cancelar", fechar]]);
 }
+// 2.6.12: o clique abre os detalhes; ir ao processo é pelo ↗, com confirmação (o clique solto levava à página sem querer)
+function irProcesso(p) {
+  modal("Abrir o processo " + p.codigo + "?", [p.razao, p.ocupacao].filter(Boolean).join(" · "), [],
+    [["Abrir", () => { fechar(); abrirProcesso(p.codigo); }, true], ["Cancelar", fechar]]);
+}
+// 2.6.12 (pedido do Átila): processo é linha de lista (fora do kanban, que fica só com as tarefas); o clique abre
 function cartaoProcesso(p) {
   const m = manualDoProcesso(p);
   const aguarda = m && m.aguardando ? (QUADRO.aguardando || {})[m.aguardando] : "";
-  const parar = fn => ev => { ev.stopPropagation(); fn(); };
-  const no = el("div", { class: "qc qc-proc" + (aguarda ? " aguarda" : ""), draggable: "true",
-      title: "Processo: clique para abrir. ✎ ou arrastar muda o lugar e a situação.", on: { click: () => abrirProcesso(p.codigo) } },
-    el("div", { class: "qc-tit cod" }, p.codigo, p.tipo ? el("span", { class: "tag", style: "margin-left:6px" }, nomeAnalise(p.tipo)) : null),
-    p.razao ? el("div", { class: "qc-razao" }, p.razao) : null,
-    p.ocupacao || p.area ? el("div", { class: "qc-orig" }, [p.ocupacao, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""].filter(Boolean).join(" · ")) : null,
-    el("div", { style: "margin-top:5px" }, tagEstado(p)),
-    aguarda ? el("div", { class: "qc-aguarda" }, "⏳ " + aguarda) : null,
-    m && m.coluna && !aguarda ? el("div", { class: "qc-orig" }, "lugar mudado à mão") : null,
-    el("div", { class: "qc-bts" },
-      el("button", { class: "bt link", title: "Mudar situação ou coluna", on: { click: parar(() => editarProcesso(p)) } }, "✎"),
-      m ? el("button", { class: "bt link", title: "Voltar ao lugar automático", on: { click: parar(() => mexer("processo", [p.codigo, p.estado, "", ""], null, false)) } }, "↺") : null));
-  no.addEventListener("dragstart", ev => { ev.dataTransfer.setData("text/plain", "p:" + p.codigo); no.classList.add("arrastando"); });
-  no.addEventListener("dragend", () => no.classList.remove("arrastando"));
-  return no;
+  const chave = "p:" + p.codigo;
+  return el("div", { class: "qc qc-proc" + (aguarda ? " aguarda" : "") + (ABERTOS.has(chave) ? " aberto" : ""),
+      title: "Clique para ver os detalhes; ↗ abre o processo", on: { click: alternar(chave) } },
+    el("div", { class: "qc-linha" },
+      el("div", { class: "qc-tit cod" }, p.codigo),
+      p.tipo ? el("span", { class: "tag" }, nomeAnalise(p.tipo)) : null,
+      el("div", { class: "qc-razao", title: p.razao || "" }, p.razao || ""),
+      aguarda ? el("span", { class: "qc-n", title: aguarda }, "⏳ " + aguarda) : null,
+      tagEstado(p),
+      el("button", { class: "bt link qc-ir", title: "Abrir o processo", on: { click: () => irProcesso(p) } }, "↗")),
+    el("div", { class: "qc-mais" },
+      p.ocupacao || p.area ? el("div", { class: "qc-orig" }, [p.ocupacao, p.area ? Number(p.area).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " m²" : ""].filter(Boolean).join(" · ")) : null,
+      m && m.coluna && !aguarda ? el("div", { class: "qc-orig" }, "lugar mudado à mão") : null,
+      el("div", { class: "qc-bts" },
+        el("button", { class: "bt link", title: "Mudar a etapa ou marcar o que está esperando", on: { click: () => editarProcesso(p) } }, "✎ etapa"),
+        m ? el("button", { class: "bt link", title: "Voltar à etapa automática (pela planilha)", on: { click: () => mexer("processo", [p.codigo, p.estado, "", ""], null, false) } }, "↺ automático") : null)));
+}
+// Feito separado por dia, o mais recente em cima
+const DIA_SEM = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+function porDia(itens, diaDe, pintar) {
+  const g = {};
+  itens.forEach(x => { const d = diaDe(x) || "sem data"; (g[d] = g[d] || []).push(x); });
+  return Object.keys(g).sort().reverse().flatMap(d => [
+    el("div", { class: "q-dia" }, d === "sem data" ? d : DIA_SEM[new Date(d + "T12:00").getDay()] + " " + dataBR(d), el("span", {}, g[d].length)),
+    ...g[d].map(pintar)]);
+}
+const diaDeTarefa = c => { const s = c.fim || c.movido; return s ? isoLocal(new Date(s * 1000)) : ""; };
+// 2.6.12: o filtro do topo muda de verdade o que aparece (antes "Seção (todos)/Só meu" só dizia onde a tarefa nova ia,
+// e parecia não fazer nada). Meus = meus processos, minhas tarefas e as da seção que eu peguei ou criei.
+const lerLS = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+const gravarLS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+function blocoAbreFecha(chave, padrao, titulo, n, corpo) {
+  const ver = lerLS(chave, padrao) === "1";
+  return [el("h3", { class: "q-bloco" }, titulo, el("span", { class: "tag" }, n),
+      el("button", { class: "bt link", on: { click: () => { gravarLS(chave, ver ? "0" : "1"); pintarQuadro(); } } }, ver ? "▾ esconder" : "▸ mostrar")),
+    ver ? corpo() : null];
 }
 function pintarQuadro() {
-  const temSecao = Array.isArray(QUADRO.secao);
+  const temSecao = Array.isArray(QUADRO.secao), temProg = Array.isArray(QUADRO.programa);
+  const eu = ultima(QUADRO.eu);
+  const minhaSecao = c => [c.autor, c.pegou].some(n => n && ultima(n) === eu);
+  const FILTROS = [["tudo", "Tudo"], ["meus", "Meus"], temSecao ? ["secao", "Seção"] : null, temProg ? ["programa", "Programa"] : null].filter(Boolean);
+  let filtro = lerLS("sseg-quadro-filtro", "tudo");
+  if (!FILTROS.some(f => f[0] === filtro)) filtro = "tudo";
+  const procsDe = f => f === "tudo" || f === "meus" ? PROCS.filter(p => colunaDoProcesso(p)) : [];
+  const tarefasDe = (f, k) => ({
+    soltos: f === "tudo" || f === "meus" ? QUADRO.cartoes.filter(c => c.coluna === k) : [],
+    sec: !temSecao ? [] : QUADRO.secao.filter(c => c.coluna === k && (f === "tudo" || f === "secao" || (f === "meus" && minhaSecao(c)))),
+    prog: !temProg ? [] : QUADRO.programa.filter(c => c.coluna === k && (f === "tudo" || f === "programa")) });
+  const nTarefas = (f, k) => { const t = tarefasDe(f, k); return t.soltos.length + t.sec.length + t.prog.length; };
+  const abertos = f => procsDe(f).filter(p => colunaDoProcesso(p) !== "feito").length
+    + QUADRO.colunas.reduce((s, k) => s + (k === "feito" ? 0 : nTarefas(f, k)), 0);
+  $("#q-filtro").replaceChildren("Mostrar:", ...FILTROS.map(([v, t]) => el("button", { class: "bt" + (v === filtro ? " on" : ""),
+    title: "Em aberto, sem contar o Feito", on: { click: () => { gravarLS("sseg-quadro-filtro", v); pintarQuadro(); } } }, t + " (" + abertos(v) + ")")));
+
+  // processos: lista por etapa; Feito fechado em número, aberto por dia
+  const procs = procsDe(filtro);
+  $("#q-procs").replaceChildren(...(procs.length ? blocoAbreFecha("sseg-quadro-procs", "1", "Processos", procs.filter(p => colunaDoProcesso(p) !== "feito").length + " em aberto", () =>
+    el("div", { class: "q-lista" }, ...QUADRO.colunas.flatMap(k => {
+      const l = procs.filter(p => colunaDoProcesso(p) === k);
+      if (!l.length) return [];
+      if (k === "feito") return blocoAbreFecha("sseg-quadro-procs-feito", "0", "Feito nos últimos 7 dias", l.length, () =>
+        el("div", { class: "q-lista" }, ...porDia(l, p => p.concluido, cartaoProcesso)));
+      return [el("div", { class: "q-etapa" }, QUADRO.nomes[k], el("span", {}, l.length)), ...ordemProcessos(l).map(cartaoProcesso)];
+    }))) : []));
+
+  // tarefas: kanban
   const cols = QUADRO.colunas.map(k => {
-    const procs = PROCS.filter(p => colunaDoProcesso(p) === k), soltos = QUADRO.cartoes.filter(c => c.coluna === k);
-    const sec = temSecao ? QUADRO.secao.filter(c => c.coluna === k) : [];
-    const prog = Array.isArray(QUADRO.programa) ? QUADRO.programa.filter(c => c.coluna === k) : [];
-    const corpo = el("div", { class: "qcol-corpo" }, ...procs.map(cartaoProcesso), ...sec.map(c => cartaoSolto(c, true)),
-      ...soltos.map(c => cartaoSolto(c, false)), ...prog.map(c => cartaoSolto(c, "programa")));
-    const destino = temSecao ? el("select", { title: "Onde a tarefa fica" }, el("option", { value: "secao" }, "Seção (todos)"), el("option", { value: "meu" }, "Só meu"),
-      Array.isArray(QUADRO.programa) ? el("option", { value: "programa" }, "Programa (arrumar o SSEG)") : null) : null;
-    if (destino) try { destino.value = localStorage.getItem("sseg-quadro-destino") || "secao"; } catch (e) {}
-    const col = el("div", { class: "qcol", "data-col": k },
-      el("h3", {}, QUADRO.nomes[k], el("span", { class: "tag" }, procs.length + soltos.length + sec.length + prog.length)),
+    const { soltos, sec, prog } = tarefasDe(filtro, k), n = soltos.length + sec.length + prog.length;
+    const feito = k === "feito", verFeito = lerLS("sseg-quadro-feito", "0") === "1";
+    const todas = [...sec.map(c => [c, true]), ...soltos.map(c => [c, false]), ...prog.map(c => [c, "programa"])];
+    const corpo = el("div", { class: "qcol-corpo" }, ...(feito ? (verFeito ? porDia(todas, ([c]) => diaDeTarefa(c), ([c, s]) => cartaoSolto(c, s, true)) : [])
+      : todas.map(([c, s]) => cartaoSolto(c, s))));
+    // tarefa nova: vai para onde o filtro aponta; em Tudo/Meus, o seletor escolhe
+    const destino = temSecao && (filtro === "tudo" || filtro === "meus") ? el("select", { title: "Onde a tarefa nova fica" },
+      el("option", { value: "secao" }, "da seção"), el("option", { value: "meu" }, "só minha"),
+      temProg ? el("option", { value: "programa" }, "do programa") : null) : null;
+    if (destino) destino.value = lerLS("sseg-quadro-destino", filtro === "meus" ? "meu" : "secao");
+    const col = el("div", { class: "qcol" + (feito ? " qcol-feito" : ""), "data-col": k },
+      el("h3", {}, QUADRO.nomes[k],
+        feito && n ? el("button", { class: "bt link", on: { click: () => { gravarLS("sseg-quadro-feito", verFeito ? "0" : "1"); pintarQuadro(); } } }, verFeito ? "▾ esconder" : "▸ ver por dia") : null,
+        el("span", { class: "tag" }, n)),
       k === "afazer" ? el("form", { class: "qc-nova", on: { submit: async ev => {
         ev.preventDefault(); const inp = ev.target.querySelector("input"); if (!inp.value.trim()) return;
-        const onde = !destino ? false : destino.value === "secao" ? true : destino.value === "programa" ? "programa" : false;
-        try { if (destino) localStorage.setItem("sseg-quadro-destino", destino.value); } catch (e) {}
-        await mexer("adicionar", [inp.value, "afazer"], ev.submitter, onde); } } },
+        const d = destino ? destino.value : filtro === "programa" ? "programa" : filtro === "secao" ? "secao" : "meu";
+        if (destino) gravarLS("sseg-quadro-destino", destino.value);
+        await mexer("adicionar", [inp.value, "afazer"], ev.submitter, d === "secao" ? true : d === "programa" ? "programa" : false); } } },
         el("input", { type: "text", placeholder: "Nova tarefa…", maxlength: 200 }), destino, el("button", { class: "bt" }, "+")) : null,
       corpo);
     col.addEventListener("dragover", ev => { ev.preventDefault(); col.classList.add("alvo"); });
     col.addEventListener("dragleave", () => col.classList.remove("alvo"));
     col.addEventListener("drop", ev => { ev.preventDefault(); col.classList.remove("alvo");
       const v = ev.dataTransfer.getData("text/plain") || "", secao = v.startsWith("g:") ? "programa" : v.startsWith("s:"), id = v.slice(2);
-      if (v.startsWith("p:")) {
-        const p = PROCS.find(x => x.codigo === id), m = p && manualDoProcesso(p);
-        if (p && colunaDoProcesso(p) !== k) mexer("processo", [id, p.estado, k, k === "esperando" && m ? m.aguardando : ""], null, false);
-        return;
-      }
       const c = (secao === "programa" ? QUADRO.programa || [] : secao ? QUADRO.secao || [] : QUADRO.cartoes).find(x => x.id === id);
       if (c && c.coluna !== k) mexer("alterar", [id, { coluna: k }], null, secao); });
     return col;
   });
+  $("#q-tarefas-tit").hidden = false;
   $("#quadro").replaceChildren(...cols);
   if (QUADRO.erro_secao) avisar("✗ Quadro da seção indisponível: " + QUADRO.erro_secao, true);
 }
@@ -2500,8 +2697,8 @@ function pintarChecklist() {
       pa.velha ? el("p", { class: "sub", style: "color:var(--verm)" }, "O JSON do SOL mudou depois da pré-análise: clique em Refazer pré-análise.") : null,
       pa.marcas.length ? el("div", { class: "pre-marcas" }, ...pa.marcas.map(l => el("div", { style: "color:" + cor(l) }, l)))
         : el("p", { class: "sub" }, "Nenhum ponto marcado."),
-      el("button", { class: "bt link", on: { click: () => modal("Pré-análise documental", "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
-        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", mandar], ["Fechar", fechar]]) } }, "ver tudo"),
+      el("div", { style: "margin-top:6px" }, el("button", { class: "bt chamativo", title: "Abre a saída inteira do script; de lá, manda ao chat", on: { click: () => modal("Pré-análise documental", "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
+        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]) } }, "Revisar e mandar pro chat")),
       refazerPre];
     // já mandada ao Claude (2.3.16): encolhe numa linha; pré-análise refeita (data nova) volta aberta
     if ((r.marcas || {}).pre_analise === pa.data)
@@ -2624,6 +2821,11 @@ function pintarCIA() {
     const sel = el("select", { style: "font-size:12px;padding:3px;border:1px solid var(--linha);border-radius:5px;background:var(--campo);color:var(--texto);max-width:100%" },
       el("option", { value: "" }, "— medida —"), ...[...new Set([...medidas, e.medida].filter(Boolean))].map(m => el("option", { value: m, selected: m === e.medida }, m)));
     sel.addEventListener("change", () => api("processo_atualizar", [PR.codigo, "exigencias", e.id, { medida: sel.value }]).then(recarregarRegistro));
+    // prancha onde está o erro (2.6.12, pedido do Átila): ao lançar, ela leva "Inconformidades já citadas acima"
+    const elems = (PR.dados && PR.dados.elementos || []).filter(p => p !== e.medida), marcadas = e.pranchas || [];
+    const pranchas = elems.length ? el("div", { class: "pranchas", title: "Marque a prancha em que o RT vai achar o erro: no lançamento ela é reprovada com \"- Inconformidades já citadas acima.\"" },
+      el("span", { class: "discreto" }, "erro na prancha:"), ...elems.map(p => el("label", {}, el("input", { type: "checkbox", checked: marcadas.includes(p),
+        on: { change: ev => api("processo_atualizar", [PR.codigo, "exigencias", e.id, { pranchas: ev.target.checked ? [...marcadas, p] : marcadas.filter(x => x !== p) }]).then(recarregarRegistro) } }), p))) : null;
     const fund = el("input", { class: "fund", value: e.fundamento || "", placeholder: "fundamento (ex.: RT 11/2016, item 5.4.2)" });
     const conta = el("span", { class: "conta" });
     const st = el("span", {}, deRascunho ? "rascunho do Claude — edite e salve" : "");
@@ -2663,7 +2865,7 @@ function pintarCIA() {
         e.pedido ? el("span", { class: "marca-tag", style: "display:inline-flex;align-items:center;gap:4px" }, caranguejo(PR.fluxo.modelo, "medium", "Claude redigindo este item"), "redigindo…") : null),
       rascDiferente ? el("details", { class: "discreto" }, el("summary", {}, "rascunho do Claude (diferente do salvo)"), el("div", { class: "rasc" }, e.rascunho),
         el("button", { class: "bt link", on: { click: () => { ta.value = e.rascunho; ta.dispatchEvent(new Event("input")); ta.focus(); } } }, "pôr o rascunho na caixa")) : null,
-      ta, fund,
+      pranchas, ta, fund,
       el("div", { class: "rod" },
         el("button", { class: "bt p", on: { click: salvar } }, "Salvar"),
         el("button", { class: "bt", title: "Manda o texto da caixa ao chat como achado; o rascunho volta para este item", on: { click: pedir } }, "Pedir ao Claude"),
@@ -2753,9 +2955,18 @@ $("#pr-lancar").onclick = async ev => {
   }
   // sem nenhuma exigência salva (CA): aprovar tudo o que está em "Analisar" no SOL, com confirmação (pedido do Átila, 20/10/2026)
   if (!grupos.size) return aprovarTudo(ev.currentTarget);
+  // prancha marcada na exigência (2.6.12): reprovada junto, apontando ao RT onde está o erro. Vem depois das medidas no
+  // SOL, daí o "acima"; se a prancha já tem exigência própria, a linha vai no fim da caixa dela
+  // só a frase padrão, sem listar as medidas (Átila, 27/10/2026: lista incompleta daria margem ao RT)
+  const citadas = new Set();
+  for (const e of PR.reg.exigencias.filter(e => (e.final || "").trim()))
+    for (const p of e.pranchas || []) if (p !== e.medida) citadas.add(p);
+  for (const p of citadas) if (!grupos.has(p)) grupos.set(p, []);
+  const linhaPrancha = p => citadas.has(p) ? "- Inconformidades já citadas acima." : "";
   const ordem = m => { const k = medidas.indexOf(m); return m ? (k < 0 ? 900 : k) : 999; };
   const lista = [...grupos.entries()].sort((a, b) => ordem(a[0]) - ordem(b[0]))
-    .map(([m, l]) => ({ medida: m, ids: l.map(e => e.id), texto: textoSOL(l.map(e => e.final)), ja: l.every(e => e.lancado && e.lancado_final === e.final) }));
+    .map(([m, l]) => ({ medida: m, ids: l.map(e => e.id), texto: textoSOL([...l.map(e => e.final), linhaPrancha(m)]),
+      ja: !citadas.has(m) && l.every(e => e.lancado && e.lancado_final === e.final) }));
   avisar("Lendo os itens no SOL… (se o Chrome perguntar, clique em Permitir)");
   let planos;
   try { planos = await api("sol_lancar_plano", [PR.codigo, lista.map(g => ({ medida: g.medida, texto: g.texto }))], ev.currentTarget); } catch (e) { return; }
@@ -2783,7 +2994,7 @@ $("#pr-lancar").onclick = async ev => {
     });
     const n = g.texto.length;
     return { g, sel, marca, no: el("div", { class: "cartao", style: "margin:6px 0;padding:8px" },
-      el("label", { style: "display:flex;gap:8px;align-items:center;font-weight:600" }, marca, (g.medida || "Sem medida escolhida") + " · " + g.ids.length + " exigência(s)"),
+      el("label", { style: "display:flex;gap:8px;align-items:center;font-weight:600" }, marca, (g.medida || "Sem medida escolhida") + " · " + (g.ids.length ? g.ids.length + " exigência(s)" : "só indica onde está o erro")),
       el("div", { style: "display:flex;gap:8px;align-items:center;margin:4px 0" }, el("span", { class: "sub" }, "vai para:"), sel,
         el("span", { class: n > 2000 ? "alto" : "discreto" }, n + " / 2000")),
       info,
@@ -2925,23 +3136,37 @@ async function abrirNoSol(url) {
 // sem o id do processo no SOL, o licenciamento cai na consulta; sem a análise direta, na caixa de análise
 const aviso2 = r => avisar((r.ok ? "✓ " : "✗ ") + ((r.arquivos || []).length ? r.arquivos.join(", ") : "") + ((r.avisos || []).length ? (r.arquivos && r.arquivos.length ? " · " : "") + r.avisos.join(" · ") : ""), !r.ok);
 $("#pr-memorial").onclick = async ev => { const f = await api("processo_memorial", [PR.codigo], ev.currentTarget); avisar("Abrindo " + f + "."); };
-$("#pr-congelar").onclick = async ev => {
-  const b = ev.currentTarget;
-  aviso2(await api("processo_congelar", [PR.codigo, false], b));
-  recarregarRegistro();
-};
-$("#pr-salvar").onclick = async ev => {
-  const b = ev.currentTarget;
-  const salvar = async bt => { aviso2(await api("processo_salvar", [PR.codigo], bt)); recarregarRegistro(); };
-  // 2.6.1: pendência aberta não fica esquecida ao fechar o processo
+// Concluir processo (2.6.12, pedido do Átila): junta "Guardar memorial" e "Salvar processo". Depois de emitir no SOL, o
+// analista marca CIA ou CA; o programa guarda o memorial desta análise (o já guardado fica: vale o de quando a CIA foi
+// lançada), baixa a CIA (no CA só confere que saiu) e sincroniza. A análise no SOL só passa para a próxima com a
+// redistribuição, então o memorial guardado logo após emitir ainda é o analisado.
+$("#pr-concluir").onclick = () => {
+  const salvas = PR.reg.exigencias.filter(e => (e.final || "").trim()).length;
   const abertas = ((PR.reg || {}).pendencias || []).filter(p => !p.feita);
-  if (!abertas.length) return salvar(b);
-  modal("Pendências abertas", abertas.length + " pendência(s) sem resposta neste processo. Resolva antes de salvar, ou salve assim.",
-    el("div", { class: "lista" }, abertas.map(p => "• " + p.texto).join("\n")),
-    [["Marcar como resolvidas e salvar", async bt => {
-      for (const p of abertas) await api("processo_atualizar", [PR.codigo, "pendencias", p.id, { feita: true }]);
-      fechar(); await salvar(b);
-    }, true], ["Salvar assim", async () => { fechar(); await salvar(b); }], ["Voltar", fechar]]);
+  const res = { v: salvas ? "CIA" : "CA" };
+  const op = (v, txt) => el("label", { style: "display:flex;gap:8px;align-items:flex-start;margin:6px 0;cursor:pointer" },
+    el("input", { type: "radio", name: "concluir-res", value: v, checked: res.v === v, on: { change: () => res.v = v } }), el("span", {}, el("b", {}, v), " — ", txt));
+  const resolver = el("input", { type: "checkbox", checked: true });
+  modal("Concluir processo", "Faça depois de emitir no SOL. Guarda o memorial desta análise (se ainda não guardou) e salva no servidor e na pasta dos prints.",
+    [op("CIA", "baixa a CIA emitida (CIA N.pdf)" + (salvas ? " · " + salvas + " exigência(s) na coluna CIA" : "")),
+     op("CA", "confere que o CA saiu no SOL; não há CIA para baixar" + (salvas ? " · ⚠ há " + salvas + " exigência(s) salvas na coluna CIA" : "")),
+     abertas.length ? el("div", { class: "cartao", style: "margin-top:8px;padding:8px" },
+       el("p", { class: "sub", style: "margin:0 0 4px" }, abertas.length + " pendência(s) sem resposta:"),
+       el("div", { class: "lista", style: "max-height:120px" }, abertas.map(p => "• " + p.texto).join("\n")),
+       el("label", { style: "display:flex;gap:6px;align-items:center;margin-top:6px" }, resolver, "marcar como resolvidas ao concluir")) : null],
+    [["Concluir", async bt => {
+      bt.disabled = true; bt.textContent = "Guardando o memorial…";
+      try {
+        if (abertas.length && resolver.checked) for (const p of abertas) await api("processo_atualizar", [PR.codigo, "pendencias", p.id, { feita: true }]);
+        const m = await api("processo_congelar", [PR.codigo, false]);
+        bt.textContent = res.v === "CIA" ? "Baixando a CIA…" : "Conferindo o CA…";
+        const r = await api("processo_salvar", [PR.codigo, res.v]);
+        r.avisos = [...(m.ok ? [] : ["memorial: " + (m.avisos || []).join(" · ")]), ...(r.avisos || [])];
+        r.arquivos = [...new Set([...(m.arquivos || []), ...(r.arquivos || [])])];
+        fechar(); aviso2(r);
+      } catch (e) { bt.disabled = false; bt.textContent = "Concluir"; return; }
+      recarregarRegistro();
+    }, true], ["Cancelar", fechar]]);
 };
 $("#pr-sol-lic").onclick = () => abrirNoSol(PR.dados.sol.licenciamento);
 $("#pr-sol-an").onclick = () => abrirNoSol(PR.dados.sol.analise);

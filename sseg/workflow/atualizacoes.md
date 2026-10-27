@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 27/10/2026 — SSEG.exe 2.6.12: Concluir processo (CIA/CA), botões do SOL agrupados, prancha na exigência
+
+- Janela do processo: "Guardar memorial" + "Salvar processo" viram **Concluir processo** (modal CIA/CA → `processo_congelar` sem refazer → `processo_salvar(codigo, resultado)`). `sol_snapshot.salvar(..., resultado="CA")` / `porta.py sol-salvar <código> --ca`: confere nos Marcos que a última análise é CA, sem baixar CIA. Os três botões do SOL num grupo com cor por botão. Pré-análise: "ver tudo" vira "Revisar e mandar pro chat".
+- Exigência ganha `pranchas` (lista das `elemGraficos` ATIVO, `processo.montar` → `elementos`). No "lançar no SOL", cada prancha marcada vira um grupo com "- Inconformidades já citadas acima." (só a frase padrão, sem listar medidas) (somado ao fim da caixa, se a prancha já tem exigência). Pedido do Átila, 27/10/2026.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 26/10/2026 — SSEG.exe 2.6.11: prazo da caixa contado como na planilha
 
 - `tagEstado` (web/index.html): a etiqueta da caixa passa de "Prazo 29/10 · 3 dias" para "7 dias · prazo 29/10" (dias corridos desde a distribuição, o número da planilha; depois a data do prazo, "vence hoje" ou "venceu"). Cor sem mudança. Pedido do Átila: o "3 dias" não dizia se era o que faltava ou o que passou.

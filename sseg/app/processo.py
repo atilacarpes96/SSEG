@@ -95,8 +95,10 @@ def montar(clone, pasta):
     passos = _ler_json(os.path.join(wf, "checklist-analise.json"))["passos"]
     anexo = _ler_json(os.path.join(wf, "anexo-l.json"))
     arq, sol = json_do_sol(pasta)
-    medidas, laudo = [], ""
+    medidas, laudo, elementos = [], "", []
     if sol:
+        # pranchas ativas, com o nome que o SOL mostra (o mesmo de sol_lancar.itens): a exigência aponta onde está o erro
+        elementos = [" ".join(str(e.get("descricao") or "").split()) for e in sol.get("elemGraficos") or [] if e.get("situacao") == "ATIVO"]
         esp = sol["especSeguranca"]
         laudo = texto_do_html((esp.get("laudo") or {}).get("txtClob") or "")
         for m in esp.get("medidas") or []:  # na ordem do SOL
@@ -126,5 +128,5 @@ def montar(clone, pasta):
         if not velha:
             auto["4"] = "pré-análise documental (script, sem Claude): pre-analise.txt"
     return {"auto": auto, "pre_analise": pre,"codigo": os.path.basename(os.path.normpath(pasta)), "pasta": pasta, "json_sol": arq and os.path.basename(arq),
-            "passos": passos, "medidas": medidas, "laudo": laudo, "compensatoria": anexo.get("compensatoria", ""),
+            "passos": passos, "medidas": medidas, "elementos": elementos, "laudo": laudo, "compensatoria": anexo.get("compensatoria", ""),
             "cias": [a for a in arquivos if re.match(r"CIA \d+", a)], "analise": reg.ler(pasta), "sol": links_sol(sol, sc.get("id_analise"))}
