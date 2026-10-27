@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 27/10/2026 — SSEG.exe 2.6.13: "Pôr na CIA" só quando o texto não está na coluna
+
+- Bloco `sseg-exigencia` no chat: se o texto (espaços normalizados) já é o rascunho ou o final de alguma exigência, mostra "✓ na CIA, item N"; senão, o botão "Pôr na CIA" (rascunho de item novo). Reavalia a cada recarga do registro. Pedido do Átila: o botão duplicava a exigência que o Claude já tinha gravado com `rascunho`. Instrução do chat (`chat.py`) ajustada.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 27/10/2026 — SSEG.exe 2.6.12: Concluir processo (CIA/CA), botões do SOL agrupados, prancha na exigência
 
 - Janela do processo: "Guardar memorial" + "Salvar processo" viram **Concluir processo** (modal CIA/CA → `processo_congelar` sem refazer → `processo_salvar(codigo, resultado)`). `sol_snapshot.salvar(..., resultado="CA")` / `porta.py sol-salvar <código> --ca`: confere nos Marcos que a última análise é CA, sem baixar CIA. Os três botões do SOL num grupo com cor por botão. Pré-análise: "ver tudo" vira "Revisar e mandar pro chat".

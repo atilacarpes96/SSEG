@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.13
+
+- **Sem notificação duplicada pelo chat.** Quando o Claude já gravou o rascunho na coluna CIA, o cartão no chat mostra "✓ na CIA, item N" no lugar do botão "Pôr na CIA". O botão só aparece se o texto ainda não está na coluna.
+
 ## 2.6.12
 
 - **Cabeçalho do processo mais enxuto.** "Licenciamento no SOL", "Análise técnica no SOL" e "Memorial SOL" ficam juntos num grupo só, cada um com a sua cor (azul, laranja, roxo).

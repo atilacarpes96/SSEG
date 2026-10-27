@@ -399,6 +399,7 @@ details.medida .itens { padding: 0 9px 8px; }
 .exig.compacta .cx-med { color: var(--suave); white-space: nowrap; max-width: 34%; overflow: hidden; text-overflow: ellipsis; }
 .exig.compacta .cx-res { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .exig.compacta .ok-tag { color: var(--ok); font-weight: 700; }
+.por-cia .ok-tag { color: var(--ok); font-weight: 600; font-size: 13px; }
 .exig input.fund { width: 100%; margin-top: 4px; padding: 4px 7px; border: 1px solid var(--linha); border-radius: 5px; font-size: 12px; }
 /* caranguejo */
 .crab { display: inline-block; vertical-align: middle; animation: anda 1.1s ease-in-out infinite; transform-origin: 50% 80%; }
@@ -2504,7 +2505,7 @@ const BLOCOS = {
       el("div", { class: "discreto" }, [d.medida, d.fundamento].filter(Boolean).join(" · ")),
       el("div", { class: "txt" }, d.texto || ""),
       el("div", { class: "rod", style: "display:flex;gap:8px;align-items:center" },
-        ctx && /^A\d{8}/.test(ctx.chave) ? el("button", { class: "bt p", on: { click: async ev => { await api("processo_exigencia", [ctx.chave, d.texto || "", d.medida || "", d.fundamento || "", "claude"], ev.currentTarget); ev.currentTarget.textContent = "Na CIA (rascunho)"; ev.currentTarget.disabled = true; recarregarRegistro(); } } }, "Pôr na CIA") : null,
+        ctx && /^A\d{8}/.test(ctx.chave) ? porNaCIA(ctx.chave, d) : null,
         el("button", { class: "bt", on: { click: () => copiar(d.texto || "") } }, "Copiar"),
         el("span", { class: "discreto", style: "margin-left:auto;" + (n > 1950 ? "color:var(--verm);font-weight:700" : "") }, n + " / 2000")));
   },
@@ -3044,6 +3045,23 @@ async function recarregarRegistro() {
   PR.reg = await api("processo_registro", [PR.codigo]);
   PR.alterado = PR.reg.alterado || 0;
   pintarChecklist(); pintarCIA(); pintarCota();
+  for (const s of document.querySelectorAll(".por-cia")) s.pintar();
+}
+// "Pôr na CIA" do bloco do chat (2.6.13, pedido do Átila): o Claude já grava o rascunho na coluna CIA pelo sseg.py, e o
+// botão só duplicava. Texto que já está na coluna (rascunho ou final) mostra "✓ na CIA, item N"; o botão fica só
+// para o bloco que o Claude não gravou.
+const normCIA = t => String(t || "").replace(/\s+/g, " ").trim();
+function porNaCIA(codigo, d) {
+  const alvo = normCIA(d.texto), s = el("span", { class: "por-cia" });
+  s.pintar = () => {
+    const ex = codigo === PR.codigo && PR.reg ? PR.reg.exigencias : null;
+    const k = ex ? ex.findIndex(e => alvo && [e.rascunho, e.final].some(t => normCIA(t) === alvo)) : -1;
+    s.replaceChildren(k >= 0 ? el("span", { class: "ok-tag", title: "O texto já está na coluna CIA: edite e salve lá" }, "✓ na CIA, item " + (k + 1))
+      : el("button", { class: "bt", title: "O Claude não gravou este texto na coluna CIA: põe como rascunho de um item novo",
+          on: { click: async ev => { await api("processo_exigencia", [codigo, d.texto || "", d.medida || "", d.fundamento || "", "claude"], ev.currentTarget); recarregarRegistro(); } } }, "Pôr na CIA"));
+  };
+  s.pintar();
+  return s;
 }
 // O Claude escreve pelo sseg.py: a janela confere o analise.json a cada 2 s (sem mexer no que você digita).
 setInterval(async () => {
