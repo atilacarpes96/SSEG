@@ -972,14 +972,17 @@ class Api:
         except PermissionError:
             raise RuntimeError("O SOL recusou a leitura: a sessão da aba caiu. Entre de novo no SOL e tente outra vez.")
 
-    def sol_lancar_aprovar_lista(self, codigo, notificados):
-        """Só lê: os itens em "Analisar" que não estão entre os notificados (viram Aprovado no lançamento)."""
+    def sol_lancar_aprovar_lista(self, codigo, notificados, reprovados=False):
+        """Só lê: os itens em "Analisar" que não estão entre os notificados (viram Aprovado no lançamento). Com
+        `reprovados` (aprovar tudo, 2.6.16): [{nome, status}], incluindo os Reprovados."""
         _s, sol_lancar = self._scripts_do_clone("sol_caixa", "sol_lancar")
         ida = self._id_analise(codigo)
-        return sol_aba.na_aba_logada(lambda aba: [i["nome"] for i in sol_lancar.a_aprovar(
-            sol_caixa_buscar(aba, ida, sol_lancar), notificados)])
+        def ler(aba):
+            l = sol_lancar.a_aprovar(sol_caixa_buscar(aba, ida, sol_lancar), notificados, reprovados)
+            return [{"nome": i["nome"], "status": (i["resultado"] or {}).get("statusResultadoAtec") or ""} for i in l] if reprovados else [i["nome"] for i in l]
+        return sol_aba.na_aba_logada(ler)
 
-    def sol_lancar(self, codigo, lancamentos, aprovar=False, notificados=None):
+    def sol_lancar(self, codigo, lancamentos, aprovar=False, notificados=None, reprovados=False):
         """Grava cada {item, texto, ids} no SOL e confere; com `aprovar`, aprova o que não está em `notificados` e não
         está Reprovado (pedido do Átila, 20/10/2026); no fim recarrega a aba do SOL. {itens, aprovados, falhas}.
         As exigências (ids) lançadas ficam marcadas."""
@@ -1006,7 +1009,8 @@ class Api:
                 out.append(r)
             if aprovar and not any("sessão" in (r.get("aviso") or "") for r in out):
                 try:
-                    extra.update(sol_lancar.aprovar_restantes(aba, ida, notificados or [l["item"] for l in lancamentos or []]))
+                    extra.update(sol_lancar.aprovar_restantes(aba, ida, notificados or [l["item"] for l in lancamentos or []],
+                                                             reprovados and not lancamentos))
                 except (RuntimeError, OSError, ValueError, PermissionError) as e:
                     extra["falhas"].append(("aprovar o resto", str(e)))
             return out

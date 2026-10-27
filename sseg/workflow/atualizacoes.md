@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 27/10/2026 — SSEG.exe 2.6.16: sem notificação, aprovar tudo inclui os Reprovados
+
+- `sol_lancar.a_aprovar/aprovar_restantes(..., reprovados=True)` quando não há nenhuma exigência salva: o Reprovado também vira Aprovado (com `justificativas: []`). Rascunho sem texto salvo deixa de bloquear o "aprovar tudo" (só avisa). Com notificação, nada muda. Pedido do Átila.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 27/10/2026 — SSEG.exe 2.6.15: característica cai no campo 3 ao lançar
 
 - `sol_lancar.achar`: nome que começa com "Característica" e não casa com nenhum item vai para "Característica geral" (ou "Tipo de edificação" / "Isolamento de risco", quando nomeados). Teste em `testar.py`. Select de medida da exigência ganha os itens fixos do SOL e as pranchas; `chat.py` diz ao Claude os nomes do campo 3. Relato do Átila.

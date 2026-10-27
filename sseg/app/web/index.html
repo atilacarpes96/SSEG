@@ -2942,20 +2942,24 @@ $("#pr-revisar").onclick = () => {
     "em corrigir, o problema em uma frase, o fundamento e a sugestão com o texto INTEIRO novo, no formato da caixa do SOL. Não grave nada (nem rascunho): " +
     "o analista decide em cada uma com Aplicar ou Ignorar. O que não é de uma exigência vai em \"observacoes\".");
 };
+// Sem notificação, aprova tudo (2.6.16, pedido do Átila): rascunho não salvo não trava mais (só aparece no aviso) e o que
+// está Reprovado no SOL (sobra de outra análise ou de um lançamento desfeito) também vira Aprovado. Aprovado fica.
 async function aprovarTudo(b) {
-  if (PR.reg.exigencias.some(e => (e.rascunho || e.achado || "").trim()))
-    return avisar("Há exigência com rascunho, mas sem texto salvo. Salve ou exclua antes: com exigência não se aprova tudo.", true);
+  const rasc = PR.reg.exigencias.filter(e => (e.rascunho || e.achado || "").trim());
   avisar("Lendo os itens no SOL… (se o Chrome perguntar, clique em Permitir)");
   let lista;
-  try { lista = await api("sol_lancar_aprovar_lista", [PR.codigo, []], b); } catch (e) { return; }
-  if (!lista.length) return avisar("Nada a aprovar: todos os itens do SOL já têm resultado.");
-  modal("Aprovar tudo no SOL?", "Este processo não tem nenhuma exigência na coluna CIA. Os " + lista.length + " itens abaixo, que estão em \"Analisar\" no SOL, vão ficar Aprovados. Itens já Reprovados ficam como estão. A análise não é concluída: o CA continua sendo você, no SOL.",
-    [el("div", { class: "lista", style: "white-space:pre-wrap;max-height:260px" }, lista.join("\n")),
+  try { lista = await api("sol_lancar_aprovar_lista", [PR.codigo, [], true], b); } catch (e) { return; }
+  if (!lista.length) return avisar("Nada a aprovar: todos os itens do SOL já estão Aprovados.");
+  const repr = lista.filter(i => i.status === "REPROVADO");
+  modal("Aprovar tudo no SOL?", "Este processo não tem nenhuma exigência salva na coluna CIA. Os " + lista.length + " itens abaixo vão ficar Aprovados" +
+    (repr.length ? ", inclusive " + repr.length + " que estão Reprovados no SOL (perdem o texto de reprovação)" : "") + ". A análise não é concluída: o CA continua sendo você, no SOL.",
+    [el("div", { class: "lista", style: "white-space:pre-wrap;max-height:260px" }, lista.map(i => i.nome + (i.status === "REPROVADO" ? "  (Reprovado → Aprovado)" : "")).join("\n")),
+     rasc.length ? el("p", { class: "sub", style: "margin-top:8px;color:var(--verm)" }, "⚠ " + rasc.length + " exigência(s) com rascunho ou achado, sem texto salvo, ficam de fora: nada delas vai para o SOL.") : null,
      el("p", { class: "sub", style: "margin-top:8px" }, "Tem certeza? Confira se não faltou nenhuma notificação antes de aprovar.")],
     [["Sim, aprovar os " + lista.length, async bt => {
       bt.disabled = true; bt.textContent = "Aprovando…";
       let r;
-      try { r = await api("sol_lancar", [PR.codigo, [], true, []]); } catch (e) { bt.disabled = false; return; }
+      try { r = await api("sol_lancar", [PR.codigo, [], true, [], true]); } catch (e) { bt.disabled = false; return; }
       const falhou = r.falhas.length;
       modal("Aprovar tudo no SOL", !falhou ? "✓ " + r.aprovados.length + " item(ns) aprovado(s) e conferido(s); a tela do SOL foi atualizada. Confira lá e emita o CA." : "Alguns não foram (veja abaixo).",
         el("div", { class: "lista" }, (r.aprovados.length ? ["✓ Aprovados: " + r.aprovados.join(", ")] : []).concat(r.falhas.map(f => "✗ " + f[0] + " — " + f[1])).join("\n") || "Nada a fazer."),

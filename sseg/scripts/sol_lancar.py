@@ -212,21 +212,28 @@ def lancar(aba, id_analise, nome, texto):
 # o botão Aprovar do SOL (o mesmo editar-item, statusResultadoAtec APROVADO, sem justificativa). Item com notificação
 # na coluna CIA nunca é aprovado aqui, mesmo que o lançamento dele tenha falhado.
 
-def a_aprovar(analise, notificados):
-    """Itens em "Analisar" (sem resultado) cujo nome não está em `notificados`."""
+def a_aprovar(analise, notificados, reprovados=False):
+    """Itens em "Analisar" (sem resultado) cujo nome não está em `notificados`. Com `reprovados` (aprovar tudo, sem
+    nenhuma notificação: 2.6.16), também os que estão Reprovados; só os Aprovados ficam de fora."""
     fora = {_chave(n) for n in notificados or []}
-    return [i for i in itens(analise) if not ((i["resultado"] or {}).get("statusResultadoAtec")) and _chave(i["nome"]) not in fora]
+    def entra(i):
+        st = (i["resultado"] or {}).get("statusResultadoAtec")
+        return not st or (reprovados and st == "REPROVADO")
+    return [i for i in itens(analise) if entra(i) and _chave(i["nome"]) not in fora]
 
 
-def aprovar_restantes(aba, id_analise, notificados):
-    """Aprova os itens de a_aprovar() e confere. {aprovados: [...], falhas: [(nome, motivo)]}."""
+def aprovar_restantes(aba, id_analise, notificados, reprovados=False):
+    """Aprova os itens de a_aprovar() e confere. {aprovados: [...], falhas: [(nome, motivo)]}.
+    Item que estava Reprovado vai com as justificativas vazias (o Aprovado não leva texto de reprovação)."""
     a = sc.buscar(aba, "%s/%s" % (sc.API, id_analise))
     if (a.get("status") or "") not in ("EM_ANALISE", ""):
         raise RuntimeError("a análise no SOL está %s" % a.get("status"))
     feitos, falhas = [], []
-    for it in a_aprovar(a, notificados):
+    for it in a_aprovar(a, notificados, reprovados):
         corpo = {"id": (it["resultado"] or {}).get("id"), "idAnaliseTecnica": a.get("id"), "idItemAnalisado": it["id"],
                  "tipoItemAnaliseTecnica": it["tipo"], "statusResultadoAtec": "APROVADO"}
+        if (it["resultado"] or {}).get("statusResultadoAtec") == "REPROVADO":
+            corpo["justificativas"] = []
         try:
             _gravar(aba, "POST", "%s/editar-item" % sc.API, json.dumps(corpo, ensure_ascii=False))
             feitos.append(it["nome"])

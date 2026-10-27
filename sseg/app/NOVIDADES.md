@@ -4,6 +4,13 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.16
+
+- **Sem notificação, "lançar no SOL" aprova tudo mesmo.**
+  - Rascunho ou achado sem texto salvo não trava mais: aparece só um aviso em vermelho de que fica de fora.
+  - Item que está Reprovado no SOL também vira Aprovado (a lista mostra "Reprovado → Aprovado"). Antes ele ficava como estava, e o CA não saía.
+  - Continua pedindo confirmação, e o CA continua sendo emitido por você, no SOL.
+
 ## 2.6.15
 
 - **Notificação de características vai sozinha para o campo 3.** No "lançar no SOL", a exigência com medida "Característica - …" (como "Característica - Ocupação: Depósitos…") já vem marcada para "Característica geral"; se o nome falar em tipo de edificação ou isolamento, vai para esse item. Antes ficava sem item, e era preciso escolher na lista.

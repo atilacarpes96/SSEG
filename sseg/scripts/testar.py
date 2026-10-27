@@ -434,6 +434,13 @@ def main():
          [(_sl.achar(car_a, n) or {}).get("tipo") for n in ("Característica - Ocupação: Depósitos de mercadorias", "Características gerais",
           "Característica - Tipo de edificação", "Característica - Isolamento de risco", "Ocupação J-4")]
          == ["GERAL", "GERAL", "TIPO_EDIFICACAO", "ISOLAMENTO_RISCO", "OCUPACAO"])
+    ap_a = {"licenciamento": {"envolvidos": {}, "caracteristica": {"id": 5, "ocupacoes": []}, "elemGraficos": [], "especsRiscos": [],
+            "especSeguranca": {"medidas": [{"id": 1, "tipo": {"nome": "Extintores"}, "resultado": None},
+                                           {"id": 2, "tipo": {"nome": "Alarme"}, "resultado": {"statusResultadoAtec": "REPROVADO"}},
+                                           {"id": 3, "tipo": {"nome": "Saídas"}, "resultado": {"statusResultadoAtec": "APROVADO"}}]}}}
+    caso("Aprovar tudo (sem notificação): Reprovado também entra; Aprovado fica; com notificação, Reprovado fica",
+         {i["nome"] for i in _sl.a_aprovar(ap_a, [], True)} == {"Tipo de edificação", "Característica geral", "Extintores", "Alarme"}
+         and {i["nome"] for i in _sl.a_aprovar(ap_a, [])} == {"Tipo de edificação", "Característica geral", "Extintores"})
     f = SOLFalso()
     pl = _sl.plano(f, 77, "saida de emergencia", "\n- Novo.")
     r = _sl.lancar(f, 77, "Saída de Emergência", "\n- Novo.")
