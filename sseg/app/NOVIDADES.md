@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.14
+
+- **Coluna CIA com as etapas à vista.** "① Revisão final" (azul, contornado) e "② Lançar no SOL" (vermelho, cheio) viraram botões de verdade, numerados na ordem em que se usa. O "copiar a CIA" ficou pequeno e cinza, ao lado do título, como "⧉ copiar".
+
 ## 2.6.13
 
 - **Sem notificação duplicada pelo chat.** Quando o Claude já gravou o rascunho na coluna CIA, o cartão no chat mostra "✓ na CIA, item N" no lugar do botão "Pôr na CIA". O botão só aparece se o texto ainda não está na coluna.
