@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.6.17
+
+- **Corrige o erro "a_aprovar() takes 2 positional arguments" no lançar no SOL.** Acontecia quando o programa atualizava antes dos scripts da pasta do SSEG no PC. Agora, se os scripts estão atrasados, o programa busca a versão nova no GitHub na hora e segue.
+
 ## 2.6.16
 
 - **Sem notificação, "lançar no SOL" aprova tudo mesmo.**

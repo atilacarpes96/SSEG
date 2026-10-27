@@ -962,9 +962,27 @@ class Api:
             raise RuntimeError("Não sei o id da análise deste processo no SOL: clique em Atualizar no Início (ele lê a caixa) e tente de novo.")
         return i
 
+    def _sol_lancar(self):
+        """sol_lancar.py do clone. O .exe novo chega antes do git pull do clone (rodada de hora em hora): script velho,
+        sem o que este .exe chama, faz o pull na hora e recarrega (relato do Átila, 27/10/2026: "a_aprovar() takes 2
+        positional arguments but 3 were given")."""
+        import inspect
+        _s, m = self._scripts_do_clone("sol_caixa", "sol_lancar")
+        if "reprovados" in inspect.signature(m.a_aprovar).parameters:
+            return m
+        try:
+            self._registro.extend(git_sinc.trazer(self._clone()))
+        except (RuntimeError, OSError, subprocess.SubprocessError) as e:
+            raise RuntimeError("Os scripts do SSEG neste PC estão atrás do programa e o git pull não saiu (%s). "
+                               "Clique em Sincronizar com o GitHub e tente de novo." % str(e)[:200])
+        _s, m = self._scripts_do_clone("sol_caixa", "sol_lancar")
+        if "reprovados" not in inspect.signature(m.a_aprovar).parameters:
+            raise RuntimeError("Os scripts do SSEG neste PC estão atrás do programa: clique em Sincronizar com o GitHub e tente de novo.")
+        return m
+
     def sol_lancar_plano(self, codigo, grupos):
         """Só lê o SOL: para cada {medida, texto}, o item que casa, status atual, o que já está no Outros e as opções."""
-        _s, sol_lancar = self._scripts_do_clone("sol_caixa", "sol_lancar")
+        sol_lancar = self._sol_lancar()
         ida = self._id_analise(codigo)
         try:
             return sol_aba.na_aba_logada(lambda aba: [dict(sol_lancar.plano(aba, ida, g.get("medida") or "", g.get("texto") or ""),
@@ -975,7 +993,7 @@ class Api:
     def sol_lancar_aprovar_lista(self, codigo, notificados, reprovados=False):
         """Só lê: os itens em "Analisar" que não estão entre os notificados (viram Aprovado no lançamento). Com
         `reprovados` (aprovar tudo, 2.6.16): [{nome, status}], incluindo os Reprovados."""
-        _s, sol_lancar = self._scripts_do_clone("sol_caixa", "sol_lancar")
+        sol_lancar = self._sol_lancar()
         ida = self._id_analise(codigo)
         def ler(aba):
             l = sol_lancar.a_aprovar(sol_caixa_buscar(aba, ida, sol_lancar), notificados, reprovados)
@@ -986,7 +1004,7 @@ class Api:
         """Grava cada {item, texto, ids} no SOL e confere; com `aprovar`, aprova o que não está em `notificados` e não
         está Reprovado (pedido do Átila, 20/10/2026); no fim recarrega a aba do SOL. {itens, aprovados, falhas}.
         As exigências (ids) lançadas ficam marcadas."""
-        _s, sol_lancar = self._scripts_do_clone("sol_caixa", "sol_lancar")
+        sol_lancar = self._sol_lancar()
         ida, pasta = self._id_analise(codigo), self._pasta_proc(codigo)
         extra = {"aprovados": [], "falhas": []}
 

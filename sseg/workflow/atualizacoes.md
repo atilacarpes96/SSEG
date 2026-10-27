@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 27/10/2026 — SSEG.exe 2.6.17: lançar no SOL com script do clone atrasado
+
+- `api._sol_lancar()`: se o `sol_lancar.py` do clone não tem o parâmetro que o .exe chama, faz `git_sinc.trazer` e recarrega; sem pull, pede "Sincronizar com o GitHub". Relato do Átila: o .exe 2.6.16 chegou antes do pull horário do clone.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 27/10/2026 — SSEG.exe 2.6.16: sem notificação, aprovar tudo inclui os Reprovados
 
 - `sol_lancar.a_aprovar/aprovar_restantes(..., reprovados=True)` quando não há nenhuma exigência salva: o Reprovado também vira Aprovado (com `justificativas: []`). Rascunho sem texto salvo deixa de bloquear o "aprovar tudo" (só avisa). Com notificação, nada muda. Pedido do Átila.
