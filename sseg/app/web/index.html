@@ -389,6 +389,79 @@ details.medida .itens { padding: 0 9px 8px; }
 .todos-painel label.marca { flex-direction: row; align-items: center; gap: 6px; }
 .todos-painel .faixa-num { display: flex; gap: 4px; }
 .todos-painel .faixa-num input { width: 50%; min-width: 0; }
+/* aba Processos 2.7.0: painel, mapa, ficha e busca nas CIAs (desenho da Consulta SOLCBM do Sgt Magalhães) */
+.todos-abas { display: flex; gap: 0; margin: 0 0 12px; border-bottom: 1px solid var(--linha); }
+.todos-abas button { border: 0; background: none; color: var(--suave); padding: 8px 14px; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.todos-abas button.ativo { color: var(--texto); border-bottom-color: var(--verm); }
+.todos-abas .bt.link { margin-left: auto; align-self: center; }
+.t-todos tr.clicavel { cursor: pointer; }
+.t-todos tr.clicavel:hover td { background: var(--fundo2); }
+.mapa { height: 340px; border-radius: var(--raio-p, 8px); overflow: hidden; background: var(--fundo2); z-index: 0; }
+.mapa-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--suave); margin-top: 8px; }
+.mapa-leg i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+#todos-mapa { margin: 0 0 12px; }
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.cifra { background: var(--cartao); border-radius: var(--raio); box-shadow: var(--sombra); padding: 12px 14px; }
+.cifra b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+.cifra small { color: var(--suave); font-size: 12px; }
+.painel-sol { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.painel-sol .mapa { height: 460px; }
+.graficos { display: grid; gap: 12px; }
+.cartao h3, .ficha-sec h3 { font-size: 13px; margin: 0 0 10px; }
+.barras { display: grid; gap: 3px; }
+.barra { display: grid; grid-template-columns: minmax(0, 190px) 1fr; gap: 8px; align-items: center; border: 0; background: none; color: var(--texto);
+  text-align: left; padding: 3px 4px; border-radius: 4px; font-size: 12px; }
+.barra:hover { background: var(--fundo2); }
+.barra .rot { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barra .trilho { display: flex; align-items: center; gap: 6px; }
+.barra .valor-barra { height: 10px; border-radius: 3px; background: var(--verm); min-width: 2px; }
+.barra .n { color: var(--suave); font-variant-numeric: tabular-nums; }
+.colunas { display: flex; align-items: flex-end; gap: 3px; height: 150px; padding-top: 16px; }
+.coluna { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; min-width: 0; }
+.coluna .valor-col { width: 100%; background: var(--verm); border-radius: 3px 3px 0 0; position: relative; }
+.coluna .valor-col span { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--suave); white-space: nowrap; }
+.coluna small { font-size: 10px; color: var(--suave); margin-top: 3px; }
+.carimbo { display: grid; grid-template-columns: 2fr repeat(5, minmax(0, 1fr)); border: 1px solid var(--linha); border-radius: var(--raio);
+  background: var(--cartao); overflow: hidden; margin-bottom: 12px; }
+.carimbo > div { padding: 10px 12px; border-right: 1px solid var(--linha); border-bottom: 1px solid var(--linha); min-width: 0; }
+.carimbo .campo { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); margin-bottom: 3px; }
+.carimbo .numero { display: block; font-size: 18px; font-weight: 700; }
+.carimbo .endereco { grid-column: 1 / -1; border-right: 0; }
+.carimbo .rodape { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-size: 12.5px; border: 0; background: var(--fundo2); }
+.ficha { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; align-items: start; }
+.ficha-sec { background: var(--cartao); border-radius: var(--raio); box-shadow: var(--sombra); padding: 14px 16px; margin-bottom: 12px; scroll-margin-top: 10px; }
+.ficha-lado { position: sticky; top: 0; display: grid; gap: 12px; }
+.ficha-lado .mapa { height: 220px; }
+.ficha-indice { display: grid; gap: 2px; }
+.ficha-indice button { text-align: left; border: 0; background: none; color: var(--texto); padding: 4px 6px; border-radius: 4px; font-size: 12.5px; }
+.ficha-indice button:hover { background: var(--fundo2); }
+.dados { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px 14px; margin: 0; }
+.dados dt { font-size: 11px; color: var(--suave); }
+.dados dd { margin: 1px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.ficha-lado .dados { grid-template-columns: 1fr; }
+.t-ficha { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.t-ficha th { text-align: left; font-size: 11px; color: var(--suave); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--linha); }
+.t-ficha td { padding: 5px 6px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+.t-ficha .num { text-align: right; white-space: nowrap; }
+.peq { font-size: 11.5px; color: var(--suave); }
+.texto-longo { white-space: pre-wrap; font-size: 12.5px; line-height: 1.45; max-height: 420px; overflow: auto; background: var(--fundo2);
+  border-radius: 6px; padding: 8px 10px; margin-top: 6px; }
+details.cia-sol { border: 1px solid var(--linha); border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; }
+details.cia-sol summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+ol.tempo { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--linha); }
+ol.tempo li { position: relative; padding: 0 0 10px 10px; font-size: 12.5px; }
+ol.tempo li::before { content: ""; position: absolute; left: -20px; top: 4px; width: 9px; height: 9px; border-radius: 50%; background: var(--ponto); }
+ol.tempo li.bombeiros::before { background: var(--verm); }
+ol.tempo .quando { color: var(--suave); font-size: 11.5px; }
+mark { background: color-mix(in srgb, var(--amarelo, #FCD733) 55%, transparent); color: inherit; border-radius: 2px; }
+.cias-form { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 8px; align-items: end; margin-bottom: 12px; }
+.cias-form label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
+.cias-res { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 12px; align-items: start; }
+.achado { border-bottom: 1px solid var(--linha); padding: 8px 0; }
+.achado .cab { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; align-items: baseline; }
+.achado blockquote { margin: 6px 0 0; padding: 4px 10px; border-left: 3px solid var(--linha); font-size: 12.5px; color: var(--texto); }
+@media (max-width: 900px) { .painel-sol, .ficha, .cias-res { grid-template-columns: 1fr; } .ficha-lado { position: static; }
+  .carimbo { grid-template-columns: 1fr 1fr; } .cias-form { grid-template-columns: 1fr 1fr; } }
 .t-todos td:nth-child(7) { min-width: 150px; }
 .t-todos th[data-ord] { cursor: pointer; user-select: none; }
 .t-todos th[data-ord].ord::after { content: " " attr(data-dir); }
@@ -684,7 +757,25 @@ footer { color: var(--suave); }
 
     <section class="tela" id="t-todos">
       <h2>Todos os processos do SOL</h2>
-      <p class="sub">Coletados do SOL pelo servidor às 8h20, 12h20 e 16h20 (dias úteis). Encerrado = alvará, extinto ou rascunho. Os filtros se somam; clique no título da coluna para ordenar e no código para abrir no SOL.</p>
+      <p class="sub">Coletados do SOL pelo servidor às 8h20, 12h20 e 16h20 (dias úteis). Encerrado = alvará, extinto ou rascunho. Clique na linha para ver a ficha completa; no código, para abrir no SOL.</p>
+      <div class="todos-abas" id="todos-abas">
+        <button data-v="painel">Painel</button><button data-v="lista">Lista</button><button data-v="cias">Busca nas CIAs</button>
+        <button class="bt link" id="todos-mapa-bt" title="Mostrar ou esconder o mapa da lista">mapa</button>
+      </div>
+      <div class="todos-v" id="todos-v-painel" hidden></div>
+      <div class="todos-v" id="todos-v-ficha" hidden></div>
+      <div class="todos-v" id="todos-v-cias" hidden>
+        <form class="cias-form" id="cias-form">
+          <label>Palavra ou trecho nas CIAs <input name="q" type="search" placeholder="barra antipânico, RT 11, brigada, extintor…"></label>
+          <label>Município <select name="cidade"><option value="">qualquer</option></select></label>
+          <label>Analista <select name="analista"><option value="">qualquer</option></select></label>
+          <label>Concluídas entre <span class="faixa-num" style="display:flex;gap:4px"><input name="de" type="date"><input name="ate" type="date"></span></label>
+          <button class="bt" type="submit">Buscar</button>
+        </form>
+        <div id="cias-res"><p class="vazio">Digite uma palavra ou um trecho. A busca ignora acentos e maiúsculas: "antipanico" acha "antipânico".</p></div>
+      </div>
+      <div class="todos-v" id="todos-v-lista">
+      <div class="mapa" id="todos-mapa" hidden></div>
       <div class="todos-filtros">
         <input id="todos-busca" type="search" placeholder="Código, razão social, fantasia, CNPJ, endereço, bairro, RT ou analista">
         <select id="todos-sit" title="Situação no SOL"></select>
@@ -713,6 +804,7 @@ footer { color: var(--suave); }
       <div class="cartao rola-x"><table class="t-proc t-todos"><thead><tr><th data-ord="numero">Processo</th><th data-ord="razao">Razão social</th><th data-ord="cidade">Cidade</th><th data-ord="ocup">Ocupação</th><th data-ord="area" class="num">Área</th><th data-ord="situacao">Situação no SOL</th><th data-ord="ultima">Última análise</th><th data-ord="protocolo">Protocolo</th><th></th></tr></thead>
         <tbody id="todos"><tr><td class="vazio" colspan="9">Carregando…</td></tr></tbody></table></div>
       <p style="text-align:center"><button class="bt" id="todos-mais" hidden>mostrar mais</button> <button class="bt link" id="todos-csv" title="Copia a lista filtrada (todas as linhas) para colar numa planilha">copiar para planilha</button> <button class="bt link" id="todos-atualizar">atualizar</button></p>
+      </div>
     </section>
 
     <section class="tela" id="t-quadro">
@@ -1077,9 +1169,13 @@ const AJUDA = {
       ["k-roxo", "CT 28/10", "consulta técnica com minuta sua"],
       ["k-azul", "Recurso", "recurso com minuta sua (cinza quando está com a chefia)"]] },
   todos: { titulo: "Processos", serve: "Todos os processos do SOL, coletados pelo servidor às 8h20, 12h20 e 16h20 dos dias úteis.",
-    passos: ["Digite qualquer coisa na busca: código, razão social, CNPJ, endereço, RT ou analista.",
+    passos: ["Quatro vistas, nas abas do topo: Painel (números, mapa e gráficos da base inteira; clique numa barra para filtrar a lista), Lista, a Ficha de um processo e a Busca nas CIAs.",
+      "Clique numa linha (ou num ponto do mapa) para abrir a ficha: edificação, ocupações, medidas, envolvidos, análises e recursos, inconformidades, o texto de cada CIA, a linha do tempo dos Marcos, boletos e laudos. Tudo o que o SOL tem, sem abrir a pasta.",
+      "Busca nas CIAs: procura um trecho em todas as CIAs já emitidas (ignora acento) e mostra o parágrafo; clique no código para abrir a ficha naquela CIA.",
+      "\"mapa\" mostra ou esconde o mapa da lista, que segue os filtros.",
+      "Digite qualquer coisa na busca: código, razão social, CNPJ, endereço, RT ou analista.",
       "\"Situação\" escolhe entre os vivos, os encerrados ou todos. \"Mais filtros\" abre cidade, ocupação, área, altura, protocolo e outros. Os filtros se somam; \"limpar filtros\" volta ao começo.",
-      "Clique no título de uma coluna para ordenar. Clique no código para abrir o processo no SOL.",
+      "Clique no título de uma coluna para ordenar. Clique no código para abrir o processo no SOL; no resto da linha, para a ficha.",
       "\"copiar para planilha\" copia a lista filtrada inteira para colar no Excel."],
     legenda: [["k-verde", "Alvará vigente", ""], ["k-cinza", "Encerrado", "alvará vencido, extinto ou rascunho"],
       ["k-laranja", "NCA / CIV", "notificação ou certificado pendente com o interessado"],
@@ -1877,8 +1973,11 @@ async function carregarBase(forcar) {
   for (const p of (BASE && BASE.processos) || []) BASE_COD[p.numero] = p;
 }
 async function carregarTodos(forcar) {
+  verTodos(TODOS_V, false);
   if (!BASE || forcar) await carregarBase(forcar);
   pintarTodos();
+  if (forcar) PAINEL = null;
+  if (TODOS_V === "painel") pintarPainel();
 }
 // filtros da aba (2.3.23, pedido do Átila: "adicionar mais campos na busca, parecido com o SOL"); ficam neste PC
 let TODOS_F = {}, TODOS_ORD = { c: "", desc: false }, TODOS_LST = [];
@@ -1974,6 +2073,7 @@ function pintarTodos() {
   document.querySelectorAll("#t-todos th[data-ord]").forEach(th => th.classList.toggle("ord", th.dataset.ord === TODOS_ORD.c)
     || th.setAttribute("data-dir", th.dataset.ord === TODOS_ORD.c ? (TODOS_ORD.desc ? "▼" : "▲") : ""));
   TODOS_LST = lst;
+  mapaLista(lst);
   $("#todos-info").textContent = lst.length + " de " + BASE.total + " processos · base de " + dataCaixa(BASE.gerado_em)
     + (r.resultado === "em andamento" ? " · coleta em andamento" : "");
   $("#todos-mais").hidden = lst.length <= TODOS_N;
@@ -1981,7 +2081,7 @@ function pintarTodos() {
   const meusCod = new Set(PROCS.map(p => p.codigo));
   corpo.replaceChildren(...lst.slice(0, TODOS_N).map(p => {
     const u = p.ultima, meu = meusCod.has(p.numero), pr = predom(p);
-    return el("tr", {},
+    return el("tr", { class: "clicavel", on: { click: e => { if (!e.target.closest("button")) abrirFicha(p.numero); } } },
       el("td", { class: "cod" }, el("button", { class: "bt link cod-sol", title: "Abrir o licenciamento no SOL (na aba em que você já entrou)",
         on: { click: () => abrirNoSol("https://solcbm.rs.gov.br/solcbm/adm/#/licenciamento/consulta/" + p.id) } }, p.numero),
         meu ? el("span", { class: "tag", style: "margin-left:6px", title: "Tem pasta neste PC" }, "seu") : null),
@@ -2028,6 +2128,330 @@ $("#todos-csv").onclick = () => {
     quemAn(p.ultima), (p.rt || []).map(titulo).join(", ")].map(v => String(v).replace(/[\t\n]/g, " ")).join("\t"));
   copiar([cab.join("\t"), ...L].join("\n"));
   avisar(TODOS_LST.length + " processo(s) copiados: cole na planilha.");
+};
+
+// ---- aba Processos 2.7.0 (28/10/2026, pedido do Átila: "do jeito que o Sgt Magalhães expôs na Consulta SOLCBM").
+// Painel (números, mapa e gráficos), Lista (a de sempre, com mapa), Ficha do processo e Busca nas CIAs. Lista e mapas usam o
+// índice que já está no PC; painel, ficha e CIAs perguntam ao banco do servidor (porta.py banco → sol_consulta.py, sem modelo).
+let TODOS_V = "lista", PAINEL = null, OPC_SOL = null, MAPA_LISTA = null, _camLista = null;
+let MOSTRA_MAPA = true;
+try { TODOS_V = localStorage.getItem("sseg-todos-v") || "lista"; MOSTRA_MAPA = localStorage.getItem("sseg-todos-mapa") !== "0"; } catch (e) {}
+if (!["painel", "lista", "cias"].includes(TODOS_V)) TODOS_V = "lista";
+const banco = (consulta, params, botao) => api("banco_sol", [consulta, params || {}], botao);
+function verTodos(v, carregar = true) {
+  if (v !== "ficha") { TODOS_V = v; try { localStorage.setItem("sseg-todos-v", v); } catch (e) {} }
+  document.querySelectorAll("#t-todos .todos-v").forEach(s => s.hidden = s.id !== "todos-v-" + v);
+  document.querySelectorAll("#todos-abas button[data-v]").forEach(b => b.classList.toggle("ativo", b.dataset.v === v));
+  $("#todos-mapa-bt").hidden = v !== "lista";
+  $("#todos-mapa").hidden = !MOSTRA_MAPA;
+  if (!carregar) return;
+  $("#t-todos").scrollIntoView({ block: "start" });
+  if (v === "painel") pintarPainel();
+  if (v === "cias") prepararCias();
+  if (v === "lista") mapaLista(TODOS_LST);
+}
+document.querySelectorAll("#todos-abas button[data-v]").forEach(b => b.onclick = () => verTodos(b.dataset.v));
+$("#todos-mapa-bt").onclick = () => {
+  MOSTRA_MAPA = !MOSTRA_MAPA;
+  try { localStorage.setItem("sseg-todos-mapa", MOSTRA_MAPA ? "1" : "0"); } catch (e) {}
+  $("#todos-mapa").hidden = !MOSTRA_MAPA;
+  if (MOSTRA_MAPA) { if (MAPA_LISTA) setTimeout(() => MAPA_LISTA.invalidateSize(), 50); mapaLista(TODOS_LST); }
+};
+
+// Leaflet (web/vendor/leaflet, BSD) só quando um mapa aparece; as imagens do mapa vêm do OpenStreetMap
+let _leaflet = null;
+function carregarLeaflet() {  // não "leaflet": o leaflet.js grava window.leaflet ao carregar
+  if (!_leaflet) _leaflet = new Promise((ok, falha) => {
+    document.head.append(el("link", { rel: "stylesheet", href: "vendor/leaflet/leaflet.css" }));
+    const s = el("script", { src: "vendor/leaflet/leaflet.js" });
+    s.onload = () => ok(window.L);
+    s.onerror = () => { _leaflet = null; falha(new Error("o mapa não carregou")); };
+    document.head.append(s);
+  });
+  return _leaflet;
+}
+const grupoSit = s => /^ALVARA_VIG/.test(s) ? "vigente" : /^ALVARA_VEN/.test(s) ? "vencido" : !s || /EXTING|RASCUNHO/.test(s) ? "outros" : "andamento";
+const corGrupo = g => getComputedStyle(document.documentElement).getPropertyValue(
+  { vigente: "--c-fechado", andamento: "--c-analise", vencido: "--c-aguarda", outros: "--c-parado" }[g]).trim() || "#888";
+const legendaMapa = () => el("div", { class: "mapa-leg" }, [["andamento", "Em andamento"], ["vigente", "Alvará vigente"], ["vencido", "Alvará vencido"],
+  ["outros", "Extinto ou rascunho"]].map(([g, t]) => el("span", {}, el("i", { style: "background:" + corGrupo(g) }), t)));
+// ponto fora do RS é erro de cadastro no SOL: fica fora do mapa (senão o enquadramento abre o Brasil inteiro)
+const noRS = g => g && g[0] < -27 && g[0] > -34 && g[1] < -49 && g[1] > -58;
+async function mapaEm(caixa) {
+  const L = await carregarLeaflet();
+  const m = L.map(caixa, { preferCanvas: true }).setView([-29.72, -52.43], 9);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(m);
+  return m;
+}
+// cada mapa é criado uma vez e a caixa dele volta para a página a cada desenho: destruir um mapa do Leaflet com
+// desenho em canvas pendente dá "Cannot read properties of undefined (reading 'clearRect')"
+const MAPAS = {};
+const caixaMapa = nome => (MAPAS[nome] = MAPAS[nome] || { el: el("div", { class: "mapa" }) }).el;
+async function pontosEm(nome, pts, centro) {
+  const x = MAPAS[nome];
+  if (!x.m) x.m = await mapaEm(x.el); else x.m.invalidateSize();
+  if (x.cam) x.cam.remove();
+  x.cam = pontosNoMapa(x.m, pts, !centro);
+  if (centro) x.m.setView(centro, 16, { animate: false });
+}
+// pts: [{geo: [lat, lng], situacao, numero, razao}]
+function pontosNoMapa(m, pts, enquadrar = true) {
+  const ordem = { outros: 0, vigente: 1, vencido: 2, andamento: 3 }, lim = [], cam = L.layerGroup().addTo(m);
+  pts.filter(p => noRS(p.geo)).sort((a, b) => ordem[grupoSit(a.situacao)] - ordem[grupoSit(b.situacao)]).forEach(p => {
+    L.circleMarker(p.geo, { radius: 5, weight: 1.2, color: "#fff", fillColor: corGrupo(grupoSit(p.situacao)), fillOpacity: .95 })
+      .bindPopup(() => el("div", {}, el("b", {}, p.numero), el("br"), p.razao || "", el("br"), nomeSit(p.situacao), el("br"),
+        el("button", { class: "bt link", on: { click: () => abrirFicha(p.numero) } }, "abrir a ficha")))
+      .addTo(cam);
+    lim.push(p.geo);
+  });
+  if (enquadrar && lim.length) m.fitBounds(lim, { padding: [20, 20], maxZoom: 15, animate: false });
+  return cam;
+}
+let _mapaT;
+function mapaLista(lst) {
+  if (!MOSTRA_MAPA || TODOS_V !== "lista" || !lst) return;
+  clearTimeout(_mapaT);
+  _mapaT = setTimeout(async () => {
+    try {
+      if (!MAPA_LISTA) MAPA_LISTA = await mapaEm($("#todos-mapa"));
+      if (TODOS_V !== "lista" || !$("#t-todos").classList.contains("ativa")) return;  // escondido, o enquadramento sai errado
+      MAPA_LISTA.invalidateSize();
+      if (_camLista) _camLista.remove();
+      _camLista = pontosNoMapa(MAPA_LISTA, lst);
+    } catch (e) { $("#todos-mapa").replaceChildren(el("p", { class: "vazio" }, String(e.message || e))); }
+  }, 300);
+}
+
+// formatos (os códigos do SOL viram português: "A_CONSTRUIR" → "A construir")
+const nBR = (v, d = 0) => v == null || v === "" ? "—" : Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const m2 = v => v == null ? "—" : nBR(v, 2) + " m²";
+function dataSol(v, hora = true) {
+  const m = /^(\d{4})-(\d\d)-(\d\d)(?:[ T](\d\d):(\d\d))?/.exec(v || "");
+  if (!m) return v || "—";
+  return m[3] + "/" + m[2] + "/" + m[1] + (hora && m[4] && !(m[4] === "00" && m[5] === "00") ? " " + m[4] + ":" + m[5] : "");
+}
+const SIGLAS_SOL = new Set(["CA", "NCA", "CIA", "CIV", "PPCI", "PRPCI", "APPCI", "GLP", "RT", "RU", "ATEC", "PSPCIM", "FACT", "TRRF"]);
+const PALAVRAS_SOL = { ANALISE: "análise", DISTRIBUICAO: "distribuição", CIENCIA: "ciência", RENOVACAO: "renovação", EXTINCAO: "extinção",
+  ISENCAO: "isenção", ENDERECO: "endereço", ALVARA: "alvará", CONSTRUCAO: "construção", EDIFICACAO: "edificação", SEGURANCA: "segurança",
+  MEDIO: "médio", PREDOMINANTE: "predominante", SUBSIDIARIA: "subsidiária", JURIDICA: "jurídica", FISICA: "física", NAO: "não",
+  TECNICO: "técnico", PROPRIETARIO: "proprietário", EXECUCAO: "execução", IMPLANTACAO: "implantação", ELETRICA: "elétrica",
+  RESPONSAVEL: "responsável", VIGENTE: "vigente", ANTERIOR: "anterior", DE: "de", A: "a" };
+function rotSol(cod) {
+  if (cod == null || cod === "") return "—";
+  const s = String(cod);
+  if (SITUACOES[s]) return SITUACOES[s];
+  if (!/^[A-Za-z0-9_]+$/.test(s) || (!s.includes("_") && /[a-z]/.test(s)) || SIGLAS_SOL.has(s)) return s;
+  const t = s.split("_").map(p => SIGLAS_SOL.has(p) ? p : PALAVRAS_SOL[p.toUpperCase()] || p.toLowerCase().replace(/cao$/, "ção").replace(/coes$/, "ções")).join(" ");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+const simNao = v => v == null ? "—" : v === 1 || v === true || v === "SIM" ? "Sim" : v === 0 || v === false || v === "NAO" ? "Não" : rotSol(v);
+const chipSit = s => el("span", { class: "tag sit " + corSit(s) }, nomeSit(s));
+// trecho destacado sem acento: posições iguais no texto e na versão sem acento (1 letra → 1 letra)
+const semAc1 = t => Array.from(String(t || "").toLowerCase(), c => { const b = c.normalize("NFD")[0]; return b && b.length === 1 ? b : c; }).join("");
+function destacar(texto, termo) {
+  const t = Array.from(String(texto || "")), q = semAc1(termo).trim();
+  if (!q) return [t.join("")];
+  const n = semAc1(t.join("")), out = [];
+  let i = 0, j;
+  while ((j = n.indexOf(q, i)) >= 0) { out.push(t.slice(i, j).join(""), el("mark", {}, t.slice(j, j + q.length).join(""))); i = j + q.length; }
+  out.push(t.slice(i).join(""));
+  return out;
+}
+const tabelaSol = (linhas, cols, vazio = "Nada registrado.") => !linhas.length ? el("p", { class: "vazio" }, vazio)
+  : el("div", { class: "rola-x" }, el("table", { class: "t-ficha" }, el("thead", {}, el("tr", {}, cols.map(c => el("th", { class: c[2] || "" }, c[0])))),
+    el("tbody", {}, linhas.map(l => el("tr", {}, cols.map(c => el("td", { class: c[2] || "" }, c[1](l))))))));
+const dados = pares => el("dl", { class: "dados" }, pares.filter(p => p).map(([k, v]) => el("div", {}, el("dt", {}, k), el("dd", {}, v ?? "—"))));
+const peq = t => t ? el("div", { class: "peq" }, t) : null;
+const secao = (id, titulo, ...filhos) => el("section", { class: "ficha-sec", id: "ficha-" + id }, el("h3", {}, titulo), ...filhos);
+
+// ---- Painel
+let _painelVez = 0;
+async function pintarPainel(forcar) {
+  const caixa = $("#todos-v-painel"), vez = ++_painelVez;  // dois cliques seguidos: só o último desenha
+  if (!PAINEL || forcar) {
+    caixa.replaceChildren(el("p", { class: "vazio" }, "Carregando o painel do servidor…"));
+    try { PAINEL = await banco("resumo"); }
+    catch (e) { return caixa.replaceChildren(el("p", { class: "vazio" }, "O painel vem do banco do servidor. " + (e.message || e))); }
+    if (vez !== _painelVez) return;
+  }
+  const r = PAINEL;
+  const cifra = (v, t, att) => el("div", { class: "cifra" + (att ? " k-laranja" : "") }, el("b", {}, v), el("small", {}, t));
+  const barras = (itens, rot, clique) => { const max = Math.max(1, ...itens.map(i => i.n)); return el("div", { class: "barras" }, itens.map(i =>
+    el("button", { class: "barra", title: rot(i) + ": " + nBR(i.n) + " processo(s). Clique para ver na lista.", on: { click: () => clique(i) } },
+      el("span", { class: "rot" }, rot(i)), el("span", { class: "trilho" }, el("span", { class: "valor-barra", style: "width:" + (i.n / max * 85) + "%" }),
+        el("span", { class: "n" }, nBR(i.n)))))); };
+  const colunas = itens => { const max = Math.max(1, ...itens.map(i => i.n)); return el("div", { class: "colunas" }, itens.map(i =>
+    el("div", { class: "coluna", title: i.chave + ": " + nBR(i.n) }, el("div", { class: "valor-col", style: "height:" + Math.max(2, i.n / max * 100) + "%" },
+      el("span", {}, nBR(i.n))), el("small", {}, String(i.chave).slice(2))))); };
+  const filtrar = f => { if (f.sit) TODOS_SIT = f.sit; else { TODOS_SIT = ""; Object.assign(TODOS_F, f); } verTodos("lista"); repintarTodos(); };
+  caixa.replaceChildren(
+    el("div", { class: "cifras" },
+      cifra(nBR(r.coletados), r.coletados < r.na_lista ? "de " + nBR(r.na_lista) + " processos já coletados" : "processos na base", r.coletados < r.na_lista),
+      cifra(nBR(r.cias), "CIAs com texto"), cifra(nBR(r.processos_com_cia), "processos com pelo menos uma CIA"),
+      cifra(nBR(r.area_total / 1e6, 2) + " km²", "de área construída licenciada"), cifra(dataCaixa(r.gerado_em) || "—", "banco montado em")),
+    el("div", { class: "painel-sol" },
+      el("section", { class: "cartao" }, el("h3", {}, "Edificações no mapa"), caixaMapa("painel"), legendaMapa()),
+      el("div", { class: "graficos" },
+        el("section", { class: "cartao" }, el("h3", {}, "Por situação"), barras(r.por_situacao.slice(0, 10), i => nomeSit(i.chave), i => filtrar({ sit: "s:" + i.chave }))),
+        el("section", { class: "cartao" }, el("h3", {}, "Por grupo de ocupação"), barras(r.por_grupo, i => (i.descricao || "?") + " (" + i.chave + ")", i => filtrar({ ocup: i.chave }))),
+        el("section", { class: "cartao" }, el("h3", {}, "Municípios com mais processos"), barras(r.por_cidade, i => cidadeBonita(i.chave), i => filtrar({ cidade: i.chave }))),
+        el("section", { class: "cartao" }, el("h3", {}, "Processos por ano de criação"), colunas(r.por_ano)))));
+  try {
+    if (!BASE) await carregarBase();
+    if (vez !== _painelVez) return;
+    await pontosEm("painel", ((BASE && BASE.processos) || []).map(p => ({ geo: p.geo, situacao: p.situacao, numero: p.numero, razao: p.razao })));
+  } catch (e) { avisar("Mapa: " + (e.message || e), true); }
+}
+
+// ---- Ficha do processo
+async function abrirFicha(numero, ciaId, termo) {
+  if (!$("#t-todos").classList.contains("ativa")) ir("todos");
+  verTodos("ficha");
+  const caixa = $("#todos-v-ficha");
+  const voltar = el("button", { class: "bt link", on: { click: () => verTodos(TODOS_V) } }, "← voltar");
+  caixa.replaceChildren(voltar, el("p", { class: "vazio" }, "Carregando a ficha de " + numero + "…"));
+  let d;
+  try { d = await banco("processo", { numero }); }
+  catch (e) { return caixa.replaceChildren(voltar, el("p", { class: "vazio" }, String(e.message || e))); }
+  const x = d.processo, meu = PROCS.some(p => p.codigo === x.numero);
+  const geo = [x.latitude_mapa ?? x.latitude_endereco, x.longitude_mapa ?? x.longitude_endereco];
+  const endereco = [x.logradouro, x.numero_endereco, x.complemento].filter(Boolean).join(", ") + (x.bairro ? " — " + x.bairro : "")
+    + ", " + cidadeBonita(x.cidade || "") + (x.uf ? "/" + x.uf : "") + (x.cep ? ", CEP " + x.cep : "");
+  const inconf = d.elementos.filter(e => e.justificativa_inconformidade);
+  const secoes = [["edificacao", "Edificação e ocupação"], ["medidas", "Medidas de segurança"], ["envolvidos", "Envolvidos"],
+    ["analises", "Análises, recursos e vistorias"], ["inconf", "Inconformidades (" + inconf.length + ")"], ["cias", "CIAs (" + d.cias.length + ")"],
+    ["marcos", "Linha do tempo (" + d.marcos.length + ")"], ["boletos", "Boletos e laudos"]];
+  const carimbo = el("div", { class: "carimbo" },
+    el("div", {}, el("span", { class: "campo" }, "Licenciamento"), el("span", { class: "numero" }, x.numero), x.razao_social || "",
+      x.nome_fantasia && x.nome_fantasia !== x.razao_social ? peq(x.nome_fantasia) : null),
+    el("div", {}, el("span", { class: "campo" }, "Situação"), chipSit(x.situacao)),
+    el("div", {}, el("span", { class: "campo" }, "Ocupação"), x.divisao || "—", peq(x.grupo_ocupacao_descricao)),
+    el("div", {}, el("span", { class: "campo" }, "Área construída"), m2(x.area_construida)),
+    el("div", {}, el("span", { class: "campo" }, "Pavimentos"), (x.pavimentos_acima_solo ?? "—") + (x.pavimentos_abaixo_solo ? " + " + x.pavimentos_abaixo_solo + " abaixo" : "")),
+    el("div", {}, el("span", { class: "campo" }, "Grau de risco"), rotSol(x.grau_risco)),
+    el("div", { class: "endereco" }, el("span", { class: "campo" }, "Endereço"), endereco),
+    el("div", { class: "rodape" }, voltar,
+      el("span", {}, el("span", { class: "peq" }, "Criado em "), dataSol(x.data_criacao)),
+      el("span", {}, el("span", { class: "peq" }, "Fase "), rotSol(x.fase)),
+      el("span", {}, el("span", { class: "peq" }, "CNAE "), (x.cnae || "—") + " " + (x.cnae_descricao || "")),
+      el("button", { class: "bt link", on: { click: () => abrirNoSol("https://solcbm.rs.gov.br/solcbm/adm/#/licenciamento/consulta/" + x.id) } }, "abrir no SOL"),
+      x.link_mapa ? el("button", { class: "bt link", on: { click: () => api("abrir_url", [x.link_mapa]) } }, "Google Maps") : null,
+      meu ? el("button", { class: "bt link", on: { click: () => abrirProcesso(x.numero) } }, "abrir no SSEG") : null,
+      meu ? el("button", { class: "bt link", on: { click: () => api("abrir_pasta_processo", [x.numero]) } }, "pasta") : null));
+  const principal = el("div", {},
+    secao("edificacao", "Edificação e ocupação",
+      dados([["Edificação", rotSol(x.edificacao)], ["Período de construção", rotSol(x.periodo_construcao)], ["Regularizada", simNao(x.regularizada)],
+        ["Área protegida", m2(x.area_protegida)], ["Área de maior população", m2(x.area_maior_populacao)], ["Área de subsolo", m2(x.area_subsolo)],
+        ["Altura ascendente", x.altura_ascendente != null ? nBR(x.altura_ascendente, 2) + " m" : "—"],
+        ["Altura descendente", x.altura_descendente != null ? nBR(x.altura_descendente, 2) + " m" : "—"],
+        ["População total", nBR(x.populacao_total)], ["População do pavimento maior", nBR(x.populacao_pavimento_maior)],
+        ["Característica construtiva", x.caracteristica_construtiva || "—"], ["Depósito descoberto", simNao(x.deposito_descoberto)],
+        ["Isolamento de risco", simNao(x.isolamento_risco)], ["Possui afastamento", simNao(x.possui_afastamento)],
+        ["TRRF", x.tempo_resistencia_fogo ?? "—"], x.transformador_instalacao ? ["Transformador", rotSol(x.transformador_instalacao) + ", " + rotSol(x.transformador_operacao)] : null,
+        x.unidade_armazenadora ? ["Unidade armazenadora", rotSol(x.unidade_armazenadora)] : null,
+        ["Isenção de taxa", x.isencao ? rotSol(x.situacao_isencao) || "Sim" : "Não"]]),
+      el("h3", { style: "margin-top:16px" }, "Ocupações"),
+      tabelaSol(d.ocupacoes, [["Tipo", o => rotSol(o.ocupacao)], ["Divisão", o => o.divisao || "—"], ["CNAE", o => [o.cnae || "", peq(o.cnae_descricao)]],
+        ["Carga de incêndio", o => nBR(o.carga_incendio) + " MJ/m²", "num"], ["Risco", o => rotSol(o.grau_risco)]]),
+      d.areas.length ? [el("h3", { style: "margin-top:16px" }, "Memorial de áreas"), tabelaSol(d.areas, [["Tipo de área", a => rotSol(a.tipo_area)],
+        ["Área", a => m2(a.area), "num"], ["População", a => nBR(a.populacao), "num"], ["Densidade", a => a.densidade ?? "—"]])] : null),
+    secao("medidas", "Medidas de segurança (campo 4)",
+      tabelaSol(d.medidas, [["Medida", m => m.medida], ["Norma", m => m.norma || "—"], ["Inviabilidade", m => rotSol(m.inviabilidade)]]),
+      x.justificativa_inviabilidade ? [el("h3", { style: "margin-top:16px" }, "Justificativa de inviabilidade técnica"), el("div", { class: "texto-longo" }, x.justificativa_inviabilidade)] : null,
+      d.riscos.length ? [el("h3", { style: "margin-top:16px" }, "Riscos especiais"), tabelaSol(d.riscos, [["Risco", r => r.descricao || rotSol(r.tipo)],
+        ["Detalhes", r => [r.recipiente, r.capacidade, r.classe, r.volume, r.outros].filter(Boolean).join("; ") || "—"], ["Central de GLP", r => simNao(r.central_glp)]])] : null),
+    secao("envolvidos", "Envolvidos",
+      tabelaSol(d.envolvidos, [["Papel", e => [rotSol(e.papel), e.procurador_de ? peq("de " + e.procurador_de) : null]],
+        ["Nome", e => [e.nome || "—", peq(e.nome_fantasia)]], ["CPF/CNPJ", e => e.cpf_cnpj || "—"],
+        ["Contato", e => [e.email, e.telefone].filter(Boolean).join(" / ") || "—"],
+        ["Responsabilidade", e => e.tipo_responsabilidade_tecnica ? rotSol(e.tipo_responsabilidade_tecnica) : ""], ["Aceite", e => simNao(e.aceitou)]])),
+    secao("analises", "Análises, recursos e vistorias",
+      tabelaSol(d.analises, [["Data", a => dataSol(a.data_hora)], ["Tipo", a => rotSol(a.tipo)], ["Resultado", a => a.descricao_status || rotSol(a.status)],
+        ["Detalhes", a => [a.motivos, a.documento, a.tipo_recurso ? rotSol(a.tipo_recurso) + " (" + a.instancia_recurso + "ª instância)" : null,
+          a.data_validade && a.tipo === "APPCI" ? "válido até " + dataSol(a.data_validade, false) : null].filter(Boolean).join(" | ")]]),
+      x.tipo_vistoria ? [el("h3", { style: "margin-top:16px" }, "Vistoria"), dados([["Tipo", rotSol(x.tipo_vistoria)], ["Número", x.numero_vistoria ?? "—"],
+        ["Solicitada em", dataSol(x.data_solicitacao_vistoria)], ["Realizada em", dataSol(x.data_realizacao_vistoria)], ["Dias", x.dias_vistoria ?? "—"],
+        ["Último vistoriador", x.ultimo_vistoriador || "—"]]),
+        x.observacoes_vistoria ? el("div", { class: "texto-longo" }, destacar(x.observacoes_vistoria, termo)) : null,
+        x.indeferimento_homologacao ? [el("h3", { style: "margin-top:12px" }, "Indeferimento da homologação"), el("div", { class: "texto-longo" }, x.indeferimento_homologacao)] : null] : null),
+    secao("inconf", "Inconformidades nos elementos gráficos",
+      tabelaSol(inconf, [["Análise", e => e.numero_analise ?? "—", "num"], ["Elemento", e => [e.descricao || rotSol(e.tipo), peq(dataSol(e.data_inclusao, false))]],
+        ["Inconformidade", e => [peq(e.parametro_inconformidade), el("div", { class: "texto-longo" }, destacar(e.justificativa_inconformidade, termo))]]],
+        "Nenhuma inconformidade registrada nos elementos gráficos.")),
+    secao("cias", "Comunicados de inconformidade na análise (CIA)",
+      d.cias.length ? d.cias.map((c, i) => el("details", { class: "cia-sol", id: "cia-" + c.id_arquivo, open: String(c.id_arquivo) === String(ciaId) || (!ciaId && i === 0) },
+        el("summary", {}, "CIA de " + dataSol(c.data_conclusao), " ", el("span", { class: "peq", style: "display:inline" }, [c.analista, c.paginas ? c.paginas + " página(s)" : ""].filter(Boolean).join(", ")),
+          c.texto ? el("button", { class: "bt link", on: { click: e => { e.preventDefault(); copiar(c.texto); avisar("Texto da CIA copiado."); } } }, "⧉ copiar") : null),
+        el("div", { class: "texto-longo" }, c.texto ? destacar(c.texto, termo) : "Texto ainda não baixado pelo servidor.")))
+        : el("p", { class: "vazio" }, "Este processo não recebeu CIA.")),
+    secao("marcos", "Linha do tempo (Marcos do SOL)",
+      el("ol", { class: "tempo" }, d.marcos.map(m => el("li", { class: m.tipo_responsavel === "Bombeiros" ? "bombeiros" : "" },
+        el("div", { class: "quando" }, dataSol(m.data_hora)), el("div", {}, m.descricao), peq([m.responsavel, m.complemento].filter(Boolean).join(" | ")))))),
+    secao("boletos", "Boletos e laudos",
+      tabelaSol(d.boletos, [["Tipo", b => rotSol(b.tipo)], ["Valor", b => "R$ " + nBR(b.valor, 2), "num"], ["Emissão", b => dataSol(b.data_emissao, false)],
+        ["Vencimento", b => dataSol(b.data_vencimento, false)], ["Pagamento", b => dataSol(b.data_pagamento, false)], ["Situação", b => rotSol(b.situacao)],
+        ["Pagador", b => [b.pagador || "", peq(b.cpf_cnpj_pagador)]]], "Nenhum boleto."),
+      el("h3", { style: "margin-top:16px" }, "Laudos"),
+      tabelaSol(d.laudos, [["Laudo", l => rotSol(l.tipo_laudo)], ["Vistoria", l => rotSol(l.tipo_vistoria)], ["Incluído em", l => dataSol(l.data_inclusao, false)],
+        ["Arquivo", l => l.nome_arquivo || ""]], "Nenhum laudo coletado (a vistoria entra na base a partir de 28/10/2026).")));
+  const lado = el("aside", { class: "ficha-lado" },
+    el("section", { class: "cartao" }, noRS(geo) ? caixaMapa("ficha") : el("p", { class: "vazio" }, "Sem coordenadas no SOL.")),
+    el("section", { class: "cartao" }, el("h3", {}, "Nesta ficha"), el("div", { class: "ficha-indice" }, secoes.map(([a, t]) =>
+      el("button", { on: { click: () => $("#ficha-" + a).scrollIntoView({ behavior: "smooth", block: "start" }) } }, t)))),
+    el("section", { class: "cartao" }, el("h3", {}, "Datas principais"), dados([
+      ["Primeiro encaminhamento à análise", dataSol(x.primeiro_encaminhamento_analise)], ["Último encaminhamento", dataSol(x.ultimo_encaminhamento_analise)],
+      ["Encaminhamentos para análise", nBR(x.qtd_encaminhamentos_analise)], ["CIAs", nBR(x.qtd_cia)], ["Certificado de aprovação", dataSol(x.data_ca)],
+      ["Emissão do alvará", dataSol(x.data_emissao_appci)], ["Último analista", x.ultimo_analista || "—"],
+      ["Último marco", [x.ultimo_marco || "—", peq(dataSol(x.data_ultimo_marco))]], ["Coletado em", dataSol(x.coletado_em)]])));
+  caixa.replaceChildren(carimbo, el("div", { class: "ficha" }, principal, lado));
+  caixa.scrollIntoView({ block: "start" });
+  if (ciaId) { const a = $("#cia-" + ciaId); if (a) setTimeout(() => ($("mark", a) || a).scrollIntoView({ block: "center" }), 80); }
+  if (noRS(geo)) {
+    try { await pontosEm("ficha", [{ geo, situacao: x.situacao, numero: x.numero, razao: x.razao_social }], geo); }
+    catch (e) { avisar("Mapa: " + (e.message || e), true); }
+  }
+}
+
+// ---- Busca nas CIAs
+async function prepararCias() {
+  const f = $("#cias-form");
+  if (f.cidade.options.length <= 1 && BASE) {
+    const cc = {}; (BASE.processos || []).forEach(p => { if (p.cidade) cc[p.cidade] = 1; });
+    f.cidade.append(...Object.keys(cc).sort().map(c => el("option", { value: c }, cidadeBonita(c))));
+  }
+  if (!OPC_SOL) {
+    try { OPC_SOL = await banco("opcoes"); f.analista.append(...OPC_SOL.analista.map(a => el("option", { value: a }, titulo(a)))); } catch (e) {}
+  }
+  setTimeout(() => f.q.focus(), 50);
+}
+$("#cias-form").onsubmit = async ev => {
+  ev.preventDefault();
+  const f = ev.target, p = Object.fromEntries([...new FormData(f).entries()].filter(([, v]) => v)), res = $("#cias-res");
+  if (!p.q) return;
+  res.replaceChildren(el("p", { class: "vazio" }, "Buscando…"));
+  let pagina = 0, r;
+  try { r = await banco("cias", { ...p, pagina }, f.querySelector("button")); }
+  catch (e) { return res.replaceChildren(el("p", { class: "vazio" }, String(e.message || e))); }
+  if (r.aviso) return res.replaceChildren(el("p", { class: "vazio" }, r.aviso));
+  const lista = el("div", {}), mais = el("div", { style: "text-align:center" });
+  const mostrar = rr => {
+    lista.append(...rr.linhas.map(l => el("div", { class: "achado" },
+      el("div", { class: "cab" }, el("button", { class: "bt link", style: "font-weight:700", on: { click: () => abrirFicha(l.numero, l.id_arquivo, p.q) } }, l.numero),
+        el("span", {}, l.razao_social || ""), el("span", { class: "peq" }, cidadeBonita(l.cidade || "") + (l.divisao ? ", " + l.divisao : "")),
+        el("span", { class: "peq" }, dataSol(l.data_conclusao, false) + (l.analista ? ", " + titulo(l.analista) : ""))),
+      l.trechos.map(t => el("blockquote", {}, t.antes, el("mark", {}, t.achado), t.depois)))));
+    const vistos = lista.children.length;
+    mais.replaceChildren(vistos < rr.total ? el("button", { class: "bt", on: { click: async e => {
+      pagina++; mostrar(await banco("cias", { ...p, pagina }, e.target)); } } }, "mostrar mais") : "");
+  };
+  const anos = r.por_ano, max = Math.max(1, ...anos.map(a => a.n));
+  res.replaceChildren(el("div", { class: "cias-res" },
+    el("section", { class: "cartao" }, el("p", {}, el("b", {}, nBR(r.total)), " CIA(s) em ", el("b", {}, nBR(r.processos)), " processo(s) contêm “" + p.q + "”"),
+      r.total ? lista : el("p", { class: "vazio" }, "Nenhuma CIA contém esse trecho. Tente uma palavra mais curta."), mais),
+    el("aside", { class: "cartao" }, el("h3", {}, "CIAs com o trecho, por ano"), anos.length ? el("div", { class: "colunas" }, anos.map(a =>
+      el("div", { class: "coluna", title: a.chave + ": " + a.n }, el("div", { class: "valor-col", style: "height:" + Math.max(2, a.n / max * 100) + "%" },
+        el("span", {}, a.n)), el("small", {}, a.chave)))) : el("p", { class: "vazio" }, "Nenhuma."))));
+  mostrar(r);
 };
 // ---- tela Quadro (2.1.14): os processos entram sozinhos pela caixa; as tarefas soltas (pendência de trabalho
 // que sobrou de uma conversa, fiscalização, reunião) moram em quadro.json na pasta dos processos.

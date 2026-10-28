@@ -7,6 +7,9 @@ Para cada processo com o JSON do SOL na pasta (api-<ID>.json, gravado pelo sol_c
   1. converte para o formato do `sseg.py check` (o mesmo de `sseg.py schema`) → pre-analise.json;
   2. roda o `check` (definidora, rota da tabela, normas do campo 4, travas) → pre-analise.txt.
 A conversa da análise começa lendo o pre-analise.txt em vez de refazer essa leitura.
+Antes da caixa (28/10/2026): processo distribuído e ainda não concluído recebe do sol_base.py o
+base-api-<ID>.json (o licenciamento da base do servidor), e a pré-análise sai dele. Nome diferente de
+propósito: o api-<ID>.json é o que faz o sol_caixa.py marcar o processo como novo na caixa.
 
 O QUE NÃO FAZ
 -------------
@@ -335,6 +338,9 @@ def pre_analisar(codigo, forcar=False):
     """(situação, texto curto). Grava pre-analise.json e pre-analise.txt na pasta do processo."""
     pasta = os.path.join(PROCESSOS, codigo)
     apis = sorted(glob.glob(os.path.join(pasta, "api-*.json")), key=os.path.getmtime)
+    da_base = not apis
+    if da_base:  # (28/10/2026) antes da caixa: o licenciamento que a base do servidor coletou (sol_base.py)
+        apis = sorted(glob.glob(os.path.join(pasta, "base-api-*.json")), key=os.path.getmtime)
     if not apis:
         return "sem-json", "sem api-<ID>.json na pasta (o sol_caixa.py ainda não baixou)"
     api_arq = apis[-1]
@@ -369,9 +375,11 @@ def pre_analisar(codigo, forcar=False):
         linha_marcos = "MARCOS DO SOL (marcos.py):\n" + mc.texto(marcos) + "\n"
     else:
         linha_marcos = "Data de protocolo da 1ª análise: sem os Marcos na pasta — conferir na aba Marcos.\n"
-    cab = ("PRÉ-ANÁLISE DOCUMENTAL (script, sem Claude) · %s · de %s\n%s"
+    cab = ("PRÉ-ANÁLISE DOCUMENTAL (script, sem Claude) · %s · de %s\n%s%s"
            "Definidora abaixo = a que o RT marcou no SOL (determinaSeguranca), não a que vale.\n\n"
-           % (codigo, os.path.basename(api_arq), linha_marcos))
+           % (codigo, os.path.basename(api_arq), linha_marcos,
+              "Feita com o JSON da base do servidor, antes de o processo chegar à caixa: quando chegar, o sol_caixa.py "
+              "baixa o licenciamento de novo e esta pré-análise é refeita.\n" if da_base else ""))
     if (marcos.get("analise") or 0) >= 2:  # reanálise: o que mudou e as plantas trocadas vêm antes de tudo
         try:
             with open(cia_arq, encoding="utf-8") as fh:

@@ -84,6 +84,10 @@ skills produz o mesmo resultado.
 `scripts/painel.py` gera o retrato do Painel SSEG e `scripts/painel_pedidos.py` aplica as trocas
 de texto pedidas no painel. As rotinas do servidor estão em `workflow/plano-servidor-24-7.md`.
 
+`scripts/sol_base.py`, `sol_banco.py` e `sol_consulta.py` mantêm no servidor a base de todos os
+processos do SOL, em JSON e em banco SQL, e respondem às consultas da aba Processos do SSEG.exe e do
+Claude, sem modelo. A cadeia inteira está em `workflow/base-do-sol-e-aba-processos.md`.
+
 ## Onde registrar algo novo
 
 - É uma **regra que vale sempre**, mesmo sem gatilho? → Instruções (e o espelho).

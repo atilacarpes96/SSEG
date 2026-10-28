@@ -4,6 +4,16 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.0
+
+- **Aba Processos nova, no desenho da Consulta SOLCBM do Sgt Magalhães.** Quatro vistas no topo da aba:
+  - **Painel:** quantos processos e CIAs a base tem, o mapa de todas as edificações (cor pela situação) e gráficos por situação, grupo de ocupação, município e ano. Clique numa barra e a lista abre filtrada.
+  - **Lista:** a de sempre, agora com o mapa em cima, que segue os filtros (o botão "mapa" mostra ou esconde).
+  - **Ficha do processo:** clique em qualquer linha ou ponto do mapa. Mostra tudo o que o SOL tem do processo sem precisar abrir a pasta: edificação e ocupações, medidas do campo 4, envolvidos com contato, análises, recursos e vistoria, inconformidades das plantas, o texto de cada CIA (com "copiar"), a linha do tempo dos Marcos, boletos e laudos.
+  - **Busca nas CIAs:** procura um trecho em todas as CIAs já emitidas (sem ligar para acento) e mostra o parágrafo onde aparece. Clique no código e a ficha abre naquela CIA, com o trecho marcado.
+- Painel, ficha e busca vêm do servidor a cada clique (1 a 2 segundos). Sem servidor ligado ao PC, só a lista funciona.
+- **Pré-análise antes da caixa.** Processo distribuído para você que ainda não chegou à caixa do SOL já ganha a pré-análise, feita com os dados da base do servidor. Quando ele chega à caixa, a pré-análise é refeita com o JSON novo.
+
 ## 2.6.17
 
 - **Corrige o erro "a_aprovar() takes 2 positional arguments" no lançar no SOL.** Acontecia quando o programa atualizava antes dos scripts da pasta do SSEG no PC. Agora, se os scripts estão atrasados, o programa busca a versão nova no GitHub na hora e segue.

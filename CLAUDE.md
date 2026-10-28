@@ -33,6 +33,7 @@ a mais já divergiu antes. Os caminhos citados nele (`normas/`, `workflow/`) sã
 | Política de modelo e custo | `sseg/workflow/politica-modelo-e-custo.md` | antes de delegar a subagente |
 | Registro local dos processos | `sseg/processos/` (fora do Git) | processo em andamento |
 | Prints, CIA, JSON do SOL | `C:\Users\55519\Desktop\Carpes\print ppci\<processo>\` | análise e revisão |
+| Todos os processos do SOL (ficha, Marcos, texto de todas as CIAs) | servidor: `python3 sseg/scripts/sol_consulta.py <consulta> '<json>'` (`sseg/workflow/base-do-sol-e-aba-processos.md`) | outro processo, CIA anterior, "como já notificaram isso" — rodar a consulta, nunca abrir os JSON da base |
 
 Ler só o arquivo de que a tarefa precisa — não abrir a base inteira.
 

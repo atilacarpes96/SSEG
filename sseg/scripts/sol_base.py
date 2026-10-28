@@ -28,7 +28,8 @@ O QUE FAZ
   5. Pastas (28/10/2026): cada pasta de sseg/processos/ que a base conhece recebe marcos.json e
      historico.json da base e o marcos-resumo.json (marcos.py), sem consulta a mais ao SOL. Antes só
      os processos da caixa tinham Marcos (24 de 486 pastas). Pasta que o sol_caixa.py leu depois da
-     base fica com o dele; o facts.json (CT) continua só do sol_caixa.py.
+     base fica com o dele; o facts.json (CT) continua só do sol_caixa.py. Processo distribuído e ainda
+     não concluído, sem o api-<ID>.json da caixa, recebe base-api-<ID>.json e a pré-análise (pre_analise.py).
   6. Banco (28/10/2026): no fim da rodada, o sol_banco.py refaz o solcbm.db (tabelas da Consulta SOLCBM
      do Sgt Magalhães), que o porta.py consulta para a aba Processos do SSEG.exe.
 
@@ -393,7 +394,27 @@ def preencher_pastas(raiz=None):
         if mudou:
             mc.resumir_pasta(pasta)
             feitas += 1
+        pre_analise_antes_da_caixa(pasta, codigo, k, d)
     return feitas
+
+
+def pre_analise_antes_da_caixa(pasta, codigo, k, d):
+    """Distribuído e ainda não concluído (distribuicao.json sem "concluido"), sem o api-<ID>.json da caixa: grava
+    base-api-<ID>.json com o licenciamento da base e roda a pré-análise (pre_analise.py, sem modelo). Quando o
+    processo chega à caixa, o sol_caixa.py baixa o api-<ID>.json, que passa a valer."""
+    import glob
+    import pre_analise
+    dist = _ler(os.path.join(pasta, "distribuicao.json"), None)
+    if not dist or dist.get("concluido") or glob.glob(os.path.join(pasta, "api-*.json")) or not d.get("licenciamento"):
+        return
+    arq = os.path.join(pasta, "base-api-%s.json" % k)
+    if _ler(arq, None) != d["licenciamento"]:
+        with open(arq, "w", encoding="utf-8") as fh:
+            json.dump(d["licenciamento"], fh, ensure_ascii=False)
+    pre_analise.PROCESSOS = os.path.dirname(pasta)
+    sit, txt = pre_analise.pre_analisar(codigo)
+    if sit != "em-dia":
+        print("  pré-análise antes da caixa %s: %s %s" % (codigo, sit, txt))
 
 
 def rodar(completo=False, limite=None):

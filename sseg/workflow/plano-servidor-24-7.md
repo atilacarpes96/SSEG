@@ -153,8 +153,12 @@ Cuidados:
   aval, e a chefia foi avisada. Lógica do coletor dele (ColetaSOLCBM) com a sessão do `sol_caixa.py`.
   A lista inteira (~6,8 mil PPCI, 7 consultas) e o detalhe (licenciamento, Marcos, histórico e texto
   das CIAs) dos vivos e de quem mudou de situação. Encerrado (alvará, extinto, rascunho) só volta no
-  completo ou se mudar. Dados em `~/sseg-base-sol/` (fora do Git e de `processos/`). O SSEG.exe lê só
-  o `indice.json`, pelo porta.py `base`. Primeira rodada: 3.296 processos em ~1h30.
+  completo ou se mudar. Dados em `~/sseg-base-sol/` (fora do Git e de `processos/`). O SSEG.exe lê o
+  `indice.json`, pelo porta.py `base`. Primeira rodada: 3.296 processos em ~1h30.
+  **Desde 28/10/2026** a rodada também coleta laudos e vistoria, monta o banco SQL (`sol_banco.py`,
+  ~3 min), preenche os Marcos de todas as pastas de `processos/` e faz a pré-análise dos distribuídos
+  que ainda não chegaram à caixa. A aba Processos do SSEG.exe 2.7.0 consulta o banco pelo porta.py
+  `banco`. Etapa por etapa em `workflow/base-do-sol-e-aba-processos.md`.
 
 ## Rotinas propostas
 

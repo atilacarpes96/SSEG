@@ -12,6 +12,18 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 28/10/2026 — SSEG.exe 2.7.0: base do SOL em banco SQL, aba Processos com mapa e ficha, pré-análise antes da caixa
+
+- Servidor: `sol_base.py` volta a coletar laudos e vistoria (`informacoes-processo`), preenche os Marcos de todas as pastas de `processos/` (474 de 486) e faz a pré-análise dos distribuídos que ainda não chegaram à caixa (`base-api-<ID>.json`). No fim de cada coleta, `sol_banco.py` monta o `solcbm.db` no formato da Consulta SOLCBM do Sgt Magalhães; `sol_consulta.py` responde por script (zero token), e o `porta.py banco` serve ao SSEG.exe.
+- SSEG.exe 2.7.0: aba Processos com Painel (mapa e gráficos), Lista com mapa, Ficha completa do processo e Busca nas CIAs. Pedido do Átila; desenho do Sgt Magalhães.
+- `CLAUDE.md`: o Claude consulta a base por `sol_consulta.py`, sem abrir os JSON. Explicação etapa por etapa em `workflow/base-do-sol-e-aba-processos.md`.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão" e faça git pull no clone. Nada a instalar na conta.
+```
+
 ## 27/10/2026 — SSEG.exe 2.6.17: lançar no SOL com script do clone atrasado
 
 - `api._sol_lancar()`: se o `sol_lancar.py` do clone não tem o parâmetro que o .exe chama, faz `git_sinc.trazer` e recarrega; sem pull, pede "Sincronizar com o GitHub". Relato do Átila: o .exe 2.6.16 chegou antes do pull horário do clone.

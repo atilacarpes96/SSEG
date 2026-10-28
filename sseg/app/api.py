@@ -1351,6 +1351,16 @@ class Api:
                     raise RuntimeError("Não li a base do servidor: %s" % e)
         return tem
 
+    def banco_sol(self, consulta, params=None):
+        """Aba Processos (2.7.0): painel, ficha e busca nas CIAs no banco do servidor (porta.py banco → sol_consulta.py).
+        Nada fica guardado no PC: cada clique pergunta ao servidor."""
+        if not _tem_servidor():
+            raise RuntimeError("O painel, a ficha e a busca nas CIAs vêm do servidor, e este PC ainda não está ligado a ele.")
+        r = acesso.chamar_json("banco", consulta, entrada=json.dumps(params or {}).encode("utf-8"), timeout=90)
+        if isinstance(r, dict) and r.get("erro"):
+            raise RuntimeError(r["erro"])
+        return r
+
     def servidor_sol_caixa(self):
         """Lê a caixa agora no servidor (só o administrador); a sincronização continua no chip Servidor."""
         r = acesso.chamar_json("sol-caixa", timeout=900)

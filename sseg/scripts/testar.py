@@ -1029,11 +1029,15 @@ def main():
         sb_m.BASE, sb_m.LISTA = base, os.path.join(base, "lista.json")
         marco = [{"id": 1, "dthMarco": 1790000000000, "descricao": "Número do licenciamento gerado"}]
         json.dump({"7": {"numero": "A00000001AA001"}, "8": {"numero": "A00000002AA001"}}, open(sb_m.LISTA, "w"))
+        lic7 = {"id": 7, "numero": "A00000001AA001", "caracteristica": {"areaConstruida": 120, "ocupacoes": [
+            {"ocupacao": "PREDOMINANTE", "determinaSeguranca": True, "cnae": {"divisao": "C-1"}}]}}
         for k in ("7", "8"):
-            json.dump({"coletado_em": "2026-10-28 12:20", "marcos": marco, "historico": {"historicoRecurso": []}},
-                      open(os.path.join(base, "proc", k + ".json"), "w"))
+            json.dump({"coletado_em": "2026-10-28 12:20", "marcos": marco, "historico": {"historicoRecurso": []},
+                       "licenciamento": lic7 if k == "7" else None}, open(os.path.join(base, "proc", k + ".json"), "w"))
         for c in ("A00000001AA001", "A00000002AA001", "A00000003AA001"):
             os.makedirs(os.path.join(procs, c))
+        json.dump({"codigo": "A00000001AA001", "distribuido": "2026-10-27"},  # na fila: pré-análise antes da caixa
+                  open(os.path.join(procs, "A00000001AA001", "distribuicao.json"), "w"))
         caixa = os.path.join(procs, "A00000002AA001", "marcos.json")
         json.dump([{"id": 2, "descricao": "lido pela caixa"}], open(caixa, "w"))
         os.utime(caixa, (sb_m._quando("2026-10-28 12:30"),) * 2)
@@ -1044,6 +1048,11 @@ def main():
              and os.path.exists(os.path.join(p1, "historico.json"))
              and json.load(open(caixa))[0]["id"] == 2 and not os.listdir(os.path.join(procs, "A00000003AA001")),
              f"{n1} {n2} {os.listdir(p1)}")
+        pa_txt = os.path.join(p1, "pre-analise.txt")
+        caso("sol_base --pastas: distribuído sem caixa ganha base-api-<ID>.json e pré-análise, sem api-<ID>.json",
+             os.path.exists(os.path.join(p1, "base-api-7.json")) and not glob.glob(os.path.join(p1, "api-*.json"))
+             and os.path.exists(pa_txt) and "antes de o processo chegar à caixa" in open(pa_txt, encoding="utf-8").read(),
+             f"{os.listdir(p1)}")
     # 22. sol_banco.py + sol_consulta.py (28/10/2026): a base vira tabelas e as consultas da aba Processos respondem
     import sol_banco, sol_consulta
     with tempfile.TemporaryDirectory() as tmp:
