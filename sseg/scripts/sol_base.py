@@ -378,13 +378,12 @@ def preencher_pastas(raiz=None):
         d = _ler(os.path.join(BASE, "proc", k + ".json"), None)
         if not d or not d.get("marcos"):
             continue
-        try:
-            if os.path.getmtime(os.path.join(pasta, mc.ARQUIVO)) >= _quando(d.get("coletado_em")):
-                continue  # o sol_caixa.py leu depois da base: fica o dele
+        try:  # o sol_caixa.py leu depois da base: fica o dele
+            mais_novo = os.path.getmtime(os.path.join(pasta, mc.ARQUIVO)) >= _quando(d.get("coletado_em"))
         except OSError:
-            pass
+            mais_novo = False
         mudou = False
-        for nome, dados in ((mc.ARQUIVO, d["marcos"]), (mc.HISTORICO, d.get("historico"))):
+        for nome, dados in () if mais_novo else ((mc.ARQUIVO, d["marcos"]), (mc.HISTORICO, d.get("historico"))):
             arq = os.path.join(pasta, nome)
             if not dados or _ler(arq, None) == dados:
                 continue

@@ -1049,6 +1049,8 @@ def main():
              and json.load(open(caixa))[0]["id"] == 2 and not os.listdir(os.path.join(procs, "A00000003AA001")),
              f"{n1} {n2} {os.listdir(p1)}")
         pa_txt = os.path.join(p1, "pre-analise.txt")
+        os.remove(pa_txt)  # 2ª rodada, Marcos da pasta mais novos que a base: a pré-análise sai mesmo assim
+        sb_m.preencher_pastas(procs)
         caso("sol_base --pastas: distribuído sem caixa ganha base-api-<ID>.json e pré-análise, sem api-<ID>.json",
              os.path.exists(os.path.join(p1, "base-api-7.json")) and not glob.glob(os.path.join(p1, "api-*.json"))
              and os.path.exists(pa_txt) and "antes de o processo chegar à caixa" in open(pa_txt, encoding="utf-8").read(),
