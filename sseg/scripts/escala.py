@@ -13,8 +13,13 @@ Roda no servidor, sobre o xlsx que a rotina do Painel do Dia baixou (download_fi
 grava ~/sseg-escala/escala.json fora do repositório (tem nome de militar; não vai ao GitHub).
 O SSEG.exe busca esse arquivo pelo SSH.
 
+Painel do Dia (28/10/2026, pedido do Átila: escala sincronizada todo dia útil): com --painel <nome>, lê também
+a tabela de CÓDIGOS da linha desse analista e grava ~/sseg-escala/painel/<segunda>.json da semana atual e da
+seguinte, no formato do doc escala/<segunda> do painel ({ano, mes, dias, fonte, atualizadoEm}). A rotina das
+7h47 grava esses arquivos no banco do painel com ArtifactData (file_path).
+
 USO
-  python3 escala.py [arquivo do download ...] [--saida ~/sseg-escala/escala.json] [--dias 45]
+  python3 escala.py [arquivo do download ...] [--saida ~/sseg-escala/escala.json] [--dias 45] [--painel "Sd Carpes"]
   Quem está em ~/sseg-escala/fora.txt (um nome por linha) não entra no escala.json, mesmo que
   ainda apareça numa aba da planilha.
 """
@@ -75,6 +80,62 @@ def horas_da_aba(linhas):
     return out
 
 
+MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro",
+         "novembro", "dezembro"]
+COD_NOME = {"F": "Folga", "FER": "Férias", "DISP": "Dispensa", "TELE": "Teletrabalho"}  # o resto fica com o código
+
+
+def turno(codigo):
+    """Código da escala → {codigo, titulo[, inicio, fim]} (regra de 15/10/2026: turnos 07h–19h)."""
+    c = re.sub(r"\s+", "", str(codigo or "")).upper()
+    hm = lambda h: "%02d:00" % h
+    if c == "M":
+        return {"codigo": c, "titulo": "Manhã", "inicio": "07:00", "fim": "13:00"}
+    if c == "T":
+        return {"codigo": c, "titulo": "Tarde", "inicio": "13:00", "fim": "19:00"}
+    if c == "SV":
+        return {"codigo": c, "titulo": "Serviço", "inicio": "07:00", "fim": "19:00"}
+    m = re.fullmatch(r"(\d{1,2})([MT]?)", c)
+    if m and 0 < int(m.group(1)) <= 12:
+        n = int(m.group(1))
+        if m.group(2) == "T":
+            return {"codigo": c, "titulo": "Tarde %dh" % n, "inicio": hm(19 - n), "fim": "19:00"}
+        return {"codigo": c, "titulo": ("Manhã %dh" if m.group(2) else "Turno %dh") % n, "inicio": "07:00", "fim": hm(7 + n)}
+    return {"codigo": c, "titulo": COD_NOME.get(c, c)} if c else None
+
+
+def codigos_da_aba(linhas, nome):
+    """{AAAA-MM-DD: código} da tabela de códigos (abaixo das linhas de datas), na linha `nome`."""
+    idx = [i for i, l in enumerate(linhas) if sum(1 for v in l[3:] if _data(v)) >= 20]
+    if not idx:
+        return {}
+    datas = {j: _data(v) for j, v in enumerate(linhas[idx[-1]]) if j >= 3 and _data(v)}
+    for l in linhas[idx[-1] + 1:]:
+        if _norm(re.sub(r"\s+", " ", str(l[1] if len(l) > 1 else "")).strip()) == _norm(nome):
+            return {datas[j].isoformat(): str(l[j]).strip() for j in datas if j < len(l) and str(l[j]).strip()}
+    return {}
+
+
+def painel(xlsx_bytes, nome, hoje=None):
+    """Docs escala/<segunda> da semana atual e da seguinte: {segunda: {ano, mes, dias, fonte, atualizadoEm}}."""
+    hoje = hoje or datetime.date.today()
+    cods, abas_lidas = {}, {}
+    for aba in abas(xlsx_bytes):
+        if ABA_MES.match(_norm(aba)):
+            for d, c in codigos_da_aba(linhas_da_aba(xlsx_bytes, _norm(aba)), nome).items():
+                cods[d], abas_lidas[d] = c, aba
+    seg = hoje - datetime.timedelta(days=hoje.weekday())
+    agora = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    out = {}
+    for s in (seg, seg + datetime.timedelta(days=7)):
+        dias = [(s + datetime.timedelta(days=i)).isoformat() for i in range(7)]
+        dd = {d: turno(cods[d]) for d in dias if d in cods and turno(cods[d])}
+        abas_s = sorted({abas_lidas[d] for d in dd})
+        out[s.isoformat()] = {"ano": s.year, "mes": MESES[s.month - 1], "dias": dd, "atualizadoEm": agora,
+                              "fonte": "%s · aba %s · linha %s" % (TITULO, "/".join(abas_s) or "—", nome)}
+    return out
+
+
 def ler(xlsx_bytes, hoje=None, dias=45):
     """Todas as abas de mês; guarda só de `dias` antes a `dias` depois de hoje."""
     hoje = hoje or datetime.date.today()
@@ -119,6 +180,7 @@ def main(argv=None):
     ap.add_argument("--saida", default=SAIDA)
     ap.add_argument("--dias", type=int, default=45)
     ap.add_argument("--fora", default=FORA, help="nomes que não entram (um por linha)")
+    ap.add_argument("--painel", help="nome na escala (ex.: \"Sd Carpes\"): grava ~/sseg-escala/painel/<segunda>.json")
     a = ap.parse_args(argv)
     fora = ler_fora(a.fora)
     for f in a.arquivos or achar_arquivos():
@@ -134,6 +196,16 @@ def main(argv=None):
                       fh, ensure_ascii=False)
         os.replace(tmp, saida)
         print("escala: %d analista(s), %d dia(s) com turno" % (len(horas), sum(len(v) for v in horas.values())))
+        if a.painel:
+            pasta = os.path.join(os.path.dirname(saida), "painel")
+            os.makedirs(pasta, exist_ok=True)
+            for f_ in os.listdir(pasta):
+                os.remove(os.path.join(pasta, f_))
+            docs = painel(x, a.painel)
+            for seg, d in docs.items():
+                with open(os.path.join(pasta, seg + ".json"), "w", encoding="utf-8") as fh:
+                    json.dump(d, fh, ensure_ascii=False)
+            print("escala painel: " + " ".join("%s=%s" % (os.path.join(pasta, s + ".json"), len(d["dias"])) for s, d in docs.items()))
         return 0
     print("escala: planilha %s não veio no download" % TITULO)
     return 0
