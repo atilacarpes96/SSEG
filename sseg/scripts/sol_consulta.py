@@ -21,7 +21,7 @@ CONSULTAS
 
 USO
   python3 sseg/scripts/sol_consulta.py pesquisa '{"divisao": "F-6", "com_cia": 1}'
-  python3 sseg/scripts/sol_consulta.py processo '{"numero": "A00050053AA001"}'
+  python3 sseg/scripts/sol_consulta.py processo '{"numero": "A000XXXXXAA001"}'
   python3 sseg/scripts/sol_consulta.py cias '{"q": "barra antipanico"}'
 """
 

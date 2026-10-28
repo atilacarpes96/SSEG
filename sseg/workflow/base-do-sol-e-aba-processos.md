@@ -99,7 +99,7 @@ O mapa vem do OpenStreetMap (Leaflet, incluído no programa).
 Em vez de abrir JSON da base, o Claude roda a consulta pronta e lê só a resposta:
 
 ```
-python3 sseg/scripts/sol_consulta.py processo '{"numero": "A00050053AA001"}'
+python3 sseg/scripts/sol_consulta.py processo '{"numero": "A000XXXXXAA001"}'
 python3 sseg/scripts/sol_consulta.py cias '{"q": "barra antipanico"}'
 python3 sseg/scripts/sol_consulta.py pesquisa '{"divisao": "F-6", "com_cia": 1}'
 ```
