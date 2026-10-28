@@ -1044,6 +1044,31 @@ def main():
              and os.path.exists(os.path.join(p1, "historico.json"))
              and json.load(open(caixa))[0]["id"] == 2 and not os.listdir(os.path.join(procs, "A00000003AA001")),
              f"{n1} {n2} {os.listdir(p1)}")
+    # 22. sol_banco.py + sol_consulta.py (28/10/2026): a base vira tabelas e as consultas da aba Processos respondem
+    import sol_banco, sol_consulta
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, "proc"))
+        os.makedirs(os.path.join(tmp, "cia"))
+        json.dump({"9": {"id": 9, "numero": "A00000009AA001", "situacao": "NCA", "cidade": "SANTA CRUZ DO SUL", "razao": "Loja Teste",
+                         "endereco": "Rua A 1", "presente": True}}, open(os.path.join(tmp, "lista.json"), "w"))
+        lic = {"id": 9, "numero": "A00000009AA001", "situacao": "NCA", "dataCriacao": "02/10/2026 - 10:00",
+               "localizacao": {"latitudeMapa": -29.7, "longitudeMapa": -52.4, "cidade": {"nome": "SANTA CRUZ DO SUL"}},
+               "caracteristica": {"areaConstruida": 350.5, "ocupacoes": [{"ocupacao": "PREDOMINANTE", "cnae": {"divisao": "C-2"}}]},
+               "especSeguranca": {"medidas": [{"tipo": {"nome": "Extintores"}, "norma": {"nome": "RT 14/2016"}}]}}
+        marcos = [{"id": 1, "dthMarco": 1790000000000, "descricao": "Conclusão de análise técnica - CIA", "nomeResponsavel": "FULANO",
+                   "arquivo": {"id": 77, "nomeArquivo": "cia.pdf"}}]
+        json.dump({"coletado_em": "2026-10-28 12:20", "licenciamento": lic, "marcos": marcos, "historico": {}, "informacoes": {}},
+                  open(os.path.join(tmp, "proc", "9.json"), "w", encoding="utf-8"))
+        open(os.path.join(tmp, "cia", "77.txt"), "w", encoding="utf-8").write("- Instalar barra\nantipânico nas portas da saída.\f")
+        n, _s = sol_banco.montar(tmp)
+        db = os.path.join(tmp, "solcbm.db")
+        f = sol_consulta.consultar("processo", {"numero": "A00000009AA001"}, db)
+        c = sol_consulta.consultar("cias", {"q": "barra antipanico"}, db)
+        p = sol_consulta.consultar("pesquisa", {"q": "loja", "com_cia": 1}, db)
+        caso("sol_banco/sol_consulta: ficha, medidas, CIA achada sem acento e pesquisa",
+             n == 1 and f["processo"]["area_construida"] == 350.5 and f["medidas"][0]["medida"] == "Extintores"
+             and c["total"] == 1 and c["linhas"][0]["trechos"][0]["achado"] == "barra antipânico" and p["total"] == 1
+             and sol_consulta.consultar("mapa", {}, db)[0][1] == -29.7, f"{n} {c} {p['total']}")
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

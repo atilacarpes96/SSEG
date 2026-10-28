@@ -38,6 +38,8 @@ AÇÕES
   sol                                     → (2.3.17) a sessão do SOL no Chromium do servidor, só lendo:
                                             {"chrome", "logado", "exp", "senha", "trava", "ultimo_login",
                                             "caixa_lida_em", "caixa_total"}. Nunca devolve token nem senha
+  banco <consulta>                        → (28/10/2026) stdin {parâmetros}: resumo, opcoes, mapa, pesquisa,
+                                            processo ou cias no solcbm.db (sol_consulta.py), para a aba Processos
   sol-caixa                     (admin)   → roda a leitura da caixa agora (sol_caixa.py, com o login
                                             automático se a sessão caiu) → {"rc", "saida"}
   analistas                     (admin)   → lista dos cadastrados
@@ -394,6 +396,15 @@ class Porta:
             return {"igual": True, "gerado_em": g}
         return {"gerado_em": g, "gz": base64.b64encode(gzip.compress(bruto)).decode()}
 
+    def banco(self, consulta, params):
+        """(28/10/2026) Aba Processos: painel, pesquisa, ficha e busca nas CIAs, no solcbm.db (sol_consulta.py).
+        Todo analista vê a base inteira, como no índice."""
+        import sol_consulta
+        try:
+            return sol_consulta.consultar(consulta, params)
+        except (RuntimeError, ValueError, KeyError) as e:
+            return {"erro": str(e)}
+
     def sol_caixa(self):
         self._so_admin()
         import contextlib
@@ -535,6 +546,8 @@ def executar(porta, args, entrada, script):
         r = porta.sol()
     elif acao == "base":
         r = porta.base(resto[0] if resto else "")
+    elif acao == "banco" and resto:
+        r = porta.banco(resto[0], json.loads(entrada() or b"{}"))
     elif acao == "sol-caixa":
         r = porta.sol_caixa()
     elif acao == "analistas":

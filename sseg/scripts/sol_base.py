@@ -14,8 +14,9 @@ O QUE FAZ
 ---------
   1. Lista: GET /licenciamentos (criação de 2000 até amanhã, páginas de 1000). Uns 7 mil processos,
      7 consultas. Grava lista.json: situação de cada um, quando apareceu e quando a situação mudou.
-  2. Detalhe (3 consultas por processo): /licenciamentos/<id>, /<id>/marcos e
-     /licenciamento-historico/<id>, em proc/<id>.json. Quais:
+  2. Detalhe (4 consultas por processo): /licenciamentos/<id>, /<id>/marcos,
+     /licenciamento-historico/<id> e /licenciamentos/informacoes-processo/<id> (laudos, PRPCI e
+     vistoria; voltou em 28/10/2026, pedido do Átila), em proc/<id>.json. Quais:
        - normal (8h, 12h, 16h): os vivos ainda não coletados, os que mudaram de situação desde a
          última coleta e os que deram erro (até 3 vezes seguidas);
        - --completo (domingo, a cada 2 semanas): todos os da lista.
@@ -28,14 +29,16 @@ O QUE FAZ
      historico.json da base e o marcos-resumo.json (marcos.py), sem consulta a mais ao SOL. Antes só
      os processos da caixa tinham Marcos (24 de 486 pastas). Pasta que o sol_caixa.py leu depois da
      base fica com o dele; o facts.json (CT) continua só do sol_caixa.py.
+  6. Banco (28/10/2026): no fim da rodada, o sol_banco.py refaz o solcbm.db (tabelas da Consulta SOLCBM
+     do Sgt Magalhães), que o porta.py consulta para a aba Processos do SSEG.exe.
 
-Fora: "informacoes-processo" (vistoria), por decisão do Átila em 17/10/2026.
 Ritmo do sol_caixa.py: 0,15 s entre consultas e nova tentativa em erro passageiro. Sessão recusada no
 meio: um login automático (sol_caixa.entrar, que respeita a trava) e segue; recusou de novo, para.
 O que já veio fica salvo: a próxima rodada continua dali.
 
 Dados ficam em ~/sseg-base-sol/, fora do Git e fora de sseg/processos/ (não descem ao PC no
-sincronizar; o SSEG.exe lê só o indice.json pelo porta.py, com chave autorizada).
+sincronizar). O SSEG.exe recebe o indice.json inteiro (lista e mapa) e consulta o solcbm.db pelo porta.py
+`banco` (painel, ficha e CIAs), com chave autorizada.
 
 USO (no servidor)
 ---
@@ -64,6 +67,7 @@ BASE = os.path.expanduser("~/sseg-base-sol")
 LISTA = os.path.join(BASE, "lista.json")
 ESTADO = os.path.join(BASE, "estado.json")
 INDICE = os.path.join(BASE, "indice.json")
+INFORMACOES = sc.LICENCIAMENTO + "/informacoes-processo"  # achado no main.js do SOL em 28/10/2026
 TAM = 1000
 # fora dos vivos: o Início não mostra e a rodada normal não reconsulta enquanto a situação não muda
 ENCERRADAS = {"ALVARA_VIGENTE", "ALVARA_VENCIDO", "EXTINGUIDO", "RASCUNHO"}
@@ -224,12 +228,17 @@ def ficha(lic):
     fantasia = {(x.get("nomeFantasia") or "").strip() for x in (env.get("estabelecimentos") or []) + (env.get("proprietarios") or [])}
     loc = lic.get("localizacao") or {}
     alt = max(float(c.get("alturaDescendente") or 0), float(c.get("alturaAscendente") or 0))
+    # ponto do mapa da aba (28/10/2026): o que o RT marcou no mapa; sem ele, o do endereço
+    lat, lng = loc.get("latitudeMapa"), loc.get("longitudeMapa")
+    if lat is None or lng is None:
+        lat, lng = loc.get("latitudeEndereco"), loc.get("longitudeEndereco")
     return {"ocupacoes": ocup, "area": c.get("areaConstruida"), "altura": round(alt, 2),
             "populacao": c.get("populacaoTotal"), "pavimentos": (c.get("pavimAcimaSolo") or 0) + (c.get("pavimAbaixoSolo") or 0),
             "situacao_ed": (c.get("edificacao") or "").replace("_", " ").lower(),
             "cnpj": sorted(d for d in docs if len(d) == 14), "fantasia": sorted(f for f in fantasia if f)[:3],
             "rt": sorted({(x.get("nome") or "").strip() for x in env.get("rts") or [] if x.get("nome")}),
-            "bairro": (loc.get("bairro") or "").strip(), "criado": _data_sol(lic.get("dataCriacao"))}
+            "bairro": (loc.get("bairro") or "").strip(), "criado": _data_sol(lic.get("dataCriacao")),
+            "geo": [round(float(lat), 6), round(float(lng), 6)] if lat is not None and lng is not None else None}
 
 
 def resumo_do(lic, marcos, historico):
@@ -263,8 +272,13 @@ def coletar(s, k, linha):
         historico = s.json("%s/%s" % (sc.HISTORICO, pid)) or {}
     except RuntimeError:  # processo sem histórico de recurso pode responder 404
         historico = {}
+    try:  # laudos, PRPCI e vistoria (o licenciamentoDTO de dentro repete o licenciamento: não guarda)
+        info = s.json("%s/%s" % (INFORMACOES, pid)) or {}
+        info.pop("licenciamentoDTO", None)
+    except RuntimeError:
+        info = None
     _gravar(os.path.join(BASE, "proc", k + ".json"),
-            {"coletado_em": agora(), "licenciamento": lic, "marcos": marcos, "historico": historico})
+            {"coletado_em": agora(), "licenciamento": lic, "marcos": marcos, "historico": historico, "informacoes": info})
     return resumo_do(lic, marcos, historico)
 
 
@@ -326,7 +340,7 @@ def gerar_indice(lista=None, estado=None):
                        "razao": l["razao"], "endereco": l.get("endereco", ""), "mudou_em": l.get("mudou_em", ""),
                        "anterior": l.get("anterior", ""),
                        **{c: r.get(c) for c in ("ocupacoes", "area", "altura", "populacao", "pavimentos", "situacao_ed",
-                                                "cnpj", "fantasia", "rt", "bairro", "criado")},
+                                                "cnpj", "fantasia", "rt", "bairro", "criado", "geo")},
                        "desde": l.get("desde", ""), "vivo": l["situacao"] not in ENCERRADAS,
                        "protocolo": r.get("protocolo", ""), "analises": r.get("analises"),
                        "ultima": dict(r["ultima"], guerra=guerra(r["ultima"].get("quem"))) if r.get("ultima") else None, "recursos": r.get("recursos"), "id_analise": r.get("id_analise"),
@@ -453,6 +467,11 @@ def rodar(completo=False, limite=None):
             print("Pastas com Marcos atualizados: %d." % preencher_pastas())
         except OSError as e:
             print("Pastas: %s" % e)
+        try:
+            import sol_banco
+            print("Banco: %d processos em %.1f s." % sol_banco.montar())
+        except Exception as e:  # o banco é derivado: falhar aqui não pode estragar a rodada
+            print("Banco: %s" % e)
 
 
 def main():
