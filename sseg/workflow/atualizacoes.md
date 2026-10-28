@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 28/10/2026 — SSEG.exe 2.7.1: voltar/avançar, Memorial SSEG e caixa da Conversa
+
+- Topo do app com ← → ⟳ (histórico das páginas, Alt+setas e botões do mouse). Na página do processo, "Memorial SOL" sai e entra "Memorial SSEG", que abre a ficha da aba Processos. O print do memorial do SOL fica só na pasta, um por análise. Pedido do Átila.
+- Corrige a caixa de mensagem da Conversa estreita: as classes do gráfico de colunas da 2.7.0 batiam com as da janela do processo.
+
+### Prompt para atualizar
+
+```
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 28/10/2026 — SSEG.exe 2.7.0: base do SOL em banco SQL, aba Processos com mapa e ficha, pré-análise antes da caixa
 
 - Servidor: `sol_base.py` volta a coletar laudos e vistoria (`informacoes-processo`), preenche os Marcos de todas as pastas de `processos/` (474 de 486) e faz a pré-análise dos distribuídos que ainda não chegaram à caixa (`base-api-<ID>.json`). No fim de cada coleta, `sol_banco.py` monta o `solcbm.db` no formato da Consulta SOLCBM do Sgt Magalhães; `sol_consulta.py` responde por script (zero token), e o `porta.py banco` serve ao SSEG.exe.

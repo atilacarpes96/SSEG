@@ -4,6 +4,13 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.1
+
+- **Voltar, avançar e recarregar no topo**, como no navegador: as setas ← → levam à página em que você estava antes (Início, Processos, a ficha de um processo, a página de um processo…) e ⟳ lê a página de novo. Também funcionam Alt+← / Alt+→ e os botões laterais do mouse. O "← Início" da página do processo virou "← Voltar".
+- **Botão "Memorial SSEG"** na página do processo, no lugar do "Memorial SOL": abre a ficha do processo na aba Processos, com tudo o que a base do servidor tem, sem entrar no SOL.
+- O print do memorial do SOL continua na pasta do processo, um por análise ("memorial SOL 1.pdf", "memorial SOL 2.pdf"…), guardado pelo "Concluir processo". Serve para ver o que o RT mudou entre uma análise e outra.
+- **Corrige a caixa de mensagem da Conversa**, que tinha ficado estreita e no meio da coluna desde a 2.7.0. Voltou a ocupar a largura da coluna, e a alça de cima volta a mudar a altura.
+
 ## 2.7.0
 
 - **Aba Processos nova, no desenho da Consulta SOLCBM do Sgt Magalhães.** Quatro vistas no topo da aba:

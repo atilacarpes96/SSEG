@@ -416,11 +416,11 @@ details.medida .itens { padding: 0 9px 8px; }
 .barra .trilho { display: flex; align-items: center; gap: 6px; }
 .barra .valor-barra { height: 10px; border-radius: 3px; background: var(--verm); min-width: 2px; }
 .barra .n { color: var(--suave); font-variant-numeric: tabular-nums; }
-.colunas { display: flex; align-items: flex-end; gap: 3px; height: 150px; padding-top: 16px; }
-.coluna { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; min-width: 0; }
-.coluna .valor-col { width: 100%; background: var(--verm); border-radius: 3px 3px 0 0; position: relative; }
-.coluna .valor-col span { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--suave); white-space: nowrap; }
-.coluna small { font-size: 10px; color: var(--suave); margin-top: 3px; }
+.graf-colunas { display: flex; align-items: flex-end; gap: 3px; height: 150px; padding-top: 16px; }
+.graf-coluna { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; min-width: 0; }
+.graf-coluna .valor-col { width: 100%; background: var(--verm); border-radius: 3px 3px 0 0; position: relative; }
+.graf-coluna .valor-col span { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--suave); white-space: nowrap; }
+.graf-coluna small { font-size: 10px; color: var(--suave); margin-top: 3px; }
 .carimbo { display: grid; grid-template-columns: 2fr repeat(5, minmax(0, 1fr)); border: 1px solid var(--linha); border-radius: var(--raio);
   background: var(--cartao); overflow: hidden; margin-bottom: 12px; }
 .carimbo > div { padding: 10px 12px; border-right: 1px solid var(--linha); border-bottom: 1px solid var(--linha); min-width: 0; }
@@ -541,6 +541,11 @@ mark { background: color-mix(in srgb, var(--amarelo, #FCD733) 55%, transparent);
 .abas-proc { display: none; }
 body.espelho .so-pc { display: none !important; }
 body:not(.espelho) .so-espelho { display: none !important; }
+/* voltar / avançar / recarregar a tela (2.7.1), como no navegador */
+#nav-hist { display: inline-flex; gap: 2px; margin-left: 14px; }
+#nav-hist button { border: 0; background: none; font-size: 17px; line-height: 1; padding: 5px 8px; border-radius: 6px; color: var(--texto); cursor: pointer; }
+#nav-hist button:hover:not(:disabled) { background: var(--fundo2); }
+#nav-hist button:disabled { color: var(--suave); opacity: .45; cursor: default; }
 #b-recarregar { border: 0; background: none; font-size: 21px; padding: 4px 8px; border-radius: 6px; color: var(--texto); margin-left: auto; }
 #sem-pc .bt { margin-left: 10px; padding: 3px 12px; font-size: 13px; }
 .esp-link { font: 12.5px Consolas, monospace; word-break: break-all; color: var(--suave); margin: 6px 0; }
@@ -714,6 +719,7 @@ footer { color: var(--suave); }
 <header>
   <button id="b-menu" title="Menu">☰</button>
   <div class="marca"><img src="brasao.png" alt=""><div><b>SSEG</b><small>CBMRS · Seção de Segurança</small></div></div>
+  <div id="nav-hist" role="group" aria-label="Navegação"><button id="nav-volta" title="Voltar à página anterior (Alt+←)" aria-label="Voltar" disabled>←</button><button id="nav-avanca" title="Avançar (Alt+→)" aria-label="Avançar" disabled>→</button><button id="nav-recarrega" title="Recarregar esta página (lê de novo os dados)" aria-label="Recarregar esta página">⟳</button></div>
   <button id="b-recarregar" class="so-espelho" title="Recarregar a página" aria-label="Recarregar a página">↻</button>
   <div id="estado-topo">
     <button class="chip novo so-pc" id="e-versao" hidden>Nova versão</button>
@@ -818,13 +824,13 @@ footer { color: var(--suave); }
 
     <section class="tela" id="t-processo">
       <div class="faixa">
-        <button class="bt" id="pr-voltar">← Início</button>
+        <button class="bt" id="pr-voltar" title="Volta à página anterior">← Voltar</button>
         <span class="cod" id="pr-cod"></span>
         <span id="pr-tags"></span>
         <span class="pr-sit" id="pr-sit"></span>
         <div class="dir">
           <div class="bts-sol" role="group" aria-label="SOL">
-            <button class="bt s-lic" id="pr-sol-lic" title="Abre no navegador">Licenciamento no SOL</button><button class="bt s-an" id="pr-sol-an" title="Abre no navegador">Análise técnica no SOL</button><button class="bt s-mem" id="pr-memorial" title="Abre o print do memorial do SOL desta análise: características, ocupações, medidas com a norma do dimensionamento, laudo e o que verificar">Memorial SOL</button>
+            <button class="bt s-lic" id="pr-sol-lic" title="Abre no navegador">Licenciamento no SOL</button><button class="bt s-an" id="pr-sol-an" title="Abre no navegador">Análise técnica no SOL</button><button class="bt s-mem" id="pr-ficha" title="Abre a ficha deste processo na aba Processos (base do SOL no servidor, sem entrar no SOL): edificação, medidas, envolvidos, análises, CIAs e linha do tempo">Memorial SSEG</button>
           </div>
           <button class="bt concluir" id="pr-concluir" title="Depois de emitir a CIA ou o CA no SOL: guarda o memorial desta análise (se ainda não guardou), baixa a CIA e salva no servidor e na pasta dos prints">✓ Concluir processo</button>
           <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
@@ -1137,7 +1143,31 @@ async function copiar(texto) {
 }
 
 // ---- navegação
-function ir(tela) {
+// Histórico (2.7.1, pedido do Átila: voltar, avançar e recarregar "igual no navegador"). Cada entrada é uma tela,
+// um processo ou uma ficha; voltar e avançar reabrem sem gravar de novo; recarregar reabre a entrada atual.
+const NAV = { pilha: [], i: -1, quieto: false };
+function navMarcar(e) {
+  if (NAV.quieto) return;
+  const at = NAV.pilha[NAV.i];
+  if (at && JSON.stringify(at) === JSON.stringify(e)) return;
+  NAV.pilha.splice(NAV.i + 1, Infinity, e);
+  if (NAV.pilha.length > 60) NAV.pilha.shift();
+  NAV.i = NAV.pilha.length - 1; navPintar();
+}
+function navPintar() { $("#nav-volta").disabled = NAV.i <= 0; $("#nav-avanca").disabled = NAV.i >= NAV.pilha.length - 1; }
+async function navAbrir(e) {
+  NAV.quieto = true;
+  try {
+    if (e.t === "processo") await abrirProcesso(e.c);
+    else if (e.t === "ficha") await abrirFicha(e.n);
+    else ir(e.t, false);
+  } catch (x) { avisar(String(x.message || x), true); }
+  finally { NAV.quieto = false; navPintar(); }
+}
+function navIr(d) { const j = NAV.i + d; if (j < 0 || j >= NAV.pilha.length) return false; NAV.i = j; navAbrir(NAV.pilha[j]); return true; }
+function navVoltar() { if (!navIr(-1)) ir("inicio"); }
+function ir(tela, marcar = true) {
+  if (marcar && tela !== "processo") navMarcar({ t: tela });
   document.querySelector("main").classList.toggle("processo", tela === "processo" || tela === "conversa");
   document.querySelectorAll(".tela").forEach(t => t.classList.toggle("ativa", t.id === "t-" + tela));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("ativo", b.dataset.tela === tela));
@@ -1191,7 +1221,8 @@ const AJUDA = {
       ["", "⏳ Aguardando…", "processo marcado como esperando alguma coisa"], ["", "👤 Carpes", "quem pegou a tarefa"],
       ["", "2/5", "itens do checklist já feitos"]] },
   processo: { titulo: "Página do processo", serve: "Tudo de um processo num lugar só: memorial, conversa com o Claude, checklist e CIA.",
-    passos: ["Memorial SOL abre o print do memorial desta análise: características, ocupações, medidas e laudo.",
+    passos: ["Memorial SSEG abre a ficha do processo na aba Processos, lida da base do servidor, sem entrar no SOL. O print do memorial do SOL fica na pasta, um por análise (\"memorial SOL 1.pdf\", \"memorial SOL 2.pdf\"…), para comparar o que o RT mudou.",
+      "As setas ← → no topo voltam e avançam entre as páginas, como no navegador; ⟳ lê a página de novo.",
       "Na Conversa, o Claude só trabalha quando você pede. O Checklist mostra o que falta conferir.",
       "A CIA em construção junta as exigências salvas. Antes de lançar, faça a \"revisão final\": um revisor lê a CIA de fora.",
       "\"lançar no SOL\" (grava as exigências no campo Outros e aprova o resto; mostra tudo e pede confirmação; não emite CIA nem CA) → emitir no SOL → \"Concluir processo\", marcando CIA ou CA (guarda o memorial, baixa a CIA e salva).",
@@ -1232,6 +1263,13 @@ Object.keys(AJUDA).forEach(tela => {
 });
 setTimeout(() => { if ($("#t-inicio").classList.contains("ativa")) ajudaPrimeira("inicio"); }, 2500);
 $("#b-recarregar").onclick = $("#b-recarregar2").onclick = () => location.reload();
+navMarcar({ t: "inicio" });  // a tela que abre
+$("#nav-volta").onclick = () => navIr(-1);
+$("#nav-avanca").onclick = () => navIr(1);
+$("#nav-recarrega").onclick = () => { const e = NAV.pilha[NAV.i]; if (e) navAbrir(e); else location.reload(); };
+// Alt+← / Alt+→ e os botões laterais do mouse, como no navegador
+addEventListener("keydown", ev => { if (ev.altKey && !ev.ctrlKey && (ev.key === "ArrowLeft" || ev.key === "ArrowRight")) { ev.preventDefault(); navIr(ev.key === "ArrowLeft" ? -1 : 1); } });
+addEventListener("mouseup", ev => { if (ev.button === 3 || ev.button === 4) { ev.preventDefault(); navIr(ev.button === 3 ? -1 : 1); } });
 $("#b-rever-ajuda").onclick = () => { try { Object.keys(AJUDA).forEach(t => localStorage.removeItem("sseg-ajuda-" + t)); } catch (e) {} avisar("A ajuda de cada tela volta a abrir na próxima visita."); };
 $("#b-menu").onclick = () => $("#menu").classList.toggle("aberto");
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => ir(b.dataset.tela));
@@ -2280,8 +2318,8 @@ async function pintarPainel(forcar) {
     el("button", { class: "barra", title: rot(i) + ": " + nBR(i.n) + " processo(s). Clique para ver na lista.", on: { click: () => clique(i) } },
       el("span", { class: "rot" }, rot(i)), el("span", { class: "trilho" }, el("span", { class: "valor-barra", style: "width:" + (i.n / max * 85) + "%" }),
         el("span", { class: "n" }, nBR(i.n)))))); };
-  const colunas = itens => { const max = Math.max(1, ...itens.map(i => i.n)); return el("div", { class: "colunas" }, itens.map(i =>
-    el("div", { class: "coluna", title: i.chave + ": " + nBR(i.n) }, el("div", { class: "valor-col", style: "height:" + Math.max(2, i.n / max * 100) + "%" },
+  const colunas = itens => { const max = Math.max(1, ...itens.map(i => i.n)); return el("div", { class: "graf-colunas" }, itens.map(i =>
+    el("div", { class: "graf-coluna", title: i.chave + ": " + nBR(i.n) }, el("div", { class: "valor-col", style: "height:" + Math.max(2, i.n / max * 100) + "%" },
       el("span", {}, nBR(i.n))), el("small", {}, String(i.chave).slice(2))))); };
   const filtrar = f => { if (f.sit) TODOS_SIT = f.sit; else { TODOS_SIT = ""; Object.assign(TODOS_F, f); } verTodos("lista"); repintarTodos(); };
   caixa.replaceChildren(
@@ -2305,10 +2343,11 @@ async function pintarPainel(forcar) {
 
 // ---- Ficha do processo
 async function abrirFicha(numero, ciaId, termo) {
-  if (!$("#t-todos").classList.contains("ativa")) ir("todos");
+  if (!$("#t-todos").classList.contains("ativa")) ir("todos", false);
   verTodos("ficha");
+  navMarcar({ t: "ficha", n: numero });
   const caixa = $("#todos-v-ficha");
-  const voltar = el("button", { class: "bt link", on: { click: () => verTodos(TODOS_V) } }, "← voltar");
+  const voltar = el("button", { class: "bt link", on: { click: () => { verTodos(TODOS_V); navMarcar({ t: "todos" }); } } }, "← voltar");
   caixa.replaceChildren(voltar, el("p", { class: "vazio" }, "Carregando a ficha de " + numero + "…"));
   let d;
   try { d = await banco("processo", { numero }); }
@@ -2448,8 +2487,8 @@ $("#cias-form").onsubmit = async ev => {
   res.replaceChildren(el("div", { class: "cias-res" },
     el("section", { class: "cartao" }, el("p", {}, el("b", {}, nBR(r.total)), " CIA(s) em ", el("b", {}, nBR(r.processos)), " processo(s) contêm “" + p.q + "”"),
       r.total ? lista : el("p", { class: "vazio" }, "Nenhuma CIA contém esse trecho. Tente uma palavra mais curta."), mais),
-    el("aside", { class: "cartao" }, el("h3", {}, "CIAs com o trecho, por ano"), anos.length ? el("div", { class: "colunas" }, anos.map(a =>
-      el("div", { class: "coluna", title: a.chave + ": " + a.n }, el("div", { class: "valor-col", style: "height:" + Math.max(2, a.n / max * 100) + "%" },
+    el("aside", { class: "cartao" }, el("h3", {}, "CIAs com o trecho, por ano"), anos.length ? el("div", { class: "graf-colunas" }, anos.map(a =>
+      el("div", { class: "graf-coluna", title: a.chave + ": " + a.n }, el("div", { class: "valor-col", style: "height:" + Math.max(2, a.n / max * 100) + "%" },
         el("span", {}, a.n)), el("small", {}, a.chave)))) : el("p", { class: "vazio" }, "Nenhuma."))));
   mostrar(r);
 };
@@ -3026,6 +3065,7 @@ async function abrirProcesso(codigo) {
   renderProcesso(d);
   mostrarCtx("#pr-slot", ctxDe(codigo, PR.fluxo, "O Claude espera o seu pedido. Exemplos: \"roda o check\", \"lê o laudo\", \"qual a data de protocolo?\""));
   ir("processo");
+  navMarcar({ t: "processo", c: codigo });
 }
 function renderProcesso(d) {
   PR.codigo = d.codigo; PR.dados = d; PR.reg = d.analise; PR.alterado = d.analise.alterado || 0;
@@ -3576,7 +3616,7 @@ for (const bt of document.querySelectorAll(".bt.mic")) {
   };
 }
 ligarForm("#cv-form", "#cv-msg", () => CTX[CV.chave]);
-$("#pr-voltar").onclick = () => ir("inicio");
+$("#pr-voltar").onclick = () => navVoltar();
 for (const b of document.querySelectorAll("#pr-abas button")) b.onclick = () => {
   for (const x of document.querySelectorAll("#pr-abas button")) x.classList.toggle("ativo", x === b);
   document.querySelector("#t-processo .colunas").dataset.aba = b.dataset.aba;
@@ -3595,7 +3635,9 @@ async function abrirNoSol(url) {
 }
 // sem o id do processo no SOL, o licenciamento cai na consulta; sem a análise direta, na caixa de análise
 const aviso2 = r => avisar((r.ok ? "✓ " : "✗ ") + ((r.arquivos || []).length ? r.arquivos.join(", ") : "") + ((r.avisos || []).length ? (r.arquivos && r.arquivos.length ? " · " : "") + r.avisos.join(" · ") : ""), !r.ok);
-$("#pr-memorial").onclick = async ev => { const f = await api("processo_memorial", [PR.codigo], ev.currentTarget); avisar("Abrindo " + f + "."); };
+// 2.7.1: o print do memorial do SOL saiu da faixa: fica na pasta ("memorial SOL N.pdf", um por análise, guardado
+// pelo Concluir processo), para conferir o que o RT mudou entre uma análise e outra. Aqui, a ficha da base.
+$("#pr-ficha").onclick = () => abrirFicha(PR.codigo);
 // Concluir processo (2.6.12, pedido do Átila): junta "Guardar memorial" e "Salvar processo". Depois de emitir no SOL, o
 // analista marca CIA ou CA; o programa guarda o memorial desta análise (o já guardado fica: vale o de quando a CIA foi
 // lançada), baixa a CIA (no CA só confere que saiu) e sincroniza. A análise no SOL só passa para a próxima com a
