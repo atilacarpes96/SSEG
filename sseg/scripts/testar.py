@@ -1021,6 +1021,29 @@ def main():
     caso("pré-análise da reanálise: planta nova, notificada a substituída, população e medida que saiu",
          "NOVO planta baixa: CIA02" in t and "Adequar a classificação" in t and "População total: 60 → 81" in t
          and "campo 4, saiu: Plano de Emergência" in t, t[-400:])
+    # 21. sol_base.py --pastas (28/10/2026): Marcos da base vão às pastas; o que o sol_caixa leu depois fica
+    import sol_base as sb_m
+    with tempfile.TemporaryDirectory() as tmp:
+        base, procs = os.path.join(tmp, "base"), os.path.join(tmp, "processos")
+        os.makedirs(os.path.join(base, "proc"))
+        sb_m.BASE, sb_m.LISTA = base, os.path.join(base, "lista.json")
+        marco = [{"id": 1, "dthMarco": 1790000000000, "descricao": "Número do licenciamento gerado"}]
+        json.dump({"7": {"numero": "A00000001AA001"}, "8": {"numero": "A00000002AA001"}}, open(sb_m.LISTA, "w"))
+        for k in ("7", "8"):
+            json.dump({"coletado_em": "2026-10-28 12:20", "marcos": marco, "historico": {"historicoRecurso": []}},
+                      open(os.path.join(base, "proc", k + ".json"), "w"))
+        for c in ("A00000001AA001", "A00000002AA001", "A00000003AA001"):
+            os.makedirs(os.path.join(procs, c))
+        caixa = os.path.join(procs, "A00000002AA001", "marcos.json")
+        json.dump([{"id": 2, "descricao": "lido pela caixa"}], open(caixa, "w"))
+        os.utime(caixa, (sb_m._quando("2026-10-28 12:30"),) * 2)
+        n1, n2 = sb_m.preencher_pastas(procs), sb_m.preencher_pastas(procs)
+        p1 = os.path.join(procs, "A00000001AA001")
+        caso("sol_base --pastas: copia Marcos e histórico, faz o resumo, não regrava e respeita a leitura da caixa",
+             n1 == 1 and n2 == 0 and os.path.exists(os.path.join(p1, "marcos-resumo.json"))
+             and os.path.exists(os.path.join(p1, "historico.json"))
+             and json.load(open(caixa))[0]["id"] == 2 and not os.listdir(os.path.join(procs, "A00000003AA001")),
+             f"{n1} {n2} {os.listdir(p1)}")
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

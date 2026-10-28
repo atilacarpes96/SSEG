@@ -24,6 +24,10 @@ O QUE FAZ
      O PDF não fica guardado.
   4. indice.json: uma linha por processo para a aba (código, situação, cidade, razão social,
      protocolo, última análise e quem fez). É o que o porta.py serve ao SSEG.exe.
+  5. Pastas (28/10/2026): cada pasta de sseg/processos/ que a base conhece recebe marcos.json e
+     historico.json da base e o marcos-resumo.json (marcos.py), sem consulta a mais ao SOL. Antes só
+     os processos da caixa tinham Marcos (24 de 486 pastas). Pasta que o sol_caixa.py leu depois da
+     base fica com o dele; o facts.json (CT) continua só do sol_caixa.py.
 
 Fora: "informacoes-processo" (vistoria), por decisão do Átila em 17/10/2026.
 Ritmo do sol_caixa.py: 0,15 s entre consultas e nova tentativa em erro passageiro. Sessão recusada no
@@ -38,12 +42,12 @@ USO (no servidor)
   python3 sseg/scripts/sol_base.py              # rodada normal
   python3 sseg/scripts/sol_base.py --completo   # consulta todos de novo
   python3 sseg/scripts/sol_base.py --indice     # só refaz o indice.json
+  python3 sseg/scripts/sol_base.py --pastas     # só copia os Marcos da base para as pastas
   python3 sseg/scripts/sol_base.py --limite 50  # no máximo 50 detalhes (teste)
 """
 
 import argparse
 import datetime
-import fcntl
 import json
 import os
 import subprocess
@@ -336,7 +340,50 @@ def gerar_indice(lista=None, estado=None):
 
 # ------------------------------------------------------------------ rodada
 
+# ------------------------------------------------------------------ 5. pastas dos processos
+
+def _quando(t):
+    """'2026-10-28 12:20' → segundos (0 sem data)."""
+    try:
+        return time.mktime(time.strptime(t, "%Y-%m-%d %H:%M"))
+    except (TypeError, ValueError):
+        return 0
+
+
+def preencher_pastas(raiz=None):
+    """Marcos e histórico de recurso da base em cada pasta de sseg/processos/ e o marcos-resumo.json. Só grava o
+    que mudou; sem gatilho de recurso (o cartão no Quadro continua com o sol_caixa.py). Devolve as pastas mudadas."""
+    raiz = raiz or sc.PROCESSOS
+    por_codigo = {l["numero"]: k for k, l in _ler(LISTA, {}).items() if l.get("numero")}
+    feitas = 0
+    for codigo in sorted(os.listdir(raiz)) if os.path.isdir(raiz) else []:
+        pasta, k = os.path.join(raiz, codigo), por_codigo.get(codigo)
+        if not k or not os.path.isdir(pasta):
+            continue
+        d = _ler(os.path.join(BASE, "proc", k + ".json"), None)
+        if not d or not d.get("marcos"):
+            continue
+        try:
+            if os.path.getmtime(os.path.join(pasta, mc.ARQUIVO)) >= _quando(d.get("coletado_em")):
+                continue  # o sol_caixa.py leu depois da base: fica o dele
+        except OSError:
+            pass
+        mudou = False
+        for nome, dados in ((mc.ARQUIVO, d["marcos"]), (mc.HISTORICO, d.get("historico"))):
+            arq = os.path.join(pasta, nome)
+            if not dados or _ler(arq, None) == dados:
+                continue
+            with open(arq, "w", encoding="utf-8") as fh:
+                json.dump(dados, fh, ensure_ascii=False)
+            mudou = True
+        if mudou:
+            mc.resumir_pasta(pasta)
+            feitas += 1
+    return feitas
+
+
 def rodar(completo=False, limite=None):
+    import fcntl  # só no servidor: o testar.py importa este arquivo no Windows
     os.makedirs(BASE, exist_ok=True)
     trava = open(os.path.join(BASE, ".rodando"), "w")
     try:
@@ -402,6 +449,10 @@ def rodar(completo=False, limite=None):
         n = gerar_indice(estado=estado)
         print("Rodada %s: %d detalhe(s), %d erro(s), %d CIA(s), %d consultas, %.1f min. Índice: %d processos."
               % (meta["resultado"], feitos, erros, cias, meta["consultas"], meta["minutos"], n))
+        try:
+            print("Pastas com Marcos atualizados: %d." % preencher_pastas())
+        except OSError as e:
+            print("Pastas: %s" % e)
 
 
 def main():
@@ -410,7 +461,11 @@ def main():
     ap.add_argument("--indice", action="store_true", help="só refaz o indice.json")
     ap.add_argument("--resumos", action="store_true", help="recalcula os resumos dos proc/*.json (sem SOL) e o índice")
     ap.add_argument("--limite", type=int, help="no máximo N detalhes nesta rodada")
+    ap.add_argument("--pastas", action="store_true", help="só copia os Marcos da base para as pastas dos processos")
     a = ap.parse_args()
+    if a.pastas:
+        print("Pastas com Marcos atualizados: %d." % preencher_pastas())
+        return 0
     if a.resumos:
         print("Resumos refeitos: %d." % refazer_resumos())
         a.indice = True
