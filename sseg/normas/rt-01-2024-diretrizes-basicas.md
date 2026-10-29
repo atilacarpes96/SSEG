@@ -113,6 +113,12 @@ oficial em 01/09/2026 — **conferir na leitura direta do PDF antes de citar em 
 | Plano de Emergência | **NBR 15219** |
 | Proteção contra Descargas Atmosféricas | NBR 5419 |
 
+**Silos e armazéns graneleiros (M-5)** — conferido no PDF em 29/10/2026: Tabela 2, linha 17
+("Silos e armazéns graneleiros — Resolução Técnica CBMRS n.º 22."); **4.11.2 "b"** tira silos e
+graneleiros do regime do armazenamento a granel (4.11.1) e manda para a RT 22; **5.3.1 "e"** faz do
+M-5, predominante ou subsidiário, local de elevado risco para a validade do APPCI. Medidas e
+Tabela 1 em [[rt-22-2023-silos-armazens-graneleiros]].
+
 ⚠️ **Erro típico no campo 4 do SOL:** citar **IT 08 para Compartimentação Horizontal**. A
 IT 08 é a de Segurança Estrutural; a compartimentação é a **IT 09**. Já apareceu no processo
 A00049570AA001 (1ª análise). Redação de notificação em [[banco-notificacoes-padrao]].

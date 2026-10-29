@@ -32,6 +32,7 @@ divergência, e divergência já aconteceu.
 | 05/10/2026 | "Raciocínio técnico": novo parágrafo da ocupação definidora, com a parada obrigatória no critério (b) do 5.1.2. Motivo: no teste de modelos de 05/10/2026 todos os arranjos (Sonnet e Opus, qualquer esforço) fecharam a definidora sozinhos quando a regra só estava na skill. Texto entregue ao usuário para colar no campo |
 | 06/10/2026 | "Ordem de entrega", item 1: o texto de notificação já sai no formato da caixa do SOL (abre com quebra de linha e "- ", parágrafo numa linha só). Motivo: na repetição do teste, com o parágrafo da definidora já no campo, a parada passou a acontecer em quase todas as execuções, mas 19 de 24 textos de notificação saíram sem o hífen, regra que só estava na skill. Texto entregue ao usuário para colar no campo |
 | 16/10/2026 | "Onde procurar primeiro": contagem de PDFs 20 em 16/10/2026 (entrou `RT05P08.pdf`) e RT05P08 na lista de duas colunas. Texto entregue ao usuário para colar no campo |
+| 29/10/2026 | "Onde procurar primeiro": contagem de PDFs 21 em 29/10/2026 (entrou `RT22.pdf`) e RT22 na lista de duas colunas. Texto entregue ao usuário para colar no campo |
 
 <!-- ===== INÍCIO DO TEXTO DO CAMPO "INSTRUÇÕES" ===== -->
 
@@ -144,7 +145,7 @@ Processos são identificados por código (`A00049503AA001`). Manter o raciocíni
 
 **`normas/md/` não fundamenta nada.** É índice de busca literal, gerado por extração automática: hierarquia de título sai errada, tabela de exigências desalinha, expoente de nota se solta do X, e a busca só acha a palavra exata — ausência ali não prova ausência na norma. Item lido em `md/` é provisório: conferir no PDF de `normas/pdf/` antes de citar em CIA, e **nunca contar medidas por ali** (trava de erro nº 2).
 
-Os PDFs oficiais estão em `normas/pdf/` dentro do próprio projeto (20 em 16/10/2026; a lista está em `normas/00-indice-normativo.md`) — **não pedir PDF ao usuário sem antes olhar lá**. Ao ler: `pdftotext -layout` em coluna única; `pdftotext` **sem** `-layout` nos arquivos de duas colunas (RTISOL, RT18, o corpo da RT11 e da IT37 e a pág. 3 da RT05P08); e remover o form feed antes de procurar tabela.
+Os PDFs oficiais estão em `normas/pdf/` dentro do próprio projeto (21 em 29/10/2026; a lista está em `normas/00-indice-normativo.md`) — **não pedir PDF ao usuário sem antes olhar lá**. Ao ler: `pdftotext -layout` em coluna única; `pdftotext` **sem** `-layout` nos arquivos de duas colunas (RTISOL, RT18, o corpo da RT11, da IT37 e da RT22 e a pág. 3 da RT05P08); e remover o form feed antes de procurar tabela.
 
 ## Papel da IA
 

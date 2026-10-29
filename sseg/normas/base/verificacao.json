@@ -967,5 +967,35 @@
     "V6_tinta_sem_texto": [],
     "APROVADO": false,
     "conferido_na_imagem": "16/10/2026: V3 conta o sumário (1 a 5) como item a mais; V4 é o cabeçalho da pág. 3. Nenhuma palavra perdida. Itens 5.2 e 5.3 tinham o 'Anexo' partido em parágrafo novo; juntado à mão. Pág. 5 da Tabela 1 (rótulos em texto vertical) virou figura inteira."
+  },
+  {
+    "pdf": "RT22.pdf",
+    "md": "RT22.md",
+    "V1_palavras_faltando": 0,
+    "V1_ex_falt": [],
+    "V1_palavras_sobrando": 0,
+    "V1_ex_sobra": [],
+    "V2_paginas_X_divergente": [],
+    "V3_aviso_numeracao_do_proprio_pdf": [],
+    "V3_itens_pdf": 110,
+    "V3_itens_md": 115,
+    "V3_retrocessos": [],
+    "V3_aviso_reinicio_numeracao": [
+      "6 -> 4",
+      "8 -> 4",
+      "8 -> 4"
+    ],
+    "V3_saltos": [
+      "2 -> 6",
+      "5 -> 7"
+    ],
+    "V3_itens_ausentes_no_md": [],
+    "V4_aviso_paginas_texto_girado": [],
+    "V4_paragrafos_nao_continuos": 0,
+    "V4_ex": [],
+    "V5_riscado_faltando": [],
+    "V5_aviso_riscado_a_mais": [],
+    "V6_tinta_sem_texto": [],
+    "APROVADO": true
   }
 ]

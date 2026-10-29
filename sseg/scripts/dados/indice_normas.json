@@ -1,7 +1,7 @@
 {
   "_leia_isto": "Forma legivel por maquina do normas/00-indice-normativo.md. Serve para a conferencia automatica das normas citadas no campo '4. Medidas de seguranca' do print do SOL. NAO e fundamento: o fundamento sai do PDF oficial. Manter em sincronia com o 00-indice-normativo.md.",
-  "_atualizado_em": "2026-10-16",
-  "_onde_estao_as_normas": "Os PDFs oficiais estao em normas/pdf/ (20 arquivos desde 16/10/2026, com IN66.pdf, IN67.pdf, IT37.pdf, RT31.pdf e RT05P08.pdf) DENTRO do repositorio desde 15/09/2026 - nao pedir PDF ao usuario sem olhar la. O texto integral convertido pelo anydoc esta em normas/md/, e serve so para LOCALIZAR trecho: nao fundamenta, porque a extracao automatica erra hierarquia de titulo e desalinha tabela. A copia local em C:\\\\Users\\\\55519\\\\Desktop\\\\Carpes\\\\Normas continua existindo e e a mesma coisa.",
+  "_atualizado_em": "2026-10-29",
+  "_onde_estao_as_normas": "Os PDFs oficiais estao em normas/pdf/ (21 arquivos desde 29/10/2026, com IN66.pdf, IN67.pdf, IT37.pdf, RT31.pdf, RT05P08.pdf e RT22.pdf) DENTRO do repositorio desde 15/09/2026 - nao pedir PDF ao usuario sem olhar la. O texto integral convertido pelo anydoc esta em normas/md/, e serve so para LOCALIZAR trecho: nao fundamenta, porque a extracao automatica erra hierarquia de titulo e desalinha tabela. A copia local em C:\\\\Users\\\\55519\\\\Desktop\\\\Carpes\\\\Normas continua existindo e e a mesma coisa.",
   "_regra_de_vigencia": "A versao aplicavel e a que estava vigente na DATA DE PROTOCOLO do PPCI PARA A PRIMEIRA ANALISE, nao a mais recente hoje. Fundamento: RT 01/2024, itens 3.4 e 4.3.3 (conferidos no PDF oficial em 01/09/2026, reconferidos em 02/09/2026 e 21/09/2026). Nunca 'atualizar' a citacao de um PPCI antigo para a versao nova. Em edificacao EXISTENTE REGULARIZADA a legislacao da epoca pode ser usada, desde que especificado no laudo de inviabilidade e no campo de medidas.",
   "_onde_achar_a_data_de_protocolo": "Aba 'Consultar licenciamento' > aba 'Marcos', marco 'Numero do licenciamento gerado'. Nao esta na tela da analise tecnica.",
   "_normas_por_remissao": "IT do CBPMESP e NBR listadas na Tabela 2 da RT 01/2024 (item 4.3.1: 'ate a entrada em vigor de Resolucao Tecnica especifica, deverao ser observadas as Normas Brasileiras e Instrucoes Tecnicas dispostas na Tabela 2, em sua edicao mais recente') e a IT 37 do CBPMESP para a M-6 (itens 4.8.1 e 4.8.7) SAO a norma aplicavel da medida, nao citacao irregular. Conferido no PDF da pasta local em 22/09/2026. O site do CBMRS (bombeiros.rs.gov.br/instrucoes-tecnicas) lista como 'em vigor no CBMRS', desde 01/07/2025: IT 08/2025 (P1 e P2), IT 09/2025, IT 15/2025 (P1 a P9), IT 25/2025 (P1 a P5) e IT 37/2025.",
@@ -189,6 +189,14 @@
       "titulo": "SPDA (ABNT NBR 5419)",
       "por_remissao": "RT 01/2024, item 4.3.1 + Tabela 2, item 10",
       "conferido_em": "2026-09-22"
+    },
+    "RT 22/2023": {
+      "titulo": "Silos e Armazens Graneleiros",
+      "vigente_desde": "2023-10-29",
+      "publicada_em": "2023-09-29",
+      "revoga": "RT 22 de 06/04/2017",
+      "conferido_em": "2026-10-29",
+      "obs": "DOE n.o 189, de 29/09/2023; assinada 28/09/2023 pelo Comandante-Geral. Art. 2o: vigor 30 dias apos a publicacao. Divisao M-5 (silos e armazens graneleiros), predominante ou subsidiaria; sacaria, nao graneleiro, defensivos e fertilizantes vao para o grupo J (2.3). Tabela 1 do Anexo A (lida na imagem): 19 medidas, mesmo X para fazenda, coletora e intermediaria/terminal; abafamento so com secador de ar aquecido (nota 1); hidrantes, alarme, deteccao e chuveiros/resfriamento conforme Anexo B (nota 2). Medidas proprias do M-5 (plano de limpeza B.11, alivio de explosao B.12, controle de poeiras B.13, controle de temperatura e fontes de ignicao B.14, abafamento B.16, chuveiros/resfriamento B.20) citam a RT 22 e sao marcadas no campo 4 sem representacao em planta (6.1.1.1). Errata 01 de 13/11/2023 ja incorporada no PDF; Nota de Atualizacao 001/2026: Anexo D (laudo CMAR) pela RT 09 para PPCI aprovado a luz da RT 09/2025. PPCI protocolado antes de 29/10/2023 segue a RT 22/2017 (7.2; PDF nao esta no projeto). Integra em normas/rt-22-2023-silos-armazens-graneleiros.md."
     },
     "RT 31/2025": {
       "titulo": "Camaras Frigorificas",
