@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 29/10/2026 — SSEG.exe 2.7.5: "Fora do prazo" só para o que está na caixa
+
+- Card "Fora do prazo" e etiqueta da lista: concluído (CA ou CIA lançado) não conta mais; só processo na caixa com o prazo vencido. A 2.7.4 (fim de semana → segunda) foi desfeita: prazo = distribuído + 10 dias corridos.
+
+### Prompt para atualizar
+
+```text
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 29/10/2026 — SSEG.exe 2.7.4: prazo da caixa no fim de semana vai para a segunda
 
 - `estado_caixa` (app/api.py): distribuído + 10 dias corridos; caindo em sábado ou domingo, vence na segunda. Feriado não entra.

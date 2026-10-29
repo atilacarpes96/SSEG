@@ -46,7 +46,7 @@ REGRAS_CARD = {
     "fila": "Na fila: atribuído, ainda sem distribuição",
     "caixa": "Na caixa: distribuído e sem conclusão",
     "vence": "Na caixa, vence em até N dias (ou já venceu)",
-    "fora_prazo": "Fora do prazo: passou do prazo na caixa ou concluído depois dele (últimos N dias)",
+    "fora_prazo": "Fora do prazo: na caixa e o prazo já venceu (concluído não conta: saiu das mãos do CBM)",
     "ct": "CT marcada ou pendente: a minuta ainda sem Finalizado (planilha de CT)",
     "ct_chefia": "CT feita, aguardando a chefia finalizar",
     "recurso": "Recurso para redigir: a minuta ainda sem Finalizado (planilha de recursos)",
@@ -88,8 +88,7 @@ def _ler(caminho):
 def estado_caixa(dist, reg, prazo=10, hoje=None):
     """Planilha (distribuicao.json) manda; o marcado à mão (analise.json) só preenche o que ela não tem.
     estado: fila (atribuído, sem distribuição) · caixa (distribuído, sem conclusão) · concluido · sem
-    (nenhum dado). Prazo = distribuído + `prazo` dias corridos; se cair em sábado ou domingo, passa para a segunda
-    (2.7.4: três CA de 26/10, segunda, distribuídos no dia 15, apareciam fora do prazo vencido no domingo 25/10)."""
+    (nenhum dado). Prazo = distribuído + `prazo` dias corridos."""
     import datetime
     hoje = hoje or datetime.date.today()
     g = lambda k: (dist.get(k) or reg.get(k) or "")
@@ -99,13 +98,10 @@ def estado_caixa(dist, reg, prazo=10, hoje=None):
          "linha": dist.get("linha")}
     if e["distribuido"]:
         d0 = datetime.date.fromisoformat(e["distribuido"])
-        vence = d0 + datetime.timedelta(days=prazo)
-        while vence.weekday() >= 5:
-            vence += datetime.timedelta(days=1)
-        e["vence"] = vence.isoformat()
+        e["vence"] = (d0 + datetime.timedelta(days=prazo)).isoformat()
         fim = datetime.date.fromisoformat(e["concluido"]) if e["concluido"] else hoje
         e["dias"] = (fim - d0).days
-        e["no_prazo"] = fim <= vence
+        e["no_prazo"] = e["dias"] <= prazo
     e["estado"] = "concluido" if e["concluido"] else "caixa" if e["distribuido"] else "fila" if dist.get("codigo") else "sem"
     return e
 

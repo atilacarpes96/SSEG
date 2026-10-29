@@ -1195,7 +1195,7 @@ const AJUDA = {
       ["k-verde", "Na caixa do SOL", "está na caixa, mas a planilha ainda não trouxe a data da distribuição"],
       ["k-cinza", "26 dias no SOL", "dias contados pelo próprio SOL (fica vermelho acima de 30)"],
       ["k-cinza", "Na fila", "distribuído, ainda não chegou à sua caixa"],
-      ["k-azul", "CIA 26/10", "concluído (vermelho se saiu fora do prazo)"],
+      ["k-azul", "CIA 26/10", "concluído"],
       ["k-roxo", "CT 28/10", "consulta técnica com minuta sua"],
       ["k-azul", "Recurso", "recurso com minuta sua (cinza quando está com a chefia)"]] },
   todos: { titulo: "Processos", serve: "Todos os processos do SOL, coletados pelo servidor às 8h20, 12h20 e 16h20 dos dias úteis.",
@@ -1785,7 +1785,7 @@ let PROCS = [], FILTRO = null, CARDS = null;
 const isoLocal = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 const dataBR = iso => iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) : "";
 const diasAte = iso => Math.round((new Date(iso + "T12:00") - new Date(isoLocal(new Date()) + "T12:00")) / 864e5);
-const COM_DIAS = ["vence", "fora_prazo"];
+const COM_DIAS = ["vence"];
 // CT e recurso (2.3.0): itens abertos da pasta (ct.json, recurso.json) em que o ME é quem usa este PC.
 // O nome casa pela última palavra ("2° Sgt Magalhães" = "Sgt Magalhães"); sem analista escolhido, conta todos.
 const ultima = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase().split(/\s+/).pop();
@@ -1799,7 +1799,8 @@ function regra(c) {
     fila: p => p.estado === "fila",
     caixa: p => p.estado === "caixa",
     vence: p => p.estado === "caixa" && !!p.vence && p.vence <= mais,
-    fora_prazo: p => (p.estado === "caixa" && p.no_prazo === false) || (conc(p) && p.no_prazo === false),
+    // 2.7.5 (pedido do Átila): concluído saiu das mãos do CBM e não tem mais prazo; só conta o que está na caixa e venceu
+    fora_prazo: p => p.estado === "caixa" && p.no_prazo === false,
     ct: p => (p.ct && p.ct >= h) || meus(p.cts, "minuta").length > 0,
     ct_chefia: p => meus(p.cts, "chefia").length > 0,
     recurso: p => meus(p.recursos, "minuta").length > 0,
@@ -1817,6 +1818,7 @@ function subtexto(c, l) {
   if (c.regra === "ct_chefia" || c.regra === "recurso_chefia") return "esperando a chefia finalizar";
   if (c.regra === "recurso") { const d = l.flatMap(p => meus(p.recursos, "minuta").map(i => i.distribuido)).filter(Boolean).sort()[0];
     return d ? "o mais antigo desde " + dataBR(d) : "minuta sem Finalizado"; }
+  if (c.regra === "fora_prazo") return "na caixa, prazo vencido";
   if (COM_DIAS.includes(c.regra)) return "últimos " + c.dias + " dias";
   return "";
 }
@@ -1926,8 +1928,8 @@ function tagEstado(p) {
       title: "Distribuído em " + dataBR(p.distribuido) + " (dias corridos, como na planilha). Prazo da seção: + " + ((CARDS || {}).prazo || 10) + " dias = " + dataBR(p.vence) },
       d == null ? prazo[0].toUpperCase() + prazo.slice(1) : d + (d === 1 ? " dia" : " dias") + " · " + prazo);
   }
-  if (p.estado === "concluido") return el("span", { class: "tag sit " + (p.no_prazo === false ? "k-vermelho" : "k-azul"),
-    title: p.dias != null ? p.dias + " dia(s) na caixa" : "" }, (p.resultado || "Concluído") + " " + dataBR(p.concluido) + (p.no_prazo === false ? " · fora do prazo" : ""));
+  if (p.estado === "concluido") return el("span", { class: "tag sit k-azul",
+    title: p.dias != null ? p.dias + " dia(s) na caixa" : "" }, (p.resultado || "Concluído") + " " + dataBR(p.concluido));
   return el("span", { class: "tag sit k-cinza", title: "Fora da planilha e sem datas marcadas na janela do processo" }, "Sem dados");
 }
 // Ordem da tabela (2.3.7, pedido do Átila): 1) na caixa, há mais dias primeiro (distribuído mais antigo);
