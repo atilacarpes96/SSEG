@@ -3016,45 +3016,51 @@ const BLOCOS = {
       ...resto.map(cartao),
       (d.observacoes || []).length ? el("div", { class: "discreto", style: "margin-top:6px" }, "Observações: " + d.observacoes.join(" · ")) : null);
   },
-  // 2.6.1: pergunta fechada (opcoes, ou tipo "simnao") vira botões; quando todas do bloco são fechadas, o clique na
-  // última já manda as respostas e o Claude segue, sem digitar nada. "Conferir na planta" vem num bloco só.
+  // 2.6.1: pergunta fechada (opcoes, ou tipo "simnao") vira botões. "Conferir na planta" vem num bloco só.
+  // 2.7.2 (pedido do Átila): nada vai sozinho. Cada pergunta aceita um complemento escrito (opção "Outro..." abre a
+  // caixa e pede o texto), há uma observação geral, e "Mandar respostas" (ou Enter numa caixa) manda o que foi marcado.
   "sseg-perguntas": (d, ctx) => {
     const qs = (d.perguntas || []).map((q, i) => ({ id: q.id || "q" + (i + 1), texto: q.texto || "", dica: q.dica || "",
       opcoes: Array.isArray(q.opcoes) && q.opcoes.length ? q.opcoes.map(String) : q.tipo === "simnao" ? ["Sim", "Não"] : null }));
-    const resp = qs.map(() => "");
+    const resp = qs.map(() => ""), extra = qs.map(() => "");
     const processo = ctx && /^A\d{8}/.test(ctx.chave);
     if (processo) api("processo_perguntas", [ctx.chave, qs]).then(recarregarRegistro).catch(() => {});
-    const fechadas = qs.every(q => q.opcoes);
     let enviado = false;
+    const valor = i => [resp[i], extra[i]].filter(Boolean).join(" — ");
+    const obs = el("input", { type: "text", placeholder: "observação para o Claude (opcional)", style: "width:100%;margin-top:4px" });
     const mandar = () => {
-      const r = qs.map((q, i) => [q, resp[i]]).filter(x => x[1]);
-      if (!r.length) return SSEG.log(["✗ Responda ao menos uma pergunta."]);
+      const r = qs.map((q, i) => [q, valor(i)]).filter(x => x[1]), o = obs.value.trim();
+      if (!r.length && !o) return SSEG.log(["✗ Responda ao menos uma pergunta ou escreva uma observação."]);
       if (enviado) return;
       enviado = true;
       caixa.querySelectorAll("button,input").forEach(x => x.disabled = true);
-      if (processo) api("processo_responder", [ctx.chave, r.map(([q, v]) => [q.texto, v])]).then(recarregarRegistro).catch(() => {});
-      chatEnviar(ctx, "Respostas" + (d.titulo ? " (" + d.titulo + ")" : "") + ":\n" + r.map(([q, v]) => "- " + q.texto + " → " + v).join("\n") + "\nSiga.");
+      if (processo && r.length) api("processo_responder", [ctx.chave, r.map(([q, v]) => [q.texto, v])]).then(recarregarRegistro).catch(() => {});
+      chatEnviar(ctx, "Respostas" + (d.titulo ? " (" + d.titulo + ")" : "") + ":\n" + r.map(([q, v]) => "- " + q.texto + " → " + v).join("\n")
+        + (o ? (r.length ? "\n" : "") + "Observação: " + o : "") + "\nSiga.");
     };
+    const enterManda = c => c.addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); mandar(); } });
+    enterManda(obs);
     const linhas = qs.flatMap((q, i) => {
       const rot = el("label", {}, (i + 1) + ". " + q.texto);
-      if (!q.opcoes) {
-        const c = el("input", { type: "text", placeholder: q.dica || "sua resposta" });
-        c.addEventListener("input", () => resp[i] = c.value.trim());
-        return [rot, c];
-      }
+      const comp = el("input", { type: "text", placeholder: q.opcoes ? "complemento (opcional)" : (q.dica || "sua resposta"), style: "width:100%" });
+      comp.addEventListener("input", () => { if (q.opcoes) extra[i] = comp.value.trim(); else resp[i] = comp.value.trim(); });
+      enterManda(comp);
+      if (!q.opcoes) return [rot, comp];
+      comp.style.display = "none";
+      const mais = el("button", { class: "bt link", type: "button", title: "Escrever algo além da opção", on: { click: () => { comp.style.display = ""; mais.remove(); comp.focus(); } } }, "+ escrever");
       const bts = q.opcoes.map(o => el("button", { class: "bt", type: "button", on: { click: ev => {
         resp[i] = o;
         bts.forEach(x => x.classList.toggle("p", x === ev.currentTarget));
-        if (fechadas && resp.every(Boolean)) mandar();
+        if (/^outr[oa]/i.test(o)) { comp.style.display = ""; comp.placeholder = "qual?"; mais.remove(); comp.focus(); }
       } } }, o));
-      return [rot, el("div", { class: "linha-bts", style: "margin:2px 0 6px;flex-wrap:wrap" }, ...bts, q.dica ? el("span", { class: "discreto" }, q.dica) : null)];
+      return [rot, el("div", { class: "linha-bts", style: "margin:2px 0 2px;flex-wrap:wrap" }, ...bts, mais, q.dica ? el("span", { class: "discreto" }, q.dica) : null), comp];
     });
     const caixa = el("div", { class: "perguntas" },
       el("b", {}, (d.titulo || "Perguntas") + (processo ? " " : ""), processo ? el("span", { class: "discreto" }, "(vão também para o checklist)") : null),
-      ...linhas,
+      ...linhas, obs,
       el("div", { class: "linha-bts", style: "margin-top:8px" },
-        fechadas ? el("span", { class: "discreto" }, "Clique na resposta: quando todas estiverem marcadas, vai sozinho.") :
-          el("button", { class: "bt p", on: { click: mandar } }, "Mandar respostas"),
+        el("button", { class: "bt p", on: { click: mandar } }, "Mandar respostas"),
+        el("span", { class: "discreto" }, "Pode mandar só as que souber."),
         processo ? el("button", { class: "bt", on: { click: () => api("abrir_pasta_processo", [ctx.chave]) } }, "Abrir a pasta do processo") : null));
     return caixa;
   },
@@ -3141,9 +3147,12 @@ function pintarChecklist() {
   if (!r.pendencias.length) pend.append(el("p", { class: "sub" }, "As perguntas e o que falta ver aparecem aqui."));
   else if (!abertas) pend.append(el("p", { class: "sub" }, "Nenhuma pendência aberta."));
   for (const p of r.pendencias.filter(p => !p.feita)) {
-    const resp = el("input", { type: "text", value: p.resposta || "", placeholder: "sua resposta (vai para o Claude)", "data-id": p.id });
-    resp.addEventListener("input", () => PR.sujos["p" + p.id] = resp.value);
-    resp.addEventListener("change", () => api("processo_atualizar", [PR.codigo, "pendencias", p.id, { resposta: resp.value, enviada: false }]).then(() => delete PR.sujos["p" + p.id]));
+    if (PR.sujos["p" + p.id] != null) p.resposta = PR.sujos["p" + p.id];
+    const resp = el("input", { type: "text", value: PR.sujos["p" + p.id] != null ? PR.sujos["p" + p.id] : (p.resposta || ""), placeholder: "sua resposta (Enter manda ao Claude)", "data-id": p.id });
+    // 2.7.2: a resposta conta na hora para o botão "Mandar" (antes ele só aparecia depois de recarregar) e Enter manda
+    resp.addEventListener("input", () => { PR.sujos["p" + p.id] = resp.value; p.resposta = resp.value; p.enviada = false; contarRespostas(); });
+    resp.addEventListener("change", () => salvarResposta(p));
+    resp.addEventListener("keydown", ev => { if (ev.key === "Enter" && resp.value.trim()) { ev.preventDefault(); enviarRespostas(); } });
     pend.append(el("div", { class: "pend" + (p.feita ? " feita" : "") },
       el("div", {}, p.texto, p.origem === "analista" ? el("span", { class: "marca-tag" }, "sua") : null),
       resp, el("div", { class: "linha-bts" },
@@ -3157,8 +3166,7 @@ function pintarChecklist() {
   const nova = el("input", { type: "text", placeholder: "+ pendência sua (Enter)", style: "width:100%;padding:5px 7px;border:1px solid var(--linha);border-radius:5px" });
   nova.addEventListener("keydown", async ev => { if (ev.key === "Enter" && nova.value.trim()) { await api("processo_pendencia", [PR.codigo, nova.value.trim()]); nova.value = ""; recarregarRegistro(); } });
   pend.append(nova);
-  const comResp = r.pendencias.filter(p => p.resposta && !p.enviada && !p.feita);
-  if (comResp.length) pend.append(el("button", { class: "bt p", style: "margin-top:6px", on: { click: enviarRespostas } }, "Mandar " + comResp.length + " resposta(s) ao Claude"));
+  pend.append(el("button", { class: "bt p", id: "mandar-resp", style: "margin-top:6px;display:none", on: { click: enviarRespostas } }));
   out.push(pend);
   // pré-análise documental (2.3.8): o que o script já leu, para não refazer
   const auto = d.auto || {};
@@ -3226,6 +3234,7 @@ function pintarChecklist() {
   out.push(med);
   const alvo = $("#pr-check"), top = alvo.scrollTop;
   alvo.replaceChildren(...out); alvo.scrollTop = top;
+  contarRespostas();
 }
 async function marcarItem(k, v) { await api("processo_marcar", [PR.codigo, "itens", k, v]); recarregarRegistro(); }
 async function itemExigencia(m, item, k, v) {
@@ -3236,8 +3245,19 @@ async function itemExigencia(m, item, k, v) {
   const ult = [...document.querySelectorAll("#pr-cia textarea")].pop();
   if (ult) { ult.placeholder = "Achado em \"" + item + "\": escreva a exigência ou peça a redação ao Claude no chat"; ult.focus(); }
 }
+function contarRespostas() {
+  const b = $("#mandar-resp"); if (!b || !PR.reg) return;
+  const n = PR.reg.pendencias.filter(p => (p.resposta || "").trim() && !p.enviada && !p.feita).length;
+  b.style.display = n ? "" : "none";
+  b.textContent = "Mandar " + n + " resposta(s) ao Claude";
+}
+function salvarResposta(p) {
+  return api("processo_atualizar", [PR.codigo, "pendencias", p.id, { resposta: p.resposta || "", enviada: false }]).then(() => delete PR.sujos["p" + p.id]);
+}
 async function enviarRespostas() {
-  const r = PR.reg, lst = r.pendencias.filter(p => p.resposta && !p.enviada && !p.feita);
+  const r = PR.reg, lst = r.pendencias.filter(p => (p.resposta || "").trim() && !p.enviada && !p.feita);
+  if (!lst.length) return;
+  for (const p of lst) await salvarResposta(p);
   const texto = "Respostas às pendências:\n" + lst.map(p => "- " + p.texto + " → " + p.resposta).join("\n");
   await chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), texto);
   for (const p of lst) await api("processo_atualizar", [PR.codigo, "pendencias", p.id, { enviada: true, feita: true }]);

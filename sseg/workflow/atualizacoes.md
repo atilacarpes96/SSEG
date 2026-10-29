@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 29/10/2026 — SSEG.exe 2.7.2: respostas do checklist e das perguntas do chat
+
+- **Checklist:** a resposta escrita na pendência vai ao Claude com Enter ou pelo botão "Mandar N resposta(s)", que aparece enquanto você digita.
+- **Perguntas do chat:** não mandam mais sozinhas no último clique; cada pergunta aceita complemento escrito, há observação geral e o botão "Mandar respostas".
+
+### Prompt para atualizar
+
+```text
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 29/10/2026 — RT 22/2023 (silos e armazéns graneleiros) na base
 
 - **RT 22/2023** (M-5; vigente desde 29/10/2023; revogou a RT 22/2017) em `normas/pdf/RT22.pdf`, com conversão verificada e a transcrição comentada `normas/rt-22-2023-silos-armazens-graneleiros.md`: Tabela 1 do Anexo A lida na imagem (19 medidas, iguais nos três tipos de unidade), Anexo B das medidas próprias do M-5 e o 6.1.1.1 (essas medidas são marcadas no campo 4, não desenhadas).

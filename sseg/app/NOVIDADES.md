@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.2
+
+- **Resposta no checklist agora vai para o Claude.** Escreva na caixa da pendência e aperte Enter, ou use o botão "Mandar N resposta(s) ao Claude", que aparece assim que você digita. Antes o botão só surgia depois de recarregar a página, e a resposta ficava parada.
+- **Perguntas do chat ("Conferir na planta") não vão mais sozinhas.** Clique nas opções, escreva um complemento em qualquer pergunta ("+ escrever"; a opção "Outro…" já abre a caixa) ou uma observação geral, e aperte "Mandar respostas" ou Enter. Dá para mandar só as que você souber.
+
 ## 2.7.1
 
 - **Voltar, avançar e recarregar no topo**, como no navegador: as setas ← → levam à página em que você estava antes (Início, Processos, a ficha de um processo, a página de um processo…) e ⟳ lê a página de novo. Também funcionam Alt+← / Alt+→ e os botões laterais do mouse. O "← Início" da página do processo virou "← Voltar".
