@@ -758,6 +758,9 @@ def main():
          and (e3["estado"], e3["concluido"], e3["dias"], e3["no_prazo"]) == ("concluido", "2026-10-09", 8, True)
          and (e4["estado"], e4["vence"]) == ("fila", "") and (e5["fonte"], e5["dias"], e5["no_prazo"]) == ("manual", 15, False)
          and e6["estado"] == "sem", str([e1, e2, e3, e4, e5, e6]))
+    e7 = E({"codigo": "x", "distribuido": "2026-10-15", "concluido": "2026-10-26", "resultado": "CA"}, {}, (2026, 10, 29))
+    caso("caixa: prazo que cai no domingo passa para a segunda (15/10 → vence 26/10; CA na segunda no prazo)",
+         (e7["vence"], e7["dias"], e7["no_prazo"]) == ("2026-10-26", 11, True), str(e7))
     # 15b2. CT e recursos (2.3.0): planilhas → <código>/ct.json e recurso.json; a porta mostra a pasta ao ME
     import ct_recursos as ctr
     CT = [["", "", "", ""], ["Cadastro", "", "", "", "", "", "", "Agendamento", "", "", "", "", "Minuta", "", "Chefe da SSeg", ""],

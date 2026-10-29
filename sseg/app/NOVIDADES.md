@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.4
+
+- **Prazo que cai no fim de semana passa para a segunda.** O prazo continua sendo a distribuição + 10 dias corridos, mas quando esse dia é sábado ou domingo ele vence na segunda-feira. Os três processos distribuídos em 15/10 e concluídos na segunda, 26/10, apareciam "fora do prazo" porque o prazo tinha caído no domingo, 25/10; agora contam no prazo. Feriado ainda não entra na conta.
+
 ## 2.7.3
 
 - **O Claude agora tira da coluna CIA o rascunho que ele mesmo errou.** Quando um item gravado por ele deixa de valer (por exemplo, uma medida que não é exigida), ele descarta o item em vez de pedir para você ignorar. Item com texto final salvo por você ele não apaga: nesse caso, ele pede para você clicar em "excluir".
