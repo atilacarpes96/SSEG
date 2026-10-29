@@ -147,6 +147,31 @@ def remover(pasta, colecao, id_):
     gravar(pasta, d)
 
 
+def descartar(pasta, ids):
+    """Tira da coluna CIA o rascunho que o Claude gravou e que não vale mais. Item com texto final
+    salvo fica: quem salvou foi o analista, e quem apaga é ele (botão "excluir")."""
+    d = ler(pasta)
+    por_id = {e["id"]: e for e in d["exigencias"]}
+    fora, salvos, nao_ha = [], [], []
+    for i in ids:
+        e = por_id.get(i)
+        if e is None:
+            nao_ha.append(i)
+        elif (e.get("final") or "").strip():
+            salvos.append(i)
+        else:
+            fora.append(i)
+    if fora:
+        d["exigencias"] = [e for e in d["exigencias"] if e["id"] not in fora]
+        gravar(pasta, d)
+    partes = ["descartado(s): %s" % (", ".join(fora) or "nenhum")]
+    if salvos:
+        partes.append("NÃO descartado(s), têm texto final salvo pelo analista: %s (ele exclui no item)" % ", ".join(salvos))
+    if nao_ha:
+        partes.append("não existe(m): %s" % ", ".join(nao_ha))
+    return "; ".join(partes)
+
+
 def marcar(pasta, grupo, chave, valor):
     """grupo "passos" (chave = nº do passo), "itens" (chave = "medida|item") ou "marcas" (estado da
     janela, ex.: "pre_analise"). valor None desmarca."""
@@ -213,6 +238,8 @@ def args_parser(sp):
     p.add_argument("ids", nargs="+")
     p = sub.add_parser("passo", help="marca passos do checklist (1 a 16), um ou vários: passo 1 3 4 5")
     p.add_argument("n", type=int, nargs="+")
+    p = sub.add_parser("descartar", help="tira da coluna CIA um rascunho sem texto final salvo (ex.: e2); o salvo é do analista")
+    p.add_argument("ids", nargs="+")
     sub.add_parser("ver", help="mostra o registro (pendências e o texto final da CIA)")
     p = sub.add_parser("sol-pdf", help="arquivo do SOL baixado em base64 (sol-arquivo-<id>.b64.json) → PDF + texto")
     p.add_argument("id", help="id do arquivo no SOL (GET /solcbm/api/v1/adm/arquivo/<id>)")
@@ -295,6 +322,8 @@ def principal(args):
         for n in args.n:
             marcar(args.pasta, "passos", n, True)
         print("passo(s) %s marcado(s)" % ", ".join(str(n) for n in args.n))
+    elif args.acao == "descartar":
+        print(descartar(args.pasta, args.ids))
     elif args.acao == "sol-pdf":
         print(sol_pdf(args.pasta, args.id, args.nome))
     else:

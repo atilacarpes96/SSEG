@@ -633,6 +633,12 @@ def main():
              e["rascunho"] and not e["final"] and not reg.texto_cia(d), str(e))
         reg.atualizar(pasta, "exigencias", e["id"], final="- Deverá (editado)")
         caso("analise.json: CIA lê só o texto final", [x["final"] for x in reg.texto_cia(reg.ler(pasta))] == ["- Deverá (editado)"])
+        # 2.7.3: descartar tira o rascunho do Claude, nunca o texto salvo pelo analista
+        e2 = reg.exigencia(pasta, "- Deverá (errado)", "Abafamento", "RT 22/2023, item B.16.1")
+        msg = reg.descartar(pasta, [e["id"], e2["id"], "e99"])
+        ids = [x["id"] for x in reg.ler(pasta)["exigencias"]]
+        caso("analise descartar: sai o rascunho, fica o item salvo, id inexistente avisado",
+             ids == [e["id"]] and "NÃO descartado" in msg and "e99" in msg, msg)
         # 2.1.13: caixa marcada à mão (quando a planilha não tem o processo)
         reg.situacao(pasta, distribuido="2026-10-01", concluido="2026-10-09", resultado="cia", ct="2026-10-15")
         d = reg.ler(pasta)

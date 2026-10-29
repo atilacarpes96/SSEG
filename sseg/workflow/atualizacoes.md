@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 29/10/2026 — SSEG.exe 2.7.3: o Claude descarta o próprio rascunho errado
+
+- **Novo comando:** `sseg.py analise --pasta <processo> descartar e2` tira da coluna CIA um rascunho sem texto final salvo. Item salvo pelo analista não sai (quem exclui é ele, no botão "excluir"). As instruções do chat do SSEG.exe já mandam usar.
+
+### Prompt para atualizar
+
+```text
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 29/10/2026 — SSEG.exe 2.7.2: respostas do checklist e das perguntas do chat
 
 - **Checklist:** a resposta escrita na pendência vai ao Claude com Enter ou pelo botão "Mandar N resposta(s)", que aparece enquanto você digita.

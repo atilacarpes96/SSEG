@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.3
+
+- **O Claude agora tira da coluna CIA o rascunho que ele mesmo errou.** Quando um item gravado por ele deixa de valer (por exemplo, uma medida que não é exigida), ele descarta o item em vez de pedir para você ignorar. Item com texto final salvo por você ele não apaga: nesse caso, ele pede para você clicar em "excluir".
+
 ## 2.7.2
 
 - **Resposta no checklist agora vai para o Claude.** Escreva na caixa da pendência e aperte Enter, ou use o botão "Mandar N resposta(s) ao Claude", que aparece assim que você digita. Antes o botão só surgia depois de recarregar a página, e a resposta ficava parada.
