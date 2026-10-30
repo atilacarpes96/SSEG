@@ -612,6 +612,9 @@ class Api:
             reg = os.path.join(p, "analise.json")
             dist = _ler(os.path.join(p, "distribuicao.json"))
             e = _saiu_da_caixa(estado_caixa(dist, _ler(reg), self._cfg().get("prazo_caixa", 10)), p)
+            if not e.get("tipo"):  # 2.7.8: fora da planilha (processo de outro analista na minha caixa), o nº vem dos Marcos
+                n_an = _ler(os.path.join(p, "marcos-resumo.json")).get("analise")
+                e["tipo"] = ("ANÁLISE" if n_an == 1 else "%dº" % n_an) if isinstance(n_an, int) and n_an > 0 else ""
             out.append(dict(_na_caixa_do_sol(e, caixa_sol[n], ultima), meu=_e_meu(dist, eu),
                             **identificacao(p, os.listdir(p), dist),
                             codigo=n, quando=quando, arquivos=len(arqs), analise=os.path.exists(reg),

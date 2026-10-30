@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.8
+
+- **Processo que caiu na sua caixa sem estar na planilha de distribuição** (por exemplo, de um analista que está fora) agora mostra na lista se é 1ª, 2ª ou 3ª análise, tirado dos Marcos do SOL. Antes a etiqueta ficava em branco.
+
 ## 2.7.7
 
 - **Arquivo que mudou no PC e no servidor agora diz qual é o mais novo e o que muda.** O aviso do chip já traz o nome do arquivo. Na tela do chip Servidor, cada arquivo em conflito mostra a hora em que foi gravado de cada lado, marca a opção "(mais novo)" e lista as diferenças: no JSON, o campo que mudou (por exemplo, a exigência e2 com um texto no PC e outro no servidor, ou uma pendência que só existe de um lado); no texto, as linhas que só estão de um lado. Nada é trocado até você escolher.
