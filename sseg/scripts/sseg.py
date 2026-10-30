@@ -682,18 +682,28 @@ def _cruzar_transcrita(p, div, s):
     fonte = "Decreto 51.803/2014, Anexo B" if tr["fonte"] == "anexo_b_decreto" else "RT 05 Parte 07/2025, Anexo A"
     s.titulo("Medidas exigidas (linha transcrita: %s, Tabela %s, %s) x campo 4" % (fonte, tr["tabela"], tr["rotulo"]))
     presentes = {canon_medida(m.get("medida")) for m in p.get("medidas", [])} - {None}
+    textos = {}
+    for n in tr["notas"]:
+        k = re.match(r"^\s*(\d+)", n)
+        if k:
+            textos[k.group(1)] = re.sub(r"^\s*\d+\s*[–-]\s*", "", n).strip()
     exigidas = set()
     for m, v in tr["exigidas"].items():
         c = canon_medida(m)
         exigidas.add(c)
         nota = re.findall(r"\d+", v)
+        # o texto da nota vai junto: "X7 — Exigido somente para a Divisão D-5" muda tudo (caso SEST, 30/10/2026: o
+        # Plano de Emergência presente no campo 4 saía "OK" e a nota dizia que para D-1 a tabela nem o exige)
+        txt = "; ".join("nota %s: %s" % (n, textos.get(n, "(texto da nota nao transcrito)")) for n in nota)
         if c is None:
-            s.atencao("%s (%s) — nome que o check nao reconhece: comparar com o campo 4 a mao." % (m, v.strip()))
+            s.atencao("%s (%s) — nome que o check nao reconhece: comparar com o campo 4 a mao.%s"
+                      % (m, v.strip(), " " + txt if txt else ""))
+        elif c in presentes and nota:
+            s.atencao("%s (%s) — presente no campo 4; %s — conferir se a nota alcanca este caso." % (m, v.strip(), txt))
         elif c in presentes:
             s.ok("%s — presente no campo 4." % m)
         elif nota:
-            s.atencao("%s (%s) — ausente do campo 4; a celula tem nota %s: aplicar a nota ao caso antes de exigir."
-                      % (m, v.strip(), ", ".join(nota)))
+            s.atencao("%s (%s) — ausente do campo 4; %s — aplicar a nota ao caso antes de exigir." % (m, v.strip(), txt))
         else:
             s.erro("%s — EXIGIDA pela linha transcrita (Tabela %s, %s) e ausente do campo 4. Conferir a celula na "
                    "imagem da tabela (normas/pdf/) antes de notificar." % (m, tr["tabela"], tr["rotulo"]))
