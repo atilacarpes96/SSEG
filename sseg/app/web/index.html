@@ -291,6 +291,8 @@ footer { flex: none; background: var(--cartao); border-top: 1px solid var(--linh
          padding: 8px 10px; max-height: 260px; overflow-y: auto; white-space: pre-wrap; }
 .conflito { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 4px 0; font-size: 12.5px; }
 .conflito code { flex: 1; min-width: 200px; }
+.conflito-det { font-size: 12px; color: var(--suave); margin: 0 0 8px 12px; overflow-wrap: anywhere; }
+.conflito-det ul { margin: 4px 0 0; padding-left: 18px; }
 textarea { width: 100%; border: 1px solid var(--linha); border-radius: 6px; padding: 7px 9px; resize: vertical; }
 .aviso { font-size: 11.5px; color: var(--suave); margin-top: 18px; }
 
@@ -1723,9 +1725,22 @@ function telaServidor(plano) {
   const meio = [el("div", { class: "lista" }, partes.join("\n\n") || "Só conflitos.")];
   if (plano.conflito.length) {
     meio.push(el("p", { class: "sub", style: "margin:12px 0 4px;color:var(--verm)" }, "Mudou dos dois lados — escolha qual fica:"));
-    plano.conflito.forEach((k, i) => meio.push(el("div", { class: "conflito" }, el("code", {}, k),
-      ...[["deixar", "deixar como está"], ["servidor", "do servidor"], ["pc", "do PC"]].map(([v, r]) =>
-        el("label", {}, el("input", { type: "radio", name: "cf" + i, value: v, checked: v === "deixar", "data-k": k }), " " + r)))));
+    // 2.7.7: qual lado foi gravado por último e o que muda de um para o outro (o servidor manda a cópia só para comparar)
+    const det = plano.detalhes || {};
+    const quando = s => new Date(s * 1000).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    plano.conflito.forEach((k, i) => {
+      const d = det[k];
+      meio.push(el("div", { class: "conflito" }, el("code", {}, k),
+        ...[["deixar", "deixar como está"], ["servidor", "do servidor"], ["pc", "do PC"]].map(([v, r]) =>
+          el("label", {}, el("input", { type: "radio", name: "cf" + i, value: v, checked: v === "deixar", "data-k": k }),
+            " " + r + (d && d.mais_novo === v ? " (mais novo)" : "")))));
+      if (d) meio.push(el("div", { class: "conflito-det" },
+        el("div", {}, "PC: " + quando(d.pc) + " · servidor: " + quando(d.servidor) + " — "
+          + (d.mais_novo ? "o mais novo é o do " + (d.mais_novo === "pc" ? "PC" : "servidor") : "gravados quase juntos")),
+        el("details", { open: plano.conflito.length <= 3 }, el("summary", {}, "o que muda (" + d.mudancas.length + ")"),
+          el("ul", {}, ...d.mudancas.map(m => el("li", {}, m))))));
+    });
+    if (plano.detalhes_erro) meio.push(el("p", { class: "sub" }, "Não consegui comparar os arquivos: " + plano.detalhes_erro));
   }
   modal("Sincronizar processos", "Planta não vai nem vem. Nada passa pelo GitHub.", meio, [
     ["Sincronizar", async b => {
@@ -3773,7 +3788,8 @@ SSEG.tour = async passo => {
     const ctx = CTX["fluxo:" + f.id]; chatAdd(ctx, el("div", { class: "msg eu" }, "Porta de saída em F-6 abre para fora?"));
     SSEG.chat("fluxo:" + f.id, { t: "texto", texto: "**Sim**, no sentido do fluxo de saída.\n\n- RT 11/2016, item 5.5.4 (portas das rotas de saída)\n\nConfira o item no PDF antes de citar." }); }
   if (passo === "github") telaGit(null, { atras: 1, frente: 0, nome: "", email: "", itens: [{ cod: "M", arquivo: "sseg/normas/exemplo.md" }, { cod: "??", arquivo: "CIA 1.pdf", fora: "CIA de processo" }] });
-  if (passo === "servidor") telaServidor({ sobe: ["A00012345AA001/1.json"], desce: ["A00012345AA002/CIA 1.pdf"], conflito: ["A00012345AA003/analise.json"], iguais: 4 });
+  if (passo === "servidor") telaServidor({ sobe: ["A00012345AA001/1.json"], desce: ["A00012345AA002/CIA 1.pdf"], conflito: ["A00012345AA003/analise.json"], iguais: 4,
+    detalhes: { "A00012345AA003/analise.json": { pc: 1761800000, servidor: 1761830000, mais_novo: "servidor", mudancas: ["exigencias[e2].final: PC Prever corrimão… · servidor Prever corrimão em ambos os lados…", "só no servidor: pendencias[p7] Qual a data de protocolo?"] } } });
   if (passo === "bug") $("#b-bug").click();
   if (passo === "processo") {
     const fake = { codigo: "A00012345AA001", json_sol: "api-1.json", sol: { id: 1, licenciamento: "", analise: "", analise_direta: false }, cias: ["CIA 1.pdf"], laudo: "Laudo de exemplo.",

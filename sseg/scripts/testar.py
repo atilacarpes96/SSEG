@@ -186,6 +186,17 @@ def main():
              open(os.path.join(ppci, cod, "CIA 1.pdf")).read() == "cia pc"
              and open(os.path.join(srv, cod, "CIA 1.pdf")).read() == "cia srv"
              and open(os.path.join(ppci, cod, "1.json")).read() == "srv2", str(r))
+        gravar(os.path.join(ppci, cod, "analise.json"), json.dumps({"exigencias": [{"id": "e1", "final": "a"}, {"id": "e2", "final": "pc"}]}))
+        gravar(os.path.join(srv, cod, "analise.json"), json.dumps({"exigencias": [{"id": "e1", "final": "a"}, {"id": "e3", "final": "srv"}]}))
+        os.utime(os.path.join(ppci, cod, "analise.json"), (1000000, 1000000))
+        dt = sc.detalhar(ppci, Falso(), [cod + "/analise.json", cod + "/CIA 1.pdf"])
+        da = dt[cod + "/analise.json"]
+        caso("sincronizar: conflito diz o lado mais novo e o que muda (2.7.7)",
+             da["mais_novo"] == "servidor" and any("só no PC" in m and "e2" in m for m in da["mudancas"])
+             and any("só no servidor" in m and "e3" in m for m in da["mudancas"])
+             and "binário" in dt[cod + "/CIA 1.pdf"]["mudancas"][0]
+             and open(os.path.join(ppci, cod, "analise.json")).read().find('"pc"') > 0, str(dt))
+        os.remove(os.path.join(ppci, cod, "analise.json")); os.remove(os.path.join(srv, cod, "analise.json"))
         r = sc.aplicar(ppci, Falso(), {cod + "/CIA 1.pdf": "servidor"})
         caso("sincronizar: escolha 'servidor' resolve o conflito",
              open(os.path.join(ppci, cod, "CIA 1.pdf")).read() == "cia srv" and not r["conflito_pendente"], str(r))

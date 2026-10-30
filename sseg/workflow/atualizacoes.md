@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 30/10/2026 — SSEG.exe 2.7.7: conflito PC × servidor mostra o mais novo e o que muda
+
+- `sincronizar.py --json` passa a trazer, para cada conflito, a hora de gravação dos dois lados, o lado mais novo e as diferenças (JSON campo a campo; texto linha a linha). A cópia do servidor vem só para comparar; nada é gravado até a escolha. O aviso do chip cita o arquivo.
+
+### Prompt para atualizar
+
+```text
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 30/10/2026 — SSEG.exe 2.7.6: PDF da RT de Implantação do SOL, da RT 22 e da RT 05 Parte 08
 
 - Bloco de norma do chat: "Não achei o PDF" para "RT de Implantação do SOL-CBMRS" (citada sem número), RT 22 e RT 05 Parte 08, com os PDFs em `normas/pdf/`. O mapa de `app/busca.py` passou a reconhecer as três.

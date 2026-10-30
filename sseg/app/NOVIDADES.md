@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.7
+
+- **Arquivo que mudou no PC e no servidor agora diz qual é o mais novo e o que muda.** O aviso do chip já traz o nome do arquivo. Na tela do chip Servidor, cada arquivo em conflito mostra a hora em que foi gravado de cada lado, marca a opção "(mais novo)" e lista as diferenças: no JSON, o campo que mudou (por exemplo, a exigência e2 com um texto no PC e outro no servidor, ou uma pendência que só existe de um lado); no texto, as linhas que só estão de um lado. Nada é trocado até você escolher.
+
 ## 2.7.6
 
 - **O botão do PDF agora acha a RT de Implantação do SOL-CBMRS.** Quando o Claude citava "RT de Implantação do SOL", que não tem número, aparecia "Não achei o PDF… em normas/pdf" mesmo com o PDF lá. Agora abre o `RTISOL.pdf` na página do item. A RT 22 (silos) e a RT 05 Parte 08 (simbologia) também passaram a abrir.

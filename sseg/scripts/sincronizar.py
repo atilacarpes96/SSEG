@@ -286,6 +286,92 @@ def aplicar(pasta_ppci, servidor, escolhas=None, so_descer=False):
     return {"subiu": sobe, "desceu": [k for k in desce if k not in presos], "conflito_pendente": resto, "presos": presos}
 
 
+# ---- O que muda num conflito (2.7.7, pedido do Átila em 30/10/2026): qual lado é o mais novo e o que difere, para o
+# analista saber qual escolher. Só lê: a cópia do servidor vem num tar para a memória e nada é gravado.
+
+def _curto(v, n=70):
+    t = v if isinstance(v, str) else json.dumps(v, ensure_ascii=False)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t if len(t) <= n else t[:n - 1] + "…"
+
+
+def _diff_json(a, b, caminho="", saida=None, limite=12):
+    """Diferenças entre o JSON do PC (a) e o do servidor (b), em frases curtas. Lista de objetos com "id" casa pelo id."""
+    saida = [] if saida is None else saida
+    if len(saida) >= limite or a == b:
+        return saida
+    if isinstance(a, dict) and isinstance(b, dict):
+        for k in list(a) + [k for k in b if k not in a]:
+            if len(saida) >= limite:
+                break
+            c = caminho + "." + k if caminho else k
+            if k not in b:
+                saida.append("só no PC: %s = %s" % (c, _curto(a[k])))
+            elif k not in a:
+                saida.append("só no servidor: %s = %s" % (c, _curto(b[k])))
+            else:
+                _diff_json(a[k], b[k], c, saida, limite)
+        return saida
+    if isinstance(a, list) and isinstance(b, list):
+        if all(isinstance(x, dict) and "id" in x for x in a + b):
+            da, db = {x["id"]: x for x in a}, {x["id"]: x for x in b}
+            for i in list(da) + [i for i in db if i not in da]:
+                c = "%s[%s]" % (caminho, i)
+                if i not in db:
+                    saida.append("só no PC: %s %s" % (c, _curto(da[i].get("texto") or da[i].get("final") or da[i])))
+                elif i not in da:
+                    saida.append("só no servidor: %s %s" % (c, _curto(db[i].get("texto") or db[i].get("final") or db[i])))
+                else:
+                    _diff_json(da[i], db[i], c, saida, limite)
+            return saida
+        if len(a) != len(b):
+            saida.append("%s: %d item(ns) no PC, %d no servidor" % (caminho or "lista", len(a), len(b)))
+            return saida
+        for i, (x, y) in enumerate(zip(a, b)):
+            _diff_json(x, y, "%s[%d]" % (caminho, i), saida, limite)
+        return saida
+    saida.append("%s: PC %s · servidor %s" % (caminho or "valor", _curto(a, 45), _curto(b, 45)))
+    return saida
+
+
+def diferencas(nome, pc, srv):
+    """O que muda do arquivo do PC para o do servidor (bytes dos dois)."""
+    if nome.endswith(".json"):
+        try:
+            d = _diff_json(json.loads(pc.decode("utf-8")), json.loads(srv.decode("utf-8")))
+            return d or ["mesmo conteúdo; só a formatação difere"]
+        except (ValueError, UnicodeDecodeError):
+            pass
+    if nome.endswith((".md", ".txt", ".json")):
+        import difflib
+        la = pc.decode("utf-8", "replace").splitlines()
+        lb = srv.decode("utf-8", "replace").splitlines()
+        so_pc = [l for l in difflib.ndiff(la, lb) if l.startswith("- ")]
+        so_srv = [l for l in difflib.ndiff(la, lb) if l.startswith("+ ")]
+        linhas = ["%d linha(s) só no PC, %d só no servidor" % (len(so_pc), len(so_srv))]
+        linhas += ["só no PC: " + _curto(l[2:]) for l in so_pc[:5] if l[2:].strip()]
+        linhas += ["só no servidor: " + _curto(l[2:]) for l in so_srv[:5] if l[2:].strip()]
+        return linhas
+    return ["arquivo binário: PC %d bytes, servidor %d bytes" % (len(pc), len(srv))]
+
+
+def detalhar(pasta_ppci, servidor, chaves):
+    """{chave: {pc: mtime, servidor: mtime, mais_novo: 'pc'|'servidor'|'', mudancas: [...]}} para os conflitos."""
+    no_pc, r = _no_pc(pasta_ppci), {}
+    with tarfile.open(fileobj=io.BytesIO(servidor.entregar(chaves)), mode="r") as tar:
+        remotos = {mb.name: (mb.mtime, tar.extractfile(mb).read()) for mb in tar.getmembers() if mb.isfile()}
+    for k in chaves:
+        if k not in remotos or not os.path.isfile(no_pc(k)):
+            continue
+        t_srv, b_srv = remotos[k]
+        t_pc = int(os.path.getmtime(no_pc(k)))
+        with open(no_pc(k), "rb") as fh:
+            b_pc = fh.read()
+        mais = "" if abs(t_pc - t_srv) < 60 else ("pc" if t_pc > t_srv else "servidor")
+        r[k] = {"pc": t_pc, "servidor": int(t_srv), "mais_novo": mais, "mudancas": diferencas(k, b_pc, b_srv)}
+    return r
+
+
 def texto_plano(p):
     linhas = ["sobe para o servidor: %d · desce para o PC: %d · iguais: %d"
               % (len(p["sobe"]), len(p["desce"]), p["iguais"])]
@@ -322,6 +408,11 @@ def principal(args, so_descer=False):
     try:
         if getattr(args, "simular", False) or getattr(args, "json", False):
             p = planejar(pasta, srv)
+            if args.json and p["conflito"]:
+                try:  # detalhe é ajuda: se falhar, a tela de escolha continua como antes
+                    p["detalhes"] = detalhar(pasta, srv, p["conflito"])
+                except (RuntimeError, OSError, tarfile.TarError) as e:
+                    p["detalhes_erro"] = str(e)[:200]
             print(json.dumps(p, ensure_ascii=False) if args.json else texto_plano(p))
             return
         escolhas = json.load(open(args.escolhas, encoding="utf-8")) if getattr(args, "escolhas", None) else {}

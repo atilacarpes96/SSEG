@@ -284,7 +284,9 @@ class Api:
         try:
             plano = self.servidor_planejar()
             if plano["conflito"]:
-                msg = "%d arquivo(s) mudaram dos dois lados: clique no chip para escolher" % len(plano["conflito"])
+                c = plano["conflito"]  # 2.7.7: diz qual arquivo; a tela do chip mostra o mais novo e o que muda
+                msg = "%s mudou%s no PC e no servidor: clique no chip para ver qual é o mais novo e escolher" % (
+                    c[0] + (" e mais %d" % (len(c) - 1) if len(c) > 1 else ""), "" if len(c) == 1 else "ram")
             elif enviar and (plano["sobe"] or plano["desce"]):
                 linhas = self.servidor_aplicar({})
                 self._registro.extend(["— Servidor (automático) —", *linhas])
