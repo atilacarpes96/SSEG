@@ -203,11 +203,27 @@ class Porta:
                 self._caixa = set()
         return self._caixa
 
+    def _passou_pela_caixa(self, cod):
+        """2.7.11: o processo saiu da caixa do admin (CA/CIA lançado) depois da distribuição da planilha ao outro: o
+        sol-caixa.json (só a leitura da caixa do servidor grava) é desta rodada, então continua do admin, que precisa
+        receber o saiu_em e os Marcos novos. Antes, ao sair da caixa, o processo voltava a ser do outro e travava."""
+        try:
+            with open(os.path.join(self.raiz, cod, "sol-caixa.json"), encoding="utf-8") as fh:
+                lido = json.load(fh).get("lido_em") or ""
+        except (OSError, ValueError, AttributeError):
+            return False
+        try:
+            with open(os.path.join(self.raiz, cod, "distribuicao.json"), encoding="utf-8") as fh:
+                dist = json.load(fh).get("distribuido") or ""
+        except (OSError, ValueError, AttributeError):
+            dist = ""
+        return bool(lido) and lido >= dist
+
     def meu(self, cod, resp=None):
         """Responsável pelo processo, ou ME de uma CT ou recurso em aberto nele (2.3.0)."""
         if norm(responsavel(self.raiz, cod, self.acesso, resp)) == norm(self.analista):
             return True
-        if self.admin and cod in self._caixa_admin():
+        if self.admin and (cod in self._caixa_admin() or self._passou_pela_caixa(cod)):
             return True
         return norm(self.analista) in envolvidos(self.raiz, cod)
 

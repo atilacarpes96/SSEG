@@ -109,7 +109,7 @@ def estado_caixa(dist, reg, prazo=10, hoje=None):
 def _saiu_da_caixa(e, pasta):
     """2.5.1: o processo estava na caixa e o servidor viu que saiu (CA ou CIA lançados no SOL): sol-caixa.json ganha
     saiu_em e os Marcos dão o resultado. A planilha, quando atualizar, manda por cima (ela já traz o concluído)."""
-    if e["estado"] != "caixa":
+    if e["estado"] not in ("caixa", "sem"):  # "sem": redistribuído a mim fora da planilha (2.7.11)
         return e
     saiu = _ler(os.path.join(pasta, "sol-caixa.json")).get("saiu_em")
     if not saiu:
@@ -150,6 +150,9 @@ def _dist_minha(dist, eu, sc, ultima_leitura):
     if _e_meu(dist, eu):
         return dist, True
     if sc.get("lido_em") and sc.get("lido_em") == ultima_leitura and not sc.get("saiu_em"):
+        return {}, True
+    # 2.7.11: saiu da minha caixa (concluí) depois da distribuição do outro — continua meu, para descer como concluído
+    if sc.get("saiu_em") and (sc.get("lido_em") or "") >= (dist.get("distribuido") or ""):
         return {}, True
     return dist, False
 

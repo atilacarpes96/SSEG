@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.11
+
+- **Processo de outro analista que você concluiu agora sai da caixa no Início.** Na 2.7.9 ele passava a ser seu só enquanto estava na caixa do SOL; ao concluir, voltava a valer o nome da planilha, o servidor parava de mandar a atualização e o processo ficava parado como "Na caixa do SOL". Agora ele continua seu e desce como concluído ("CA 30/10").
+
 ## 2.7.10
 
 - **Depois de concluir, o botão vira "✓ Processo concluído", em azul.** Fica assim enquanto o processo estiver nessa análise; se ele voltar numa análise nova, o botão volta a "Concluir processo". Passando o mouse, mostra CIA ou CA e quando foi concluído.

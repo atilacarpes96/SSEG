@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 30/10/2026 — SSEG.exe 2.7.11: processo redistribuído e concluído sai da caixa
+
+- `porta.py` e `api.py`: processo que saiu da caixa do SOL depois da distribuição da planilha ao outro analista (`sol-caixa.json` com `saiu_em` e `lido_em` ≥ `distribuido`) continua de quem estava com ele; desce como concluído.
+
+### Prompt para atualizar
+
+```text
+Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
+```
+
 ## 30/10/2026 — SSEG.exe 2.7.10: botão "Processo concluído" e Início atualizado ao concluir
 
 - Concluir processo grava `conclusao` (data, CIA/CA, nº da análise dos Marcos) em `analise.json`; o botão fica azul, "✓ Processo concluído", até chegar análise nova. Ao concluir, o programa roda o Atualizar do Início.
