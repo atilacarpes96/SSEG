@@ -24,7 +24,7 @@ Atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar na conta.
 
 ## 30/10/2026 — check: linha transcrita da tabela cruzada com o campo 4
 
-- `sseg.py check`/`travas` (e a pré-análise): sem linha conferida em `tabelas_conferidas.json`, cruza a linha **transcrita** do PDF com o campo 4. Medida exigida ausente vira erro; célula com nota vira atenção ("aplicar a nota"); medida do campo 4 fora da linha, atenção. Antes, nesse caso, só dizia "linha não conferida — não dá para cruzar", e uma medida exigida que faltava no campo 4 passou por 4 análises. Pré-análises da caixa refeitas no servidor em 30/10/2026. Célula com nota mostra o texto da nota, também quando a medida está no campo 4 (o Plano de Emergência X7 da 6D, "somente para D-5", saía como OK).
+- `sseg.py check`/`travas` (e a pré-análise): sem linha conferida em `tabelas_conferidas.json`, cruza a linha **transcrita** do PDF com o campo 4. Medida exigida ausente vira erro; célula com nota vira atenção ("aplicar a nota"); medida do campo 4 fora da linha, atenção. Antes, nesse caso, só dizia "linha não conferida — não dá para cruzar", e uma medida exigida que faltava no campo 4 passou por 4 análises. Pré-análises da caixa refeitas no servidor em 30/10/2026. Célula com nota mostra o texto da nota, também quando a medida está no campo 4 (o Plano de Emergência X7 da 6D, "somente para D-5", saía como OK). Medida a mais no campo 4 sai como informação ("não se notifica", casos-referencia §4), não como atenção.
 
 ### Prompt para atualizar
 

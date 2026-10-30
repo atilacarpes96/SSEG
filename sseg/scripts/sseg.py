@@ -658,8 +658,7 @@ def travas(p, s=None):
                            % (exig, ln["tabela"], ln["divisao"], ln["coluna"]))
             for nao in ln["nao_exigidas"]:
                 if canon_medida(nao) in presentes:
-                    s.atencao("%s consta no campo 4 mas NAO e exigida nessa linha da tabela — "
-                              "se veio de laudo/opcao do RT, o fundamento nao e a tabela." % nao)
+                    s.info("%s consta no campo 4 mas nao e exigida nessa linha — medida a mais: nao se notifica." % nao)
         elif _cruzar_transcrita(p, div, s):
             pass
         else:
@@ -699,7 +698,8 @@ def _cruzar_transcrita(p, div, s):
             s.atencao("%s (%s) — nome que o check nao reconhece: comparar com o campo 4 a mao.%s"
                       % (m, v.strip(), " " + txt if txt else ""))
         elif c in presentes and nota:
-            s.atencao("%s (%s) — presente no campo 4; %s — conferir se a nota alcanca este caso." % (m, v.strip(), txt))
+            s.info("%s (%s) — presente no campo 4; %s Se a nota tira a exigencia, e medida a mais: nao se notifica."
+                   % (m, v.strip(), txt))
         elif c in presentes:
             s.ok("%s — presente no campo 4." % m)
         elif nota:
@@ -710,8 +710,8 @@ def _cruzar_transcrita(p, div, s):
     for m in p.get("medidas", []):
         c = canon_medida(m.get("medida"))
         if c and c not in exigidas:
-            s.atencao("%s consta no campo 4 mas nao esta marcada nessa linha da tabela — se veio de laudo/opcao do "
-                      "RT, o fundamento nao e a tabela." % m.get("medida"))
+            s.info("%s consta no campo 4 mas nao esta marcada nessa linha — medida a mais: nao se notifica "
+                   "(Átila, 30/10/2026)." % m.get("medida"))
     return True
 
 
