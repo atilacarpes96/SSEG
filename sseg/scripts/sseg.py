@@ -660,12 +660,49 @@ def travas(p, s=None):
                 if canon_medida(nao) in presentes:
                     s.atencao("%s consta no campo 4 mas NAO e exigida nessa linha da tabela — "
                               "se veio de laudo/opcao do RT, o fundamento nao e a tabela." % nao)
+        elif _cruzar_transcrita(p, div, s):
+            pass
         else:
             s.pergunta("Linha da tabela nao conferida para %s / %s — nao da para cruzar as "
                        "medidas exigidas com o campo 4. Quando for cruzar: renderizar a pagina da tabela "
                        "(pdftoppm, normas/pdf/) e ler a linha — sem pedir a imagem ao analista."
                        % (div, coluna_altura(h)))
     return s
+
+
+def _cruzar_transcrita(p, div, s):
+    """Sem linha conferida, cruza a linha TRANSCRITA do PDF (tabelas_conferidas.json) com o campo 4 (30/10/2026, pedido
+    do Átila: a medida exigida que faltava no campo 4 passou por 4 análises porque a linha não estava "conferida" e o
+    cruzamento não rodava; ficava dependendo do Claude ler a imagem). Célula com nota não vira erro: aplicar a nota é
+    do analista. Devolve False se não há transcrição para a divisão/coluna."""
+    tab, col, _s = rota_tabela(p, Saida())
+    tr = linha_transcrita(p, div, tab, col) if tab else None
+    if not tr:
+        return False
+    fonte = "Decreto 51.803/2014, Anexo B" if tr["fonte"] == "anexo_b_decreto" else "RT 05 Parte 07/2025, Anexo A"
+    s.titulo("Medidas exigidas (linha transcrita: %s, Tabela %s, %s) x campo 4" % (fonte, tr["tabela"], tr["rotulo"]))
+    presentes = {canon_medida(m.get("medida")) for m in p.get("medidas", [])} - {None}
+    exigidas = set()
+    for m, v in tr["exigidas"].items():
+        c = canon_medida(m)
+        exigidas.add(c)
+        nota = re.findall(r"\d+", v)
+        if c is None:
+            s.atencao("%s (%s) — nome que o check nao reconhece: comparar com o campo 4 a mao." % (m, v.strip()))
+        elif c in presentes:
+            s.ok("%s — presente no campo 4." % m)
+        elif nota:
+            s.atencao("%s (%s) — ausente do campo 4; a celula tem nota %s: aplicar a nota ao caso antes de exigir."
+                      % (m, v.strip(), ", ".join(nota)))
+        else:
+            s.erro("%s — EXIGIDA pela linha transcrita (Tabela %s, %s) e ausente do campo 4. Conferir a celula na "
+                   "imagem da tabela (normas/pdf/) antes de notificar." % (m, tr["tabela"], tr["rotulo"]))
+    for m in p.get("medidas", []):
+        c = canon_medida(m.get("medida"))
+        if c and c not in exigidas:
+            s.atencao("%s consta no campo 4 mas nao esta marcada nessa linha da tabela — se veio de laudo/opcao do "
+                      "RT, o fundamento nao e a tabela." % m.get("medida"))
+    return True
 
 
 # ----------------------------------------------------------------------------- render

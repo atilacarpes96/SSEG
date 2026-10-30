@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 30/10/2026 — check: linha transcrita da tabela cruzada com o campo 4
+
+- `sseg.py check`/`travas` (e a pré-análise): sem linha conferida em `tabelas_conferidas.json`, cruza a linha **transcrita** do PDF com o campo 4. Medida exigida ausente vira erro; célula com nota vira atenção ("aplicar a nota"); medida do campo 4 fora da linha, atenção. Antes, nesse caso, só dizia "linha não conferida — não dá para cruzar", e uma medida exigida que faltava no campo 4 passou por 4 análises. Pré-análises da caixa refeitas no servidor em 30/10/2026.
+
+### Prompt para atualizar
+
+```text
+Atualize o SSEG desta pasta pelo chip GitHub (git pull). Nada a instalar na conta.
+```
+
 ## 30/10/2026 — SSEG.exe 2.7.11: processo redistribuído e concluído sai da caixa
 
 - `porta.py` e `api.py`: processo que saiu da caixa do SOL depois da distribuição da planilha ao outro analista (`sol-caixa.json` com `saiu_em` e `lido_em` ≥ `distribuido`) continua de quem estava com ele; desce como concluído.
