@@ -1001,7 +1001,7 @@ class Api:
         positional arguments but 3 were given")."""
         import inspect
         _s, m = self._scripts_do_clone("sol_caixa", "sol_lancar")
-        if "reprovados" in inspect.signature(m.a_aprovar).parameters:
+        if "reprovados" in inspect.signature(m.a_aprovar).parameters and hasattr(m, "CORRECOES"):
             return m
         try:
             self._registro.extend(git_sinc.trazer(self._clone()))
@@ -1040,6 +1040,14 @@ class Api:
         sol_lancar = self._sol_lancar()
         ida, pasta = self._id_analise(codigo), self._pasta_proc(codigo)
         extra = {"aprovados": [], "falhas": []}
+        # dois grupos para o mesmo item do SOL (ex.: duas medidas fora do campo 4 no "Adicionar correções") viram um
+        # lançamento só, com os textos em sequência: o "Outros" do item guarda um texto, e o segundo apagava o primeiro
+        juntos = {}
+        for l in lancamentos or []:
+            j = juntos.setdefault(l["item"], {"item": l["item"], "texto": "", "ids": []})
+            j["texto"] = (j["texto"].rstrip() + "\n\n" + l["texto"].lstrip("\n")) if j["texto"] else l["texto"]
+            j["ids"] += l.get("ids") or []
+        lancamentos = list(juntos.values())
 
         def rodar(aba):
             try:

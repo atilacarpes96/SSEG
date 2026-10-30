@@ -471,6 +471,13 @@ def main():
          [(_sl.achar(car_a, n) or {}).get("tipo") for n in ("Característica - Ocupação: Depósitos de mercadorias", "Características gerais",
           "Característica - Tipo de edificação", "Característica - Isolamento de risco", "Ocupação J-4")]
          == ["GERAL", "GERAL", "TIPO_EDIFICACAO", "ISOLAMENTO_RISCO", "OCUPACAO"])
+    med_a = {"licenciamento": {"envolvidos": {}, "caracteristica": {"id": 5, "ocupacoes": []}, "elemGraficos": [], "especsRiscos": [],
+             "especSeguranca": {"id": 9, "medidas": [{"id": 1, "tipo": {"nome": "Sinalização de Emergência"}, "resultado": None}]}}}
+    caso("Lançar no SOL: 'Geral' vai à Característica geral; medida fora do campo 4 vai a 'Adicionar correções' (30/10/2026)",
+         [(_sl.achar(med_a, n) or {}).get("tipo") for n in ("Geral", "Compartimentação Horizontal", "Sinalização de Emergência")]
+         == ["GERAL", "MEDIDA_SEGURANCA_OUTRA", "MEDIDA_SEGURANCA"]
+         and _sl.achar(med_a, "Compartimentação Horizontal")["id"] == 9
+         and "MEDIDA_SEGURANCA_OUTRA" not in {i["tipo"] for i in _sl.a_aprovar(med_a, [], True)})
     ap_a = {"licenciamento": {"envolvidos": {}, "caracteristica": {"id": 5, "ocupacoes": []}, "elemGraficos": [], "especsRiscos": [],
             "especSeguranca": {"medidas": [{"id": 1, "tipo": {"nome": "Extintores"}, "resultado": None},
                                            {"id": 2, "tipo": {"nome": "Alarme"}, "resultado": {"statusResultadoAtec": "REPROVADO"}},

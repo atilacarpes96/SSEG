@@ -36,6 +36,12 @@ CHAVES = {  # chave das opções do modal, dos itens que não são medida (confi
     "ELEMENTO_GRAFICO": "analise.elementos.pranchas", "RISCO_ESPECIFICO": "analise.riscos.especificos",
 }  # conferidas no chunk 3 do SOL em 20/10/2026 (getConfiguracaoItemReprovado)
 STATUS = {"APROVADO": "Aprovado", "REPROVADO": "Reprovado"}
+CORRECOES = "Adicionar correções (medida fora do campo 4)"
+# nomes de medida da coluna CIA (sseg.canon_medida) — medida que não está no campo 4 vai para "Adicionar correções"
+MEDIDAS_CONHECIDAS = ("compartimentacao", "acesso de viatura", "seguranca estrutural", "controle de materiais", "cmar",
+                      "controle de fumaca", "saida", "brigada", "plano de emergencia", "iluminacao", "deteccao", "alarme",
+                      "sinalizacao", "extintor", "hidrante", "mangotinho", "chuveiro", "sprinkler", "isolamento de risco",
+                      "descargas atmosfericas", "spda", "espuma", "resfriamento", "elevador de emergencia")
 LIMITE = 2000
 
 GRAVAR = r"""(async () => {
@@ -81,7 +87,13 @@ def itens(analise):
         t = m.get("tipo") or {}
         out.append({"tipo": "MEDIDA_SEGURANCA", "id": m.get("id"), "nome": t.get("nome") or "?", "resultado": m.get("resultado"),
                     "chave": t.get("chaveNC")})
-    # "Outras medidas" (MEDIDA_SEGURANCA_OUTRA) fica de fora: no SOL a ação dela é "Corrigir/Salvar correções", não Reprovar
+    # "Adicionar correções" (30/10/2026, relato do Átila): medida exigida que NÃO está no campo 4 vai no botão "Adicionar
+    # correções" abaixo da tabela de medidas. No código do SOL (chunk 4, app-acao-analise acao="CORRIGIR") é o mesmo modal
+    # do Reprovar, com tipo MEDIDA_SEGURANCA_OUTRA, id da especSeguranca, resultado = especSeguranca.resultadoOutrasMedidas
+    # e opções em analise.medidas.outros ("Salvar correções", chunk 3). Não tem Aprovar: fica fora do aprovar o resto.
+    if esp.get("id"):
+        out.append({"tipo": "MEDIDA_SEGURANCA_OUTRA", "id": esp.get("id"), "nome": CORRECOES,
+                    "resultado": esp.get("resultadoOutrasMedidas"), "chave": "analise.medidas.outros"})
     for r in L.get("especsRiscos") or []:
         t = r.get("risco") or r.get("tipo") or {}
         nome = (t.get("descricao") or t.get("nome")) if isinstance(t, dict) else t
@@ -104,6 +116,13 @@ def achar(analise, nome):
     iguais = [i for i in lst if _chave(i["nome"]) == k]
     if not iguais:  # "Planta Baixa" × "planta baixa"; "Ocupação F-8" × "Ocupação F-8 — Restaurantes"
         iguais = [i for i in lst if _chave(i["nome"]).startswith(k) or k.startswith(_chave(i["nome"]))]
+    if not iguais and (k in ("geral", "campo 3", "caracteristicas") or k.startswith(("geral ", "populacao", "campo 3"))):
+        # "Geral" / população / campo 3 na coluna CIA = "Característica geral" do SOL (relato do Átila, 30/10/2026)
+        iguais = [i for i in lst if i["tipo"] == "GERAL"]
+    if not iguais and (k.startswith(("adicionar correcoes", "correcoes", "outras medidas"))
+                       or any(m in k for m in MEDIDAS_CONHECIDAS)):
+        # medida exigida que não está no campo 4 (não casou com nenhuma medida do SOL): "Adicionar correções"
+        iguais = [i for i in lst if i["tipo"] == "MEDIDA_SEGURANCA_OUTRA"]
     if not iguais and k.startswith("caracteristica"):
         # "Característica - Ocupação: …" (campo 3 na coluna CIA) vai para "Característica geral", salvo quando nomeia o
         # tipo de edificação ou o isolamento (relato do Átila, 27/10/2026: não marcava sozinho)
@@ -219,7 +238,7 @@ def a_aprovar(analise, notificados, reprovados=False):
     def entra(i):
         st = (i["resultado"] or {}).get("statusResultadoAtec")
         return not st or (reprovados and st == "REPROVADO")
-    return [i for i in itens(analise) if entra(i) and _chave(i["nome"]) not in fora]
+    return [i for i in itens(analise) if entra(i) and _chave(i["nome"]) not in fora and i["tipo"] != "MEDIDA_SEGURANCA_OUTRA"]
 
 
 def aprovar_restantes(aba, id_analise, notificados, reprovados=False):

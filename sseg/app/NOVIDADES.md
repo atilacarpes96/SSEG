@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.12
+
+- **Lançar no SOL acha a "Característica geral" para a exigência do campo 3.** Exigência agrupada como "Geral" (população, dados do campo 3) não casava com nenhum item e pedia para escolher na lista; agora vai sozinha para "Característica geral".
+- **Medida exigida que não está no campo 4 vai para "Adicionar correções".** É o botão abaixo da tabela de medidas, com a opção "Outros", como você faz à mão. Antes o programa não achava item para ela. Duas ou mais medidas nessa situação entram juntas no mesmo "Outros", uma depois da outra (antes a segunda apagaria a primeira). O "Adicionar correções" nunca é marcado como Aprovado no "aprovar o resto".
+
 ## 2.7.11
 
 - **Processo de outro analista que você concluiu agora sai da caixa no Início.** Na 2.7.9 ele passava a ser seu só enquanto estava na caixa do SOL; ao concluir, voltava a valer o nome da planilha, o servidor parava de mandar a atualização e o processo ficava parado como "Na caixa do SOL". Agora ele continua seu e desce como concluído ("CA 30/10").
