@@ -191,9 +191,23 @@ class Porta:
         if not self.admin and norm(analista) not in {norm(n) for n in self.acesso["analistas"]}:
             raise SystemExit("analista não cadastrado: %s" % analista)
 
+    def _caixa_admin(self):
+        """Códigos da última leitura da caixa do SOL no servidor (.caixa/caixa.json). O login do SOL do servidor é o do
+        admin: o que está ali está na caixa dele, mesmo que a planilha dê o processo a outro (2.7.8, caso de 30/10/2026:
+        PPCI de analista afastado redistribuído no SOL; a planilha ainda tinha o nome dele e o processo não descia)."""
+        if not hasattr(self, "_caixa"):
+            try:
+                with open(os.path.join(self.raiz, ".caixa", "caixa.json"), encoding="utf-8") as fh:
+                    self._caixa = {it.get("codigo") for it in json.load(fh).get("itens") or []}
+            except (OSError, ValueError, AttributeError):
+                self._caixa = set()
+        return self._caixa
+
     def meu(self, cod, resp=None):
         """Responsável pelo processo, ou ME de uma CT ou recurso em aberto nele (2.3.0)."""
         if norm(responsavel(self.raiz, cod, self.acesso, resp)) == norm(self.analista):
+            return True
+        if self.admin and cod in self._caixa_admin():
             return True
         return norm(self.analista) in envolvidos(self.raiz, cod)
 

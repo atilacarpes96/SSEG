@@ -143,6 +143,17 @@ def _e_meu(dist, eu):
     return not dono or not eu or _ultima_palavra(dono) == _ultima_palavra(eu)
 
 
+def _dist_minha(dist, eu, sc, ultima_leitura):
+    """2.7.8: processo de outro analista (pela planilha) que o SOL passou para a minha caixa — caso de 30/10/2026, PPCI
+    redistribuído com o analista fora. A caixa lida mais recente manda: o processo é meu e a linha da planilha, que é do
+    outro, não conta (nem o prazo dela). Devolve (distribuição a usar, é meu)."""
+    if _e_meu(dist, eu):
+        return dist, True
+    if sc.get("lido_em") and sc.get("lido_em") == ultima_leitura and not sc.get("saiu_em"):
+        return {}, True
+    return dist, False
+
+
 def _na_caixa_do_sol(e, sc, ultima_leitura):
     """2.6.3: a caixa do SOL manda sobre a planilha. A planilha entra uma vez por dia (7h47); a caixa do SOL é lida a
     cada Atualizar (no servidor ou no Chrome deste PC) e grava sol-caixa.json em cada processo dela. Processo da
@@ -610,12 +621,12 @@ class Api:
             arqs = [os.path.join(p, a) for a in os.listdir(p)]
             quando = max([os.path.getmtime(a) for a in arqs] + [os.path.getmtime(p)])
             reg = os.path.join(p, "analise.json")
-            dist = _ler(os.path.join(p, "distribuicao.json"))
+            dist, meu = _dist_minha(_ler(os.path.join(p, "distribuicao.json")), eu, caixa_sol[n], ultima)
             e = _saiu_da_caixa(estado_caixa(dist, _ler(reg), self._cfg().get("prazo_caixa", 10)), p)
             if not e.get("tipo"):  # 2.7.8: fora da planilha (processo de outro analista na minha caixa), o nº vem dos Marcos
                 n_an = _ler(os.path.join(p, "marcos-resumo.json")).get("analise")
                 e["tipo"] = ("ANÁLISE" if n_an == 1 else "%dº" % n_an) if isinstance(n_an, int) and n_an > 0 else ""
-            out.append(dict(_na_caixa_do_sol(e, caixa_sol[n], ultima), meu=_e_meu(dist, eu),
+            out.append(dict(_na_caixa_do_sol(e, caixa_sol[n], ultima), meu=meu,
                             **identificacao(p, os.listdir(p), dist),
                             codigo=n, quando=quando, arquivos=len(arqs), analise=os.path.exists(reg),
                             cts=_ler(os.path.join(p, "ct.json")).get("itens") or [],
@@ -887,7 +898,9 @@ class Api:
         if not os.path.isdir(pasta):
             raise RuntimeError("Não há pasta %s na pasta dos processos." % codigo)
         d = processo.montar(self._clone(), pasta)
-        dist = _ler(os.path.join(pasta, "distribuicao.json"))
+        sc_ = _ler(os.path.join(pasta, "sol-caixa.json"))
+        dist, _ = _dist_minha(_ler(os.path.join(pasta, "distribuicao.json")), self._cfg().get("analista") or "", sc_,
+                              getattr(self, "_ultima_caixa", ""))
         d["caixa"] = _na_caixa_do_sol(_saiu_da_caixa(estado_caixa(dist, d["analise"], self._cfg().get("prazo_caixa", 10)), pasta),
                                       _ler(os.path.join(pasta, "sol-caixa.json")), getattr(self, "_ultima_caixa", ""))
         # cabeçalho enxuto (2.3.13): código, razão social, medidas; CT e recurso só quando existem

@@ -262,6 +262,16 @@ def main():
              set(ful.listar()) == {"A00000002AA001/1.json", "A00000002AA001/distribuicao.json"}
              and ful.meus() == ["A00000002AA001"] and adm.meus() == ["A00000001AA001"]
              and set(adm.listar()) == {"A00000001AA001/1.json"}, str((ful.listar(), adm.listar())))
+        g(os.path.join(raiz, ".caixa", "caixa.json"), json.dumps({"itens": [{"codigo": "A00000002AA001"}]}))
+        caso("porta: processo do outro pela planilha que está na caixa do SOL do servidor desce ao admin (2.7.8)",
+             P().meu("A00000002AA001") and ful.meu("A00000002AA001") and not ful.meu("A00000001AA001"))
+        os.remove(os.path.join(raiz, ".caixa", "caixa.json"))
+        import api as _api_m
+        dist_o = {"analista": "Sd Riccardi", "distribuido": "2026-09-28", "tipo": "7º"}
+        caso("caixa: PPCI do outro na minha caixa do SOL é meu e sem o prazo da planilha dele (2.7.8)",
+             _api_m._dist_minha(dist_o, "Sd Carpes", {"lido_em": "2026-10-30"}, "2026-10-30") == ({}, True)
+             and _api_m._dist_minha(dist_o, "Sd Carpes", {"lido_em": "2026-10-29"}, "2026-10-30") == (dist_o, False)
+             and _api_m._dist_minha(dist_o, "Sd Riccardi", {}, "2026-10-30") == (dist_o, True))
         pacote = sc.empacotar({"A00000001AA001/1.json": os.path.join(d, "acesso.json"),   # de outro: recusa
                                "A00000002AA001/distribuicao.json": os.path.join(d, "acesso.json"),  # só o servidor grava
                                "A00000003AA001/CIA 1.pdf": os.path.join(raiz, "A00000002AA001", "1.json")})  # novo: vira dele
