@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.6
+
+- **O botão do PDF agora acha a RT de Implantação do SOL-CBMRS.** Quando o Claude citava "RT de Implantação do SOL", que não tem número, aparecia "Não achei o PDF… em normas/pdf" mesmo com o PDF lá. Agora abre o `RTISOL.pdf` na página do item. A RT 22 (silos) e a RT 05 Parte 08 (simbologia) também passaram a abrir.
+
 ## 2.7.5
 
 - **Concluído não conta mais como "fora do prazo".** Processo com CA ou CIA lançado saiu das mãos do CBM e não tem prazo correndo: o card "Fora do prazo" agora mostra só o que está na sua caixa com o prazo vencido, e a etiqueta do concluído fica só "CA 26/10" ou "CIA 26/10", sem o vermelho.

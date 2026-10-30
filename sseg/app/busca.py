@@ -31,13 +31,15 @@ FORA = {"banco-notificacoes-padrao.md", "README.md"}
 PDF_RT = {"1": "RT CBMRS 01 – Diretrizes Básicas de Segurança Contra Incêndio.pdf",
           "2": "RT CBMRS 02 – Termos e Definições.pdf", "4": "RT CBMRS 04 – Isolamento de Riscos.pdf",
           "10": "RT10.pdf", "11": "RT11.pdf", "12": "RT12.pdf", "14": "RT14.pdf", "17": "RT17.pdf",
-          "18": "RT18.pdf", "31": "RT31.pdf"}
-PDF_RT5 = {"1": "RTCBMRS 5 parte 1 - 1 2016 - ppci na forma completa.pdf", "7": "RT 05 Parte 07.pdf"}
+          "18": "RT18.pdf", "22": "RT22.pdf", "31": "RT31.pdf"}
+PDF_RT5 = {"1": "RTCBMRS 5 parte 1 - 1 2016 - ppci na forma completa.pdf", "7": "RT 05 Parte 07.pdf",
+           "8": "RT05P08.pdf"}
 PDF_COMENTADA = [  # prefixo do normas/<rt>.md
     ("rt-01-", PDF_RT["1"]), ("rt-02-", PDF_RT["2"]), ("rt-04-", PDF_RT["4"]),
-    ("rt-05-parte01", PDF_RT5["1"]), ("rt-05-parte07", PDF_RT5["7"]), ("rt-10-", "RT10.pdf"),
+    ("rt-05-parte01", PDF_RT5["1"]), ("rt-05-parte07", PDF_RT5["7"]), ("rt-05-parte08", PDF_RT5["8"]),
+    ("rt-10-", "RT10.pdf"),
     ("rt-11-", "RT11.pdf"), ("rt-12-", "RT12.pdf"), ("rt-14-", "RT14.pdf"), ("rt-17-", "RT17.pdf"),
-    ("rt-18-", "RT18.pdf"), ("rt-31-", "RT31.pdf"), ("rt-implantacao-sol", "RTISOL.pdf"),
+    ("rt-18-", "RT18.pdf"), ("rt-22-", "RT22.pdf"), ("rt-31-", "RT31.pdf"), ("rt-implantacao-sol", "RTISOL.pdf"),
     ("decreto-51803", "DECRETO51803.pdf"), ("lei-complementar-14376", "Lec nº 14.376.pdf"),
     ("in-045-", "IN45.pdf"), ("in-066-", "IN66.pdf"), ("in-067-", "IN67.pdf"),
 ]
@@ -53,7 +55,9 @@ def pdf_citado(texto):
         achados.append((m.start(), pdf))
     for rx, pdf in ((r"\bdecreto\s*(?:estadual\s*)?(?:n\.?\s*o?\.?\s*)?51\.?803", "DECRETO51803.pdf"),
                     (r"\b(?:lc|lei complementar)\s*(?:n\.?\s*o?\.?\s*)?14\.?376", "Lec nº 14.376.pdf"),
-                    (r"\bin\s*(?:n\.?\s*o?\.?\s*)?0?(45|66|67)\b", None), (r"\bit\s*37\b", "IT37.pdf")):
+                    (r"\bin\s*(?:n\.?\s*o?\.?\s*)?0?(45|66|67)\b", None), (r"\bit\s*37\b", "IT37.pdf"),
+                    # "RT de Implantação do SOL-CBMRS" não tem número (2.7.6)
+                    (r"\b(?:rt|resolucao tecnica)\s*(?:cbmrs\s*)?(?:de|da)\s*implantacao\b|\brtisol\b", "RTISOL.pdf")):
         for m in re.finditer(rx, t):
             achados.append((m.start(), pdf or "IN%s.pdf" % m.group(1)))
     achados = [a for a in sorted(achados) if a[1]]

@@ -987,6 +987,10 @@ def main():
     caso("busca: todo PDF do mapa existe em normas/pdf", mapa <= pdfs, str(sorted(mapa - pdfs)))
     r = busca.buscar(busca.carregar(RAIZ), 'extintor "5 m"')
     caso("busca: modelo do banco liga ao PDF da RT 14", r[0].get("pdf") == "sseg/normas/pdf/RT14.pdf", str(r[0].get("pdf")))
+    cit = {"RT de Implantação do SOL-CBMRS, itens 6.3.2 (alínea d) e 6.3.3.1": "RTISOL.pdf",
+           "RT 22/2023, item B.6.2.1": "RT22.pdf", "RT 05 Parte 08/2016": "RT05P08.pdf"}
+    caso("busca: RT de Implantação (sem número), RT 22 e RT 05 Parte 08 achadas em normas/pdf (2.7.6)",
+         all(busca.pdf_citado(t) == p for t, p in cit.items()), str({t: busca.pdf_citado(t) for t in cit}))
     if shutil.which("pdftotext"):
         pg = busca.pagina(os.path.join(RAIZ, r[0]["pdf"]), 'extintor "5 m"', r[0]["texto"])
         caso("busca: PDF abre na página do item 5.2.10 da RT 14", pg == 5, str(pg))
