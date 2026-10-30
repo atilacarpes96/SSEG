@@ -690,6 +690,7 @@ class Api:
         self._pasta_proc(codigo)
         r = acesso.chamar_json("sol-salvar", codigo, *(["--ca"] if resultado == "CA" else []), timeout=300)
         if r.get("ok"):
+            self._marcar_concluido(codigo, resultado)
             try:
                 self._trazer_processo()
                 self.servidor_aplicar({})
@@ -697,6 +698,17 @@ class Api:
                 r.setdefault("avisos", []).append("sincronização: " + str(e)[:200])
         self._log("Processo salvo %s: %s" % (codigo, ", ".join(r.get("arquivos") or []) or "; ".join(r.get("avisos") or [])))
         return r
+
+    def _marcar_concluido(self, codigo, resultado):
+        """2.7.10 (pedido do Átila): o botão vira "Processo concluído". Grava em analise.json a data, CIA/CA e o nº da
+        análise (Marcos): quando o processo volta numa análise nova, o nº muda e o botão volta a "Concluir processo"."""
+        import datetime
+        pasta = self._pasta_proc(codigo)
+        reg = self._reg()
+        d = reg.ler(pasta)
+        d["conclusao"] = {"em": datetime.datetime.now().isoformat(timespec="minutes"), "resultado": resultado,
+                          "analise": _ler(os.path.join(pasta, "marcos-resumo.json")).get("analise")}
+        reg.gravar(pasta, d)
 
     def _trazer_processo(self):
         """Desce do servidor o que ele tem de mais novo (não sobe nada)."""

@@ -95,6 +95,8 @@ h2:first-child { margin-top: 0; }
 .bts-sol .s-lic { --cor: var(--c-aguarda); } .bts-sol .s-an { --cor: var(--c-analise); } .bts-sol .s-mem { --cor: var(--c-ct); }
 .bt.concluir { background: var(--c-fechado); border-color: var(--c-fechado); color: #fff; font-weight: 600; }
 .bt.concluir:hover:not(:disabled) { background: color-mix(in srgb, var(--c-fechado) 85%, #000); }
+.bt.concluir.feito { background: var(--azul); border-color: var(--azul); }
+.bt.concluir.feito:hover:not(:disabled) { background: color-mix(in srgb, var(--azul) 85%, #000); }
 .bt.chamativo { background: var(--azul-bg); border: 1px solid var(--azul); color: var(--azul); font-weight: 600; padding: 5px 12px; font-size: 13px; text-decoration: none; }
 .bt.chamativo:hover:not(:disabled) { background: var(--azul); color: #fff; }
 .pranchas { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 12px; margin: 2px 0 4px; }
@@ -3106,6 +3108,7 @@ function renderProcesso(d) {
     tagRecurso(d)].filter(Boolean));
   $("#pr-laudo").hidden = !d.laudo;
   pintarSituacao(d.caixa || { estado: "sem" });
+  pintarConcluir();
   pintarCota();
   pintarChecklist(); pintarCIA();
 }
@@ -3563,7 +3566,7 @@ async function recarregarRegistro() {
   if (!PR.codigo || PR.foto) return;
   PR.reg = await api("processo_registro", [PR.codigo]);
   PR.alterado = PR.reg.alterado || 0;
-  pintarChecklist(); pintarCIA(); pintarCota();
+  pintarChecklist(); pintarCIA(); pintarCota(); pintarConcluir();
   for (const s of document.querySelectorAll(".por-cia")) s.pintar();
 }
 // "Pôr na CIA" do bloco do chat (2.6.13, pedido do Átila): o Claude já grava o rascunho na coluna CIA pelo sseg.py, e o
@@ -3679,6 +3682,20 @@ $("#pr-ficha").onclick = () => abrirFicha(PR.codigo);
 // analista marca CIA ou CA; o programa guarda o memorial desta análise (o já guardado fica: vale o de quando a CIA foi
 // lançada), baixa a CIA (no CA só confere que saiu) e sincroniza. A análise no SOL só passa para a próxima com a
 // redistribuição, então o memorial guardado logo após emitir ainda é o analisado.
+// 2.7.10 (pedido do Átila): concluído nesta análise, o botão vira "Processo concluído" (azul) — terminou tudo aqui e dá
+// para voltar. A conclusão vale para o nº da análise em que foi feita: análise nova nos Marcos, o botão volta ao normal.
+function conclusaoAtual() {
+  const c = (PR.reg || {}).conclusao, n = ((PR.dados || {}).marcos || {}).analise;
+  return c && (c.analise == null || n == null || c.analise === n) ? c : null;
+}
+function pintarConcluir() {
+  const c = conclusaoAtual(), b = $("#pr-concluir");
+  b.classList.toggle("feito", !!c);
+  b.textContent = c ? "✓ Processo concluído" : "✓ Concluir processo";
+  b.title = c ? (c.resultado || "") + " em " + new Date(c.em).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+    + ": memorial guardado e processo salvo. Pode voltar ao Início. Clique para concluir de novo."
+    : "Depois de emitir a CIA ou o CA no SOL: guarda o memorial desta análise (se ainda não guardou), baixa a CIA e salva no servidor e na pasta dos prints";
+}
 $("#pr-concluir").onclick = () => {
   const salvas = PR.reg.exigencias.filter(e => (e.final || "").trim()).length;
   const abertas = ((PR.reg || {}).pendencias || []).filter(p => !p.feita);
@@ -3704,7 +3721,10 @@ $("#pr-concluir").onclick = () => {
         r.arquivos = [...new Set([...(m.arquivos || []), ...(r.arquivos || [])])];
         fechar(); aviso2(r);
       } catch (e) { bt.disabled = false; bt.textContent = "Concluir"; return; }
-      recarregarRegistro();
+      await recarregarRegistro();
+      // 2.7.10 (pedido do Átila): o Início se atualiza sozinho — relê a caixa do SOL (o concluído sai dela), sincroniza e
+      // reordena a lista, como o botão Atualizar; ao voltar, a lista já está em dia
+      if (!$("#b-atualizar").disabled) $("#b-atualizar").click();
     }, true], ["Cancelar", fechar]]);
 };
 $("#pr-sol-lic").onclick = () => abrirNoSol(PR.dados.sol.licenciamento);

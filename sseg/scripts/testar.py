@@ -383,6 +383,17 @@ def main():
     sys.path.insert(0, os.path.join(AQUI, "..", "app"))
     import api as _api
     with tempfile.TemporaryDirectory() as d:
+        cod_c = "A00000005AA001"
+        os.makedirs(os.path.join(d, cod_c))
+        open(os.path.join(d, cod_c, "marcos-resumo.json"), "w").write(json.dumps({"analise": 8}))
+        a_c = _api.Api.__new__(_api.Api)
+        a_c._cfg = lambda: {"processos": d}
+        a_c._reg = lambda: __import__("analise_registro")
+        a_c._marcar_concluido(cod_c, "CA")
+        cc = json.load(open(os.path.join(d, cod_c, "analise.json"))).get("conclusao") or {}
+        caso("concluir: grava CA e o nº da análise dos Marcos (o botão vira 'Processo concluído') (2.7.10)",
+             cc.get("resultado") == "CA" and cc.get("analise") == 8 and cc.get("em"), str(cc))
+    with tempfile.TemporaryDirectory() as d:
         w = lambda n, o: open(os.path.join(d, n), "w", encoding="utf-8").write(json.dumps(o))
         e0 = _api.estado_caixa({"codigo": "A1", "distribuido": "2026-10-10"}, {}, 10, __import__("datetime").date(2026, 10, 19))
         ficou = _api._saiu_da_caixa(dict(e0), d)["estado"]

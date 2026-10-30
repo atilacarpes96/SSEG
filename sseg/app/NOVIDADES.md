@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.7.10
+
+- **Depois de concluir, o botão vira "✓ Processo concluído", em azul.** Fica assim enquanto o processo estiver nessa análise; se ele voltar numa análise nova, o botão volta a "Concluir processo". Passando o mouse, mostra CIA ou CA e quando foi concluído.
+- **O Início se atualiza sozinho ao concluir:** relê a caixa do SOL, sincroniza com o servidor e reordena a lista, como o botão Atualizar. Ao voltar, o processo concluído já saiu da caixa.
+
 ## 2.7.9
 
 - **PPCI de outro analista que o SOL passou para a sua caixa agora desce e aparece na lista.** Antes valia o nome da planilha de distribuição: o processo redistribuído (por exemplo, com o analista fora) ficava no servidor, já com a pré-análise, mas não chegava ao seu PC. Agora a caixa do SOL manda: ele desce, aparece como seu, com o número da análise tirado dos Marcos e sem o prazo da distribuição do outro analista.
