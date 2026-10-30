@@ -31,7 +31,10 @@ def rel(caminho):
 
 def git(*args):
     try:
-        return subprocess.run(["git", "-C", RAIZ, *args], capture_output=True, text=True, timeout=30).stdout.strip()
+        # core.quotepath=off: sem isso o ls-files escapa nome com acento ("Lec_n\302\272…") e o caminho citado no doc
+        # parecia não existir (falso "não existe no repositório", 30/10/2026)
+        return subprocess.run(["git", "-c", "core.quotepath=off", "-C", RAIZ, *args], capture_output=True, text=True,
+                              encoding="utf-8", timeout=30).stdout.strip()
     except Exception:
         return ""
 
