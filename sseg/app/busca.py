@@ -30,7 +30,7 @@ FORA = {"banco-notificacoes-padrao.md", "README.md"}
 # Norma → PDF oficial em sseg/normas/pdf/ (o que fundamenta). Sem PDF na pasta: sem link.
 PDF_RT = {"1": "RT CBMRS 01 – Diretrizes Básicas de Segurança Contra Incêndio.pdf",
           "2": "RT CBMRS 02 – Termos e Definições.pdf", "4": "RT CBMRS 04 – Isolamento de Riscos.pdf",
-          "10": "RT10.pdf", "11": "RT11.pdf", "12": "RT12.pdf", "14": "RT14.pdf", "17": "RT17.pdf",
+          "10": "RT10.pdf", "11": "RT11.pdf", "12": "RT12.pdf", "14": "RT14.pdf", "15": "RT15.pdf", "17": "RT17.pdf",
           "18": "RT18.pdf", "22": "RT22.pdf", "31": "RT31.pdf"}
 PDF_RT5 = {"1": "RTCBMRS 5 parte 1 - 1 2016 - ppci na forma completa.pdf", "7": "RT 05 Parte 07.pdf",
            "8": "RT05P08.pdf"}
@@ -38,7 +38,7 @@ PDF_COMENTADA = [  # prefixo do normas/<rt>.md
     ("rt-01-", PDF_RT["1"]), ("rt-02-", PDF_RT["2"]), ("rt-04-", PDF_RT["4"]),
     ("rt-05-parte01", PDF_RT5["1"]), ("rt-05-parte07", PDF_RT5["7"]), ("rt-05-parte08", PDF_RT5["8"]),
     ("rt-10-", "RT10.pdf"),
-    ("rt-11-", "RT11.pdf"), ("rt-12-", "RT12.pdf"), ("rt-14-", "RT14.pdf"), ("rt-17-", "RT17.pdf"),
+    ("rt-11-", "RT11.pdf"), ("rt-12-", "RT12.pdf"), ("rt-14-", "RT14.pdf"), ("rt-15-", "RT15.pdf"), ("rt-17-", "RT17.pdf"),
     ("rt-18-", "RT18.pdf"), ("rt-22-", "RT22.pdf"), ("rt-31-", "RT31.pdf"), ("rt-implantacao-sol", "RTISOL.pdf"),
     ("decreto-51803", "DECRETO51803.pdf"), ("lei-complementar-14376", "Lec nº 14.376.pdf"),
     ("in-045-", "IN45.pdf"), ("in-066-", "IN66.pdf"), ("in-067-", "IN67.pdf"), ("it-25-", "IT25P4.pdf"),
@@ -105,9 +105,21 @@ def ano_do_pdf(pdf, clone):
     return None
 
 
+def _pdf_rt_novo(rotulo, clone):
+    """RT que entrou em normas/pdf depois deste .exe (03/11/2026): RTnn.pdf no clone já abre pelo link, sem versão
+    nova do programa. Só o nome padrão RTnn.pdf; a RT 05 (por Parte) fica no mapa fixo."""
+    m = re.search(r"\b(?:rt|resolucao tecnica)\s*(?:cbmrs)?\s*(?:n\.?\s*o?\.?\s*)?0?(\d{1,2})\b", normalizar(rotulo))
+    if not m or m.group(1) == "5":
+        return None
+    for nome in ("RT%s.pdf" % m.group(1), "RT%02d.pdf" % int(m.group(1))):
+        if os.path.isfile(os.path.join(clone, "sseg", "normas", "pdf", nome)):
+            return nome
+    return None
+
+
 def norma_status(rotulo, clone):
     """{pdf, aviso}: pdf None = a norma não está em normas/pdf (sinal de norma a incorporar)."""
-    pdf = pdf_citado(rotulo)
+    pdf = pdf_citado(rotulo) or _pdf_rt_novo(rotulo, clone)
     if not pdf or not os.path.isfile(os.path.join(clone, "sseg", "normas", "pdf", pdf)):
         return {"pdf": None, "aviso": "Esta norma não está em normas/pdf — sem PDF para abrir (vale incorporar)."}
     t = normalizar(rotulo)

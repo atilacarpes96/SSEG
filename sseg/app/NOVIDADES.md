@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.8
+
+- **Links da RT 15 (Brigada de Incêndio)**, que entrou na pasta de normas: "item 5.6.4 da RT 15, Parte 01/2023", "Tabela 3 da RT 15" abrem o PDF na página. Citação da Parte 01/2022 abre a de 2023 com o aviso de versão.
+- **RT nova abre pelo link sem precisar de versão nova do programa**, desde que o PDF entre na pasta de normas com o nome padrão (RTnn.pdf): o link procura o arquivo na pasta do SSEG.
+
 ## 2.8.7
 
 - **Links da IT 25 Parte 4** (armazenamento fracionado de líquidos inflamáveis e combustíveis, que entrou na pasta de normas). "Item 47.7.3.2 da IT 25", "Tabela 4.5 da IT 25/2025", "IT 25 – CBPMESP, Parte 4" viram link e abrem o PDF na página do item. Como a numeração continua entre as Partes da IT 25, item 33 a 49 ou Tabela 4.x abre a Parte 4 mesmo sem dizer a Parte; item ou Parte que não é a 4 aparece como "sem PDF", para não abrir o arquivo errado.

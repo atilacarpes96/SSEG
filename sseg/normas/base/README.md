@@ -1,6 +1,6 @@
 # normas/base — normas convertidas e verificadas
 
-Markdown das 22 normas de `normas/pdf/`, gerado por `scripts/normas_converter.py` e conferido contra o PDF por `scripts/normas_verificador.py` (02/10/2026). Resultado por norma em `verificacao.json`.
+Markdown das 23 normas de `normas/pdf/`, gerado por `scripts/normas_converter.py` e conferido contra o PDF por `scripts/normas_verificador.py` (02/10/2026). Resultado por norma em `verificacao.json`.
 
 O texto segue a ordem do PDF. Cada página começa com `<!-- pág N -->`, e o número de página é a posição no arquivo, não o número impresso. Item numerado vem em **negrito**, texto riscado (revogado) vem entre `~~ ~~` e expoente de nota sai como X¹. Figuras e células desenhadas viram imagens em `img/`, com o texto da figura em comentário.
 
@@ -12,7 +12,8 @@ O texto segue a ordem do PDF. Cada página começa com `<!-- pág N -->`, e o n�
 5. Riscado igual ao do pymupdf4llm (detector independente).
 6. Nenhuma página com tinta sem texto (glifo vetorial ou imagem) sem figura no md.
 
-## Resultado: 19 de 22 passam nas 6
+## Resultado: 20 de 23 passam nas 6
+- **RT 15 Parte 01** (03/11/2026): APROVADO nas 6. A Tabela 3 do Anexo A é imagem (pág. 11), e o "02" mesclado da Tabela 1 (Básico 1 e Básico 2) aparece só na primeira linha. A transcrição conferida está em `normas/rt-15-parte01-2023-brigada-incendio.md`.
 - **IT 25 Parte 4** (03/11/2026): APROVADO nas 6. V3 mostra "saltos" porque a numeração da Parte 4 começa no item 33, e números como "3.000" e "4.200" no começo de linha parecem itens. As Tabelas 4.A1, 4.A2 e 4.B2 só existem como imagem (págs. 20–21). A transcrição conferida está em `normas/it-25-2025-parte4-armazenamento-fracionado.md`.
 - **RT 22** (29/10/2026): APROVADO nas 6. A Tabela 1 do Anexo A sai em linhas partidas (nome da medida em duas linhas): a transcrição conferida está em `normas/rt-22-2023-silos-armazens-graneleiros.md`.
 - **RT 05 Parte 08** (16/10/2026): V3 conta o sumário como item e V4 acusa o cabeçalho da pág. 3. Conferido na imagem; os 5.2 e 5.3 tinham "Anexo" partido em parágrafo novo, juntado à mão.

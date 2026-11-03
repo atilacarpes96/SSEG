@@ -987,7 +987,7 @@ class Api:
 
     def norma_pdf(self, rotulo, consulta=""):
         """Bloco sseg-norma: o programa acha o PDF oficial e a página (mecanismo da busca 1.2.2)."""
-        nome = busca.pdf_citado(rotulo)
+        nome = busca.pdf_citado(rotulo) or busca._pdf_rt_novo(rotulo, self._clone())
         if not nome:
             raise RuntimeError("Não achei o PDF de \"%s\" em normas/pdf." % rotulo)
         caminho = os.path.join(self._clone(), "sseg", "normas", "pdf", nome)

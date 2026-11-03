@@ -1050,5 +1050,34 @@
     "V5_aviso_riscado_a_mais": [],
     "V6_tinta_sem_texto": [],
     "APROVADO": true
+  },
+  {
+    "pdf": "RT15.pdf",
+    "md": "RT15.md",
+    "V1_palavras_faltando": 0,
+    "V1_ex_falt": [],
+    "V1_palavras_sobrando": 0,
+    "V1_ex_sobra": [],
+    "V2_paginas_X_divergente": [],
+    "V3_aviso_numeracao_do_proprio_pdf": [],
+    "V3_itens_pdf": 103,
+    "V3_itens_md": 105,
+    "V3_retrocessos": [],
+    "V3_aviso_reinicio_numeracao": [
+      "5.8.4 -> 02"
+    ],
+    "V3_saltos": [
+      "02 -> 5.8.5"
+    ],
+    "V3_itens_ausentes_no_md": [],
+    "V4_aviso_paginas_texto_girado": [
+      23
+    ],
+    "V4_paragrafos_nao_continuos": 0,
+    "V4_ex": [],
+    "V5_riscado_faltando": [],
+    "V5_aviso_riscado_a_mais": [],
+    "V6_tinta_sem_texto": [],
+    "APROVADO": true
   }
 ]
