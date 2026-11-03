@@ -220,7 +220,7 @@ Norma do RS, **nível 4** (abaixo das RTs), sujeita à regra de vigência por da
 
 ## ⚠️ Pendências e alertas
 
-- **Instruções do Projeto** — em 24/09/2026 o campo já trazia a RT 17 com vigência em **01/01/2027** (a pendência antiga do 01/07/2026 estava resolvida). Faltavam duas mudanças, entregues ao usuário para colar no campo nessa data: a ressalva das **IT do CBPMESP chamadas pela RT 01/2024** (4.3.1 + Tabela 2; 4.8 para a M-6), junto com a posição das **IN do CBMRS**, e a contagem de **PDFs (17)**. O espelho [[instrucoes-projeto-espelho]] já está com o texto novo — **conferir se o campo foi atualizado** antes de dar por encerrado.
+- ✅ **Instruções do Projeto — resolvido em 03/11/2026:** o Átila substituiu o campo inteiro pelo texto do espelho [[instrucoes-projeto-espelho]] (23 PDFs, IT 25 na hierarquia das fontes, IT25P4 entre os arquivos de duas colunas) e trocou na conta as skills `ppci-analise-processo`, `ppci-revisao-cia` e `sol-cbmrs-navegador` pelas versões do repositório. Campo, espelho e skills da conta estão iguais ao GitHub nesta data.
 - **IN 068/2025** (enquadramento F-5, F-6, F-8, F-11, F-12; DOE 252, de 26/12/2025) — PDF **não está no projeto**. Pela leitura por WebFetch (não confiável) não menciona a IN 066. Conferir no PDF antes de afirmar que as duas convivem.
 - **IN 067/2025 — a Portaria que regula o Corpo Técnico** que avalia a STE (Art. 8º) **não está no projeto**; nem a transição para PPCI já em análise em 05/11/2025.
 - ✅ **LC 14.376/2013 — resolvido em 16/10/2026:** o PDF em `normas/pdf/Lec nº 14.376.pdf` já é o consolidado **até a LC 16.280/2025** (capa); estava no projeto desde 15/09/2026 sem que este alerta fosse baixado. Arts. 10 e 31 conferidos nele.
