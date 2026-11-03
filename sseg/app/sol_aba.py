@@ -13,7 +13,8 @@ Caminho: a depuração remota que o analista já ligou para o Chrome DevTools MC
 (chrome_devtools.porta_depuracao). O Chrome pede "Permitir" a cada conexão nova: a conexão fica
 aberta enquanto o programa roda, para pedir uma vez só.
 
-O que NÃO faz: não digita senha, não clica, não lê nada da página além de "está logada?".
+O que NÃO faz: não digita senha, não lê nada da página além de "está logada?". O único clique é no ☰, para
+recolher o menu lateral que a tela nova abre (03/11/2026).
 Sem aba logada (ou sem depuração), quem chama abre o link do jeito antigo.
 """
 
@@ -23,6 +24,7 @@ import os
 import socket
 import struct
 import threading
+import time
 
 import chrome_devtools
 
@@ -32,6 +34,14 @@ LOGADA = r"""(() => {
   const t = sessionStorage.getItem("access_token") || localStorage.getItem("access_token");
   try { return !!t && JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp > Date.now() / 1000; }
   catch (e) { return false; }
+})()"""
+
+# Menu lateral do SOL fechado depois que o programa mexe na aba (03/11/2026: monitor em pé do Átila; os 280 px do
+# menu fazem falta). Só clica no ☰ (a.menu-button) se o menu (div.side) estiver aberto. Mesmo script do
+# sol_lancar.RECOLHER_MENU, que vale depois do recarregar.
+RECOLHER_MENU = r"""(() => {
+  const side = document.querySelector(".sidenav .side"), bt = document.querySelector("a.menu-button");
+  if (side && bt && side.classList.contains("opened")) bt.click();
 })()"""
 
 
@@ -146,6 +156,9 @@ def _ir(c, url):
             c.pedir("Runtime.evaluate", {"expression": "location.hash = %s" % json.dumps(destino)}, sessao)
             c.pedir("Target.activateTarget", {"targetId": t["targetId"]})
             c.pedir("Page.bringToFront", {}, sessao)
+            for _ in range(6):  # a tela nova do SOL pode abrir o menu lateral logo depois da troca do "#"
+                time.sleep(0.4)
+                c.pedir("Runtime.evaluate", {"expression": RECOLHER_MENU}, sessao)
             return True, "aberto na aba do SOL em que você já entrou"
         finally:
             try:

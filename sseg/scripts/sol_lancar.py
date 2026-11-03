@@ -24,6 +24,7 @@ a aba do SOL logada do Chrome do analista (app/sol_aba.py).
 
 import json
 import re
+import time
 import unicodedata
 
 import sol_caixa as sc
@@ -265,12 +266,41 @@ def aprovar_restantes(aba, id_analise, notificados, reprovados=False):
     return {"aprovados": [n for n in feitos if depois.get(n) == "APROVADO"], "falhas": falhas}
 
 
-RECARREGAR = "(() => { setTimeout(() => location.reload(), 300); return JSON.stringify(true); })()"
+RECARREGAR = ("(() => { window.__ssegVelha = true; setTimeout(() => location.reload(), 300); "
+              "return JSON.stringify(true); })()")
+
+# Menu lateral do SOL (div.side.opened, botão ☰ = a.menu-button da barra de cima): toda página nova do SOL abre com
+# ele aberto, e no monitor em pé do Átila os 280 px fazem falta (03/11/2026). Só clica no ☰ se estiver aberto.
+# window.__ssegVelha = a página de antes do recarregar, que ainda responde por um instante.
+RECOLHER_MENU = r"""(() => {
+  const side = document.querySelector(".sidenav .side"), bt = document.querySelector("a.menu-button");
+  if (window.__ssegVelha || !side || !bt) return JSON.stringify("esperando");
+  if (side.classList.contains("opened")) { bt.click(); return JSON.stringify("clicou"); }
+  return JSON.stringify("fechado");
+})()"""
+
+
+def recolher_menu(avaliar, segundos=15):
+    """Fecha o menu lateral do SOL. avaliar(js) roda na aba e devolve o JSON. True quando ficou fechado
+    (duas leituras seguidas: a página recém-carregada pode abrir o menu depois do primeiro olhar)."""
+    fim, vistos = time.time() + segundos, 0
+    while time.time() < fim:
+        try:
+            r = avaliar(RECOLHER_MENU)
+        except (RuntimeError, OSError, ValueError, KeyError):
+            r = None  # página trocando: o contexto antigo some no meio da leitura
+        vistos = vistos + 1 if r == "fechado" else 0
+        if vistos >= 2:
+            return True
+        time.sleep(0.5)
+    return False
 
 
 def recarregar(aba):
-    """Recarrega a aba do SOL para a tela mostrar o que foi gravado (o SOL não relê sozinho; a sessão fica, é a mesma aba)."""
+    """Recarrega a aba do SOL para a tela mostrar o que foi gravado (o SOL não relê sozinho; a sessão fica, é a mesma aba)
+    e recolhe o menu lateral que a página nova abre."""
     try:
         aba.avaliar(RECARREGAR)
     except (RuntimeError, OSError, ValueError):
-        pass
+        return
+    recolher_menu(aba.avaliar)

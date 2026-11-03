@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.4
+
+- **Menu lateral do SOL fechado depois que o programa mexe na aba.** Toda vez que o SOL carrega uma tela nova, ele abre o menu da esquerda (Licenciamento, Central de atendimento…), que ocupa 280 px da largura. Agora, quando o programa leva a aba ao processo ("SOL: análise", "SOL: licenciamento") ou recarrega a tela depois de lançar no SOL, ele recolhe o menu no ☰. Para abrir de novo, é só clicar no ☰ do SOL. Se o F5 for seu, o SOL ainda abre o menu: o programa só fecha o que ele mesmo abriu.
+
 ## 2.8.3
 
 - **"Itens citados" da coluna CIA sem repetição.** O mesmo item citado de dois jeitos ("5.6.2.5 da RTCBMRS nº 11, parte 1" no texto e "RT 11/2016, item 5.6.2.5" no fundamento) agora vira um link só, com o rótulo que tem o ano. Anos diferentes da mesma RT (RT 01/2022 e RT 01/2024) continuam separados, porque são versões diferentes.
