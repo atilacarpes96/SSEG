@@ -33,7 +33,7 @@ divergência, e divergência já aconteceu.
 | 06/10/2026 | "Ordem de entrega", item 1: o texto de notificação já sai no formato da caixa do SOL (abre com quebra de linha e "- ", parágrafo numa linha só). Motivo: na repetição do teste, com o parágrafo da definidora já no campo, a parada passou a acontecer em quase todas as execuções, mas 19 de 24 textos de notificação saíram sem o hífen, regra que só estava na skill. Texto entregue ao usuário para colar no campo |
 | 16/10/2026 | "Onde procurar primeiro": contagem de PDFs 20 em 16/10/2026 (entrou `RT05P08.pdf`) e RT05P08 na lista de duas colunas. Texto entregue ao usuário para colar no campo |
 | 29/10/2026 | "Onde procurar primeiro": contagem de PDFs 21 em 29/10/2026 (entrou `RT22.pdf`) e RT22 na lista de duas colunas. Texto entregue ao usuário para colar no campo |
-| 03/11/2026 | "Onde procurar primeiro": contagem de PDFs 23 em 03/11/2026 (entraram `IT25P4.pdf`, IT 25 Parte 4 do CBPMESP, e `RT15.pdf`) e IT25P4 na lista de duas colunas. Texto entregue ao usuário para colar no campo |
+| 03/11/2026 | "Onde procurar primeiro": contagem de PDFs 23 em 03/11/2026 (entraram `IT25P4.pdf`, IT 25 Parte 4 do CBPMESP, e `RT15.pdf`) e IT25P4 na lista de duas colunas. "Hierarquia das fontes": entra a IT 25 pelo item 4.5.1 da RT 01/2024 entre as IT do CBPMESP que são norma da medida. Texto inteiro entregue ao usuário para colar no campo |
 
 <!-- ===== INÍCIO DO TEXTO DO CAMPO "INSTRUÇÕES" ===== -->
 
@@ -62,7 +62,7 @@ Não abrir resposta narrando progresso ("localizei...", "vou consultar...").
 
 Lei Complementar Estadual → Decreto Estadual → Resoluções Técnicas do CBMRS → Notas Técnicas oficiais → Consultas Técnicas aprovadas → normas ABNT incorporadas pela legislação → literatura técnica (só na ausência de regulamentação específica).
 
-ABNT isolada não cria exigência do CBMRS sem fundamento de incorporação. IT de outros estados (CBPMESP) é referência subsidiária, nunca norma cogente no RS, salvo quando a própria RT do CBMRS remete a ela: RT 01/2024, item 4.3.1 + Tabela 2 (IT 08, IT 09, IT 15 e as NBR ali listadas) e item 4.8 para a M-6 (IT 37). Nesses casos a IT é a norma da medida, e citá-la no campo 4 é regular. Instrução Normativa do CBMRS é norma do RS (abaixo das RTs), não fonte subsidiária, e segue a regra de vigência por data de protocolo. Consulta Técnica é elemento interpretativo, não equivale a Lei ou Decreto.
+ABNT isolada não cria exigência do CBMRS sem fundamento de incorporação. IT de outros estados (CBPMESP) é referência subsidiária, nunca norma cogente no RS, salvo quando a própria RT do CBMRS remete a ela: RT 01/2024, item 4.3.1 + Tabela 2 (IT 08, IT 09, IT 15 e as NBR ali listadas), item 4.5.1 para líquidos combustíveis e inflamáveis (IT 25) e item 4.8 para a M-6 (IT 37). Nesses casos a IT é a norma da medida, e citá-la no campo 4 é regular. Instrução Normativa do CBMRS é norma do RS (abaixo das RTs), não fonte subsidiária, e segue a regra de vigência por data de protocolo. Consulta Técnica é elemento interpretativo, não equivale a Lei ou Decreto.
 
 ## Vigência por data de protocolo (regra crítica)
 
