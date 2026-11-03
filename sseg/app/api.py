@@ -970,6 +970,21 @@ class Api:
                 par.update(resposta=resp, enviada=True, feita=True)
         reg.gravar(pasta, d)
 
+    def ditado_windows(self):
+        """Microfone no PC (2.8.2): o WebView2 do programa tem o objeto de reconhecimento de voz do navegador, mas ele
+        não transcreve (o botão falhava sem texto). Abre a digitação por voz do próprio Windows (Win+H), que escreve
+        no campo que está com o foco; a tela já pôs o foco no campo antes de chamar."""
+        if os.name != "nt":
+            raise RuntimeError("A digitação por voz do Windows só existe no PC com Windows.")
+        import ctypes
+        u = ctypes.windll.user32
+        VK_LWIN, VK_H, SOLTA = 0x5B, 0x48, 0x0002
+        u.keybd_event(VK_LWIN, 0, 0, 0)
+        u.keybd_event(VK_H, 0, 0, 0)
+        u.keybd_event(VK_H, 0, SOLTA, 0)
+        u.keybd_event(VK_LWIN, 0, SOLTA, 0)
+        return True
+
     def norma_pdf(self, rotulo, consulta=""):
         """Bloco sseg-norma: o programa acha o PDF oficial e a página (mecanismo da busca 1.2.2)."""
         nome = busca.pdf_citado(rotulo)

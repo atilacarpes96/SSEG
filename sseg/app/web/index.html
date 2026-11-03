@@ -3795,9 +3795,17 @@ ligarForm("#pr-form", "#pr-msg", () => CTX[PR.codigo]);
 const Reconhecer = window.SpeechRecognition || window.webkitSpeechRecognition;
 const VOZ = { rec: null, bt: null };
 function pararVoz() { const r = VOZ.rec; VOZ.rec = null; if (r) try { r.stop(); } catch (e) {} }
+// 2.8.2: no PC o WebView2 tem o SpeechRecognition, mas ele não transcreve (falhava sem aviso). Lá o 🎤 abre a
+// digitação por voz do Windows (Win+H), que escreve no campo com o foco. No celular segue o reconhecimento do Safari.
 for (const bt of document.querySelectorAll(".bt.mic")) {
-  bt.hidden = !Reconhecer || !window.isSecureContext;
+  bt.hidden = ESPELHO ? (!Reconhecer || !window.isSecureContext) : false;
+  if (!ESPELHO) bt.title = "Falar: abre a digitação por voz do Windows (Win+H) neste campo; confira e envie";
   bt.onclick = () => {
+    if (!ESPELHO) {
+      const campo = $("#" + bt.dataset.campo), fim = campo.value.length;
+      campo.focus(); campo.setSelectionRange(fim, fim);
+      return api("ditado_windows", [], bt).catch(() => {});
+    }
     if (VOZ.rec) return pararVoz();
     const campo = $("#" + bt.dataset.campo), antes = campo.value ? campo.value.replace(/\s*$/, " ") : "";
     const rec = new Reconhecer();

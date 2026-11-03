@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.2
+
+- **O 🎤 volta a funcionar no PC.** O navegador embutido no programa (WebView2, da Microsoft) não faz reconhecimento de voz: o botão aparecia, mas não escrevia nada. Agora ele abre a digitação por voz do próprio Windows (a mesma do Win+H) no campo da mensagem: fale, o texto vai entrando no campo, confira e envie. Na primeira vez o Windows pode pedir para ligar a digitação por voz ou o reconhecimento de fala online (Configurações → Privacidade → Fala). Para português, o idioma do Windows (ou o do teclado) precisa estar em português do Brasil. No celular nada muda: continua o reconhecimento do Safari.
+
 ## 2.8.1
 
 - **Revisão final: dá para explicar ou pedir alteração no texto proposto.** Cada item a decidir tem agora um campo embaixo: escreva o que quer mudar ou por que o texto atual está certo ("manter a Nota 02", "tirar a parte da planta", "o RT já justificou no memorial") e clique em "Pedir ajuste" (ou Ctrl+Enter). O Claude da conversa refaz a proposta só daquela exigência, conferindo no PDF qualquer item novo, e ela volta como um cartão novo, com Aplicar e Ignorar. Se o pedido contrariar a norma, ele diz por quê.
