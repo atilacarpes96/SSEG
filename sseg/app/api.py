@@ -1196,12 +1196,16 @@ class Api:
         """Eventos desta conversa desde que o programa abriu (a outra tela monta o chat a partir deles)."""
         return list(self._hist.get(chave, []))
 
-    def chat_enviar(self, chave, texto, de=""):
+    def chat_enviar(self, chave, texto, de="", imagens=None):
         """chave = código do processo (janela de 3 colunas) ou "fluxo:<id>" (janela de conversa do fluxo).
-        de = qual tela mandou: ela já mostrou a mensagem; as outras recebem o evento "eu"."""
+        de = qual tela mandou: ela já mostrou a mensagem; as outras recebem o evento "eu".
+        imagens (2.8.5) = prints colados no campo: [{"url": "data:image/...;base64,...", "mini": miniatura}]."""
         texto = (texto or "").strip()
-        if not texto:
+        imgs = chat.imagens(imagens)
+        if not texto and not imgs:
             return
+        if not texto:
+            texto = "Veja o print." if len(imgs) == 1 else "Veja os prints."
         c = self._conversas.get(chave)
         if c is None:
             claude = self._claude or instalar.localizar().get("claude")
@@ -1233,11 +1237,11 @@ class Api:
                               self._reg(), {"ler": self._cota_ler, "gravar": self._cota_gravar}, sol=links)
             self._conversas[chave] = c
             c.contexto = self._contexto_pasta(pasta) if pasta and not (self._reg().ler(pasta).get("chat") or {}).get("sessao") else ""
-        ev = {"t": "eu", "texto": texto, "de": de}
+        ev = {"t": "eu", "texto": texto, "de": de, "minis": [i["mini"] for i in imgs]}
         self._guardar(chave, ev)
         self._emitir("chat", chave, ev)
         extra, c.contexto = getattr(c, "contexto", ""), ""
-        c.enviar(texto + extra)
+        c.enviar(texto + extra, imgs)
 
     def _contexto_pasta(self, pasta):
         """2.6.1: a conversa NOVA de um processo já recebe o `sseg.py resumo` junto da 1ª mensagem (o analista não vê).

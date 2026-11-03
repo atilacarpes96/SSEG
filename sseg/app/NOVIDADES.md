@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.5
+
+- **Prints na conversa.** Cole um print no campo da mensagem (Ctrl+V), arraste a imagem para ele ou clique no 🖼 (no celular, abre as fotos). O print aparece em miniatura em cima do campo (o × tira) e vai junto com a mensagem: o Claude vê a imagem, então dá para mostrar a tela em vez de descrever ("o que é esse campo?", "esse texto está certo?"). Até 8 por mensagem; dá para mandar só o print, sem texto. Na conversa, clicar na miniatura abre o print inteiro.
+- **Enter envia a mensagem, Shift+Enter quebra a linha**, como no Claude Code. Ctrl+Enter continua valendo. No celular o Enter segue quebrando a linha (o teclado não tem Shift+Enter); lá quem envia é o botão.
+
 ## 2.8.4
 
 - **Menu lateral do SOL fechado depois que o programa mexe na aba.** Toda vez que o SOL carrega uma tela nova, ele abre o menu da esquerda (Licenciamento, Central de atendimento…), que ocupa 280 px da largura. Agora, quando o programa leva a aba ao processo ("SOL: análise", "SOL: licenciamento") ou recarrega a tela depois de lançar no SOL, ele recolhe o menu no ☰. Para abrir de novo, é só clicar no ☰ do SOL. Se o F5 for seu, o SOL ainda abre o menu: o programa só fecha o que ele mesmo abriu.

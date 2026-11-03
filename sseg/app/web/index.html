@@ -356,6 +356,17 @@ a.norma-link.aviso-versao { text-decoration-color: #c78a00; text-decoration-styl
 .sub-linha { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--suave); margin: 6px 0; }
 .entrada { position: relative; border-top: 1px solid var(--linha); padding: 10px 10px 8px; display: flex; gap: 8px; align-items: flex-end; background: var(--cartao); }
 .entrada textarea { flex: 1; min-height: 84px; resize: none; }
+/* 2.8.5: prints na conversa */
+.entrada { flex-wrap: wrap; }
+.entrada .anexos { flex-basis: 100%; display: flex; gap: 8px; flex-wrap: wrap; }
+.entrada .anexos:empty { display: none; }
+.entrada .anexos div { position: relative; }
+.entrada .anexos img, .msg .prints img { height: 64px; max-width: 160px; object-fit: cover; border: 1px solid var(--linha); border-radius: 5px; display: block; }
+.entrada .anexos button { position: absolute; top: -7px; right: -7px; width: 20px; height: 20px; padding: 0; border-radius: 50%; background: var(--cartao); border: 1px solid var(--linha); line-height: 16px; cursor: pointer; }
+.entrada.solta { outline: 2px dashed var(--rosa-borda); outline-offset: -4px; }
+.msg .prints { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 5px; }
+.msg .prints img { cursor: zoom-in; }
+.msg .prints:last-child { margin-bottom: 0; }
 /* alças de altura (2.3.1): a do chat fica em cima (a caixa cresce para cima); a da CIA, embaixo do item */
 .puxa { touch-action: none; user-select: none; cursor: ns-resize; }
 .puxa::after { content: ""; display: block; width: 38px; height: 4px; border-radius: 2px; background: var(--linha); margin: 0 auto; }
@@ -874,7 +885,7 @@ footer { color: var(--suave); }
         <div class="coluna" data-col="chat">
           <h2>Conversa <span class="sub" style="margin:0;text-transform:none;letter-spacing:0;font-weight:400" id="pr-modelo"></span></h2>
           <div class="slot" id="pr-slot"></div>
-          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="4" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
+          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="4" placeholder="Peça ao Claude (ex.: roda o check) — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print (também dá para colar com Ctrl+V ou arrastar a imagem para o campo)">🖼</button><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
         </div>
         <div class="col-borda" data-borda="1" title="Arraste para mudar a largura das colunas (duplo clique volta ao padrão)"></div>
         <div class="coluna" data-col="check">
@@ -898,7 +909,7 @@ footer { color: var(--suave); }
       </div>
       <div class="coluna conversa-unica">
         <div class="slot" id="cv-slot"></div>
-        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="4" placeholder="Escreva ao Claude — Ctrl+Enter envia"></textarea><button type="button" class="bt mic" data-campo="cv-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
+        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="4" placeholder="Escreva ao Claude — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print (também dá para colar com Ctrl+V ou arrastar a imagem para o campo)">🖼</button><button type="button" class="bt mic" data-campo="cv-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
       </div>
     </section>
     <section class="tela" id="t-busca">
@@ -3792,10 +3803,29 @@ function trabalhando(ctx, on) {
   if (!on) return ctx.trab.replaceChildren();
   ctx.trab.replaceChildren(caranguejo(ctx.fluxo.modelo, ctx.fluxo.esforco, "Claude · " + nomeModelo(ctx.fluxo.modelo) + " · conversando"), el("span", { class: "trab-txt" }, "Claude trabalhando…"));
 }
-async function chatEnviar(ctx, texto) {
-  chatAdd(ctx, el("div", { class: "msg eu" }, texto));
+// Mensagem do analista; imgs = prints anexados ({url, mini}). Na tela que mandou, clicar abre o print inteiro.
+function msgEu(texto, imgs) {
+  const minis = (imgs || []).filter(i => i && (i.mini || i.url));
+  return el("div", { class: "msg eu" },
+    minis.length ? el("div", { class: "prints" }, ...minis.map(i => el("img", { src: i.mini || i.url, alt: "print",
+      on: { click: () => modal("Print", "", el("img", { src: i.url || i.mini, style: "max-width:100%;max-height:70vh;display:block;margin:auto" }), [["Fechar", fechar, true]]) } }))) : null,
+    texto);
+}
+async function chatEnviar(ctx, texto, imgs) {
+  imgs = imgs || [];
+  chatAdd(ctx, msgEu(texto, imgs));
   ctx.ativ = null; trabalhando(ctx, true);
-  try { await api("chat_enviar", [ctx.chave, texto, CLIENTE]); } catch (e) { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
+  try { await api("chat_enviar", [ctx.chave, texto, CLIENTE, imgs]); } catch (e) { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + (e.message || e))); }
+}
+// 2.8.5: print colado/arrastado/escolhido -> até 2000 px (o Claude reduz acima disso) + miniatura para a conversa
+async function prepararPrint(arq) {
+  const bmp = await createImageBitmap(arq);
+  const reduz = (max, tipo, q) => { const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+    cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height); return cv.toDataURL(tipo, q); };
+  let url = reduz(2000, "image/png");
+  if (url.length > 4.5e6) url = reduz(2000, "image/jpeg", 0.88);  // foto de tela cheia em PNG passa dos 5 MB da API
+  return { url, mini: reduz(200, "image/jpeg", 0.7) };
 }
 const tetoChat = () => Math.round(window.innerHeight * 0.6);
 function ligarForm(form, campo, ctxAtual) {
@@ -3804,8 +3834,37 @@ function ligarForm(form, campo, ctxAtual) {
   ta.addEventListener("input", aj);
   let larg = 0;  // só a largura interessa: a altura do form muda com a própria caixa
   new ResizeObserver(([o]) => { const w = Math.round(o.contentRect.width); if (w !== larg) { larg = w; requestAnimationFrame(aj); } }).observe($(form));
-  $(form).onsubmit = ev => { ev.preventDefault(); pararVoz(); const t = ta.value.trim(); if (!t) return; ta.value = ""; aj(); chatEnviar(ctxAtual(), t); };
-  $(campo).addEventListener("keydown", ev => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) $(form).requestSubmit(); });
+  // prints (2.8.5): Ctrl+V no campo, arrastar para o campo ou o botão 🖼 (no celular abre as fotos)
+  const imgs = [], bandeja = el("div", { class: "anexos" });
+  $(form).prepend(bandeja);
+  const pintar = () => bandeja.replaceChildren(...imgs.map((i, n) => el("div", {}, el("img", { src: i.mini, alt: "print" }),
+    el("button", { type: "button", title: "Tirar este print", on: { click: () => { imgs.splice(n, 1); pintar(); } } }, "×"))));
+  const juntar = async arqs => {
+    for (const f of [...arqs].filter(f => f && f.type.startsWith("image/"))) {
+      if (imgs.length >= 8) { SSEG.log(["No máximo 8 prints por mensagem."]); break; }
+      try { imgs.push(await prepararPrint(f)); pintar(); } catch (e) { SSEG.log(["Não consegui ler a imagem: " + (e.message || e)]); }
+    }
+  };
+  ta.addEventListener("paste", ev => {
+    const arqs = [...(ev.clipboardData || {}).items || []].filter(i => i.kind === "file").map(i => i.getAsFile()).filter(f => f && f.type.startsWith("image/"));
+    if (arqs.length) { ev.preventDefault(); juntar(arqs); }  // texto colado segue normal
+  });
+  const fm = $(form);
+  fm.addEventListener("dragover", ev => { if ([...ev.dataTransfer.types].includes("Files")) { ev.preventDefault(); fm.classList.add("solta"); } });
+  fm.addEventListener("dragleave", () => fm.classList.remove("solta"));
+  fm.addEventListener("drop", ev => { if (!ev.dataTransfer.files.length) return; ev.preventDefault(); fm.classList.remove("solta"); juntar(ev.dataTransfer.files); });
+  const escolher = el("input", { type: "file", accept: "image/*", multiple: true, hidden: true });
+  escolher.onchange = () => { juntar(escolher.files); escolher.value = ""; };
+  fm.append(escolher);
+  fm.querySelector(".bt.anexar").onclick = () => escolher.click();
+  $(form).onsubmit = ev => { ev.preventDefault(); pararVoz(); const t = ta.value.trim(); if (!t && !imgs.length) return;
+    const vai = imgs.splice(0); pintar(); ta.value = ""; aj(); chatEnviar(ctxAtual(), t || (vai.length > 1 ? "Veja os prints." : "Veja o print."), vai); };
+  // 2.8.5: Enter envia e Shift+Enter quebra a linha, como no Claude Code (pedido do Átila). No celular o teclado não tem
+  // Shift+Enter: lá Enter segue quebrando a linha e quem envia é o botão (Ctrl+Enter continua valendo nos dois).
+  $(campo).addEventListener("keydown", ev => {
+    if (ev.key !== "Enter" || ev.isComposing || ev.shiftKey) return;
+    if (ev.ctrlKey || ev.metaKey || !ESPELHO) { ev.preventDefault(); $(form).requestSubmit(); }
+  });
 }
 ligarForm("#pr-form", "#pr-msg", () => CTX[PR.codigo]);
 // Falar em vez de digitar (2.4): reconhecimento de voz do navegador (Safari no iPhone, só em https — o
@@ -3970,7 +4029,7 @@ SSEG.chat = (chave, ev) => {
   const doProcesso = chave === PR.codigo && !ctx.replay;
   if (ev.t === "eu") {  // mensagem mandada pela outra tela
     if (ev.de === CLIENTE) return;
-    chatAdd(ctx, el("div", { class: "msg eu" }, ev.texto)); ctx.ativ = null; trabalhando(ctx, true);
+    chatAdd(ctx, msgEu(ev.texto, (ev.minis || []).map(m => ({ mini: m })))); ctx.ativ = null; trabalhando(ctx, true);
   }
   else if (ev.t === "texto") { ctx.ativ = null; chatAdd(ctx, el("div", { class: "msg claude" }, resposta(ev.texto, ctx))); }
   else if (ev.t === "ferramenta") {

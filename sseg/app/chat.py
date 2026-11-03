@@ -27,6 +27,28 @@ import gasto
 NOVA_JANELA_NAO = 0x08000000 if os.name == "nt" else 0
 
 
+IMG_TIPOS = ("image/png", "image/jpeg", "image/webp", "image/gif")
+IMG_MAX = 5 * 1024 * 1024  # limite da API por imagem (bytes da imagem, não do base64)
+IMG_QTD = 8
+
+
+def imagens(lista):
+    """Prints colados na conversa (2.8.5): data URLs da tela -> [{tipo, dados (base64), mini}]. A tela já reduz a
+    imagem para no máximo 2000 px; aqui só confere tipo, tamanho e quantidade."""
+    saida = []
+    for it in (lista or [])[:IMG_QTD]:
+        url = (it or {}).get("url") or ""
+        cab, _, dados = url.partition(",")
+        tipo = cab[5:].split(";")[0] if cab.startswith("data:") and cab.endswith(";base64") else ""
+        if tipo not in IMG_TIPOS or not dados:
+            raise RuntimeError("Imagem não aceita (use PNG, JPG, WebP ou GIF).")
+        if len(dados) * 3 // 4 > IMG_MAX:
+            raise RuntimeError("Print grande demais (mais de 5 MB mesmo reduzido).")
+        mini = (it.get("mini") or "")
+        saida.append({"tipo": tipo, "dados": dados, "mini": mini if mini.startswith("data:image/") and len(mini) < 60000 else ""})
+    return saida
+
+
 def _sessao_existe(sessao):
     """A conversa `sessao` está neste PC? O claude guarda em ~/.claude/projects/<pasta>/<id>.jsonl."""
     base = os.path.join(os.path.expanduser("~"), ".claude", "projects")
@@ -218,12 +240,16 @@ class Conversa:
         threading.Thread(target=self._ler, daemon=True).start()
         threading.Thread(target=self._ler_erros, daemon=True).start()
 
-    def enviar(self, texto):
+    def enviar(self, texto, imgs=()):
         with self._trava:
             if self.proc is None or self.proc.poll() is not None:
                 self._subir()
             self.ocupado = True
-            msg = {"type": "user", "message": {"role": "user", "content": texto}}
+            conteudo = texto
+            if imgs:  # 2.8.5: prints vão como blocos de imagem da própria mensagem (o Claude vê a imagem)
+                conteudo = [{"type": "image", "source": {"type": "base64", "media_type": i["tipo"], "data": i["dados"]}}
+                            for i in imgs] + [{"type": "text", "text": texto}]
+            msg = {"type": "user", "message": {"role": "user", "content": conteudo}}
             self.proc.stdin.write(json.dumps(msg, ensure_ascii=False) + "\n")
             self.proc.stdin.flush()
 
