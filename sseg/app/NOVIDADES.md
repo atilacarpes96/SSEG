@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.6
+
+- **Links do Anexo "L" da RT 05 Parte 1.1/2016.** "Tabela L.1", "Tabela L.2", "Tabela L.3" e "Anexo "L"" viram link e abrem o PDF da RT 05 Parte 1.1 na página da tabela (L.1 e L.2 nas págs. 44–46, L.3 na 48), não mais na lista de tabelas do começo. Vale também para as formas que o banco usa: "RTCBMRS nº 05, Parte 1.1 de 2016" (com vírgula e "de 2016") e "RT 05 P1.1/2016".
+- **Tabela abre no título dela.** O link de tabela (de qualquer RT) passa a preferir a linha do título ("Tabela 1 – ...", "Tabela 4: ..."); antes podia abrir numa menção no meio do texto (a Tabela 1 da RT 11 abria na pág. 4 em vez da 30).
+
 ## 2.8.5
 
 - **Prints na conversa.** Cole um print no campo da mensagem (Ctrl+V), arraste a imagem para ele ou clique no 🖼 (no celular, abre as fotos). O print aparece em miniatura em cima do campo (o × tira) e vai junto com a mensagem: o Claude vê a imagem, então dá para mostrar a tela em vez de descrever ("o que é esse campo?", "esse texto está certo?"). Até 8 por mensagem; dá para mandar só o print, sem texto. Na conversa, clicar na miniatura abre o print inteiro.

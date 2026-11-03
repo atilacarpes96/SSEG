@@ -50,7 +50,8 @@ def pdf_citado(texto):
     """Primeira norma citada num texto (modelo do banco) → nome do PDF, ou None."""
     t = normalizar(texto)
     achados = []
-    for m in re.finditer(r"\b(?:rt|resolucao tecnica)\s*(?:cbmrs)?\s*(?:n\.?\s*o?\.?\s*)?0?(\d{1,2})\b(?:\s*parte\s*0?(\d))?", t):
+    # "RTCBMRS nº 05, Parte 1.1" (vírgula antes da Parte) e "RT 05 P1.1" (Parte abreviada) também (03/11/2026)
+    for m in re.finditer(r"\b(?:rt|resolucao tecnica)\s*(?:cbmrs)?\s*(?:n\.?\s*o?\.?\s*)?0?(\d{1,2})\b(?:\s*,?\s*(?:parte|p\.?)\s*0?(\d))?", t):
         pdf = PDF_RT5.get(m.group(2) or "") if m.group(1) == "5" else PDF_RT.get(m.group(1))
         achados.append((m.start(), pdf))
     for rx, pdf in ((r"\bdecreto\s*(?:estadual\s*)?(?:n\.?\s*o?\.?\s*)?51\.?803", "DECRETO51803.pdf"),
@@ -79,7 +80,8 @@ def pdf_do_resultado(r):
 # O programa transforma "item 5.2.2 da RT 01/2024" num link que abre o PDF oficial na página do item.
 # A versão de cada PDF sai do nome da transcrição comentada (rt-01-2024-... → 2024): citação de outro ano
 # abre o PDF com aviso, porque a vigência é pela data de protocolo e quem escolhe a versão é o analista.
-TABELA = re.compile(r"\btabela\s+(\d{1,2}[a-z]?(?:\.\d{1,2})*)\b")
+TABELA = re.compile(r"\btabela\s+((?:[a-z]\.)?\d{1,2}[a-z]?(?:\.\d{1,2})*)\b")  # "Tabela L.1" do Anexo L (03/11/2026)
+ANEXO = re.compile(r"\banexo\s+[\"\u201c\u201d]?([a-z])[\"\u201c\u201d]?(?![a-z])")
 ARTIGO = re.compile(r"\bart(?:igo)?\.?\s*(\d{1,3})\s*[o\u00ba\u00b0]?(?!\d)")
 
 
@@ -124,13 +126,17 @@ def pagina_item(caminho, rotulo, pdftotext="pdftotext"):
     (título do item) fora do sumário; depois qualquer menção; não achou → (1, ""). Só aproxima."""
     t = normalizar(rotulo).split(" \u00b7 ")[0]  # "5.2.2 · RT 01/2024": o item é só a parte antes do ponto
     m, tab, art = ITEM.search(t), TABELA.search(t), ARTIGO.search(t)
-    if not m and not tab and not art:
+    anx = ANEXO.search(t) if not m and not tab and not art else None
+    if not m and not tab and not art and not anx:
         return 1, ""
     try:
         pags = _paginas_linhas(caminho, pdftotext)
     except (OSError, subprocess.SubprocessError):
         return 1, ""
-    if art and not m and not tab:
+    if anx:  # "Anexo L": a página do título do anexo (linha só com ele), não as menções no texto
+        cab = re.compile(r"^anexo\s+[\"\u201c\u201d]?" + anx.group(1) + r"[\"\u201c\u201d]?\s*$()")
+        meio = re.compile(r"\banexo\s+[\"\u201c\u201d]?" + anx.group(1) + r"(?![a-z])")
+    elif art and not m and not tab:
         cab = re.compile(r"^art\.?\s*" + art.group(1) + r"\s*[o\u00ba\u00b0]?(?!\d)\s*[-\u2013.]?\s*(.*)")
         meio = re.compile(r"\bart\.?\s*" + art.group(1) + r"(?!\d)")
     elif tab:
@@ -140,7 +146,12 @@ def pagina_item(caminho, rotulo, pdftotext="pdftotext"):
         cab = re.compile(r"^" + re.escape(m.group(0)) + r"\.?(?![\d.])\s*(.*)")
         meio = re.compile(r"(?<![\d.])" + re.escape(m.group(0)) + r"(?![\d])")
     sumario = lambda linhas: sum(1 for l in linhas if re.search(r"\.{5,}|…{3,}", l)) >= 5 or any(l in ("sumario", "indice") for l in linhas)  # noqa: E731
-    for i, linhas in enumerate(pags):
+    # tabela: primeiro o título com separador ("Tabela L.1 – ...", "Tabela 4: ..."), que a lista de tabelas e a
+    # menção quebrada no começo da linha ("Tabela 1, do Anexo A") não têm; não achou, o critério de antes
+    cabs = [cab]
+    if tab:
+        cabs.insert(0, re.compile(cab.pattern + r"\s*[-\u2013\u2014:]\s*(.*)"))
+    for i, linhas, cab in ((i, l, c) for c in cabs for i, l in enumerate(pags)):
         if sumario([n for n, _o in linhas]):
             continue
         for n, orig in linhas:

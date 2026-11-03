@@ -2977,10 +2977,12 @@ function nomeModelo(m) { return /haiku/i.test(m) ? "Haiku" : /opus/i.test(m) ? "
 // 2.8.0 (pedido do Átila, 02/11/2026): "item 5.2.2 da RT 01/2024", "Tabela 2 da RT 01/2024", "Art. 5º do Decreto 51.803"
 // viram link que abre o PDF oficial na página do item (norma_pdf). Item sem a norma ao lado usa a última norma citada
 // na mesma resposta; sem nenhuma antes, fica sem link. Só na tela: o texto copiado continua sem link.
-const RX_NORMA = /(?:\b(?:RT|Resolução Técnica)\s*(?:CBMRS\s*)?(?:n\.?\s*[º°o]?\.?\s*)?0?\d{1,2}(?:\s*,?\s*Parte\s*0?\d{1,2}(?:\.\d)?)?(?:\s*\/\s*\d{4})?|\bRT\s+de\s+Implantação(?:\s+do\s+SOL(?:-CBMRS)?)?|\bRTISOL\b|\bDecreto(?:\s+Estadual)?\s*(?:n\.?\s*[º°o]?\.?\s*)?51\.?803(?:\/\d{4})?|\b(?:LC|Lei\s+Complementar)\s*(?:n\.?\s*[º°o]?\.?\s*)?14\.?376(?:\/\d{4})?)/gi;
+const RX_NORMA = /(?:\b(?:RT|Resolução Técnica)\s*(?:CBMRS\s*)?(?:n\.?\s*[º°o]?\.?\s*)?0?\d{1,2}(?:\s*,?\s*(?:Parte|P\.?)\s*0?\d{1,2}(?:\.\d)?)?(?:\s*(?:\/|de)\s*\d{4})?|\bRT\s+de\s+Implantação(?:\s+do\s+SOL(?:-CBMRS)?)?|\bRTISOL\b|\bDecreto(?:\s+Estadual)?\s*(?:n\.?\s*[º°o]?\.?\s*)?51\.?803(?:\/\d{4})?|\b(?:LC|Lei\s+Complementar)\s*(?:n\.?\s*[º°o]?\.?\s*)?14\.?376(?:\/\d{4})?)/gi;
 // IN e IT só em maiúscula (com /i, "in 2025" viraria norma); as que não têm PDF aparecem como "sem PDF"
 const RX_NORMA_MAI = /\b(?:IN\s*(?:n\.?\s*[º°o]?\.?\s*)?0?\d{2,3}(?:\/[A-Z\/]*\d{4})?|IT\s*(?:n\.?\s*[º°o]?\.?\s*)?\d{1,2}(?:\/\d{4})?)\b/g;
-const RX_REF = /(?:\b(?:sub)?ite(?:m|ns)\s+\d{1,2}(?:\.\d{1,2}){1,5}|\bTabela\s+\d{1,2}[A-Z]?(?:\.\d{1,2})*\b|\bArt(?:igo)?\.?\s*\d{1,3}\s*[º°]?(?!\d))/gi;
+const RX_REF = /(?:\b(?:sub)?ite(?:m|ns)\s+\d{1,2}(?:\.\d{1,2}){1,5}|\bTabela\s+(?:[A-Z]\.)?\d{1,2}[A-Z]?(?:\.\d{1,2})*\b|\bArt(?:igo)?\.?\s*\d{1,3}\s*[º°]?(?!\d))/gi;
+// 03/11/2026: "Anexo L" / "Anexo “L”" e "Tabela L.1" (Anexo L da RT 05 Parte 1.1); anexo só com A maiúsculo e letra só
+const RX_ANEXO = /\bAnexo\s+(?:&quot;|["“”])?[A-Z](?:&quot;|["“”])?(?![A-Za-zÀ-ú])/g;
 const RX_NUM = /(?<![\d.,\/])\d{1,2}(?:\.\d{1,2}){1,5}(?![\d,]|\.\d)/g;
 function linkNormas(t, estado) {
   if (ESPELHO) return t;  // no celular o PDF abriria no PC
@@ -2990,7 +2992,7 @@ function linkNormas(t, estado) {
   const contar = (x, c) => x.split(c).length - 1;
   normas.forEach(n => { const a = t.slice(0, n.i); n.parent = contar(a, "(") > contar(a, ")"); });
   const dentro = (i, f) => normas.some(n => i < n.f && f > n.i);
-  const refs = [...t.matchAll(RX_REF)].map(m => ({ i: m.index, f: m.index + m[0].length, txt: m[0] }));
+  const refs = [...t.matchAll(RX_REF), ...t.matchAll(RX_ANEXO)].map(m => ({ i: m.index, f: m.index + m[0].length, txt: m[0] }));
   // número sem "item" só vira link encostado numa norma: "RT 01/2024, 5.2.2.1" ou "5.2.2.1 da RT 01/2024"
   for (const m of t.matchAll(RX_NUM)) {
     const i = m.index, f = i + m[0].length;
@@ -3007,7 +3009,7 @@ function linkNormas(t, estado) {
     if (p.norma) { rotulo = p.txt; if (!p.parent) estado.norma = p.txt; }
     else {
       // "item 6.3.6.1.2, alínea b, da RT de Implantação": a alínea no meio não separa o item da norma (2.8.1)
-      const depois = normas.find(n => n.i >= p.f && /^\s*,?\s*(?:al[ií]nea\s+(?:&quot;|["“'])?[a-z](?:&quot;|["”'])?\s*,?\s*)?(?:d[aoe]s?\s+)?$/i.test(t.slice(p.f, n.i)));
+      const depois = normas.find(n => n.i >= p.f && /^\s*,?\s*(?:al[ií]nea\s+(?:&quot;|["“'])?[a-z](?:&quot;|["”'])?\s*,?\s*)?(?:d[aoe]\s+Anexo\s+(?:&quot;|["“”])?[A-Z](?:&quot;|["“”])?\s*,?\s*)?(?:d[aoe]s?\s+)?$/i.test(t.slice(p.f, n.i)));
       const antes = [...normas].reverse().find(n => n.f <= p.i && !n.parent);
       const norma = (depois || antes || {}).txt || estado.norma;
       if (!norma) { out += t.slice(pos, p.f); pos = p.f; continue; }
@@ -3030,10 +3032,11 @@ function comNormas(tag, attrs, texto, estado = {}) {
 // e pela Parte (a que não diz a Parte casa com qualquer uma) e fica o rótulo com o ano, que é o que confere a versão.
 // Anos diferentes (RT 01/2022 e RT 01/2024) continuam separados.
 function normaChave(rotulo) {
-  const [item, norma = ""] = rotulo.split(" · ");
-  const m = norma.match(/^(?:RT|Resolução Técnica)(?:\s*CBMRS)?\b\D*?0?(\d{1,2})(?:\s*,?\s*Parte\s*0?(\d{1,2}))?(?:\s*\/\s*(\d{4}))?/i);
-  return m ? { item: item.toLowerCase(), rt: +m[1], parte: m[2] ? +m[2] : null, ano: m[3] || null }
-    : { item: item.toLowerCase(), outra: norma.toLowerCase().replace(/\s+/g, " ") };
+  let [item, norma = ""] = rotulo.split(" · ");
+  const m = norma.match(/^(?:RT|Resolução Técnica)(?:\s*CBMRS)?\b\D*?0?(\d{1,2})(?:\s*,?\s*(?:Parte|P\.?)\s*0?(\d{1,2}))?(?:\.\d)?(?:\s*(?:\/|de)\s*(\d{4}))?/i);
+  item = item.toLowerCase().replace(/&quot;|["“”]/g, "");
+  return m ? { item, rt: +m[1], parte: m[2] ? +m[2] : null, ano: m[3] || null }
+    : { item, outra: norma.toLowerCase().replace(/\s+/g, " ") };
 }
 function mesmoItem(a, b) {
   if (a.item !== b.item) return false;
