@@ -117,6 +117,16 @@ def achar(analise, nome):
     iguais = [i for i in lst if _chave(i["nome"]) == k]
     if not iguais:  # "Planta Baixa" × "planta baixa"; "Ocupação F-8" × "Ocupação F-8 — Restaurantes"
         iguais = [i for i in lst if _chave(i["nome"]).startswith(k) or k.startswith(_chave(i["nome"]))]
+    if not iguais:
+        # "Responsável Técnico" na coluna CIA × "RT: LUIZ ..." no SOL: o nome do item muda com o nome da pessoa (relato do
+        # Átila, 03/11/2026: tinha de escolher à mão). Uma pessoa só desse tipo = ela; mais de uma = a que o texto nomeia.
+        tipo = ("RT" if k.startswith(("responsavel tecnico", "responsaveis tecnicos", "rt ")) or k == "rt" else
+                "RU" if k.startswith(("responsavel pelo uso", "responsaveis pelo uso", "ru ")) or k == "ru" else
+                "PROPRIETARIO" if k.startswith("proprietario") else None)
+        if tipo:
+            iguais = [i for i in lst if i["tipo"] == tipo]
+            if len(iguais) > 1:
+                iguais = [i for i in iguais if _chave(i["nome"].split(":", 1)[-1]) in k] or iguais
     if not iguais and (k in ("geral", "campo 3", "caracteristicas") or k.startswith(("geral ", "populacao", "campo 3"))):
         # "Geral" / população / campo 3 na coluna CIA = "Característica geral" do SOL (relato do Átila, 30/10/2026)
         iguais = [i for i in lst if i["tipo"] == "GERAL"]
