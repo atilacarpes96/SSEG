@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.9
+
+- **Reanálise concluída no mesmo dia entra na meta da semana.** Processo que voltou para outra análise, foi distribuído e concluído antes da planilha de distribuição do dia seguinte ficava com a data da análise anterior (ex.: CIA de julho) e não contava na meta nem aparecia no filtro "Meta da semana". Agora vale a saída da caixa que o SOL registrou, com o resultado dos Marcos. No dia seguinte a planilha traz a linha nova e manda como antes.
+
 ## 2.8.8
 
 - **Links da RT 15 (Brigada de Incêndio)**, que entrou na pasta de normas: "item 5.6.4 da RT 15, Parte 01/2023", "Tabela 3 da RT 15" abrem o PDF na página. Citação da Parte 01/2022 abre a de 2023 com o aviso de versão.

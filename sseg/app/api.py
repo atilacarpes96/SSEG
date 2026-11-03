@@ -109,11 +109,18 @@ def estado_caixa(dist, reg, prazo=10, hoje=None):
 def _saiu_da_caixa(e, pasta):
     """2.5.1: o processo estava na caixa e o servidor viu que saiu (CA ou CIA lançados no SOL): sol-caixa.json ganha
     saiu_em e os Marcos dão o resultado. A planilha, quando atualizar, manda por cima (ela já traz o concluído)."""
-    if e["estado"] not in ("caixa", "sem"):  # "sem": redistribuído a mim fora da planilha (2.7.11)
+    if e["estado"] not in ("caixa", "sem", "concluido"):  # "sem": redistribuído a mim fora da planilha (2.7.11)
         return e
     saiu = _ler(os.path.join(pasta, "sol-caixa.json")).get("saiu_em")
     if not saiu:
         return e
+    if e["estado"] == "concluido":
+        if saiu <= (e["concluido"] or ""):
+            return e
+        # 2.8.9 (relato do Átila, 03/11/2026): reanálise distribuída e concluída no mesmo dia, antes da planilha do dia
+        # seguinte. A linha da planilha é da análise anterior (concluída em julho) e o processo não contava na meta.
+        # Vale a saída do SOL; a distribuição dessa análise a planilha ainda não tem.
+        e = dict(e, distribuido="", vence="", dias=None, no_prazo=None)
     ultima = max(_ler(os.path.join(pasta, "marcos-resumo.json")).get("analises") or [{}], key=lambda a: a.get("data") or "")
     res = ultima.get("resultado") if (ultima.get("data") or "") >= e["distribuido"] else ""
     e.update(estado="concluido", concluido=saiu, resultado=res if res in ("CA", "CIA") else "", fonte="sol")

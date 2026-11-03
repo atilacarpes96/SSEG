@@ -410,6 +410,15 @@ def main():
         caso("app: processo que saiu da caixa vira concluído com o resultado dos Marcos; análise velha não conta; na caixa fica",
              ficou == "caixa" and (e1["estado"], e1["resultado"], e1["concluido"], e1["dias"]) == ("concluido", "CA", "2026-10-19", 9)
              and (e2["estado"], e2["resultado"]) == ("concluido", ""), str((ficou, e1, e2)))
+        # 2.8.9: reanálise que entrou e saiu da caixa antes da planilha do dia seguinte (linha da planilha = análise anterior)
+        e3 = _api.estado_caixa({"codigo": "A1", "distribuido": "2026-07-29", "concluido": "2026-07-30", "resultado": "CIA"}, {})
+        w("marcos-resumo.json", {"analises": [{"data": "2026-07-30", "resultado": "CIA"}, {"data": "2026-10-19", "resultado": "CA"}]})
+        e4 = _api._saiu_da_caixa(dict(e3), d)
+        w("sol-caixa.json", {"id": 1, "saiu_em": "2026-07-30"})   # saída antiga: a planilha já sabe
+        e5 = _api._saiu_da_caixa(dict(e3), d)
+        caso("app: reanálise concluída no dia, com a planilha ainda na análise anterior, conta pela saída do SOL (2.8.9)",
+             (e4["estado"], e4["concluido"], e4["resultado"], e4["distribuido"]) == ("concluido", "2026-10-19", "CA", "")
+             and (e5["concluido"], e5["distribuido"]) == ("2026-07-30", "2026-07-29"), str((e4, e5)))
     # 11b3a. print do memorial (2.6.4): norma do dimensionamento, inviabilidade, laudo, notificação e o que verificar
     import memorial_sol as _ms
     api_f = {"numero": "A00012345AA001", "tipo": "PPCI",
