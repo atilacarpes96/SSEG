@@ -547,6 +547,11 @@ mark { background: color-mix(in srgb, var(--amarelo, #FCD733) 55%, transparent);
 .perguntas input { width: 100%; padding: 5px 8px; border: 1px solid var(--linha); border-radius: 5px; }
 .cartao-exig { border: 1px solid var(--linha); border-left: 3px solid var(--verm); border-radius: 8px; padding: 8px 10px; background: var(--cartao); }
 .cartao-exig .txt { white-space: pre-wrap; font-size: 13px; margin: 4px 0; }
+.cartao-exig textarea.rev-sug { width: 100%; font: inherit; font-size: 13px; margin: 4px 0; resize: vertical; }
+.cit-itens { font-size: 12px; margin: 2px 0 4px; }
+.cit-itens:empty { display: none; }
+.rev-pedir { display: flex; gap: 8px; align-items: flex-end; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--linha); }
+.rev-pedir textarea { flex: 1; min-width: 0; font: inherit; font-size: 13px; resize: vertical; }
 
 /* ---- aviso que aparece e some (no celular é a única resposta visível: o rodapé fica escondido) */
 #aviso { position: fixed; left: 50%; bottom: 64px; transform: translate(-50%, 20px); max-width: min(560px, calc(100% - 24px));
@@ -2990,7 +2995,8 @@ function linkNormas(t, estado) {
     let rotulo;
     if (p.norma) { rotulo = p.txt; if (!p.parent) estado.norma = p.txt; }
     else {
-      const depois = normas.find(n => n.i >= p.f && /^\s*,?\s*(?:d[aoe]s?\s+)?$/i.test(t.slice(p.f, n.i)));
+      // "item 6.3.6.1.2, alínea b, da RT de Implantação": a alínea no meio não separa o item da norma (2.8.1)
+      const depois = normas.find(n => n.i >= p.f && /^\s*,?\s*(?:al[ií]nea\s+(?:&quot;|["“'])?[a-z](?:&quot;|["”'])?\s*,?\s*)?(?:d[aoe]s?\s+)?$/i.test(t.slice(p.f, n.i)));
       const antes = [...normas].reverse().find(n => n.f <= p.i && !n.parent);
       const norma = (depois || antes || {}).txt || estado.norma;
       if (!norma) { out += t.slice(pos, p.f); pos = p.f; continue; }
@@ -3000,6 +3006,25 @@ function linkNormas(t, estado) {
     pos = p.f;
   }
   return out + t.slice(pos);
+}
+// 2.8.1: o texto dos blocos (revisão final, exigência, fundamento) ganha o mesmo link de item do texto corrido
+function comNormas(tag, attrs, texto, estado = {}) {
+  const n = el(tag, attrs);
+  n.innerHTML = linkNormas(String(texto || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"), estado);
+  return n;
+}
+// Coluna CIA (2.8.1): o texto fica numa caixa editável, onde link não cabe; embaixo dela vai a linha
+// "itens citados" com um link por item (texto da caixa + fundamento), refeita enquanto se digita.
+function itensCitados(textos) {
+  const vistos = new Map();
+  for (const t of textos) for (const a of comNormas("div", {}, t).querySelectorAll("a.norma-link"))
+    if (/ · /.test(a.dataset.rotulo) && !vistos.has(a.dataset.rotulo)) vistos.set(a.dataset.rotulo, a);
+  const linha = el("div", { class: "cit-itens discreto" });
+  if (!vistos.size || ESPELHO) return linha;
+  linha.append("Itens citados: ");
+  [...vistos.values()].forEach((a, k) => { if (k) linha.append(" · "); a.textContent = a.dataset.rotulo.replace(" · ", " da "); linha.append(a); });
+  setTimeout(() => marcarNormas(linha), 0);
+  return linha;
 }
 const NORMA_ST = new Map();
 async function marcarNormas(raiz) {
@@ -3080,13 +3105,13 @@ const BLOCOS = {
         el("td", { class: h.ok === false ? "efeito-alerta" : "efeito-ok" }, (h.ok === false ? "! " : "✓ ") + (h.efeito || "")))))),
     d.conclusao ? el("div", { class: "discreto" }, d.conclusao) : null,
     d.norma ? BLOCOS["sseg-norma"](d.norma) : null),
-  "sseg-norma": d => el("div", { class: "discreto" }, d.rotulo || "",
+  "sseg-norma": d => el("div", { class: "discreto" }, comNormas("span", {}, d.rotulo || ""),
     " ", el("button", { class: "bt link", title: "Abre o PDF oficial de: " + (d.rotulo || ""), on: { click: ev => api("norma_pdf", [d.rotulo || "", d.consulta || ""], ev.currentTarget) } }, "PDF")),
   "sseg-exigencia": (d, ctx) => {
     const n = (d.texto || "").length;
     return el("div", { class: "cartao-exig" },
       el("div", { class: "discreto" }, [d.medida, d.fundamento].filter(Boolean).join(" · ")),
-      el("div", { class: "txt" }, d.texto || ""),
+      comNormas("div", { class: "txt" }, d.texto || ""),
       el("div", { class: "rod", style: "display:flex;gap:8px;align-items:center" },
         ctx && /^A\d{8}/.test(ctx.chave) ? porNaCIA(ctx.chave, d) : null,
         el("button", { class: "bt", on: { click: () => copiar(d.texto || "") } }, "Copiar"),
@@ -3100,23 +3125,61 @@ const BLOCOS = {
     const atual = id => ((PR.reg && PR.codigo === (ctx && ctx.chave) && PR.reg.exigencias) || []).find(e => e.id === id);
     const cartao = x => {
       const ex = atual(x.id), estado = el("span", { class: "discreto", style: "margin-left:auto" });
+      const conta = el("span", { class: "discreto" }, (x.sugestao || "").length + " / 2000");
+      // 2.8.1 (pedido do Átila): o texto sugerido pode ser editado antes de Aplicar, e "Pedir ajuste" manda ao Claude
+      // uma explicação ou um pedido de alteração; a resposta volta como um cartão novo só daquela exigência.
+      let edita = null;
+      const sugDiv = x.sugestao ? comNormas("div", { class: "txt" }, x.sugestao) : null;
+      const editar = b => {
+        if (edita) return;
+        edita = el("textarea", { class: "rev-sug", "aria-label": "Texto sugerido de " + x.id });
+        edita.value = x.sugestao || "";
+        edita.addEventListener("input", () => { conta.textContent = edita.value.length + " / 2000"; conta.style.color = edita.value.length > 2000 ? "var(--verm)" : ""; autoAltura(edita); });
+        sugDiv.replaceWith(edita); requestAnimationFrame(() => { autoAltura(edita); edita.focus(); });
+        b.disabled = true;
+      };
+      const pedido = processo ? el("textarea", { class: "rev-pedido", rows: 2, "aria-label": "Explicar ou pedir alteração em " + x.id,
+        placeholder: "Explique ou peça uma alteração no texto proposto (ex.: manter a Nota 02; tirar a parte da planta; o RT já justificou isso no memorial)…" }) : null;
+      const pedir = () => {
+        const t = pedido.value.trim();
+        if (!t) return avisar("Escreva o que quer mudar ou explicar.", true);
+        const prop = edita ? edita.value.trim() : (x.sugestao || "");
+        chatEnviar(ctx, "Revisão final, ajuste na exigência " + x.id + (x.medida || (ex && ex.medida) ? " (" + (x.medida || ex.medida) + ")" : "") + ".\n\n" +
+          "Pedido do analista: " + t + "\n\n" +
+          (prop ? "Texto proposto na revisão" + (edita ? " (já editado pelo analista)" : "") + ":\n" + prop + "\n\n" : "") +
+          (ex && (ex.final || ex.rascunho) ? "Texto salvo hoje na coluna CIA:\n" + (ex.final || ex.rascunho) + "\n\n" : "") +
+          "Refaça a proposta atendendo o pedido. Se o pedido contrariar a norma ou tirar um fundamento necessário, diga isso no \"problema\" e explique; " +
+          "item novo citado tem de ser conferido no PDF antes. Responda com UM bloco sseg-revisao só com esta exigência (mesmo id, veredito corrigir, ou ok se ficar como está), " +
+          "com problema, fundamento e a sugestão com o texto INTEIRO novo, no formato da caixa do SOL. Não grave nada: o analista decide com Aplicar ou Ignorar.");
+        pedido.value = ""; autoAltura(pedido);
+      };
+      if (pedido) {
+        pedido.addEventListener("input", () => autoAltura(pedido));
+        pedido.addEventListener("keydown", ev => { if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); pedir(); } });
+      }
       const decidir = async (b, ignorar) => {
-        await api("processo_aplicar_revisao", [ctx.chave, x.id, x.sugestao || "", x.fundamento || "", ignorar], b);
+        const texto = edita ? edita.value.trim() : (x.sugestao || "");
+        if (!ignorar && texto.length > 2000) return avisar("O texto passou de 2000 caracteres: a caixa do SOL não aceita.", true);
+        await api("processo_aplicar_revisao", [ctx.chave, x.id, texto, x.fundamento || "", ignorar], b);
         b.parentNode.querySelectorAll("button").forEach(z => z.disabled = true);
+        if (edita) edita.readOnly = true;
         estado.textContent = ignorar ? "ignorada" : "✓ aplicada na coluna CIA" + (ex && ex.lancado ? " — lance de novo no SOL" : "");
         recarregarRegistro();
       };
       return el("div", { class: "cartao-exig" },
         el("div", {}, el("b", {}, x.id + (x.medida || (ex && ex.medida) ? " · " + (x.medida || ex.medida) : "")), " ",
           el("span", { class: "tag sit " + (x.veredito === "corrigir" ? "k-vermelho" : "k-laranja") }, x.veredito === "corrigir" ? "corrigir" : "conferir")),
-        x.problema ? el("p", { style: "margin:4px 0" }, x.problema) : null,
+        x.problema ? comNormas("p", { style: "margin:4px 0" }, x.problema) : null,
         x.fundamento ? BLOCOS["sseg-norma"]({ rotulo: x.fundamento, consulta: "" }) : null,
-        x.sugestao ? el("details", { open: true }, el("summary", { class: "discreto" }, "texto sugerido (substitui o atual)"), el("div", { class: "txt" }, x.sugestao)) : null,
-        ex && x.sugestao ? el("details", {}, el("summary", { class: "discreto" }, "texto atual"), el("div", { class: "txt" }, ex.final || ex.rascunho || "")) : null,
-        processo && x.sugestao ? el("div", { class: "rod", style: "display:flex;gap:8px;align-items:center" },
+        x.sugestao ? el("details", { open: true }, el("summary", { class: "discreto" }, "texto sugerido (substitui o atual)"), sugDiv) : null,
+        ex && x.sugestao ? el("details", {}, el("summary", { class: "discreto" }, "texto atual"), comNormas("div", { class: "txt" }, ex.final || ex.rascunho || "")) : null,
+        processo && x.sugestao ? el("div", { class: "rod", style: "display:flex;gap:8px;align-items:center;flex-wrap:wrap" },
           el("button", { class: "bt p", on: { click: ev => decidir(ev.currentTarget, false) } }, "Aplicar"),
           el("button", { class: "bt", on: { click: ev => decidir(ev.currentTarget, true) } }, "Ignorar"),
-          el("span", { class: "discreto" }, (x.sugestao || "").length + " / 2000"), estado) : null);
+          el("button", { class: "bt", title: "Corrigir o texto sugerido aqui mesmo antes de Aplicar", on: { click: ev => editar(ev.currentTarget) } }, "Editar"),
+          conta, estado) : null,
+        pedido ? el("div", { class: "rev-pedir" }, pedido,
+          el("button", { class: "bt", title: "Manda a explicação ou o pedido ao Claude desta conversa (Ctrl+Enter)", on: { click: pedir } }, "Pedir ajuste")) : null);
     };
     return el("div", {},
       el("b", {}, "Revisão final: " + resto.length + " a decidir, " + ok.length + " sem problema"),
@@ -3435,6 +3498,9 @@ function pintarCIA() {
       el("span", { class: "discreto" }, "erro na prancha:"), ...elems.map(p => el("label", {}, el("input", { type: "checkbox", checked: marcadas.includes(p),
         on: { change: ev => api("processo_atualizar", [PR.codigo, "exigencias", e.id, { pranchas: ev.target.checked ? [...marcadas, p] : marcadas.filter(x => x !== p) }]).then(recarregarRegistro) } }), p))) : null;
     const fund = el("input", { class: "fund", value: e.fundamento || "", placeholder: "fundamento (ex.: RT 11/2016, item 5.4.2)" });
+    let cit = itensCitados([ta.value, fund.value]), citT = 0;
+    const refazCit = () => { clearTimeout(citT); citT = setTimeout(() => { const n = itensCitados([ta.value, fund.value]); cit.replaceWith(n); cit = n; }, 400); };
+    ta.addEventListener("input", refazCit); fund.addEventListener("input", refazCit);
     const conta = el("span", { class: "conta" });
     const st = el("span", {}, deRascunho ? "rascunho do Claude — edite e salve" : "");
     const contar = () => { const n = ta.value.length; conta.textContent = n + " / 2000"; conta.classList.toggle("alto", n > 1950); };
@@ -3473,7 +3539,7 @@ function pintarCIA() {
         e.pedido ? el("span", { class: "marca-tag", style: "display:inline-flex;align-items:center;gap:4px" }, caranguejo(PR.fluxo.modelo, "medium", "Claude redigindo este item"), "redigindo…") : null),
       rascDiferente ? el("details", { class: "discreto" }, el("summary", {}, "rascunho do Claude (diferente do salvo)"), el("div", { class: "rasc" }, e.rascunho),
         el("button", { class: "bt link", on: { click: () => { ta.value = e.rascunho; ta.dispatchEvent(new Event("input")); ta.focus(); } } }, "pôr o rascunho na caixa")) : null,
-      pranchas, ta, fund,
+      pranchas, ta, fund, cit,
       el("div", { class: "rod" },
         el("button", { class: "bt p", on: { click: salvar } }, "Salvar"),
         el("button", { class: "bt", title: "Manda o texto da caixa ao chat como achado; o rascunho volta para este item", on: { click: pedir } }, "Pedir ao Claude"),

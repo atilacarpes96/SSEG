@@ -4,6 +4,13 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.1
+
+- **Revisão final: dá para explicar ou pedir alteração no texto proposto.** Cada item a decidir tem agora um campo embaixo: escreva o que quer mudar ou por que o texto atual está certo ("manter a Nota 02", "tirar a parte da planta", "o RT já justificou no memorial") e clique em "Pedir ajuste" (ou Ctrl+Enter). O Claude da conversa refaz a proposta só daquela exigência, conferindo no PDF qualquer item novo, e ela volta como um cartão novo, com Aplicar e Ignorar. Se o pedido contrariar a norma, ele diz por quê.
+- **"Editar" no texto sugerido.** Corrija uma palavra direto no cartão e clique em Aplicar: vai o texto editado, com a contagem dos 2.000 caracteres.
+- **Itens citados viram link também nos cartões da revisão final, da exigência e no fundamento** (antes só no texto corrido da conversa). Na coluna CIA, onde o texto fica numa caixa editável, aparece embaixo de cada exigência a linha "Itens citados", com um link por item, refeita enquanto você digita.
+- "item 6.3.6.1.2, alínea b, da RT de Implantação" agora vira link: a alínea no meio não separa mais o item da norma.
+
 ## 2.8.0
 
 - **Todo item de norma citado na conversa vira link para o PDF oficial.** "Item 5.2.2 da RT 01/2024", "RT 11/2016, item 5.4.2", "Tabela 2 da RT 01/2024", "Art. 5º do Decreto 51.803/2014": clique e o PDF abre na página em que o item começa (fora do sumário). Passando o mouse, aparece o começo do texto do item e a página. Item citado sem a norma ao lado ("conforme o item 4.8") usa a última norma citada na resposta; norma entre parênteses não conta. Número solto, sem "item" e longe da norma, não vira link. O texto copiado para o SOL continua sem link.
