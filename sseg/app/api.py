@@ -976,10 +976,30 @@ class Api:
         if not nome:
             raise RuntimeError("Não achei o PDF de \"%s\" em normas/pdf." % rotulo)
         caminho = os.path.join(self._clone(), "sseg", "normas", "pdf", nome)
-        pg = busca.pagina(caminho, consulta, rotulo, base.pdftotext())
+        if consulta:
+            pg = busca.pagina(caminho, consulta, rotulo, base.pdftotext())
+        else:  # link de item no texto (2.8.0): página em que o item abre a linha, fora do sumário
+            pg, _assunto = busca.pagina_item(caminho, rotulo, base.pdftotext())
         base.abrir_pdf(caminho, pg)
-        self._log("PDF %s aberto na página %d (pedido: \"%s\") — conferir o item ali antes de citar." % (nome, pg, rotulo[:80]))
+        aviso = busca.norma_status(rotulo, self._clone()).get("aviso")
+        self._log("PDF %s aberto na página %d (pedido: \"%s\") — conferir o item ali antes de citar.%s"
+                  % (nome, pg, rotulo[:80], (" ⚠ " + aviso) if aviso else ""))
         return pg
+
+    def normas_status(self, rotulos):
+        """Links de item no texto (2.8.0): para cada rótulo, se há PDF, aviso de versão e o assunto do item
+        (título que o programa leu no PDF, para o analista ir guardando número e assunto)."""
+        clone, out = self._clone(), []
+        for r in (rotulos or [])[:200]:
+            st = busca.norma_status(r, clone)
+            if st["pdf"]:
+                try:
+                    pg, st["assunto"] = busca.pagina_item(os.path.join(clone, "sseg", "normas", "pdf", st["pdf"]), r, base.pdftotext())
+                    st["pagina"] = pg
+                except (OSError, subprocess.SubprocessError):
+                    st["assunto"] = ""
+            out.append(st)
+        return out
 
     def processo_atualizar(self, codigo, colecao, id_, campos):
         """O programa muda resposta/feita da pendência e final/fundamento da exigência. Rascunho não."""

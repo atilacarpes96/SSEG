@@ -75,6 +75,87 @@ def pdf_do_resultado(r):
     return pdf and "sseg/normas/pdf/" + pdf
 
 
+# ---- link de item no texto do Claude (2.8.0, pedido do Átila em 02/11/2026) ----
+# O programa transforma "item 5.2.2 da RT 01/2024" num link que abre o PDF oficial na página do item.
+# A versão de cada PDF sai do nome da transcrição comentada (rt-01-2024-... → 2024): citação de outro ano
+# abre o PDF com aviso, porque a vigência é pela data de protocolo e quem escolhe a versão é o analista.
+TABELA = re.compile(r"\btabela\s+(\d{1,2}[a-z]?(?:\.\d{1,2})*)\b")
+ARTIGO = re.compile(r"\bart(?:igo)?\.?\s*(\d{1,3})\s*[o\u00ba\u00b0]?(?!\d)")
+
+
+def ano_do_pdf(pdf, clone):
+    """Ano da versão do PDF, tirado do normas/<rt>-<ano>-....md que aponta para ele; sem transcrição: None."""
+    pre = next((pre for pre, p in PDF_COMENTADA if p == pdf), None)
+    if not pre:
+        return None
+    for arq in glob.glob(os.path.join(clone, "sseg", "normas", pre + "*.md")):
+        m = re.search(r"-(\d{4})-", os.path.basename(arq)[len(pre) - 1:])
+        if m:
+            return m.group(1)
+    return None
+
+
+def norma_status(rotulo, clone):
+    """{pdf, aviso}: pdf None = a norma não está em normas/pdf (sinal de norma a incorporar)."""
+    pdf = pdf_citado(rotulo)
+    if not pdf or not os.path.isfile(os.path.join(clone, "sseg", "normas", "pdf", pdf)):
+        return {"pdf": None, "aviso": "Esta norma não está em normas/pdf — sem PDF para abrir (vale incorporar)."}
+    t = normalizar(rotulo)
+    m = re.search(r"(?:rt|resolucao tecnica)[^/]{0,40}?/\s*(\d{4})\b", t) or re.search(r"\bparte\s*0?\d{1,2}\s*/\s*(\d{4})\b", t)
+    ano, ano_pdf = (m.group(1) if m else None), ano_do_pdf(pdf, clone)
+    if ano and ano_pdf and ano != ano_pdf:
+        return {"pdf": pdf, "aviso": "O texto cita a versão de %s; o PDF da pasta é a de %s. Confira qual vale pela data de protocolo." % (ano, ano_pdf)}
+    return {"pdf": pdf, "aviso": None}
+
+
+_LINHAS = {}
+
+
+def _paginas_linhas(caminho, pdftotext="pdftotext"):
+    if caminho not in _LINHAS:
+        out = subprocess.run([pdftotext, "-enc", "UTF-8", caminho, "-"], capture_output=True,
+                             creationflags=0x08000000 if os.name == "nt" else 0, timeout=60).stdout
+        _LINHAS[caminho] = [[(normalizar(l).strip(), l.strip()) for l in p.splitlines()] for p in out.decode("utf-8", "replace").split("\f")]
+    return _LINHAS[caminho]
+
+
+def pagina_item(caminho, rotulo, pdftotext="pdftotext"):
+    """(página 1-based, assunto) do item ou tabela do rótulo. Prefere a página em que o número ABRE a linha
+    (título do item) fora do sumário; depois qualquer menção; não achou → (1, ""). Só aproxima."""
+    t = normalizar(rotulo).split(" \u00b7 ")[0]  # "5.2.2 · RT 01/2024": o item é só a parte antes do ponto
+    m, tab, art = ITEM.search(t), TABELA.search(t), ARTIGO.search(t)
+    if not m and not tab and not art:
+        return 1, ""
+    try:
+        pags = _paginas_linhas(caminho, pdftotext)
+    except (OSError, subprocess.SubprocessError):
+        return 1, ""
+    if art and not m and not tab:
+        cab = re.compile(r"^art\.?\s*" + art.group(1) + r"\s*[o\u00ba\u00b0]?(?!\d)\s*[-\u2013.]?\s*(.*)")
+        meio = re.compile(r"\bart\.?\s*" + art.group(1) + r"(?!\d)")
+    elif tab:
+        cab = re.compile(r"^tabela\s+" + re.escape(tab.group(1)) + r"(?![\da-z.])")
+        meio = re.compile(r"\btabela\s+" + re.escape(tab.group(1)) + r"(?![\da-z.])")
+    else:
+        cab = re.compile(r"^" + re.escape(m.group(0)) + r"\.?(?![\d.])\s*(.*)")
+        meio = re.compile(r"(?<![\d.])" + re.escape(m.group(0)) + r"(?![\d])")
+    sumario = lambda linhas: sum(1 for l in linhas if re.search(r"\.{5,}|…{3,}", l)) >= 5 or any(l in ("sumario", "indice") for l in linhas)  # noqa: E731
+    for i, linhas in enumerate(pags):
+        if sumario([n for n, _o in linhas]):
+            continue
+        for n, orig in linhas:
+            achou = cab.match(n)
+            if achou:
+                # o texto normalizado tem o mesmo tamanho do original só sem acento: corta o original na mesma posição
+                ini = achou.start(1) if achou.groups() and achou.group(1) else 0
+                assunto = orig[ini:ini + 90] if len(orig) == len(n) else (achou.group(1) if achou.groups() else n)[:90]
+                return i + 1, assunto.strip(" -–:")
+    for i, linhas in enumerate(pags):
+        if any(meio.search(n) for n, _o in linhas):
+            return i + 1, ""
+    return 1, ""
+
+
 _PAGINAS = {}
 
 

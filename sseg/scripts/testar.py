@@ -1038,6 +1038,21 @@ def main():
     if shutil.which("pdftotext"):
         pg = busca.pagina(os.path.join(RAIZ, r[0]["pdf"]), 'extintor "5 m"', r[0]["texto"])
         caso("busca: PDF abre na página do item 5.2.10 da RT 14", pg == 5, str(pg))
+        # 2.8.0: link de item no texto — página em que o item abre a linha (fora do sumário), com o assunto
+        rt01 = os.path.join(RAIZ, "sseg", "normas", "pdf", busca.PDF_RT["1"])
+        alvo = {"5.2.2 · RT 01/2024": 21, "4.3.1 · RT 01/2024": 7, "Tabela 2 · RT 01/2024": 8}
+        achou = {r: busca.pagina_item(rt01, r)[0] for r in alvo}
+        caso("link de item: 5.2.2, 4.3.1 e Tabela 2 da RT 01/2024 abrem na página do título do item", achou == alvo, str(achou))
+        pg, ass = busca.pagina_item(os.path.join(RAIZ, "sseg", "normas", "pdf", busca.PDF_RT["2"]), "4.20 · RT 02/2014")
+        caso("link de item: 4.20 da RT 02 abre na pág. 4 com o assunto 'Altura da edificação'",
+             pg == 4 and ass.startswith("Altura da edifica"), "%d %r" % (pg, ass))
+        pg, _a = busca.pagina_item(os.path.join(RAIZ, "sseg", "normas", "pdf", "DECRETO51803.pdf"), "Art. 5º · Decreto 51.803/2014")
+        caso("link de item: o número do Decreto (51.803) não é lido como item", pg >= 1 and "51.803" not in _a, str(pg))
+    st = busca.norma_status("5.2.2.1 · RT 01/2022", RAIZ)
+    caso("link de item: RT 01/2022 citada abre o PDF de 2024 com aviso de versão", st["pdf"] and "2022" in (st["aviso"] or ""), str(st))
+    caso("link de item: RT 01/2024 citada sem aviso", busca.norma_status("5.2.2 · RT 01/2024", RAIZ)["aviso"] is None)
+    caso("link de item: norma sem PDF (RT 13, IT 08) vem marcada para incorporar",
+         busca.norma_status("5.1 · RT 13/2025", RAIZ)["pdf"] is None and busca.norma_status("IT 08", RAIZ)["pdf"] is None)
     # 19. lições das conversas de 16–17/10/2026 (2.3.22): pergunta repetida, linha transcrita, página da tabela
     import analise_registro as ar
     regs = {"pendencias": [{"id": "p4", "texto": "Planta CIA02: os 40,55 m² de depósito de cerveja saíram de 'área técnica'?"},

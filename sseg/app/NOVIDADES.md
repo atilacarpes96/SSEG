@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.0
+
+- **Todo item de norma citado na conversa vira link para o PDF oficial.** "Item 5.2.2 da RT 01/2024", "RT 11/2016, item 5.4.2", "Tabela 2 da RT 01/2024", "Art. 5º do Decreto 51.803/2014": clique e o PDF abre na página em que o item começa (fora do sumário). Passando o mouse, aparece o começo do texto do item e a página. Item citado sem a norma ao lado ("conforme o item 4.8") usa a última norma citada na resposta; norma entre parênteses não conta. Número solto, sem "item" e longe da norma, não vira link. O texto copiado para o SOL continua sem link.
+- **O link avisa o que falta na pasta de normas.** Sublinhado cinza: a norma não está em normas/pdf (ex.: RT 13, IT 08), vale incorporar. Sublinhado ondulado laranja: o texto cita outra versão (RT 01/2022) e o PDF da pasta é a de 2024; confira qual vale pela data de protocolo.
+- **As três colunas do processo têm largura ajustável.** Arraste a borda entre Conversa, Checklist e CIA; duplo clique na borda volta ao padrão. O checklist tem "◂ minimizar": vira uma tira fina, e a conversa e a CIA ficam com o espaço (a borda entre elas continua ajustável). Clique na tira para trazer o checklist de volta. A largura e o checklist minimizado ficam salvos no PC. No celular nada muda: continuam as abas.
+
 ## 2.7.12
 
 - **Lançar no SOL acha a "Característica geral" para a exigência do campo 3.** Exigência agrupada como "Geral" (população, dados do campo 3) não casava com nenhum item e pedia para escolher na lista; agora vai sozinha para "Característica geral".

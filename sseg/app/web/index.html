@@ -325,6 +325,23 @@ main.processo { padding: 0; overflow: hidden; }
 .bt.etapa.lan i { background: #fff; color: var(--verm); }
 .bt.etapa.lan:hover:not(:disabled) { background: var(--verm-claro); }
 .rola { flex: 1; overflow-y: auto; padding: 10px 14px; }
+/* 2.8.0: colunas da janela do processo com largura ajustável (arrastar a borda) e o checklist minimizável */
+.colunas { grid-template-columns: var(--cols, minmax(260px, 1.25fr) 7px minmax(200px, 1fr) 7px minmax(240px, 1fr)); }
+.col-borda { cursor: col-resize; background: var(--linha); width: 7px; position: relative; touch-action: none; border-left: 3px solid var(--fundo); border-right: 3px solid var(--fundo); }
+.col-borda:hover, .col-borda.arrastando { background: var(--verm); }
+.col-borda[hidden] { display: none; }
+.coluna { border-right: 0; }
+.coluna > h2 .bt.min-col { margin-left: auto; font-size: 11.5px; color: var(--suave); }
+.tira-col { display: none; }
+.coluna.minimizada > :not(.tira-col) { display: none !important; }
+.coluna.minimizada .tira-col { display: flex; flex: 1; border: 0; background: var(--fundo); cursor: pointer; writing-mode: vertical-rl; align-items: center;
+  justify-content: flex-start; padding: 14px 0; gap: 8px; font-weight: 600; font-size: 12.5px; color: var(--suave); letter-spacing: .04em; }
+.coluna.minimizada .tira-col:hover { color: var(--verm); background: var(--cartao); }
+/* 2.8.0: item de norma citado no texto vira link que abre o PDF oficial na página do item */
+a.norma-link { color: inherit; text-decoration: underline dotted var(--verm); text-underline-offset: 3px; cursor: pointer; }
+a.norma-link:hover { color: var(--verm); text-decoration-style: solid; }
+a.norma-link.sem-pdf { text-decoration-color: var(--suave); cursor: help; }
+a.norma-link.aviso-versao { text-decoration-color: #c78a00; text-decoration-style: wavy; }
 /* chat */
 .msg { margin: 8px 0; max-width: 100%; }
 .msg.eu { background: var(--rosa); border: 1px solid var(--rosa-borda); border-radius: 10px 10px 2px 10px; padding: 7px 11px; margin-left: 14%; white-space: pre-wrap; }
@@ -599,6 +616,9 @@ body.sem-pc #sem-pc { display: block; }
   .colunas[data-aba="chat"] [data-col="chat"], .colunas[data-aba="check"] [data-col="check"],
   .colunas[data-aba="cia"] [data-col="cia"] { display: flex; }
   .coluna > h2 { display: none; }
+  .col-borda { display: none !important; }
+  .coluna.minimizada > .rola { display: block !important; }
+  .coluna.minimizada .tira-col { display: none !important; }
   .msg.eu { margin-left: 8%; }
   footer { gap: 8px; padding: 6px 10px; }
   #ultima { display: none; }
@@ -851,10 +871,13 @@ footer { color: var(--suave); }
           <div class="slot" id="pr-slot"></div>
           <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="4" placeholder="Peça ao Claude (ex.: roda o check) — Ctrl+Enter envia"></textarea><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
         </div>
+        <div class="col-borda" data-borda="1" title="Arraste para mudar a largura das colunas (duplo clique volta ao padrão)"></div>
         <div class="coluna" data-col="check">
-          <h2>Checklist</h2>
+          <h2>Checklist <button class="bt link min-col" id="pr-min-check" title="Esconde o checklist; a conversa e a CIA ficam com o espaço">◂ minimizar</button></h2>
           <div class="rola" id="pr-check"></div>
+          <button class="tira-col" id="pr-tira-check" title="Mostrar o checklist de novo">▸ Checklist</button>
         </div>
+        <div class="col-borda" data-borda="2" title="Arraste para mudar a largura das colunas (duplo clique volta ao padrão)"></div>
         <div class="coluna" data-col="cia">
           <h2>CIA em construção <button class="bt link copiar-cia" id="pr-copiar-cia" title="Copia a CIA inteira, no formato da caixa do SOL">⧉ copiar</button><span class="cia-etapas"><button class="bt etapa rev" id="pr-revisar" title="Revisão final da CIA pelo subagente revisor-cia (Sonnet 5.5, lê a CIA de fora, sem o raciocínio desta conversa), aqui mesmo. Faça antes de lançar no SOL."><i>1</i>Revisão final</button><button class="bt etapa lan so-pc" id="pr-lancar" title="Grava as exigências salvas no campo Outros de cada item no SOL e aprova o resto; sem exigência (CA), aprova tudo. Mostra tudo antes e pede confirmação; não emite a CIA nem o CA."><i>2</i>Lançar no SOL</button></span></h2>
           <div class="rola" id="pr-cia"></div>
@@ -2935,9 +2958,74 @@ function caranguejo(modelo, esforco, titulo, parado) {
 function nomeModelo(m) { return /haiku/i.test(m) ? "Haiku" : /opus/i.test(m) ? "Opus" : "Sonnet"; }
 
 // Markdown → HTML sem passar HTML do modelo: tudo é escapado antes; só as marcas conhecidas viram tag.
+// 2.8.0 (pedido do Átila, 02/11/2026): "item 5.2.2 da RT 01/2024", "Tabela 2 da RT 01/2024", "Art. 5º do Decreto 51.803"
+// viram link que abre o PDF oficial na página do item (norma_pdf). Item sem a norma ao lado usa a última norma citada
+// na mesma resposta; sem nenhuma antes, fica sem link. Só na tela: o texto copiado continua sem link.
+const RX_NORMA = /(?:\b(?:RT|Resolução Técnica)\s*(?:CBMRS\s*)?(?:n\.?\s*[º°o]?\.?\s*)?0?\d{1,2}(?:\s*,?\s*Parte\s*0?\d{1,2}(?:\.\d)?)?(?:\s*\/\s*\d{4})?|\bRT\s+de\s+Implantação(?:\s+do\s+SOL(?:-CBMRS)?)?|\bRTISOL\b|\bDecreto(?:\s+Estadual)?\s*(?:n\.?\s*[º°o]?\.?\s*)?51\.?803(?:\/\d{4})?|\b(?:LC|Lei\s+Complementar)\s*(?:n\.?\s*[º°o]?\.?\s*)?14\.?376(?:\/\d{4})?)/gi;
+// IN e IT só em maiúscula (com /i, "in 2025" viraria norma); as que não têm PDF aparecem como "sem PDF"
+const RX_NORMA_MAI = /\b(?:IN\s*(?:n\.?\s*[º°o]?\.?\s*)?0?\d{2,3}(?:\/[A-Z\/]*\d{4})?|IT\s*(?:n\.?\s*[º°o]?\.?\s*)?\d{1,2}(?:\/\d{4})?)\b/g;
+const RX_REF = /(?:\b(?:sub)?ite(?:m|ns)\s+\d{1,2}(?:\.\d{1,2}){1,5}|\bTabela\s+\d{1,2}[A-Z]?(?:\.\d{1,2})*\b|\bArt(?:igo)?\.?\s*\d{1,3}\s*[º°]?(?!\d))/gi;
+const RX_NUM = /(?<![\d.,\/])\d{1,2}(?:\.\d{1,2}){1,5}(?![\d,]|\.\d)/g;
+function linkNormas(t, estado) {
+  if (ESPELHO) return t;  // no celular o PDF abriria no PC
+  const normas = [...t.matchAll(RX_NORMA), ...t.matchAll(RX_NORMA_MAI)].map(m => ({ i: m.index, f: m.index + m[0].length, txt: m[0].replace(/\s+/g, " ") }))
+    .sort((a, b) => a.i - b.i);
+  // norma entre parênteses ("Tabela 2 (IT 08) e item 4.8") é remissão: não vira a norma dos itens seguintes
+  const contar = (x, c) => x.split(c).length - 1;
+  normas.forEach(n => { const a = t.slice(0, n.i); n.parent = contar(a, "(") > contar(a, ")"); });
+  const dentro = (i, f) => normas.some(n => i < n.f && f > n.i);
+  const refs = [...t.matchAll(RX_REF)].map(m => ({ i: m.index, f: m.index + m[0].length, txt: m[0] }));
+  // número sem "item" só vira link encostado numa norma: "RT 01/2024, 5.2.2.1" ou "5.2.2.1 da RT 01/2024"
+  for (const m of t.matchAll(RX_NUM)) {
+    const i = m.index, f = i + m[0].length;
+    if (dentro(i, f) || refs.some(r => i < r.f && f > r.i)) continue;
+    const antes = normas.find(n => n.f <= i && /^\s*,?\s*$/.test(t.slice(n.f, i)));
+    const depois = normas.find(n => n.i >= f && /^\s*(?:,|d[aoe])?\s*$/i.test(t.slice(f, n.i)));
+    if (antes || depois) refs.push({ i, f, txt: m[0] });
+  }
+  const pecas = [...normas.map(n => ({ ...n, norma: true })), ...refs].sort((a, b) => a.i - b.i);
+  let out = "", pos = 0;
+  for (const p of pecas) {
+    if (p.i < pos) continue;
+    let rotulo;
+    if (p.norma) { rotulo = p.txt; if (!p.parent) estado.norma = p.txt; }
+    else {
+      const depois = normas.find(n => n.i >= p.f && /^\s*,?\s*(?:d[aoe]s?\s+)?$/i.test(t.slice(p.f, n.i)));
+      const antes = [...normas].reverse().find(n => n.f <= p.i && !n.parent);
+      const norma = (depois || antes || {}).txt || estado.norma;
+      if (!norma) { out += t.slice(pos, p.f); pos = p.f; continue; }
+      rotulo = p.txt.replace(/^(?:sub)?ite(?:m|ns)\s+/i, "") + " · " + norma;
+    }
+    out += t.slice(pos, p.i) + '<a class="norma-link" data-rotulo="' + rotulo.replace(/"/g, "&quot;") + '" title="Abrir no PDF oficial: ' + rotulo.replace(/"/g, "&quot;") + '">' + t.slice(p.i, p.f) + "</a>";
+    pos = p.f;
+  }
+  return out + t.slice(pos);
+}
+const NORMA_ST = new Map();
+async function marcarNormas(raiz) {
+  const links = [...raiz.querySelectorAll("a.norma-link")];
+  const novos = [...new Set(links.map(a => a.dataset.rotulo).filter(r => !NORMA_ST.has(r)))];
+  if (novos.length && window.pywebview && window.pywebview.api.normas_status) {
+    try { (await window.pywebview.api.normas_status(novos)).forEach((st, k) => NORMA_ST.set(novos[k], st)); } catch (e) { return; }
+  }
+  for (const a of links) {
+    const st = NORMA_ST.get(a.dataset.rotulo); if (!st) continue;
+    a.classList.toggle("sem-pdf", !st.pdf); a.classList.toggle("aviso-versao", !!st.aviso);
+    a.title = !st.pdf ? st.aviso : (st.assunto ? "«" + st.assunto + "…» — " : "") + "abre o PDF" + (st.pagina ? " na pág. " + st.pagina : "") + (st.aviso ? "\n⚠ " + st.aviso : "");
+  }
+}
+document.addEventListener("click", ev => {
+  const a = ev.target.closest && ev.target.closest("a.norma-link"); if (!a) return;
+  ev.preventDefault();
+  const st = NORMA_ST.get(a.dataset.rotulo);
+  if (st && !st.pdf) return avisar(st.aviso, true);
+  api("norma_pdf", [a.dataset.rotulo, ""]).catch(() => {});
+});
 function mdHtml(texto) {
   const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  const inl = t => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|\W)\*([^*\n]+)\*(?=\W|$)/g, "$1<i>$2</i>");
+  const estado = {};
+  const inl = t => esc(t).split(/(`[^`]+`)/).map((x, k) => k % 2 ? "<code>" + x.slice(1, -1) + "</code>" :
+    linkNormas(x, estado).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|\W)\*([^*\n]+)\*(?=\W|$)/g, "$1<i>$2</i>")).join("");
   const linhas = texto.split("\n"), out = []; let lista = null;
   const fechaLista = () => { if (lista) { out.push(`</${lista}>`); lista = null; } };
   const celulas = l => l.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
@@ -2976,6 +3064,7 @@ function resposta(texto, ctx) {
     else { despeja(); raiz.append(el("pre", {}, corpo.replace(/\n$/, ""))); }
   }
   despeja();
+  setTimeout(() => marcarNormas(raiz), 0);
   return raiz;
 }
 function md(texto) { return mdHtml(texto); }
@@ -3657,6 +3746,42 @@ for (const bt of document.querySelectorAll(".bt.mic")) {
 }
 ligarForm("#cv-form", "#cv-msg", () => CTX[CV.chave]);
 $("#pr-voltar").onclick = () => navVoltar();
+// 2.8.0 (pedido do Átila): as três colunas do processo têm largura ajustável e o checklist minimiza. Fica salvo no PC.
+const COLS = (() => { try { return Object.assign({ chat: 1.25, check: 1, cia: 1, min: false }, JSON.parse(localStorage.getItem("sseg-colunas") || "{}")); }
+  catch (e) { return { chat: 1.25, check: 1, cia: 1, min: false }; } })();
+function aplicarColunas() {
+  const box = document.querySelector("#t-processo .colunas"), chk = box.querySelector('[data-col="check"]');
+  chk.classList.toggle("minimizada", COLS.min);
+  box.querySelector('[data-borda="1"]').hidden = COLS.min;
+  // borda escondida sai da grade: minimizado são 4 trilhas (conversa · tira do checklist · borda · CIA)
+  box.style.setProperty("--cols", "minmax(260px, " + COLS.chat + "fr) " + (COLS.min ? "34px" : "7px minmax(200px, " + COLS.check + "fr)") + " 7px minmax(240px, " + COLS.cia + "fr)");
+  gravarLS("sseg-colunas", JSON.stringify(COLS));
+}
+$("#pr-min-check").onclick = () => { COLS.min = true; aplicarColunas(); };
+$("#pr-tira-check").onclick = () => { COLS.min = false; aplicarColunas(); };
+for (const borda of document.querySelectorAll("#t-processo .col-borda")) {
+  borda.addEventListener("dblclick", () => { Object.assign(COLS, { chat: 1.25, check: 1, cia: 1 }); aplicarColunas(); });
+  borda.addEventListener("pointerdown", ev => {
+    const box = borda.parentElement, cols = ["chat", "check", "cia"].filter(c => !(c === "check" && COLS.min));
+    // a borda mexe nas duas colunas abertas vizinhas: com o checklist minimizado, a 2ª borda divide conversa e CIA
+    const esq = borda.dataset.borda === "1" ? "chat" : (COLS.min ? "chat" : "check"), dir = borda.dataset.borda === "1" ? "check" : "cia";
+    const larg = c => box.querySelector('[data-col="' + c + '"]').getBoundingClientRect().width;
+    const w0 = {}; cols.forEach(c => w0[c] = larg(c));
+    const x0 = ev.clientX, MIN = { chat: 260, check: 200, cia: 240 };
+    borda.setPointerCapture(ev.pointerId); borda.classList.add("arrastando"); document.body.style.userSelect = "none";
+    const mover = e => {
+      let d = e.clientX - x0;
+      d = Math.max(MIN[esq] - w0[esq], Math.min(w0[dir] - MIN[dir], d));
+      cols.forEach(c => COLS[c] = Math.round((w0[c] + (c === esq ? d : c === dir ? -d : 0)) / 10) / 10);
+      aplicarColunas();
+    };
+    const soltar = () => { borda.classList.remove("arrastando"); document.body.style.userSelect = "";
+      borda.removeEventListener("pointermove", mover); borda.removeEventListener("pointerup", soltar); borda.removeEventListener("pointercancel", soltar); };
+    borda.addEventListener("pointermove", mover); borda.addEventListener("pointerup", soltar); borda.addEventListener("pointercancel", soltar);
+    ev.preventDefault();
+  });
+}
+aplicarColunas();
 for (const b of document.querySelectorAll("#pr-abas button")) b.onclick = () => {
   for (const x of document.querySelectorAll("#pr-abas button")) x.classList.toggle("ativo", x === b);
   document.querySelector("#t-processo .colunas").dataset.aba = b.dataset.aba;
