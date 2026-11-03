@@ -97,7 +97,7 @@ falta dele lá, do arquivo que o usuário salvar na pasta ou anexar.
 Validado: staging + `pdftotext` funcionam; `pdftotext`, `pdftoppm`, `pdfinfo` e `qpdf` estão
 instalados no sandbox.
 
-## Inventário conferido — 09/09/2026, atualizado em 11/09/2026, 22/09/2026, 24/09/2026, 30/09/2026, 16/10/2026 e 29/10/2026
+## Inventário conferido — 09/09/2026, atualizado em 11/09/2026, 22/09/2026, 24/09/2026, 30/09/2026, 16/10/2026, 29/10/2026 e 03/11/2026
 
 Versão lida da capa e do Art. 2º de cada arquivo, um a um.
 
@@ -117,6 +117,7 @@ Versão lida da capa e do Art. 2º de cada arquivo, um a um.
 | `RT10.pdf` (9 p.) | RT 10 | **2024** — Art. 2º: **07/04/2025** | ✅ |
 | `RT11.pdf` (37 p.) ⚠️ duas colunas no corpo | RT 11 Parte 01 | **2016** — vigor **19/09/2016**, DOE 146 de 02/08/2016 | ✅ 5.12.1.2 transcrito em 11/09/2026; 5.7.3.3.1 conferido em 22/09/2026; **5.4.1.2.2** conferido em 24/09/2026 |
 | `RT12.pdf` (41 p.) | RT 12 | **2021** — Art. 2º: **01/01/2022** | ✅ |
+| **`IT25P4.pdf`** (59 p.) ⭐ novo em 03/11/2026 ⚠️ duas colunas no corpo (págs. 2–27) | **IT 25 do CBPMESP, Parte 4** — Armazenamento fracionado de líquidos igníferos | **2025** — atualizada pela Portaria CCB 003/800/25, DOE-SP de 20/03/2025; em vigor no CBMRS desde **01/07/2025** (página oficial) | ✅ íntegra em [[it-25-2025-parte4-armazenamento-fracionado]]; Tabelas 4.A1, 4.A2 e 4.B2 lidas na imagem (págs. 20–21) |
 | `RT14.pdf` (11 p.) | RT 14 | **2016** — 11/04/2016, DOE 077 de 26/04/2016, vigor 30 dias após | ✅ Tabela 2 e 5.4.5 (sobre rodas) conferidos em 22/09/2026 |
 | `RT17.pdf` (46 p.) | RT 17 Parte 01 | **2025** — Art. 2º: **1º de janeiro de 2027** | ✅ nota "f" da Tabela 1 (M-6 → IT 37) conferida em 22/09/2026 |
 | **`RT22.pdf`** (38 p.) ⭐ novo em 29/10/2026 ⚠️ duas colunas no corpo (págs. 3–10) | **RT 22** — Silos e Armazéns Graneleiros (M-5) | **2023** — assinada 28/09/2023, DOE 189 de 29/09/2023, Art. 2º: 30 dias após a publicação (**29/10/2023**); revoga a RT 22 de 06/04/2017. "Versão atualizada" do site, já com a errata 01 (13/11/2023) | ✅ íntegra em [[rt-22-2023-silos-armazens-graneleiros]]; Tabela 1 do Anexo A lida na imagem (pág. 11) |
@@ -130,7 +131,7 @@ Versão lida da capa e do Art. 2º de cada arquivo, um a um.
    de riscos é o `RT CBMRS 04`. Abrir `RTISOL.pdf` procurando afastamento entre edificações
    dá em nada — e pior, dá a impressão de que a RT 04 não está na pasta.
 2. **Arquivos de duas colunas: `RTISOL.pdf`, `RT18.pdf`, o corpo da `RT11.pdf`, o corpo da
-   `IT37.pdf` e o corpo da `RT22.pdf` (págs. 3–10).** `pdftotext -layout` **intercala as duas colunas na mesma linha** e embaralha a
+   `IT37.pdf`, o corpo da `RT22.pdf` (págs. 3–10) e o corpo da `IT25P4.pdf` (págs. 2–27).** `pdftotext -layout` **intercala as duas colunas na mesma linha** e embaralha a
    ordem dos itens — na RT 18 o 8.1 sai depois do 8.2 e o 9.3 aparece no meio do 8.5; na RT 11
    o texto do 5.12.1.2 sai colado ao do 5.12.1.3. **Nesses, usar `pdftotext` sem `-layout`**
    para item de texto; nas **tabelas**, aí sim `-layout`. Regra geral: se a numeração sair fora
@@ -167,7 +168,7 @@ Precisa de anexo do usuário ou de outra fonte:
 - **IN 068/2025** (enquadramento F-5, F-6, F-8, F-11, F-12 — conversa com a IN 066) e a
   **Portaria** que regula o Corpo Técnico da STE (IN 067, Art. 8º)
 - ITs do CBPMESP aplicáveis por remissão da RT 01/2024 e ainda sem PDF: **IT 08, IT 09, IT 15,
-  IT 25**
+  IT 25 Partes 1, 2, 3 e 5** (a Parte 4 entrou em 03/11/2026)
 
 📌 **RT 13/2025 (iluminação) é a mais sentida das que faltam** — é medida corrente no campo 4
 e o doc dela no projeto não tem item transcrito.
@@ -193,6 +194,8 @@ Na mesma leitura foi conferido o **item 5.12.1.2 da RT 11**, que é o regime do 
 ✅ **03/10/2026:** `Carpes\Normas\_md\` passou a **espelhar `sseg/normas/base/`** (19 normas convertidas por `normas_converter.py` e conferidas contra o PDF por `normas_verificador.py`, mais a pasta `img/`). A pasta antiga, feita com anydoc e com 17 normas, ficou em `Carpes\Normas\_md_antigo\`. `Carpes\Normas\` tem agora os 19 PDFs, iguais a `sseg/normas/pdf/`.
 
 ✅ **RT 05 Parte 08/2016 entrou em 16/10/2026** (PDF trazido pelo usuário). Em `sseg/normas/pdf/RT05P08.pdf`, `base/` e `md/`; íntegra em [[rt-05-parte08-2016-simbologia]]. ⏳ Copiar para `Carpes\Normas\` (PDF e `_md\`) no PC.
+
+✅ **IT 25/2025, Parte 4 entrou em 03/11/2026** (baixada do site do CBMRS pelo servidor, página Instruções Técnicas: `/upload/arquivos/202503/25172051-it-25-25-liquidos-igniferos-parte-4.pdf`; as Partes 1, 2, 3 e 5 estão na mesma página). Em `sseg/normas/pdf/IT25P4.pdf`, `base/` e `md/`; íntegra em [[it-25-2025-parte4-armazenamento-fracionado]]. ⏳ Copiar para `Carpes\Normas\` (PDF e `_md\`) no PC.
 
 ✅ **RT 22/2023 entrou em 29/10/2026** (baixada do site do CBMRS pelo servidor, página Resoluções Técnicas: `/upload/arquivos/202311/13152933-resolucao-tecnica-cbmrs-n-22-2023-versao-atualizada.pdf`; errata 01 e Nota de Atualização 001/2026 na mesma página, transcritas no doc). Em `sseg/normas/pdf/RT22.pdf`, `base/` e `md/`; íntegra em [[rt-22-2023-silos-armazens-graneleiros]]. ⏳ Copiar para `Carpes\Normas\` (PDF e `_md\`) no PC.
 

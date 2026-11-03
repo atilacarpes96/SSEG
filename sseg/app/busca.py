@@ -41,7 +41,7 @@ PDF_COMENTADA = [  # prefixo do normas/<rt>.md
     ("rt-11-", "RT11.pdf"), ("rt-12-", "RT12.pdf"), ("rt-14-", "RT14.pdf"), ("rt-17-", "RT17.pdf"),
     ("rt-18-", "RT18.pdf"), ("rt-22-", "RT22.pdf"), ("rt-31-", "RT31.pdf"), ("rt-implantacao-sol", "RTISOL.pdf"),
     ("decreto-51803", "DECRETO51803.pdf"), ("lei-complementar-14376", "Lec nº 14.376.pdf"),
-    ("in-045-", "IN45.pdf"), ("in-066-", "IN66.pdf"), ("in-067-", "IN67.pdf"),
+    ("in-045-", "IN45.pdf"), ("in-066-", "IN66.pdf"), ("in-067-", "IN67.pdf"), ("it-25-", "IT25P4.pdf"),
 ]
 ITEM = re.compile(r"(?<![\d.,])\d{1,2}(?:\.\d{1,2}){1,4}(?![\d,]|\.\d)")
 
@@ -61,6 +61,14 @@ def pdf_citado(texto):
                     (r"\b(?:rt|resolucao tecnica)\s*(?:cbmrs\s*)?(?:de|da)\s*implantacao\b|\brtisol\b", "RTISOL.pdf")):
         for m in re.finditer(rx, t):
             achados.append((m.start(), pdf or "IN%s.pdf" % m.group(1)))
+    # IT 25 do CBPMESP (03/11/2026): só a Parte 4 está em normas/pdf. A numeração continua entre as Partes: item 33 a
+    # 49 ou Tabela 4.x = Parte 4. Outra Parte citada (ou item de outra Parte) fica sem PDF, para não abrir o errado.
+    for m in re.finditer(r"\bit\s*(?:n\.?\s*o?\.?\s*)?25\b(?:\s*/\s*\d{4})?(?:\s*[-\u2013,]?\s*(?:parte|p\.?)\s*0?(\d))?", t):
+        parte = m.group(1)
+        if not parte:
+            n = ITEM.search(t)
+            parte = "4" if re.search(r"\btabela\s+4\.", t) or n and n.group(0).split(".")[0] in [str(i) for i in range(33, 50)] else None
+        achados.append((m.start(), "IT25P4.pdf" if parte == "4" else None))
     achados = [a for a in sorted(achados) if a[1]]
     return achados[0][1] if achados else None
 
@@ -80,7 +88,7 @@ def pdf_do_resultado(r):
 # O programa transforma "item 5.2.2 da RT 01/2024" num link que abre o PDF oficial na página do item.
 # A versão de cada PDF sai do nome da transcrição comentada (rt-01-2024-... → 2024): citação de outro ano
 # abre o PDF com aviso, porque a vigência é pela data de protocolo e quem escolhe a versão é o analista.
-TABELA = re.compile(r"\btabela\s+((?:[a-z]\.)?\d{1,2}[a-z]?(?:\.\d{1,2})*)\b")  # "Tabela L.1" do Anexo L (03/11/2026)
+TABELA = re.compile(r"\btabela\s+((?:[a-z]\.)?\d{1,2}[a-z]?(?:\.[a-z]?\d{1,2})*)\b")  # e "Tabela 4.A1" (IT 25)  # "Tabela L.1" do Anexo L (03/11/2026)
 ANEXO = re.compile(r"\banexo\s+[\"\u201c\u201d]?([a-z])[\"\u201c\u201d]?(?![a-z])")
 ARTIGO = re.compile(r"\bart(?:igo)?\.?\s*(\d{1,3})\s*[o\u00ba\u00b0]?(?!\d)")
 
@@ -103,7 +111,7 @@ def norma_status(rotulo, clone):
     if not pdf or not os.path.isfile(os.path.join(clone, "sseg", "normas", "pdf", pdf)):
         return {"pdf": None, "aviso": "Esta norma não está em normas/pdf — sem PDF para abrir (vale incorporar)."}
     t = normalizar(rotulo)
-    m = re.search(r"(?:rt|resolucao tecnica)[^/]{0,40}?/\s*(\d{4})\b", t) or re.search(r"\bparte\s*0?\d{1,2}\s*/\s*(\d{4})\b", t)
+    m = re.search(r"(?:rt|resolucao tecnica|\bit)[^/]{0,40}?/\s*(\d{4})\b", t) or re.search(r"\bparte\s*0?\d{1,2}\s*/\s*(\d{4})\b", t)
     ano, ano_pdf = (m.group(1) if m else None), ano_do_pdf(pdf, clone)
     if ano and ano_pdf and ano != ano_pdf:
         return {"pdf": pdf, "aviso": "O texto cita a versão de %s; o PDF da pasta é a de %s. Confira qual vale pela data de protocolo." % (ano, ano_pdf)}

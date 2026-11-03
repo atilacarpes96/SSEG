@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.7
+
+- **Links da IT 25 Parte 4** (armazenamento fracionado de líquidos inflamáveis e combustíveis, que entrou na pasta de normas). "Item 47.7.3.2 da IT 25", "Tabela 4.5 da IT 25/2025", "IT 25 – CBPMESP, Parte 4" viram link e abrem o PDF na página do item. Como a numeração continua entre as Partes da IT 25, item 33 a 49 ou Tabela 4.x abre a Parte 4 mesmo sem dizer a Parte; item ou Parte que não é a 4 aparece como "sem PDF", para não abrir o arquivo errado.
+- **Tabela com letra no número** ("Tabela 4.A1", "Tabela 4.B2") também abre na página da tabela.
+
 ## 2.8.6
 
 - **Links do Anexo "L" da RT 05 Parte 1.1/2016.** "Tabela L.1", "Tabela L.2", "Tabela L.3" e "Anexo "L"" viram link e abrem o PDF da RT 05 Parte 1.1 na página da tabela (L.1 e L.2 nas págs. 44–46, L.3 na 48), não mais na lista de tabelas do começo. Vale também para as formas que o banco usa: "RTCBMRS nº 05, Parte 1.1 de 2016" (com vírgula e "de 2016") e "RT 05 P1.1/2016".

@@ -309,6 +309,11 @@ fonte independente.
 É o fundamento a usar quando o projeto declara armazenamento de líquidos sem dizer qual
 produto, qual volume e qual a classificação quanto à inflamabilidade.
 
+📌 **Parte 4 da IT 25/2025 (armazenamento fracionado) no projeto desde 03/11/2026:**
+`normas/pdf/IT25P4.pdf`, transcrita em [[it-25-2025-parte4-armazenamento-fracionado]]
+(modalidades, quantidades máximas, contenção, extintores do M-2, linhas acima de 20 m³). As
+Partes 1, 2, 3 e 5 ainda não estão em `normas/pdf/`.
+
 ## 4.6 — Dos gases combustíveis
 
 > **4.6.1** Os depósitos de armazenamento, distribuição e comercialização de gás liquefeito de

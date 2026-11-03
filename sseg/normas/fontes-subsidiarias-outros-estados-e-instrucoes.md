@@ -6,7 +6,7 @@
 
 As Instruções Técnicas do Corpo de Bombeiros da Polícia Militar do Estado de São Paulo (IT-CBPMESP) **não são normas do RS** e não vinculam formalmente o CBMRS. Pelo padrão observado na prática do usuário, elas são usadas como referência técnica subsidiária apenas quando **não existe RT própria do CBMRS regulando o tema específico** (ex.: compartimentação horizontal, tipo de subestação elétrica). Ao usar uma IT de SP como fundamento, registrar explicitamente que é referência subsidiária/orientação técnica, não dispositivo cogente do RS — nível mais próximo de "literatura técnica" (nível 7 da hierarquia) do que de norma vinculante.
 
-⭐ **Exceção — incorporação por citação:** quando é a **própria norma do CBMRS** que remete à IT paulista, a remissão passa a integrar a norma vigente do RS. É o caso da **IT 37** (citada pelo item 4.8.6.1 da RT 01/2024) e da **IT 10** (citada pelo item 5.12.1.2 "b" da RT 11 P01/2016 e pelo inciso III do Art. 1º da IN 045/2023). Nesses casos o fundamento citado é o **item da norma do RS**, com a IT aparecendo dentro dele.
+⭐ **Exceção — incorporação por citação:** quando é a **própria norma do CBMRS** que remete à IT paulista, a remissão passa a integrar a norma vigente do RS. É o caso da **IT 37** (citada pelo item 4.8.6.1 da RT 01/2024), da **IT 25** (citada pelo item 4.5.1 da RT 01/2024 para líquidos combustíveis e inflamáveis; Parte 4 em [[it-25-2025-parte4-armazenamento-fracionado]]) e da **IT 10** (citada pelo item 5.12.1.2 "b" da RT 11 P01/2016 e pelo inciso III do Art. 1º da IN 045/2023). Nesses casos o fundamento citado é o **item da norma do RS**, com a IT aparecendo dentro dele.
 
 ⚠️ **Instrução Normativa do CBMRS não é fonte subsidiária** — é norma do RS, nível 4 (par das Notas Técnicas), e alcançada pela regra de vigência por data de protocolo do item 3.4 da RT 01/2024.
 
@@ -64,6 +64,14 @@ são usadas sem remissão expressa de uma RT do CBMRS.
 retirada da indicação de ocupação pelo item 5.4.1.1 da RT 01/2024
 ([[rt-01-2024-diretrizes-basicas]], seção 5.4 — áreas técnicas). Redações em
 [[divisao-trabalho-notificacao]].
+
+## ⭐ Instrução Técnica nº 25/2025 (CBPMESP), Parte 4 — Armazenamento fracionado de líquidos
+
+**Doc próprio, com a íntegra lida no PDF oficial: [[it-25-2025-parte4-armazenamento-fracionado]].**
+
+- Não é subsidiária: vale no RS pelo **item 4.5.1 da RT 01/2024**, até RT específica do CBMRS. Em vigor no CBMRS desde **01/07/2025** (edição 2025, página oficial).
+- Recipientes ≤ 450 L, tanques portáteis ≤ 2.500 L, IBC ≤ 3.000 L. Seis modalidades (itens 42 a 47), cada uma com limites de volume e lista de exigências. Acima de **20 m³**, linhas de espuma e resfriamento (47.7.1.1).
+- Remete a IT 11, 21, 23 e 24 do CBPMESP: no RS, a medida segue a norma do RS (RT 11, RT 14, NBR 10897/16981). Ver o aparente conflito no doc.
 
 ## ⭐ Instrução Técnica nº 10 (CBPMESP) — Classe de materiais de acabamento e revestimento
 

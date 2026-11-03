@@ -2979,8 +2979,8 @@ function nomeModelo(m) { return /haiku/i.test(m) ? "Haiku" : /opus/i.test(m) ? "
 // na mesma resposta; sem nenhuma antes, fica sem link. Só na tela: o texto copiado continua sem link.
 const RX_NORMA = /(?:\b(?:RT|Resolução Técnica)\s*(?:CBMRS\s*)?(?:n\.?\s*[º°o]?\.?\s*)?0?\d{1,2}(?:\s*,?\s*(?:Parte|P\.?)\s*0?\d{1,2}(?:\.\d)?)?(?:\s*(?:\/|de)\s*\d{4})?|\bRT\s+de\s+Implantação(?:\s+do\s+SOL(?:-CBMRS)?)?|\bRTISOL\b|\bDecreto(?:\s+Estadual)?\s*(?:n\.?\s*[º°o]?\.?\s*)?51\.?803(?:\/\d{4})?|\b(?:LC|Lei\s+Complementar)\s*(?:n\.?\s*[º°o]?\.?\s*)?14\.?376(?:\/\d{4})?)/gi;
 // IN e IT só em maiúscula (com /i, "in 2025" viraria norma); as que não têm PDF aparecem como "sem PDF"
-const RX_NORMA_MAI = /\b(?:IN\s*(?:n\.?\s*[º°o]?\.?\s*)?0?\d{2,3}(?:\/[A-Z\/]*\d{4})?|IT\s*(?:n\.?\s*[º°o]?\.?\s*)?\d{1,2}(?:\/\d{4})?)\b/g;
-const RX_REF = /(?:\b(?:sub)?ite(?:m|ns)\s+\d{1,2}(?:\.\d{1,2}){1,5}|\bTabela\s+(?:[A-Z]\.)?\d{1,2}[A-Z]?(?:\.\d{1,2})*\b|\bArt(?:igo)?\.?\s*\d{1,3}\s*[º°]?(?!\d))/gi;
+const RX_NORMA_MAI = /\b(?:IN\s*(?:n\.?\s*[º°o]?\.?\s*)?0?\d{2,3}(?:\/[A-Z\/]*\d{4})?|IT\s*(?:n\.?\s*[º°o]?\.?\s*)?\d{1,2}(?:\/\d{4})?(?:\s*[-–]?\s*(?:do\s+)?CBPMESP)?(?:\s*[-–,]?\s*(?:Parte|P\.?)\s*0?\d)?)\b/g;
+const RX_REF = /(?:\b(?:sub)?ite(?:m|ns)\s+\d{1,2}(?:\.\d{1,2}){1,5}|\bTabela\s+(?:[A-Z]\.)?\d{1,2}[A-Z]?(?:\.[A-Z]?\d{1,2})*\b|\bArt(?:igo)?\.?\s*\d{1,3}\s*[º°]?(?!\d))/gi;
 // 03/11/2026: "Anexo L" / "Anexo “L”" e "Tabela L.1" (Anexo L da RT 05 Parte 1.1); anexo só com A maiúsculo e letra só
 const RX_ANEXO = /\bAnexo\s+(?:&quot;|["“”])?[A-Z](?:&quot;|["“”])?(?![A-Za-zÀ-ú])/g;
 const RX_NUM = /(?<![\d.,\/])\d{1,2}(?:\.\d{1,2}){1,5}(?![\d,]|\.\d)/g;

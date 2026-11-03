@@ -12,6 +12,18 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 03/11/2026 — Normas: IT 25/2025 Parte 4 (CBPMESP) incorporada; SSEG.exe 2.8.4 a 2.8.7
+
+- **IT 25/2025, Parte 4 — Armazenamento fracionado de líquidos igníferos** em `normas/pdf/IT25P4.pdf`, com conversão verificada (`normas/base/`, `normas/md/`) e transcrição comentada em `normas/it-25-2025-parte4-armazenamento-fracionado.md`. Vale no RS pela RT 01/2024, item 4.5.1; em vigor no CBMRS desde 01/07/2025. Índices atualizados (`00-indice-normativo.md`, `indice_normas.json` — "IT 25" passa a ser norma aceita para espuma e resfriamento no campo 4 —, `pasta-normas-local.md`).
+- **Instruções do projeto:** "Onde procurar primeiro" passa a contar **22 PDFs em 03/11/2026** e põe a IT25P4 na lista de arquivos de duas colunas (espelho atualizado).
+- **SSEG.exe 2.8.4 a 2.8.7:** menu lateral do SOL recolhido depois que o programa mexe na aba; prints na conversa (colar, arrastar, 🖼) e Enter envia; links do Anexo "L" da RT 05 Parte 1.1 e da IT 25 Parte 4.
+
+### Prompt para atualizar
+
+```text
+No projeto SSEG, abra sseg/workflow/instrucoes-projeto-espelho.md e copie o texto entre os marcadores INÍCIO DO TEXTO DO CAMPO e FIM DO TEXTO DO CAMPO para o campo "Instruções" do projeto, substituindo tudo (mudou a contagem de PDFs para 22 e a lista de arquivos de duas colunas). Depois atualize o SSEG.exe pelo chip "Nova versão". Nada a instalar nas skills.
+```
+
 ## 30/10/2026 — SSEG.exe 2.7.12: Lançar no SOL — "Geral" e "Adicionar correções"
 
 - `sol_lancar.py`: "Geral"/população/campo 3 → Característica geral; medida que não casa com o campo 4 → item `MEDIDA_SEGURANCA_OUTRA` (botão "Adicionar correções", id da especSeguranca, opções `analise.medidas.outros`, lido do código do SOL em 30/10/2026). `api.py`: lançamentos para o mesmo item do SOL são juntados num texto só.
