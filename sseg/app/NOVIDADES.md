@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.3
+
+- **"Itens citados" da coluna CIA sem repetição.** O mesmo item citado de dois jeitos ("5.6.2.5 da RTCBMRS nº 11, parte 1" no texto e "RT 11/2016, item 5.6.2.5" no fundamento) agora vira um link só, com o rótulo que tem o ano. Anos diferentes da mesma RT (RT 01/2022 e RT 01/2024) continuam separados, porque são versões diferentes.
+
 ## 2.8.2
 
 - **O 🎤 volta a funcionar no PC.** O navegador embutido no programa (WebView2, da Microsoft) não faz reconhecimento de voz: o botão aparecia, mas não escrevia nada. Agora ele abre a digitação por voz do próprio Windows (a mesma do Win+H) no campo da mensagem: fale, o texto vai entrando no campo, confira e envie. Na primeira vez o Windows pode pedir para ligar a digitação por voz ou o reconhecimento de fala online (Configurações → Privacidade → Fala). Para português, o idioma do Windows (ou o do teclado) precisa estar em português do Brasil. No celular nada muda: continua o reconhecimento do Safari.

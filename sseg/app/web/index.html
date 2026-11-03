@@ -3015,14 +3015,32 @@ function comNormas(tag, attrs, texto, estado = {}) {
 }
 // Coluna CIA (2.8.1): o texto fica numa caixa editável, onde link não cabe; embaixo dela vai a linha
 // "itens citados" com um link por item (texto da caixa + fundamento), refeita enquanto se digita.
+// A mesma RT citada de dois jeitos ("RTCBMRS nº 11, parte 1" e "RT 11/2016") é um item só: casa pelo número da RT
+// e pela Parte (a que não diz a Parte casa com qualquer uma) e fica o rótulo com o ano, que é o que confere a versão.
+// Anos diferentes (RT 01/2022 e RT 01/2024) continuam separados.
+function normaChave(rotulo) {
+  const [item, norma = ""] = rotulo.split(" · ");
+  const m = norma.match(/^(?:RT|Resolução Técnica)(?:\s*CBMRS)?\b\D*?0?(\d{1,2})(?:\s*,?\s*Parte\s*0?(\d{1,2}))?(?:\s*\/\s*(\d{4}))?/i);
+  return m ? { item: item.toLowerCase(), rt: +m[1], parte: m[2] ? +m[2] : null, ano: m[3] || null }
+    : { item: item.toLowerCase(), outra: norma.toLowerCase().replace(/\s+/g, " ") };
+}
+function mesmoItem(a, b) {
+  if (a.item !== b.item) return false;
+  if (a.outra != null || b.outra != null) return a.outra === b.outra;
+  return a.rt === b.rt && (a.parte == null || b.parte == null || a.parte === b.parte) && (a.ano == null || b.ano == null || a.ano === b.ano);
+}
 function itensCitados(textos) {
-  const vistos = new Map();
-  for (const t of textos) for (const a of comNormas("div", {}, t).querySelectorAll("a.norma-link"))
-    if (/ · /.test(a.dataset.rotulo) && !vistos.has(a.dataset.rotulo)) vistos.set(a.dataset.rotulo, a);
+  const vistos = [];
+  for (const t of textos) for (const a of comNormas("div", {}, t).querySelectorAll("a.norma-link")) {
+    if (!/ · /.test(a.dataset.rotulo)) continue;
+    const k = normaChave(a.dataset.rotulo), j = vistos.findIndex(v => mesmoItem(v.k, k));
+    if (j < 0) vistos.push({ k, a });
+    else if (k.ano && !vistos[j].k.ano) vistos[j] = { k: { ...k, parte: k.parte ?? vistos[j].k.parte }, a };
+  }
   const linha = el("div", { class: "cit-itens discreto" });
-  if (!vistos.size || ESPELHO) return linha;
+  if (!vistos.length || ESPELHO) return linha;
   linha.append("Itens citados: ");
-  [...vistos.values()].forEach((a, k) => { if (k) linha.append(" · "); a.textContent = a.dataset.rotulo.replace(" · ", " da "); linha.append(a); });
+  vistos.map(v => v.a).forEach((a, k) => { if (k) linha.append(" · "); a.textContent = a.dataset.rotulo.replace(" · ", " da "); linha.append(a); });
   setTimeout(() => marcarNormas(linha), 0);
   return linha;
 }
