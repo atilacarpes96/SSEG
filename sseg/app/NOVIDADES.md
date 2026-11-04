@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.12
+
+- **Reanálise aparece com o número certo.** Processo que voltou à caixa para a 2ª (3ª…) análise aparecia como "1ª análise" enquanto a planilha de distribuição ainda tinha só a linha da análise anterior (casos A00026160AA002 e A00049406AA001, 04/11/2026). Agora, processo que a planilha dá como concluído e que voltou à caixa do SOL aparece com o número da análise seguinte; quando a linha nova entra na planilha, ela volta a mandar.
+
 ## 2.8.11
 
 - **Revisão final não fica mais pendurada.** O subagente revisor-cia ia para o segundo plano: a resposta saía só "já está rodando" e o bloco da revisão podia nunca aparecer (caso de 04/11/2026). Agora a revisão pede o subagente em primeiro plano; e, se algum subagente ainda estiver rodando quando a resposta fechar, a conversa continua em "Esperando o subagente … terminar" até o resultado chegar.

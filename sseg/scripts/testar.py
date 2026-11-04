@@ -437,6 +437,8 @@ def main():
         caso("app: reanálise concluída no dia, com a planilha ainda na análise anterior, conta pela saída do SOL (2.8.9)",
              (e4["estado"], e4["concluido"], e4["resultado"], e4["distribuido"]) == ("concluido", "2026-10-19", "CA", "")
              and (e5["concluido"], e5["distribuido"]) == ("2026-07-30", "2026-07-29"), str((e4, e5)))
+        caso("app: nº da análise da planilha lido para comparar com os Marcos (2.8.12)",
+             [_api._n_analise(t) for t in ("ANÁLISE", "Analise", "2º", "3", "", None)] == [1, 1, 2, 3, 0, 0])
     # 2.8.11: conversa do processo gravada em conversa.jsonl e devolvida ao reabrir o programa
     with tempfile.TemporaryDirectory() as d:
         a1 = _api.Api.__new__(_api.Api)

@@ -106,6 +106,14 @@ def estado_caixa(dist, reg, prazo=10, hoje=None):
     return e
 
 
+def _n_analise(tipo):
+    """Nº da análise pelo tipo da planilha: "ANÁLISE" = 1, "2º" = 2…; 0 se não der para ler."""
+    if re.match(r"^\s*AN[AÁ]LISE\s*$", tipo or "", re.I):
+        return 1
+    m = re.match(r"^\s*(\d+)", tipo or "")
+    return int(m.group(1)) if m else 0
+
+
 def _saiu_da_caixa(e, pasta):
     """2.5.1: o processo estava na caixa e o servidor viu que saiu (CA ou CIA lançados no SOL): sol-caixa.json ganha
     saiu_em e os Marcos dão o resultado. A planilha, quando atualizar, manda por cima (ela já traz o concluído)."""
@@ -633,10 +641,18 @@ class Api:
             reg = os.path.join(p, "analise.json")
             dist, meu = _dist_minha(_ler(os.path.join(p, "distribuicao.json")), eu, caixa_sol[n], ultima)
             e = _saiu_da_caixa(estado_caixa(dist, _ler(reg), self._cfg().get("prazo_caixa", 10)), p)
+            mr = _ler(os.path.join(p, "marcos-resumo.json"))
             if not e.get("tipo"):  # 2.7.8: fora da planilha (processo de outro analista na minha caixa), o nº vem dos Marcos
-                n_an = _ler(os.path.join(p, "marcos-resumo.json")).get("analise")
+                n_an = mr.get("analise")
                 e["tipo"] = ("ANÁLISE" if n_an == 1 else "%dº" % n_an) if isinstance(n_an, int) and n_an > 0 else ""
-            out.append(dict(_na_caixa_do_sol(e, caixa_sol[n], ultima), meu=meu,
+            e2 = _na_caixa_do_sol(e, caixa_sol[n], ultima)
+            if e["estado"] == "concluido" and e2["estado"] == "caixa" and _n_analise(e.get("tipo")):
+                # 2.8.12: a planilha dá como concluído e a caixa do SOL o tem de novo = reanálise antes de a linha nova
+                # entrar na planilha; é a análise seguinte (A00026160AA002 aparecia como 1ª sendo a 2ª, 04/11/2026).
+                # Não pelo nº dos Marcos: ele conta cada "Distribuição de análise técnica", redistribuição inclusive.
+                n_an = max(_n_analise(e["tipo"]), len(mr.get("analises") or [])) + 1
+                e2["tipo"] = "%dº" % n_an
+            out.append(dict(e2, meu=meu,
                             **identificacao(p, os.listdir(p), dist),
                             codigo=n, quando=quando, arquivos=len(arqs), analise=os.path.exists(reg),
                             cts=_ler(os.path.join(p, "ct.json")).get("itens") or [],
