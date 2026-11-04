@@ -24,7 +24,8 @@ import os
 import re
 import subprocess
 
-ENVIA = [r"\.json$", r"\.md$", r"\.txt$", r"^\d+\.pdf$", r"^CIA \d+.*\.pdf$", r"memorial.*\.pdf$"]
+# .jsonl: conversa.jsonl da janela do processo (2.8.11)
+ENVIA = [r"\.json$", r"\.jsonl$", r"\.md$", r"\.txt$", r"^\d+\.pdf$", r"^CIA \d+.*\.pdf$", r"memorial.*\.pdf$"]
 DESTINO = "SSEG/sseg/processos"
 
 

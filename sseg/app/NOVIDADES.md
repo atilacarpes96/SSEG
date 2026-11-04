@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.11
+
+- **Revisão final não fica mais pendurada.** O subagente revisor-cia ia para o segundo plano: a resposta saía só "já está rodando" e o bloco da revisão podia nunca aparecer (caso de 04/11/2026). Agora a revisão pede o subagente em primeiro plano; e, se algum subagente ainda estiver rodando quando a resposta fechar, a conversa continua em "Esperando o subagente … terminar" até o resultado chegar.
+- **Texto de subagente não aparece mais como resposta do Claude.** O que o subagente escrevia para o Claude (ex.: o resultado cru de uma busca) saía na conversa misturado; agora só as ferramentas dele aparecem, discretas.
+- **A conversa de cada processo fica salva** em `conversa.jsonl`, na pasta do processo: volta na janela depois de fechar o programa e sobe ao servidor com a pasta (para o Claude do servidor poder ver uma resposta estranha). Os prints não vão no arquivo, só quantos foram.
+
 ## 2.8.10
 
 - **🎤 no PC grava e o servidor transcreve.** A digitação por voz do Windows (2.8.2) abria o painel azul, mas o texto não entrava no campo da janela. Agora: clique no 🎤 (fica vermelho, ■), fale, clique de novo. O áudio vai ao servidor, que transcreve com o Whisper (o mesmo do transcritor), e o texto entra no fim do campo em uns 10 s. Confira e envie. Até 5 minutos por gravação.

@@ -78,6 +78,7 @@ INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe 
 
 Regras desta janela:
 - Abrir a janela não é pedido. Faça só o que o analista pedir em cada mensagem; não rode o fluxo inteiro sozinho.
+- Subagente (Agent/Task): sempre em primeiro plano (run_in_background: false) e espere o resultado na mesma resposta; não responda "já está rodando". Resultado de subagente que chegar depois, sem pedido novo, só muda algo se mudar a conclusão: senão, uma linha.
 - Skill desta janela: leia e siga `sseg/skills/ppci-analise-processo/SKILL.md` do clone (é a versão do GitHub). Nunca use as skills da conta (anthropic-skills:ppci-*, sol-cbmrs-navegador etc.): podem estar velhas. Vale para toda skill citada: sempre o arquivo em sseg/skills/<nome>/SKILL.md.
 - Comandos prontos (não precisa de --help):
   - tudo o que a pasta já tem (cadastro do SOL, Marcos, CIAs em texto, CT, recurso): `python sseg/scripts/sseg.py resumo --pasta "{pasta}"`
@@ -297,19 +298,28 @@ class Conversa:
                 reg["chat"]["sessao"] = d["session_id"]
                 self.registro.gravar(self.pasta, reg)
         elif t == "assistant":
+            # 2.8.11 (relato do Átila, 04/11/2026): mensagem com parent_tool_use_id é do SUBAGENTE. O texto dele saía na
+            # conversa como se fosse a resposta; agora só as ferramentas dele aparecem, discretas.
+            sub = d.get("parent_tool_use_id")
             for c in d["message"].get("content", []):
-                if c.get("type") == "text" and c.get("text", "").strip():
+                if c.get("type") == "text" and c.get("text", "").strip() and not sub:
                     self.aoevento({"t": "texto", "texto": c["text"]})
-                elif c.get("type") == "tool_use":
+                elif c.get("type") == "tool_use" and c.get("name") != "SubagentHandback":
                     self._ferramenta(c)
         elif t == "user":
             conteudo = d.get("message", {}).get("content", [])
             for c in conteudo if isinstance(conteudo, list) else []:
                 if c.get("type") == "tool_result" and c.get("tool_use_id") in self.subs:
-                    s = self.subs.pop(c["tool_use_id"])
-                    self.aoevento({"t": "sub_fim", "id": c["tool_use_id"], "segundos": round(time.time() - s["inicio"])})
+                    if "Async agent launched" in json.dumps(c.get("content"), ensure_ascii=False):
+                        self.subs[c["tool_use_id"]]["fundo"] = True  # foi para o segundo plano: termina no task_notification
+                        continue
+                    self._sub_fim(c["tool_use_id"])
                 elif c.get("type") == "tool_result":
                     self.aoevento({"t": "pronto"})  # a janela relê o analise.json (o sseg.py pode ter escrito)
+        elif t == "system" and d.get("subtype") in ("task_notification", "task_updated"):
+            st = d.get("status") or (d.get("patch") or {}).get("status")
+            if d.get("tool_use_id") in self.subs and st in ("completed", "failed", "killed", "stopped", "error"):
+                self._sub_fim(d["tool_use_id"])
         elif t == "rate_limit_event":
             self._cota(d.get("rate_limit_info") or {})
         elif t == "result":
@@ -319,10 +329,18 @@ class Conversa:
                         "resumo": str((x.get("tool_input") or {}).get("command") or (x.get("tool_input") or {}).get("file_path") or "")[:90],
                         "detalhe": json.dumps(x.get("tool_input", {}), ensure_ascii=False)[:600]}
                        for x in d.get("permission_denials") or []]
-            self.aoevento({"t": "fim", "erro": d.get("is_error", False), "negados": negados,
+            # subagente ainda em segundo plano: a rodada fechou, mas a resposta de verdade vem na próxima (sozinha)
+            esperando = [x["tipo"] for x in self.subs.values()]
+            self.ocupado = bool(esperando)
+            self.aoevento({"t": "fim", "erro": d.get("is_error", False), "negados": negados, "esperando": esperando,
                            "tokens": sum(u.get(k, 0) or 0 for k in ("input_tokens", "output_tokens",
                                                                     "cache_creation_input_tokens")),
                            "texto": d.get("result", "") if d.get("is_error") else ""})
+
+    def _sub_fim(self, ident):
+        s = self.subs.pop(ident, None)
+        if s:
+            self.aoevento({"t": "sub_fim", "id": ident, "segundos": round(time.time() - s["inicio"])})
 
     def _ferramenta(self, c):
         nome, ent = c.get("name", ""), c.get("input") or {}

@@ -1220,13 +1220,55 @@ class Api:
         cfg["cota"] = v
         base.gravar_config(cfg)
 
+    # 2.8.11 (pedido do Átila, 04/11/2026): a conversa de cada processo fica gravada em <pasta>/conversa.jsonl. Volta na
+    # janela depois de fechar o programa (o Claude já lembrava pelo --resume; a tela não) e sobe ao servidor com a pasta,
+    # para dar para ver de lá uma resposta estranha. Sem os prints (só quantos) e sem a cota.
+    CONVERSA = "conversa.jsonl"
+
+    def _arq_conversa(self, chave):
+        if not chave or chave.startswith("fluxo:"):
+            return None
+        try:
+            return os.path.join(self._pasta_proc(chave), self.CONVERSA)
+        except Exception:  # noqa: BLE001 — pasta de processos não configurada: só não grava
+            return None
+
     def _guardar(self, chave, ev):
         h = self._hist.setdefault(chave, [])
         h.append(ev)
         del h[:-600]
+        arq = self._arq_conversa(chave) if ev.get("t") != "cota" else None
+        if arq:
+            linha = {k: v for k, v in ev.items() if k != "minis"}
+            if ev.get("minis"):
+                linha["prints"] = len(ev["minis"])
+            linha["em"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+            try:
+                with open(arq, "a", encoding="utf-8") as fh:
+                    fh.write(json.dumps(linha, ensure_ascii=False) + "\n")
+            except OSError:
+                pass
 
     def chat_historico(self, chave):
-        """Eventos desta conversa desde que o programa abriu (a outra tela monta o chat a partir deles)."""
+        """Eventos desta conversa (a outra tela e a janela reaberta montam o chat a partir deles). Desde 2.8.11, quando o
+        programa acabou de abrir, vêm do conversa.jsonl do processo (os últimos 600)."""
+        if chave not in self._hist:
+            arq = self._arq_conversa(chave)
+            evs = []
+            try:
+                with open(arq, encoding="utf-8") as fh:
+                    for linha in fh.readlines()[-600:]:
+                        try:
+                            ev = json.loads(linha)
+                        except ValueError:
+                            continue
+                        ev.pop("em", None)
+                        evs.append(ev)
+            except (OSError, TypeError):
+                pass
+            if evs and (evs[-1].get("t") not in ("fim", "erro") or evs[-1].get("esperando")):
+                evs.append({"t": "fim"})  # a conversa parou com o programa fechado: a tela não fica "trabalhando"
+            self._hist[chave] = evs
         return list(self._hist.get(chave, []))
 
     def chat_enviar(self, chave, texto, de="", imagens=None):

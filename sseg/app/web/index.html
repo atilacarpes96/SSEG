@@ -3626,7 +3626,7 @@ new ResizeObserver(([o]) => { const w = Math.round(o.contentRect.width); if (w =
 $("#pr-revisar").onclick = () => {
   const salvas = PR.reg.exigencias.filter(e => (e.final || "").trim()).length;
   if (!salvas) return avisar("Nenhuma exigência com texto salvo para revisar.", true);
-  chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Revisão final da CIA deste processo: chame o subagente revisor-cia (Agent, subagent_type \"revisor-cia\") " +
+  chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Revisão final da CIA deste processo: chame o subagente revisor-cia (Agent, subagent_type \"revisor-cia\", run_in_background: false, e espere ele terminar) " +
     "passando só o código " + PR.codigo + " e a pasta do processo, para ele rodar `python sseg/scripts/sseg.py revisar-cia --pasta \"<pasta>\"` " +
     "e julgar as " + salvas + " exigência(s) salvas na coluna CIA, como manda a skill ppci-revisao-cia. Não passe a ele o seu raciocínio nem as suas conclusões. " +
     "Quando ele voltar, responda com UM bloco sseg-revisao com todas as exigências pelo id (e1, e2…): veredito ok, corrigir ou conferir; " +
@@ -4104,6 +4104,11 @@ SSEG.chat = (chave, ev) => {
     }
     if (ev.erro && ev.texto) chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + ev.texto));
     if (doProcesso) recarregarRegistro();
+    // 2.8.11: a rodada fechou com subagente em segundo plano (ex.: revisor-cia); a resposta chega sozinha depois
+    if (ev.esperando && ev.esperando.length && !ctx.replay) {
+      trabalhando(ctx, true);
+      const tt = ctx.trab.querySelector(".trab-txt"); if (tt) tt.textContent = "Esperando o subagente " + ev.esperando.join(", ") + " terminar…";
+    }
   }
   else if (ev.t === "erro") { trabalhando(ctx, false); chatAdd(ctx, el("div", { class: "msg aviso" }, "✗ " + ev.texto)); }
   else if (ev.t === "aviso") SSEG.log(["Claude: " + ev.texto]);

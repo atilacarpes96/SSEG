@@ -419,6 +419,23 @@ def main():
         caso("app: reanálise concluída no dia, com a planilha ainda na análise anterior, conta pela saída do SOL (2.8.9)",
              (e4["estado"], e4["concluido"], e4["resultado"], e4["distribuido"]) == ("concluido", "2026-10-19", "CA", "")
              and (e5["concluido"], e5["distribuido"]) == ("2026-07-30", "2026-07-29"), str((e4, e5)))
+    # 2.8.11: conversa do processo gravada em conversa.jsonl e devolvida ao reabrir o programa
+    with tempfile.TemporaryDirectory() as d:
+        a1 = _api.Api.__new__(_api.Api)
+        a1._hist, a1._pasta_proc = {}, (lambda c: os.path.join(d, c))
+        os.makedirs(os.path.join(d, "A1"))
+        a1._guardar("A1", {"t": "eu", "texto": "oi", "de": "x", "minis": ["data:image/jpeg;base64,AAA"]})
+        a1._guardar("A1", {"t": "cota", "janela": 3})
+        a1._guardar("A1", {"t": "texto", "texto": "resposta"})
+        a1._guardar("fluxo:analise", {"t": "texto", "texto": "não grava"})
+        a2 = _api.Api.__new__(_api.Api)
+        a2._hist, a2._pasta_proc = {}, a1._pasta_proc
+        h = a2.chat_historico("A1")
+        linhas = [json.loads(l) for l in open(os.path.join(d, "A1", "conversa.jsonl"), encoding="utf-8")]
+        caso("app: conversa do processo vai para conversa.jsonl (sem cota, sem os prints) e volta ao reabrir (2.8.11)",
+             [e["t"] for e in h] == ["eu", "texto", "fim"] and linhas[0].get("prints") == 1 and "minis" not in linhas[0]
+             and all("em" in l for l in linhas) and len(linhas) == 2 and __import__("enviar").selecionar(["conversa.jsonl"])[0] == ["conversa.jsonl"],
+             str((h, linhas)))
     # 11b3a. print do memorial (2.6.4): norma do dimensionamento, inviabilidade, laudo, notificação e o que verificar
     import memorial_sol as _ms
     api_f = {"numero": "A00012345AA001", "tipo": "PPCI",
