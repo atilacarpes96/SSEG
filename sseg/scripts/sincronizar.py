@@ -12,7 +12,10 @@ COMO DECIDE (por arquivo, comparando com a última sincronização, guardada em
 sseg/processos/.sincronizacao.json no clone do PC):
   - só o PC mudou ........... sobe
   - só o servidor mudou ..... desce
-  - os dois mudaram ......... CONFLITO: não sobrescreve; o analista escolhe (PC, servidor ou deixar)
+  - os dois mudaram ......... CONFLITO, resolvido sozinho (04/11/2026, pedido do Átila): fica o lado que contém tudo
+                              o que o outro tem (só acrescentou); senão o gravado por último. A versão que sai fica
+                              guardada em sseg/processos/substituidos-sinc/. Gravados com menos de 1 min de diferença e
+                              com mudança dos dois lados: o analista escolhe (PC, servidor ou deixar)
   - apagado de um lado ...... não apaga do outro (apagar não se propaga)
 
 O mesmo arquivo roda nos dois lados: no PC (comandos abaixo) e no servidor, chamado pelo SSH
@@ -255,9 +258,83 @@ def _no_pc(pasta_ppci):
     return caminho
 
 
-def planejar(pasta_ppci, servidor):
+def planejar(pasta_ppci, servidor, auto=True):
     local = manifesto(pasta_ppci, PROC_CLONE)
     plano = comparar(local, servidor.listar(), _ler_base())
+    if auto and plano["conflito"]:
+        _resolver(pasta_ppci, servidor, plano)
+    return plano
+
+
+# ---- Conflito resolvido sozinho (04/11/2026, pedido do Átila: "geralmente vai ser o mais novo"). Primeiro vê se um
+# lado só acrescentou ao outro (conversa.jsonl, exigência nova na análise): esse fica e nada se perde. Senão fica o
+# gravado por último. Gravados quase juntos (< 1 min) com mudança dos dois lados: não há como saber, vai ao analista.
+
+def _contem(a, b):
+    """True se tudo o que há em b também está em a (a só acrescentou)."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        return all(k in a and _contem(a[k], v) for k, v in b.items())
+    if isinstance(a, list) and isinstance(b, list):
+        if all(isinstance(x, dict) and "id" in x for x in a + b):
+            da = {x["id"]: x for x in a}
+            return all(x["id"] in da and _contem(da[x["id"]], x) for x in b)
+        return len(b) <= len(a) and all(_contem(x, y) for x, y in zip(a, b))
+    return a == b
+
+
+def decidir(nome, pc, srv, t_pc, t_srv):
+    """('pc' | 'servidor' | '', motivo) para um conflito, com os bytes e a hora de gravação de cada lado."""
+    if nome.endswith(".json"):
+        try:
+            a, b = json.loads(pc.decode("utf-8")), json.loads(srv.decode("utf-8"))
+            if _contem(a, b):
+                return "pc", "o do PC tem tudo o que o do servidor tem, e mais"
+            if _contem(b, a):
+                return "servidor", "o do servidor tem tudo o que o do PC tem, e mais"
+        except (ValueError, UnicodeDecodeError):
+            pass
+    elif nome.endswith((".md", ".txt", ".jsonl")):
+        la = pc.decode("utf-8", "replace").splitlines()
+        lb = srv.decode("utf-8", "replace").splitlines()
+        if la[:len(lb)] == lb or set(lb) <= set(la):
+            return "pc", "o do PC só acrescentou ao do servidor"
+        if lb[:len(la)] == la or set(la) <= set(lb):
+            return "servidor", "o do servidor só acrescentou ao do PC"
+    if abs(t_pc - t_srv) < 60:
+        return "", "gravados quase juntos, com mudança dos dois lados"
+    return ("pc", "o do PC é o mais novo") if t_pc > t_srv else ("servidor", "o do servidor é o mais novo")
+
+
+def _resolver(pasta_ppci, servidor, plano, guardar=False):
+    """Passa a sobe/desce os conflitos que dá para decidir (plano["auto"] = {chave: {lado, motivo}}). `guardar`
+    (na hora de aplicar) copia a versão que sai para sseg/processos/substituidos-sinc/<data-hora>/."""
+    import time
+    no_pc, auto = _no_pc(pasta_ppci), {}
+    try:
+        with tarfile.open(fileobj=io.BytesIO(servidor.entregar(plano["conflito"])), mode="r") as tar:
+            remotos = {mb.name: (mb.mtime, tar.extractfile(mb).read()) for mb in tar.getmembers() if mb.isfile()}
+    except (RuntimeError, OSError, tarfile.TarError):
+        return plano
+    pasta_bak = os.path.join(PROC_CLONE, "substituidos-sinc", time.strftime("%Y%m%d-%H%M%S"))
+    for k in list(plano["conflito"]):
+        if k not in remotos or not os.path.isfile(no_pc(k)):
+            continue
+        with open(no_pc(k), "rb") as fh:
+            b_pc = fh.read()
+        t_srv, b_srv = remotos[k]
+        lado, motivo = decidir(k, b_pc, b_srv, int(os.path.getmtime(no_pc(k))), int(t_srv))
+        if not lado:
+            continue
+        if guardar:
+            alvo = os.path.join(pasta_bak, ("servidor-" if lado == "pc" else "pc-") + k.replace("/", "__"))
+            os.makedirs(pasta_bak, exist_ok=True)
+            with open(alvo, "wb") as fh:
+                fh.write(b_srv if lado == "pc" else b_pc)
+        plano["conflito"].remove(k)
+        plano["sobe" if lado == "pc" else "desce"].append(k)
+        auto[k] = {"lado": lado, "motivo": motivo}
+    if auto:
+        plano["auto"] = auto
     return plano
 
 
@@ -267,6 +344,14 @@ def aplicar(pasta_ppci, servidor, escolhas=None, so_descer=False):
     base = _ler_base()
     local = manifesto(pasta_ppci, PROC_CLONE)
     plano = comparar(local, servidor.listar(), base)
+    fixos = {k: v for k, v in escolhas.items() if v in ("pc", "servidor", "deixar")}
+    abertos = [k for k in plano["conflito"] if k not in fixos]
+    if abertos:  # o que o analista não escolheu, decide sozinho (e guarda a versão que sai)
+        p2 = _resolver(pasta_ppci, servidor, dict(plano, conflito=list(abertos), sobe=[], desce=[]), guardar=True)
+        for k, a in (p2.get("auto") or {}).items():
+            if not (so_descer and a["lado"] == "pc"):
+                escolhas[k] = a["lado"]
+        plano["auto"] = {k: a for k, a in (p2.get("auto") or {}).items() if k in escolhas}
     no_pc = _no_pc(pasta_ppci)
     sobe = [] if so_descer else plano["sobe"] + [k for k in plano["conflito"] if escolhas.get(k) == "pc"]
     desce = plano["desce"] + [k for k in plano["conflito"] if escolhas.get(k) == "servidor"]
@@ -283,7 +368,8 @@ def aplicar(pasta_ppci, servidor, escolhas=None, so_descer=False):
             nova[k] = base[k]
     _gravar_base(nova)
     resto = [k for k in plano["conflito"] if escolhas.get(k) not in ("pc", "servidor")]
-    return {"subiu": sobe, "desceu": [k for k in desce if k not in presos], "conflito_pendente": resto, "presos": presos}
+    return {"subiu": sobe, "desceu": [k for k in desce if k not in presos], "conflito_pendente": resto, "presos": presos,
+            "auto": plano.get("auto") or {}}
 
 
 # ---- O que muda num conflito (2.7.7, pedido do Átila em 30/10/2026): qual lado é o mais novo e o que difere, para o
@@ -378,6 +464,8 @@ def texto_plano(p):
     for rot, ch in (("sobe", "sobe"), ("desce", "desce"), ("CONFLITO (mudou dos dois lados)", "conflito")):
         for k in p[ch]:
             linhas.append("  %s  %s" % (rot, k))
+    for k, a in (p.get("auto") or {}).items():
+        linhas.append("  (mudou dos dois lados: fica o do %s, %s)  %s" % ("PC" if a["lado"] == "pc" else "servidor", a["motivo"], k))
     if p["apagado_pc"]:
         linhas.append("  apagado no PC, fica no servidor: " + ", ".join(p["apagado_pc"]))
     return "\n".join(linhas)
@@ -424,6 +512,9 @@ def principal(args, so_descer=False):
         print("  ↓ " + k)
     for k in r["subiu"]:
         print("  ↑ " + k)
+    for k, a in (r.get("auto") or {}).items():
+        print("  = %s: mudou dos dois lados, ficou o do %s (%s; o outro guardado em processos/substituidos-sinc)"
+              % (k, "PC" if a["lado"] == "pc" else "servidor", a["motivo"]))
     for k in r.get("presos") or []:
         print("  ! não atualizei %s: está aberto em outro programa (feche o arquivo; a próxima sincronização traz)" % k)
     if r["conflito_pendente"]:

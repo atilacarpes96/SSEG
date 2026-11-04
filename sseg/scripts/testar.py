@@ -200,6 +200,24 @@ def main():
         r = sc.aplicar(ppci, Falso(), {cod + "/CIA 1.pdf": "servidor"})
         caso("sincronizar: escolha 'servidor' resolve o conflito",
              open(os.path.join(ppci, cod, "CIA 1.pdf")).read() == "cia srv" and not r["conflito_pendente"], str(r))
+        # conflito resolvido sozinho (04/11/2026): o lado que só acrescentou fica; senão o mais novo; o outro é guardado
+        gravar(os.path.join(ppci, cod, "conversa.jsonl"), "a\n"); gravar(os.path.join(srv, cod, "conversa.jsonl"), "a\n")
+        gravar(os.path.join(ppci, cod, "notas.md"), "base"); gravar(os.path.join(srv, cod, "notas.md"), "base")
+        sc.aplicar(ppci, Falso())
+        gravar(os.path.join(ppci, cod, "conversa.jsonl"), "a\nb\n"); gravar(os.path.join(srv, cod, "conversa.jsonl"), "a\nc\nb\n")
+        gravar(os.path.join(ppci, cod, "notas.md"), "versao pc"); gravar(os.path.join(srv, cod, "notas.md"), "versao srv")
+        os.utime(os.path.join(srv, cod, "notas.md"), (1000000, 1000000))
+        pa = sc.planejar(ppci, Falso())
+        ra = sc.aplicar(ppci, Falso())
+        bak = os.path.join(clone_proc, "substituidos-sinc")
+        guardados = [n for _r, _d, fs in os.walk(bak) for n in fs] if os.path.isdir(bak) else []
+        caso("sincronizar: conflito resolvido sozinho (o que só acrescentou, senão o mais novo) e o outro guardado",
+             not pa["conflito"] and pa["auto"][cod + "/conversa.jsonl"]["lado"] == "servidor"
+             and pa["auto"][cod + "/notas.md"]["lado"] == "pc"
+             and open(os.path.join(ppci, cod, "conversa.jsonl")).read() == "a\nc\nb\n"
+             and open(os.path.join(srv, cod, "notas.md")).read() == "versao pc"
+             and sorted(guardados) == ["pc-%s__conversa.jsonl" % cod, "servidor-%s__notas.md" % cod]
+             and not ra["conflito_pendente"], str((pa, ra, guardados)))
         # arquivo aberto no PC (Windows não deixa trocar): os outros descem, ele fica para a próxima (relato de 20/10/2026)
         gravar(os.path.join(srv, cod, "memorial SOL 2.pdf"), "print novo")
         gravar(os.path.join(srv, cod, "memorial SOL 2.txt"), "texto novo")
