@@ -3877,15 +3877,50 @@ const VOZ = { rec: null, bt: null };
 function pararVoz() { const r = VOZ.rec; VOZ.rec = null; if (r) try { r.stop(); } catch (e) {} }
 // 2.8.2: no PC o WebView2 tem o SpeechRecognition, mas ele não transcreve (falhava sem aviso). Lá o 🎤 abre a
 // digitação por voz do Windows (Win+H), que escreve no campo com o foco. No celular segue o reconhecimento do Safari.
+// 2.8.10 (relato do Átila, 04/11/2026): o Win+H abre o painel do Windows, mas o texto não entra no campo da janela. Com
+// servidor, o 🎤 grava aqui (clique = começa, clique de novo = para) e o servidor transcreve (Whisper, ditado.py).
+// Sem servidor ou sem microfone liberado, volta ao Win+H.
+const GRAV = { rec: null, bt: null, partes: [], stream: null, timer: null };
+let SRV_DITADO = null;  // o servidor está configurado neste PC? (perguntado no 1º clique)
+async function gravarOuParar(bt) {
+  const campo = $("#" + bt.dataset.campo);
+  if (GRAV.rec) { GRAV.rec.stop(); return; }
+  if (SRV_DITADO === null) { try { SRV_DITADO = !!(await api("estado_servidor")).configurado; } catch (e) { SRV_DITADO = false; } }
+  const winH = () => { const fim = campo.value.length; campo.focus(); campo.setSelectionRange(fim, fim); return api("ditado_windows", [], bt).catch(() => {}); };
+  if (!SRV_DITADO || !navigator.mediaDevices || !window.MediaRecorder) return winH();
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) {
+    SSEG.log(["✗ microfone: " + (e.name === "NotAllowedError" ? "o programa não recebeu permissão para o microfone (Windows: Configurações → Privacidade → Microfone → apps da área de trabalho). Abrindo a digitação por voz do Windows." : e.message)]);
+    return winH();
+  }
+  const tipo = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "";
+  const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : {});
+  Object.assign(GRAV, { rec, bt, partes: [], stream });
+  rec.ondataavailable = ev => { if (ev.data && ev.data.size) GRAV.partes.push(ev.data); };
+  rec.onstop = async () => {
+    clearTimeout(GRAV.timer); stream.getTracks().forEach(t => t.stop());
+    const blob = new Blob(GRAV.partes, { type: rec.mimeType || "audio/webm" });
+    Object.assign(GRAV, { rec: null, partes: [], stream: null });
+    bt.classList.remove("ouvindo"); bt.textContent = "…"; bt.disabled = true; bt.title = "Transcrevendo no servidor…";
+    try {
+      const b64 = await new Promise((ok, erro) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = erro; r.readAsDataURL(blob); });
+      const t = (await api("ditado_servidor", [b64])) || "";
+      if (t) { campo.value = campo.value ? campo.value.replace(/\s*$/, " ") + t : t; campo.dispatchEvent(new Event("input")); }
+      else SSEG.log(["🎤 não entendi nada na gravação; tente de novo mais perto do microfone."]);
+    } catch (e) { SSEG.log(["✗ microfone: " + (e.message || e)]); }
+    finally { bt.textContent = "🎤"; bt.disabled = false; bt.title = TITULO_MIC; campo.focus(); }
+  };
+  rec.start(1000);
+  bt.classList.add("ouvindo"); bt.textContent = "■"; bt.title = "Gravando: clique para parar e transcrever";
+  GRAV.timer = setTimeout(() => { if (GRAV.rec === rec) rec.stop(); }, 5 * 60 * 1000);  // no máximo 5 min por vez
+}
+const TITULO_MIC = "Falar: clique para gravar e de novo para parar; o texto entra no campo (confira e envie)";
 for (const bt of document.querySelectorAll(".bt.mic")) {
   bt.hidden = ESPELHO ? (!Reconhecer || !window.isSecureContext) : false;
-  if (!ESPELHO) bt.title = "Falar: abre a digitação por voz do Windows (Win+H) neste campo; confira e envie";
+  if (!ESPELHO) bt.title = TITULO_MIC;
   bt.onclick = () => {
-    if (!ESPELHO) {
-      const campo = $("#" + bt.dataset.campo), fim = campo.value.length;
-      campo.focus(); campo.setSelectionRange(fim, fim);
-      return api("ditado_windows", [], bt).catch(() => {});
-    }
+    if (!ESPELHO) return gravarOuParar(bt);
     if (VOZ.rec) return pararVoz();
     const campo = $("#" + bt.dataset.campo), antes = campo.value ? campo.value.replace(/\s*$/, " ") : "";
     const rec = new Reconhecer();

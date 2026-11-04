@@ -992,6 +992,32 @@ class Api:
         u.keybd_event(VK_LWIN, 0, SOLTA, 0)
         return True
 
+    def ditado_servidor(self, audio_b64):
+        """🎤 no PC (2.8.10, relato do Átila em 04/11/2026: o Win+H abre o painel e não escreve no campo da janela).
+        A tela grava o áudio (webm/opus, base64) e ele vai pela entrada padrão do SSH ao servidor, que transcreve com o
+        faster-whisper do transcritor (sseg/scripts/ditado.py do clone do servidor). Devolve o texto."""
+        if not self.estado_servidor()["configurado"]:
+            raise RuntimeError("Sem servidor neste PC: o microfone transcreve no servidor (Configuração → Servidor).")
+        dados = base64.b64decode(audio_b64 or "")
+        if len(dados) < 1000:
+            raise RuntimeError("Não gravou áudio (o Windows liberou o microfone para o programa?).")
+        if len(dados) > 20 * 1024 * 1024:
+            raise RuntimeError("Gravação longa demais: fale em partes de até uns 5 minutos.")
+        try:
+            p = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "sseg-servidor",
+                                "cd ~/SSEG && ~/transcritor/venv/bin/python sseg/scripts/ditado.py -"],
+                               input=dados, capture_output=True, timeout=300, creationflags=base.SEM_JANELA)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("O servidor demorou demais para transcrever; tente uma fala mais curta.")
+        except OSError as e:
+            raise RuntimeError("Não consegui falar com o servidor (%s)." % e)
+        texto = p.stdout.decode("utf-8", "replace").strip()
+        if p.returncode != 0:
+            erro = p.stderr.decode("utf-8", "replace").strip().splitlines()
+            raise RuntimeError("O servidor não transcreveu: %s" % (erro[-1] if erro else "código %d" % p.returncode))
+        self._log("🎤 transcrito no servidor (%d KB de áudio, %d caracteres)." % (len(dados) // 1024, len(texto)))
+        return texto
+
     def norma_pdf(self, rotulo, consulta=""):
         """Bloco sseg-norma: o programa acha o PDF oficial e a página (mecanismo da busca 1.2.2)."""
         nome = busca.pdf_citado(rotulo) or busca._pdf_rt_novo(rotulo, self._clone())

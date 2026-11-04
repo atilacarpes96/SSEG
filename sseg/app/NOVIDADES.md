@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.10
+
+- **🎤 no PC grava e o servidor transcreve.** A digitação por voz do Windows (2.8.2) abria o painel azul, mas o texto não entrava no campo da janela. Agora: clique no 🎤 (fica vermelho, ■), fale, clique de novo. O áudio vai ao servidor, que transcreve com o Whisper (o mesmo do transcritor), e o texto entra no fim do campo em uns 10 s. Confira e envie. Até 5 minutos por gravação.
+- Na primeira vez o programa pode pedir para permitir o microfone. Se o Windows bloquear (Configurações → Privacidade → Microfone → "Permitir que aplicativos da área de trabalho acessem o microfone"), ou se este PC não tiver servidor configurado, o botão volta a abrir a digitação por voz do Windows.
+
 ## 2.8.9
 
 - **Reanálise concluída no mesmo dia entra na meta da semana.** Processo que voltou para outra análise, foi distribuído e concluído antes da planilha de distribuição do dia seguinte ficava com a data da análise anterior (ex.: CIA de julho) e não contava na meta nem aparecia no filtro "Meta da semana". Agora vale a saída da caixa que o SOL registrou, com o resultado dos Marcos. No dia seguinte a planilha traz a linha nova e manda como antes.
