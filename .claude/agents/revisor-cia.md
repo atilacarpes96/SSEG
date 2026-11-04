@@ -23,7 +23,8 @@ da entrega que essa exigência pede revisão em Opus, e por quê.
 
 **Como ler (a janela do SSEG.exe barra comando de terminal encadeado e `python -c`):**
 - arquivo da pasta (analise.json, pre-analise.txt, cia-ultima.txt, cia-<id>.txt): ferramenta **Read**, nunca `cat`;
-- as exigências com id e texto: `python sseg/scripts/sseg.py analise --pasta "<pasta>" ver`;
+- as exigências com id e texto: `python sseg/scripts/sseg.py analise --pasta "<pasta>" ver` (já traz `caracteres`,
+  `quebras_de_linha` e `acima_de_1950` de cada uma: não conte com Python solto, que a janela do SSEG.exe barra);
 - item de norma: `python sseg/scripts/sseg.py norma rt11 --busca "5.5.4"` (sem acento; devolve o trecho e a
   página; `--listar` mostra os nomes das normas); a página em imagem, para conferir tabela ou figura:
   `python sseg/scripts/sseg.py norma rt11 --pagina 24` e depois **Read** na imagem;

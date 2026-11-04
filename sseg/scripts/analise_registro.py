@@ -329,7 +329,10 @@ def principal(args):
     else:
         d = ler(args.pasta)
         print(json.dumps({"pendencias": d["pendencias"], "passos": d["passos"],
+                          # tamanho e quebras já contados (04/11/2026): o revisor-cia contava com python solto, barrado na janela
                           "cia_final": [{"id": e["id"], "medida": e["medida"], "final": e["final"],
-                                         "fundamento": e["fundamento"]} for e in texto_cia(d)],
+                                         "fundamento": e["fundamento"], "caracteres": len(e["final"]),
+                                         "quebras_de_linha": e["final"].count("\n"),
+                                         "acima_de_1950": len(e["final"]) > 1950} for e in texto_cia(d)],
                           "rascunhos_sem_final": [e["id"] for e in d["exigencias"] if not e.get("final")]},
                          ensure_ascii=False, indent=1))
