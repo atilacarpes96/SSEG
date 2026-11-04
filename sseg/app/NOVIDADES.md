@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.13
+
+- **Dá para parar e continuar a conversa do processo depois, em qualquer PC.** No mesmo PC já era assim: fechar o processo ou o programa e abrir de novo traz a conversa na tela e o Claude lembra (2.8.11). Agora também em outro PC: a conversa salva (`conversa.jsonl`) vem pelo servidor, aparece na janela e o Claude recebe o que foi conversado antes junto da primeira mensagem, para continuar a pendência de onde parou. Os prints não vão junto, só o texto. Se a conversa continuou nos dois PCs antes de sincronizar, a sincronização junta as mensagens dos dois lados pela hora.
+
 ## 2.8.12
 
 - **Reanálise aparece com o número certo.** Processo que voltou à caixa para a 2ª (3ª…) análise aparecia como "1ª análise" enquanto a planilha de distribuição ainda tinha só a linha da análise anterior (casos A00026160AA002 e A00049406AA001, 04/11/2026). Agora, processo que a planilha dá como concluído e que voltou à caixa do SOL aparece com o número da análise seguinte; quando a linha nova entra na planilha, ela volta a mandar.

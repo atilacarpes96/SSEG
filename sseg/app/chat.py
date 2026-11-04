@@ -210,8 +210,8 @@ class Conversa:
         elif sessao:
             # a conversa foi feita em outro PC (o analise.json vem pelo servidor) e não existe aqui: com --resume o
             # claude sai com código 1 a cada mensagem. Começa uma conversa nova; o que foi salvo no processo continua.
-            self.aoevento({"t": "aviso", "texto": "A conversa anterior deste processo foi feita em outro PC e não existe "
-                                                  "aqui: começando uma conversa nova. Análise, pendências e passos salvos continuam."})
+            self.aoevento({"t": "aviso", "texto": "A conversa anterior deste processo foi feita em outro PC: o Claude "
+                                                  "continua a partir dela (o texto salvo vai junto; os prints não)."})
         return cmd
 
     def _sol_txt(self):

@@ -1287,6 +1287,40 @@ class Api:
             self._hist[chave] = evs
         return list(self._hist.get(chave, []))
 
+    def _conversa_anterior(self, chave, limite=24000):
+        """O que já foi conversado neste processo (conversa.jsonl), em texto, para a conversa nova do Claude continuar
+        dela. Só mensagens do analista e respostas do Claude; das mais novas para trás até `limite` caracteres."""
+        try:
+            with open(self._arq_conversa(chave), encoding="utf-8") as fh:
+                linhas = fh.readlines()
+        except (OSError, TypeError):
+            return ""
+        partes, total, cortou = [], 0, False
+        for linha in reversed(linhas):
+            try:
+                ev = json.loads(linha)
+            except ValueError:
+                continue
+            if ev.get("t") not in ("eu", "texto") or not (ev.get("texto") or "").strip():
+                continue
+            t = ev["texto"].strip()
+            if len(t) > 4000:
+                t = t[:4000] + " […]"
+            quem = "Analista" if ev["t"] == "eu" else "Claude"
+            quando = (ev.get("em") or "")[:16].replace("T", " ")
+            bloco = "[%s%s]\n%s" % (quem, ", " + quando if quando else "", t)
+            if total + len(bloco) > limite:
+                cortou = True
+                break
+            partes.append(bloco)
+            total += len(bloco)
+        if not partes:
+            return ""
+        return ("\n\n<conversa_anterior>\nConversa anterior deste processo (feita em outro PC ou numa sessão que não "
+                "existe mais aqui), da mais antiga para a mais nova%s. Continue dela: o analista pode estar retomando uma "
+                "pendência que ficou no meio. Prints não vêm junto.\n\n%s\n</conversa_anterior>"
+                % (" (só o final)" if cortou else "", "\n\n".join(reversed(partes))))
+
     def chat_enviar(self, chave, texto, de="", imagens=None):
         """chave = código do processo (janela de 3 colunas) ou "fluxo:<id>" (janela de conversa do fluxo).
         de = qual tela mandou: ela já mostrou a mensagem; as outras recebem o evento "eu".
@@ -1327,7 +1361,12 @@ class Api:
             c = chat.Conversa(self._clone(), pasta, codigo, fluxo, claude, subs, aoevento,
                               self._reg(), {"ler": self._cota_ler, "gravar": self._cota_gravar}, sol=links)
             self._conversas[chave] = c
-            c.contexto = self._contexto_pasta(pasta) if pasta and not (self._reg().ler(pasta).get("chat") or {}).get("sessao") else ""
+            sessao = (self._reg().ler(pasta).get("chat") or {}).get("sessao") if pasta else None
+            # 2.8.13: sem a conversa do Claude neste PC (feita em outro PC, ou nunca houve), a nova já começa com o resumo
+            # da pasta e com o que foi conversado antes (conversa.jsonl, que veio pelo servidor): dá para parar, fechar
+            # e continuar de outro PC do ponto em que parou
+            c.contexto = (self._contexto_pasta(pasta) + self._conversa_anterior(chave)
+                          if pasta and not (sessao and chat._sessao_existe(sessao)) else "")
         ev = {"t": "eu", "texto": texto, "de": de, "minis": [i["mini"] for i in imgs]}
         self._guardar(chave, ev)
         self._emitir("chat", chave, ev)

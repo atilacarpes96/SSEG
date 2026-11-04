@@ -218,6 +218,13 @@ def main():
              and open(os.path.join(srv, cod, "notas.md")).read() == "versao pc"
              and sorted(guardados) == ["pc-%s__conversa.jsonl" % cod, "servidor-%s__notas.md" % cod]
              and not ra["conflito_pendente"], str((pa, ra, guardados)))
+        l0, lp, ls = ('{"t": "eu", "texto": "%s", "em": "%s"}' % x for x in (("oi", "1"), ("pc", "3"), ("srv", "2")))
+        gravar(os.path.join(ppci, cod, "conversa.jsonl"), l0 + "\n" + lp + "\n")
+        gravar(os.path.join(srv, cod, "conversa.jsonl"), l0 + "\n" + ls + "\n")
+        rj = sc.aplicar(ppci, Falso())
+        caso("sincronizar: conversa continuada nos dois PCs junta as mensagens pela hora (2.8.13)",
+             open(os.path.join(srv, cod, "conversa.jsonl")).read() == "\n".join([l0, ls, lp]) + "\n"
+             and open(os.path.join(ppci, cod, "conversa.jsonl")).read() == "\n".join([l0, ls, lp]) + "\n", str(rj))
         # arquivo aberto no PC (Windows não deixa trocar): os outros descem, ele fica para a próxima (relato de 20/10/2026)
         gravar(os.path.join(srv, cod, "memorial SOL 2.pdf"), "print novo")
         gravar(os.path.join(srv, cod, "memorial SOL 2.txt"), "texto novo")
@@ -456,6 +463,13 @@ def main():
              [e["t"] for e in h] == ["eu", "texto", "fim"] and linhas[0].get("prints") == 1 and "minis" not in linhas[0]
              and all("em" in l for l in linhas) and len(linhas) == 2 and __import__("enviar").selecionar(["conversa.jsonl"])[0] == ["conversa.jsonl"],
              str((h, linhas)))
+        ant = a2._conversa_anterior("A1")
+        a1._guardar("A1", {"t": "texto", "texto": "x" * 3000})
+        curto = a2._conversa_anterior("A1", limite=3040)
+        caso("app: conversa salva vai como contexto da conversa nova em outro PC (2.8.13)",
+             "<conversa_anterior>" in ant and ant.index("[Analista") < ant.index("[Claude") and "resposta" in ant
+             and "não grava" not in ant and "só o final" in curto and "[Analista" not in curto
+             and a2._conversa_anterior("A2") == "", ant + curto[:300])
     # 11b3a. print do memorial (2.6.4): norma do dimensionamento, inviabilidade, laudo, notificação e o que verificar
     import memorial_sol as _ms
     api_f = {"numero": "A00012345AA001", "tipo": "PPCI",

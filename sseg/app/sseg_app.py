@@ -47,7 +47,7 @@ import git_sinc
 import instalar
 import relato
 
-VERSAO = "2.8.12"
+VERSAO = "2.8.13"
 REPO = "atilacarpes96/SSEG"
 REPO_URL = "https://github.com/%s.git" % REPO
 VERSAO_URL = "https://raw.githubusercontent.com/%s/main/sseg/app/VERSION" % REPO

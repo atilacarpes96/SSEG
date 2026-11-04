@@ -305,6 +305,20 @@ def decidir(nome, pc, srv, t_pc, t_srv):
     return ("pc", "o do PC é o mais novo") if t_pc > t_srv else ("servidor", "o do servidor é o mais novo")
 
 
+def juntar_jsonl(pc, srv):
+    """Linhas dos dois lados, sem repetir, em ordem de "em" (hora em que foi gravada); a ordem de cada lado se mantém."""
+    vistas, linhas = set(), []
+    for i, l in enumerate(pc.decode("utf-8", "replace").splitlines() + srv.decode("utf-8", "replace").splitlines()):
+        if l.strip() and l not in vistas:
+            vistas.add(l)
+            try:
+                em = json.loads(l).get("em") or ""
+            except (ValueError, AttributeError):
+                em = ""
+            linhas.append((em, i, l))
+    return ("\n".join(l for _e, _i, l in sorted(linhas)) + "\n").encode("utf-8")
+
+
 def _resolver(pasta_ppci, servidor, plano, guardar=False):
     """Passa a sobe/desce os conflitos que dá para decidir (plano["auto"] = {chave: {lado, motivo}}). `guardar`
     (na hora de aplicar) copia a versão que sai para sseg/processos/substituidos-sinc/<data-hora>/."""
@@ -323,8 +337,15 @@ def _resolver(pasta_ppci, servidor, plano, guardar=False):
             b_pc = fh.read()
         t_srv, b_srv = remotos[k]
         lado, motivo = decidir(k, b_pc, b_srv, int(os.path.getmtime(no_pc(k))), int(t_srv))
+        junto = None
+        if k.endswith(".jsonl") and not motivo.endswith("acrescentou ao do servidor") and not motivo.endswith("acrescentou ao do PC"):
+            # conversa continuada nos dois PCs (2.8.13): junta as linhas dos dois lados pela hora ("em"), sem perder nada
+            junto, lado, motivo = juntar_jsonl(b_pc, b_srv), "pc", "juntei as mensagens dos dois lados"
         if not lado:
             continue
+        if junto is not None and guardar:
+            with open(no_pc(k), "wb") as fh:
+                fh.write(junto)
         if guardar:
             alvo = os.path.join(pasta_bak, ("servidor-" if lado == "pc" else "pc-") + k.replace("/", "__"))
             os.makedirs(pasta_bak, exist_ok=True)
