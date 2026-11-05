@@ -753,6 +753,39 @@ footer { color: var(--suave); }
 .t-todos td.cidade { white-space: normal; max-width: 115px; }
 .t-todos td:nth-child(6) { max-width: 175px; }
 .t-todos td:nth-child(6) .tag.sit { white-space: normal; }
+/* ==== espaço 2.8.15 (pedido do Átila, 04/11/2026: no Full HD do serviço falta tela) ========================
+   A caixa da conversa divide a altura com os botões, o rodapé sobe para o topo e a janela do processo aperta.
+   Telas estreitas (celular) seguem com o rodapé e os espaços de antes. */
+.entrada { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; padding: 8px; align-items: stretch; }
+.entrada .anexos { grid-column: 1 / -1; }
+.entrada textarea { grid-column: 1; grid-row: 2 / span 2; min-height: 58px; }
+.entrada .bt { padding: 2px 8px; min-height: 26px; }
+.entrada .bt.anexar { grid-column: 2; grid-row: 2; }
+.entrada .bt.mic { grid-column: 3; grid-row: 2; }
+.entrada .bt.p { grid-column: 2 / 4; grid-row: 3; }
+@media (min-width: 701px) {
+  header { padding: 3px 12px; gap: 10px; }
+  .marca img { width: 28px; height: 28px; }
+  .marca b { font-size: 17px; }
+  .marca small { display: none; }
+  header > footer { flex: 1; min-width: 0; padding: 0; gap: 10px; border: 0; background: none; }
+  #estado-topo { margin-left: 0; }
+  .faixa { padding: 5px 12px; gap: 8px; }
+  .coluna > h2 { padding: 5px 10px 4px; }
+  .rola { padding: 6px 8px; }
+  .slot .msg { margin: 6px 0; }
+  .exig { padding: 5px 7px; margin-bottom: 6px; }
+  .exig .cab { align-items: center; gap: 5px; }
+  .exig textarea { margin-top: 3px; min-height: 48px; padding: 4px 6px; line-height: 1.35; }
+  .exig input.fund { margin-top: 3px; padding: 3px 6px; font-size: 12px; }
+  .exig .rod { gap: 3px 4px; margin-top: 3px; }
+  .exig .rod .bt { padding: 2px 8px; font-size: 12px; }
+  .exig .rod .bt.link { padding: 2px 3px; }
+  .exig .puxa { height: 8px; margin: 0 -7px -5px; padding-top: 2px; }
+  .pranchas { margin: 1px 0 2px; }
+  .linha-fund { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .linha-fund > * { flex: 1 1 40%; min-width: 0; margin-top: 3px; }
+}
 </style>
 </head>
 <body>
@@ -885,7 +918,7 @@ footer { color: var(--suave); }
         <div class="coluna" data-col="chat">
           <h2>Conversa <span class="sub" style="margin:0;text-transform:none;letter-spacing:0;font-weight:400" id="pr-modelo"></span></h2>
           <div class="slot" id="pr-slot"></div>
-          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="4" placeholder="Peça ao Claude (ex.: roda o check) — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print (também dá para colar com Ctrl+V ou arrastar a imagem para o campo)">🖼</button><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
+          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print (também dá para colar com Ctrl+V ou arrastar a imagem para o campo)">🖼</button><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
         </div>
         <div class="col-borda" data-borda="1" title="Arraste para mudar a largura das colunas (duplo clique volta ao padrão)"></div>
         <div class="coluna" data-col="check">
@@ -909,7 +942,7 @@ footer { color: var(--suave); }
       </div>
       <div class="coluna conversa-unica">
         <div class="slot" id="cv-slot"></div>
-        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="4" placeholder="Escreva ao Claude — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print (também dá para colar com Ctrl+V ou arrastar a imagem para o campo)">🖼</button><button type="button" class="bt mic" data-campo="cv-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
+        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="2" placeholder="Escreva ao Claude — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print (também dá para colar com Ctrl+V ou arrastar a imagem para o campo)">🖼</button><button type="button" class="bt mic" data-campo="cv-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
       </div>
     </section>
     <section class="tela" id="t-busca">
@@ -1318,6 +1351,10 @@ $("#b-menu").onclick = () => $("#menu").classList.toggle("aberto");
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => ir(b.dataset.tela));
 document.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => ir(b.dataset.ir));
 $("#b-detalhes").onclick = () => $("#detalhes").classList.toggle("aberto");
+// 2.8.15: no PC o rodapé vira parte do topo (uma barra a menos); no celular não cabe e ele fica embaixo.
+{ const larga = matchMedia("(min-width: 701px)"), rodape = $("footer");
+  const situar = () => { if (larga.matches) $("header").insertBefore(rodape, $("#estado-topo")); else $("#aviso").after(rodape); };
+  larga.addEventListener("change", situar); situar(); }
 
 // ---- janelinha
 function modal(titulo, sub, meio, botoes) {
@@ -3568,10 +3605,11 @@ function pintarCIA() {
     itens.set(e.id, el("div", { class: "exig" },
       el("div", { class: "cab" }, el("b", {}, (i + 1) + ". "), sel,
         deRascunho || rascDiferente ? el("span", { class: "marca-tag" }, "rascunho do Claude") : null,
-        e.pedido ? el("span", { class: "marca-tag", style: "display:inline-flex;align-items:center;gap:4px" }, caranguejo(PR.fluxo.modelo, "medium", "Claude redigindo este item"), "redigindo…") : null),
+        e.pedido ? el("span", { class: "marca-tag", style: "display:inline-flex;align-items:center;gap:4px" }, caranguejo(PR.fluxo.modelo, "medium", "Claude redigindo este item"), "redigindo…") : null,
+        temFinal && !e.lancado ? el("span", { class: "salvo", title: "Texto final salvo" }, "✓ salvo") : null, conta),
       rascDiferente ? el("details", { class: "discreto" }, el("summary", {}, "rascunho do Claude (diferente do salvo)"), el("div", { class: "rasc" }, e.rascunho),
         el("button", { class: "bt link", on: { click: () => { ta.value = e.rascunho; ta.dispatchEvent(new Event("input")); ta.focus(); } } }, "pôr o rascunho na caixa")) : null,
-      pranchas, ta, fund, cit,
+      pranchas, ta, el("div", { class: "linha-fund" }, fund, cit),
       el("div", { class: "rod" },
         el("button", { class: "bt p", on: { click: salvar } }, "Salvar"),
         el("button", { class: "bt", title: "Manda o texto da caixa ao chat como achado; o rascunho volta para este item", on: { click: pedir } }, "Pedir ao Claude"),
@@ -3580,11 +3618,10 @@ function pintarCIA() {
         CIA_VISTA.agrupar ? null : el("button", { class: "bt link", title: "subir", on: { click: () => api("processo_mover", [PR.codigo, e.id, -1]).then(recarregarRegistro) } }, "↑"),
         CIA_VISTA.agrupar ? null : el("button", { class: "bt link", title: "descer", on: { click: () => api("processo_mover", [PR.codigo, e.id, 1]).then(recarregarRegistro) } }, "↓"),
         CIA_VISTA.compacto ? el("button", { class: "bt link", title: "voltar a uma linha", on: { click: () => { CIA_ABERTOS.delete(e.id); pintarCIA(); } } }, "fechar") : null,
-        el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "exigencias", e.id]).then(recarregarRegistro) } }, "excluir"),
-        conta),
-      temFinal ? el("div", { class: "discreto salvo" }, "✓ texto final salvo",
-        e.lancado ? (e.lancado_final === e.final ? " · ✓ lançado no SOL em " + e.lancado + (e.lancado_conferido === false ? " (sem conferência: veja na tela do SOL)" : "")
-          : " · ⚠ mudou depois de lançado no SOL (" + e.lancado + "): lance de novo") : "") : null,
+        el("button", { class: "bt link", on: { click: () => api("processo_remover", [PR.codigo, "exigencias", e.id]).then(recarregarRegistro) } }, "excluir")),
+      temFinal && e.lancado ? el("div", { class: "discreto salvo" }, "✓ texto final salvo",
+        e.lancado_final === e.final ? " · ✓ lançado no SOL em " + e.lancado + (e.lancado_conferido === false ? " (sem conferência: veja na tela do SOL)" : "")
+          : " · ⚠ mudou depois de lançado no SOL (" + e.lancado + "): lance de novo") : null,
       alca(ta, 1, () => Infinity, h => h ? CIA_ALTURA.set(e.id, h) : CIA_ALTURA.delete(e.id))));
   });
   if (CIA_VISTA.agrupar && r.exigencias.length > 1) {

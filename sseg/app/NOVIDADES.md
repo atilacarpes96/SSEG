@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.15
+
+- **Mais espaço na tela, pensado para o Full HD do serviço.** A barra de baixo (versão, Detalhes, última mensagem e uso) subiu para a barra de cima, e a barra de cima ficou mais baixa. A caixa da conversa divide a altura com os botões, em vez de deixar um vazio em cima deles. Títulos das colunas e a faixa do processo ficaram mais baixos, e os cards da CIA ficaram mais compactos: "✓ salvo" e a contagem de caracteres foram para a linha de cima de cada card. No celular o rodapé continua embaixo.
+
 ## 2.8.14
 
 - **O 🎤 não abre mais a barra de voz do Windows.** Quando o microfone não conseguia gravar ou o PC estava sem servidor, o programa abria a digitação por voz do Windows, que ficava parada na frente da tela e não escrevia no campo. Agora o 🎤 só avisa no registro o que falta (servidor ou permissão do microfone). Gravar e transcrever pelo servidor continua igual.
