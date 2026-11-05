@@ -3883,6 +3883,17 @@ function pararVoz() { const r = VOZ.rec; VOZ.rec = null; if (r) try { r.stop(); 
 // sem escrever nada. Saiu: sem servidor ou sem microfone liberado, o 🎤 só avisa no registro o que falta.
 const GRAV = { rec: null, bt: null, partes: [], stream: null, timer: null };
 let SRV_DITADO = null;  // o servidor está configurado neste PC? (perguntado no 1º clique)
+// 2.8.14 (relato do Átila, 04/11/2026): o padrão do Windows era o "Steam Streaming Microphone", virtual e mudo: gravava
+// silêncio e o 🎤 "não funcionava". Microfone virtual fica de fora quando há um de verdade ligado.
+const MIC_VIRTUAL = /steam streaming|virtual|oculus|sonic studio|voicemeeter|vb-audio|cable output|mixagem|stereo mix/i;
+async function microfoneReal() {
+  const padrao = await navigator.mediaDevices.getUserMedia({ audio: true });
+  if (!MIC_VIRTUAL.test(padrao.getAudioTracks()[0]?.label || "")) return padrao;
+  const real = (await navigator.mediaDevices.enumerateDevices()).find(d => d.kind === "audioinput" && !["default", "communications"].includes(d.deviceId) && !MIC_VIRTUAL.test(d.label));
+  if (!real) return padrao;
+  padrao.getTracks().forEach(t => t.stop());
+  return navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: real.deviceId } } });
+}
 async function gravarOuParar(bt) {
   const campo = $("#" + bt.dataset.campo);
   if (GRAV.rec) { GRAV.rec.stop(); return; }
@@ -3890,11 +3901,13 @@ async function gravarOuParar(bt) {
   if (!SRV_DITADO) return SSEG.log(["✗ microfone: este PC não tem servidor configurado, e é ele que transcreve (Configuração → Servidor)."]);
   if (!navigator.mediaDevices || !window.MediaRecorder) return SSEG.log(["✗ microfone: esta janela não consegue gravar áudio."]);
   let stream;
-  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  try { stream = await microfoneReal(); }
   catch (e) {
     SSEG.log(["✗ microfone: " + (e.name === "NotAllowedError" ? "o programa não recebeu permissão para o microfone (Windows: Configurações → Privacidade → Microfone → apps da área de trabalho)." : e.message)]);
     return;
   }
+  const nomeMic = stream.getAudioTracks()[0]?.label || "microfone padrão";
+  SSEG.log(["🎤 gravando em: " + nomeMic]);
   const tipo = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "";
   const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : {});
   Object.assign(GRAV, { rec, bt, partes: [], stream });
@@ -3908,7 +3921,7 @@ async function gravarOuParar(bt) {
       const b64 = await new Promise((ok, erro) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = erro; r.readAsDataURL(blob); });
       const t = (await api("ditado_servidor", [b64])) || "";
       if (t) { campo.value = campo.value ? campo.value.replace(/\s*$/, " ") + t : t; campo.dispatchEvent(new Event("input")); }
-      else SSEG.log(["🎤 não entendi nada na gravação; tente de novo mais perto do microfone."]);
+      else SSEG.log(["🎤 não entendi nada na gravação feita em \"" + nomeMic + "\". Se for o microfone errado, troque a entrada em Configurações do Windows → Sistema → Som."]);
     } catch (e) { SSEG.log(["✗ microfone: " + (e.message || e)]); }
     finally { bt.textContent = "🎤"; bt.disabled = false; bt.title = TITULO_MIC; campo.focus(); }
   };

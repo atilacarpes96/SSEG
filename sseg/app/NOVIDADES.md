@@ -7,6 +7,7 @@ analista: o que muda na tela e no dia a dia, sem nome de função.
 ## 2.8.14
 
 - **O 🎤 não abre mais a barra de voz do Windows.** Quando o microfone não conseguia gravar ou o PC estava sem servidor, o programa abria a digitação por voz do Windows, que ficava parada na frente da tela e não escrevia no campo. Agora o 🎤 só avisa no registro o que falta (servidor ou permissão do microfone). Gravar e transcrever pelo servidor continua igual.
+- **O 🎤 usa um microfone de verdade.** Quando o padrão do Windows era um microfone virtual (como o da Steam, que só grava silêncio), o 🎤 gravava nada e não escrevia. Agora ele pula os virtuais se houver um microfone real ligado e mostra no registro em qual microfone está gravando.
 
 ## 2.8.13
 
