@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.16
+
+- **PDF na conversa.** O botão de print (🖼) virou 📎 e aceita PDF além de print: clique e escolha, arraste o arquivo para o campo ou cole com Ctrl+V. O Claude lê o texto e vê as páginas (memorial, laudo, ART, planta, CT de outro processo). Até 3 PDFs e 24 MB por mensagem. Na janela de um processo, uma cópia fica na pasta dele ("anexo <nome>.pdf"), para o Claude reler depois sem você anexar de novo.
+
 ## 2.8.15
 
 - **Mais espaço na tela, pensado para o Full HD do serviço.** A barra de baixo (versão, Detalhes, última mensagem e uso) subiu para a barra de cima, e a barra de cima ficou mais baixa. A caixa da conversa divide a altura com os botões, em vez de deixar um vazio em cima deles. Títulos das colunas e a faixa do processo ficaram mais baixos, e os cards da CIA ficaram mais compactos: "✓ salvo" e a contagem de caracteres foram para a linha de cima de cada card. No celular o rodapé continua embaixo.

@@ -470,6 +470,15 @@ def main():
              "<conversa_anterior>" in ant and ant.index("[Analista") < ant.index("[Claude") and "resposta" in ant
              and "não grava" not in ant and "só o final" in curto and "[Analista" not in curto
              and a2._conversa_anterior("A2") == "", ant + curto[:300])
+    # 2.8.14: PDF na conversa vai como documento e fica cópia na pasta (o mesmo PDF não duplica)
+    import chat as _chat
+    _pdfb = base64.b64encode(b"%PDF-1.4 teste").decode()
+    _it = _chat.imagens([{"url": "data:application/pdf;base64," + _pdfb, "nome": "Laudo: final.pdf"}])
+    with tempfile.TemporaryDirectory() as d:
+        c1 = _api.Api._guardar_pdfs(d, _it); c2 = _api.Api._guardar_pdfs(d, _it)
+        caso("app: PDF na conversa vai como documento e a cópia na pasta não duplica (2.8.14)",
+             _chat.bloco(_it[0])["type"] == "document" and _it[0]["nome"] == "Laudo_ final.pdf" and c1 == c2
+             and os.listdir(d) == ["anexo Laudo_ final.pdf"], str((_it[0]["nome"], c1, c2, os.listdir(d))))
     # 11b3a. print do memorial (2.6.4): norma do dimensionamento, inviabilidade, laudo, notificação e o que verificar
     import memorial_sol as _ms
     api_f = {"numero": "A00012345AA001", "tipo": "PPCI",

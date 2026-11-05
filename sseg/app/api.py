@@ -1314,8 +1314,10 @@ class Api:
         imgs = chat.imagens(imagens)
         if not texto and not imgs:
             return
+        pdfs = [i for i in imgs if i["tipo"] == "application/pdf"]
         if not texto:
-            texto = "Veja o print." if len(imgs) == 1 else "Veja os prints."
+            texto = ("Veja o PDF." if len(pdfs) == 1 else "Veja os PDFs.") if pdfs and len(pdfs) == len(imgs) else (
+                "Veja o print." if len(imgs) == 1 else "Veja os anexos.")
         c = self._conversas.get(chave)
         if c is None:
             claude = self._claude or instalar.localizar().get("claude")
@@ -1352,11 +1354,40 @@ class Api:
             # e continuar de outro PC do ponto em que parou
             c.contexto = (self._contexto_pasta(pasta) + self._conversa_anterior(chave)
                           if pasta and not (sessao and chat._sessao_existe(sessao)) else "")
-        ev = {"t": "eu", "texto": texto, "de": de, "minis": [i["mini"] for i in imgs]}
+        ev = {"t": "eu", "texto": texto, "de": de, "minis": [i["mini"] for i in imgs if i["tipo"] != "application/pdf"]}
+        if pdfs:
+            ev["pdfs"] = [i["nome"] for i in pdfs]
         self._guardar(chave, ev)
         self._emitir("chat", chave, ev)
         extra, c.contexto = getattr(c, "contexto", ""), ""
+        copias = self._guardar_pdfs(None if chave.startswith("fluxo:") else self._pasta_proc(chave), pdfs)
+        if copias:  # 2.8.14: a cópia fica na pasta do processo, para o Claude reler depois (e numa conversa retomada)
+            extra = "\n\n(PDF anexado nesta mensagem; cópia na pasta do processo: %s)" % "; ".join(copias) + extra
         c.enviar(texto + extra, imgs)
+
+    @staticmethod
+    def _guardar_pdfs(pasta, pdfs):
+        """PDF anexado na conversa: cópia em <pasta>/anexo <nome>.pdf (o mesmo PDF de novo não duplica). Devolve os
+        caminhos gravados."""
+        feitos = []
+        for i in pdfs if pasta and os.path.isdir(pasta) else []:
+            nome = i["nome"] if i["nome"].lower().endswith(".pdf") else i["nome"] + ".pdf"
+            dados = base64.b64decode(i["dados"])
+            alvo, n = os.path.join(pasta, "anexo " + nome), 1
+            while os.path.exists(alvo):
+                with open(alvo, "rb") as fh:
+                    if fh.read() == dados:
+                        break
+                n += 1
+                alvo = os.path.join(pasta, "anexo %s (%d).pdf" % (nome[:-4], n))
+            else:
+                try:
+                    with open(alvo, "wb") as fh:
+                        fh.write(dados)
+                except OSError:
+                    continue
+            feitos.append(alvo)
+        return feitos
 
     def _contexto_pasta(self, pasta):
         """2.6.1: a conversa NOVA de um processo já recebe o `sseg.py resumo` junto da 1ª mensagem (o analista não vê).

@@ -367,6 +367,7 @@ a.norma-link.aviso-versao { text-decoration-color: #c78a00; text-decoration-styl
 .msg .prints { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 5px; }
 .msg .prints img { cursor: zoom-in; }
 .msg .prints:last-child { margin-bottom: 0; }
+.entrada .anexos .pdf, .msg .prints .pdf { height: 64px; max-width: 200px; padding: 6px 10px; box-sizing: border-box; display: flex; align-items: center; gap: 6px; border: 1px solid var(--linha); border-radius: 5px; font-size: 12px; overflow-wrap: anywhere; overflow: hidden; }
 /* alças de altura (2.3.1): a do chat fica em cima (a caixa cresce para cima); a da CIA, embaixo do item */
 .puxa { touch-action: none; user-select: none; cursor: ns-resize; }
 .puxa::after { content: ""; display: block; width: 38px; height: 4px; border-radius: 2px; background: var(--linha); margin: 0 auto; }
@@ -918,7 +919,7 @@ footer { color: var(--suave); }
         <div class="coluna" data-col="chat">
           <h2>Conversa <span class="sub" style="margin:0;text-transform:none;letter-spacing:0;font-weight:400" id="pr-modelo"></span></h2>
           <div class="slot" id="pr-slot"></div>
-          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print (também dá para colar com Ctrl+V ou arrastar a imagem para o campo)">🖼</button><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
+          <form class="entrada" id="pr-form"><textarea id="pr-msg" rows="2" placeholder="Peça ao Claude (ex.: roda o check) — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print ou PDF (também dá para colar com Ctrl+V ou arrastar o arquivo para o campo)">📎</button><button type="button" class="bt mic" data-campo="pr-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
         </div>
         <div class="col-borda" data-borda="1" title="Arraste para mudar a largura das colunas (duplo clique volta ao padrão)"></div>
         <div class="coluna" data-col="check">
@@ -942,7 +943,7 @@ footer { color: var(--suave); }
       </div>
       <div class="coluna conversa-unica">
         <div class="slot" id="cv-slot"></div>
-        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="2" placeholder="Escreva ao Claude — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print (também dá para colar com Ctrl+V ou arrastar a imagem para o campo)">🖼</button><button type="button" class="bt mic" data-campo="cv-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
+        <form class="entrada" id="cv-form"><textarea id="cv-msg" rows="2" placeholder="Escreva ao Claude — Enter envia · Shift+Enter quebra a linha"></textarea><button type="button" class="bt anexar" title="Anexar print ou PDF (também dá para colar com Ctrl+V ou arrastar o arquivo para o campo)">📎</button><button type="button" class="bt mic" data-campo="cv-msg" title="Falar (o texto aparece no campo; confira e envie)" hidden>🎤</button><button class="bt p">Enviar</button></form>
       </div>
     </section>
     <section class="tela" id="t-busca">
@@ -3843,11 +3844,12 @@ function trabalhando(ctx, on) {
   if (!on) return ctx.trab.replaceChildren();
   ctx.trab.replaceChildren(caranguejo(ctx.fluxo.modelo, ctx.fluxo.esforco, "Claude · " + nomeModelo(ctx.fluxo.modelo) + " · conversando"), el("span", { class: "trab-txt" }, "Claude trabalhando…"));
 }
-// Mensagem do analista; imgs = prints anexados ({url, mini}). Na tela que mandou, clicar abre o print inteiro.
+// Mensagem do analista; imgs = prints anexados ({url, mini}) e PDFs ({nome, pdf: true}). Clicar no print abre inteiro.
+const chipPdf = nome => el("div", { class: "pdf", title: nome }, "📄 " + nome);
 function msgEu(texto, imgs) {
-  const minis = (imgs || []).filter(i => i && (i.mini || i.url));
+  const minis = (imgs || []).filter(i => i && (i.pdf || i.mini || i.url));
   return el("div", { class: "msg eu" },
-    minis.length ? el("div", { class: "prints" }, ...minis.map(i => el("img", { src: i.mini || i.url, alt: "print",
+    minis.length ? el("div", { class: "prints" }, ...minis.map(i => i.pdf ? chipPdf(i.nome) : el("img", { src: i.mini || i.url, alt: "print",
       on: { click: () => modal("Print", "", el("img", { src: i.url || i.mini, style: "max-width:100%;max-height:70vh;display:block;margin:auto" }), [["Fechar", fechar, true]]) } }))) : null,
     texto);
 }
@@ -3877,28 +3879,42 @@ function ligarForm(form, campo, ctxAtual) {
   // prints (2.8.5): Ctrl+V no campo, arrastar para o campo ou o botão 🖼 (no celular abre as fotos)
   const imgs = [], bandeja = el("div", { class: "anexos" });
   $(form).prepend(bandeja);
-  const pintar = () => bandeja.replaceChildren(...imgs.map((i, n) => el("div", {}, el("img", { src: i.mini, alt: "print" }),
-    el("button", { type: "button", title: "Tirar este print", on: { click: () => { imgs.splice(n, 1); pintar(); } } }, "×"))));
+  const pintar = () => bandeja.replaceChildren(...imgs.map((i, n) => el("div", {}, i.pdf ? chipPdf(i.nome) : el("img", { src: i.mini, alt: "print" }),
+    el("button", { type: "button", title: i.pdf ? "Tirar este PDF" : "Tirar este print", on: { click: () => { imgs.splice(n, 1); pintar(); } } }, "×"))));
+  // 2.8.14: PDF também (memorial, laudo, ART, planta): vai ao Claude como documento; até 3 e 24 MB por mensagem
+  const ehPdf = f => f.type === "application/pdf" || /\.pdf$/i.test(f.name || "");
+  const lerPdf = f => new Promise((ok, erro) => { const r = new FileReader();
+    r.onload = () => ok({ url: "data:application/pdf;base64," + String(r.result).split(",")[1], nome: f.name || "anexo.pdf", pdf: true, tam: f.size });
+    r.onerror = () => erro(r.error); r.readAsDataURL(f); });
   const juntar = async arqs => {
-    for (const f of [...arqs].filter(f => f && f.type.startsWith("image/"))) {
-      if (imgs.length >= 8) { SSEG.log(["No máximo 8 prints por mensagem."]); break; }
+    for (const f of [...arqs].filter(f => f && (f.type.startsWith("image/") || ehPdf(f)))) {
+      if (ehPdf(f)) {
+        const ja = imgs.filter(i => i.pdf);
+        if (ja.length >= 3) { SSEG.log(["No máximo 3 PDFs por mensagem."]); continue; }
+        if (ja.reduce((t, i) => t + i.tam, 0) + f.size > 24 * 1024 * 1024) { SSEG.log(["PDF grande demais: até 24 MB por mensagem (somados). " + f.name]); continue; }
+        try { imgs.push(await lerPdf(f)); pintar(); } catch (e) { SSEG.log(["Não consegui ler o PDF: " + (e.message || e)]); }
+        continue;
+      }
+      if (imgs.filter(i => !i.pdf).length >= 8) { SSEG.log(["No máximo 8 prints por mensagem."]); continue; }
       try { imgs.push(await prepararPrint(f)); pintar(); } catch (e) { SSEG.log(["Não consegui ler a imagem: " + (e.message || e)]); }
     }
   };
   ta.addEventListener("paste", ev => {
-    const arqs = [...(ev.clipboardData || {}).items || []].filter(i => i.kind === "file").map(i => i.getAsFile()).filter(f => f && f.type.startsWith("image/"));
+    const arqs = [...(ev.clipboardData || {}).items || []].filter(i => i.kind === "file").map(i => i.getAsFile()).filter(f => f && (f.type.startsWith("image/") || ehPdf(f)));
     if (arqs.length) { ev.preventDefault(); juntar(arqs); }  // texto colado segue normal
   });
   const fm = $(form);
   fm.addEventListener("dragover", ev => { if ([...ev.dataTransfer.types].includes("Files")) { ev.preventDefault(); fm.classList.add("solta"); } });
   fm.addEventListener("dragleave", () => fm.classList.remove("solta"));
   fm.addEventListener("drop", ev => { if (!ev.dataTransfer.files.length) return; ev.preventDefault(); fm.classList.remove("solta"); juntar(ev.dataTransfer.files); });
-  const escolher = el("input", { type: "file", accept: "image/*", multiple: true, hidden: true });
+  const escolher = el("input", { type: "file", accept: "image/*,application/pdf,.pdf", multiple: true, hidden: true });
   escolher.onchange = () => { juntar(escolher.files); escolher.value = ""; };
   fm.append(escolher);
   fm.querySelector(".bt.anexar").onclick = () => escolher.click();
   $(form).onsubmit = ev => { ev.preventDefault(); pararVoz(); const t = ta.value.trim(); if (!t && !imgs.length) return;
-    const vai = imgs.splice(0); pintar(); ta.value = ""; aj(); chatEnviar(ctxAtual(), t || (vai.length > 1 ? "Veja os prints." : "Veja o print."), vai); };
+    const vai = imgs.splice(0); pintar(); ta.value = ""; aj();
+    const soPdf = vai.every(i => i.pdf);
+    chatEnviar(ctxAtual(), t || (soPdf ? (vai.length > 1 ? "Veja os PDFs." : "Veja o PDF.") : vai.length > 1 ? "Veja os anexos." : "Veja o print."), vai); };
   // 2.8.5: Enter envia e Shift+Enter quebra a linha, como no Claude Code (pedido do Átila). No celular o teclado não tem
   // Shift+Enter: lá Enter segue quebrando a linha e quem envia é o botão (Ctrl+Enter continua valendo nos dois).
   $(campo).addEventListener("keydown", ev => {
@@ -4118,7 +4134,7 @@ SSEG.chat = (chave, ev) => {
   const doProcesso = chave === PR.codigo && !ctx.replay;
   if (ev.t === "eu") {  // mensagem mandada pela outra tela
     if (ev.de === CLIENTE) return;
-    chatAdd(ctx, msgEu(ev.texto, (ev.minis || []).map(m => ({ mini: m })))); ctx.ativ = null; trabalhando(ctx, true);
+    chatAdd(ctx, msgEu(ev.texto, [...(ev.minis || []).map(m => ({ mini: m })), ...(ev.pdfs || []).map(n => ({ nome: n, pdf: true }))])); ctx.ativ = null; trabalhando(ctx, true);
   }
   else if (ev.t === "texto") { ctx.ativ = null; chatAdd(ctx, el("div", { class: "msg claude" }, resposta(ev.texto, ctx))); }
   else if (ev.t === "ferramenta") {

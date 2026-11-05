@@ -18,6 +18,7 @@ Cada linha do stream vira um evento simples para a tela (aoevento(dict)):
 
 import json
 import os
+import re
 import subprocess
 import threading
 import time
@@ -30,23 +31,45 @@ NOVA_JANELA_NAO = 0x08000000 if os.name == "nt" else 0
 IMG_TIPOS = ("image/png", "image/jpeg", "image/webp", "image/gif")
 IMG_MAX = 5 * 1024 * 1024  # limite da API por imagem (bytes da imagem, não do base64)
 IMG_QTD = 8
+PDF_QTD = 3
+PDF_MAX = 24 * 1024 * 1024  # a API aceita até 32 MB por pedido; sobra para o resto da mensagem
 
 
 def imagens(lista):
     """Prints colados na conversa (2.8.5): data URLs da tela -> [{tipo, dados (base64), mini}]. A tela já reduz a
-    imagem para no máximo 2000 px; aqui só confere tipo, tamanho e quantidade."""
-    saida = []
-    for it in (lista or [])[:IMG_QTD]:
+    imagem para no máximo 2000 px; aqui só confere tipo, tamanho e quantidade. 2.8.14: também PDF ({url, nome}),
+    que vai ao Claude como documento (ele lê o texto e vê as páginas)."""
+    saida, pdf_total = [], 0
+    for it in (lista or [])[:IMG_QTD + PDF_QTD]:
         url = (it or {}).get("url") or ""
         cab, _, dados = url.partition(",")
         tipo = cab[5:].split(";")[0] if cab.startswith("data:") and cab.endswith(";base64") else ""
+        if tipo == "application/pdf" and dados:
+            pdf_total += len(dados) * 3 // 4
+            if sum(1 for x in saida if x["tipo"] == tipo) >= PDF_QTD:
+                raise RuntimeError("No máximo %d PDFs por mensagem." % PDF_QTD)
+            if pdf_total > PDF_MAX:
+                raise RuntimeError("PDF grande demais: até %d MB por mensagem (somados)." % (PDF_MAX // 1024 // 1024))
+            nome = re.sub(r"[\\/:*?\"<>|\r\n]+", "_", (it.get("nome") or "anexo.pdf"))[:120]
+            saida.append({"tipo": tipo, "dados": dados, "mini": "", "nome": nome})
+            continue
         if tipo not in IMG_TIPOS or not dados:
-            raise RuntimeError("Imagem não aceita (use PNG, JPG, WebP ou GIF).")
+            raise RuntimeError("Arquivo não aceito (use PDF, ou imagem PNG, JPG, WebP ou GIF).")
         if len(dados) * 3 // 4 > IMG_MAX:
             raise RuntimeError("Print grande demais (mais de 5 MB mesmo reduzido).")
+        if sum(1 for x in saida if x["tipo"] != "application/pdf") >= IMG_QTD:
+            continue
         mini = (it.get("mini") or "")
         saida.append({"tipo": tipo, "dados": dados, "mini": mini if mini.startswith("data:image/") and len(mini) < 60000 else ""})
     return saida
+
+
+def bloco(i):
+    """Bloco da mensagem para o Claude: imagem ou documento PDF."""
+    if i["tipo"] == "application/pdf":
+        return {"type": "document", "title": i.get("nome") or "anexo.pdf",
+                "source": {"type": "base64", "media_type": "application/pdf", "data": i["dados"]}}
+    return {"type": "image", "source": {"type": "base64", "media_type": i["tipo"], "data": i["dados"]}}
 
 
 def _sessao_existe(sessao):
@@ -247,9 +270,8 @@ class Conversa:
                 self._subir()
             self.ocupado = True
             conteudo = texto
-            if imgs:  # 2.8.5: prints vão como blocos de imagem da própria mensagem (o Claude vê a imagem)
-                conteudo = [{"type": "image", "source": {"type": "base64", "media_type": i["tipo"], "data": i["dados"]}}
-                            for i in imgs] + [{"type": "text", "text": texto}]
+            if imgs:  # 2.8.5: prints vão como blocos de imagem da própria mensagem (o Claude vê a imagem); 2.8.14: e PDF
+                conteudo = [bloco(i) for i in imgs] + [{"type": "text", "text": texto}]
             msg = {"type": "user", "message": {"role": "user", "content": conteudo}}
             self.proc.stdin.write(json.dumps(msg, ensure_ascii=False) + "\n")
             self.proc.stdin.flush()
