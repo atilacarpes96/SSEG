@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.14
+
+- **O 🎤 não abre mais a barra de voz do Windows.** Quando o microfone não conseguia gravar ou o PC estava sem servidor, o programa abria a digitação por voz do Windows, que ficava parada na frente da tela e não escrevia no campo. Agora o 🎤 só avisa no registro o que falta (servidor ou permissão do microfone). Gravar e transcrever pelo servidor continua igual.
+
 ## 2.8.13
 
 - **Dá para parar e continuar a conversa do processo depois, em qualquer PC.** No mesmo PC já era assim: fechar o processo ou o programa e abrir de novo traz a conversa na tela e o Claude lembra (2.8.11). Agora também em outro PC: a conversa salva (`conversa.jsonl`) vem pelo servidor, aparece na janela e o Claude recebe o que foi conversado antes junto da primeira mensagem, para continuar a pendência de onde parou. Os prints não vão junto, só o texto. Se a conversa continuou nos dois PCs antes de sincronizar, a sincronização junta as mensagens dos dois lados pela hora.

@@ -3879,20 +3879,21 @@ function pararVoz() { const r = VOZ.rec; VOZ.rec = null; if (r) try { r.stop(); 
 // digitação por voz do Windows (Win+H), que escreve no campo com o foco. No celular segue o reconhecimento do Safari.
 // 2.8.10 (relato do Átila, 04/11/2026): o Win+H abre o painel do Windows, mas o texto não entra no campo da janela. Com
 // servidor, o 🎤 grava aqui (clique = começa, clique de novo = para) e o servidor transcreve (Whisper, ditado.py).
-// Sem servidor ou sem microfone liberado, volta ao Win+H.
+// 2.8.14 (relato do Átila, 04/11/2026): a reserva do Win+H deixava a barra de voz do Windows parada na frente da tela
+// sem escrever nada. Saiu: sem servidor ou sem microfone liberado, o 🎤 só avisa no registro o que falta.
 const GRAV = { rec: null, bt: null, partes: [], stream: null, timer: null };
 let SRV_DITADO = null;  // o servidor está configurado neste PC? (perguntado no 1º clique)
 async function gravarOuParar(bt) {
   const campo = $("#" + bt.dataset.campo);
   if (GRAV.rec) { GRAV.rec.stop(); return; }
   if (SRV_DITADO === null) { try { SRV_DITADO = !!(await api("estado_servidor")).configurado; } catch (e) { SRV_DITADO = false; } }
-  const winH = () => { const fim = campo.value.length; campo.focus(); campo.setSelectionRange(fim, fim); return api("ditado_windows", [], bt).catch(() => {}); };
-  if (!SRV_DITADO || !navigator.mediaDevices || !window.MediaRecorder) return winH();
+  if (!SRV_DITADO) return SSEG.log(["✗ microfone: este PC não tem servidor configurado, e é ele que transcreve (Configuração → Servidor)."]);
+  if (!navigator.mediaDevices || !window.MediaRecorder) return SSEG.log(["✗ microfone: esta janela não consegue gravar áudio."]);
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
   catch (e) {
-    SSEG.log(["✗ microfone: " + (e.name === "NotAllowedError" ? "o programa não recebeu permissão para o microfone (Windows: Configurações → Privacidade → Microfone → apps da área de trabalho). Abrindo a digitação por voz do Windows." : e.message)]);
-    return winH();
+    SSEG.log(["✗ microfone: " + (e.name === "NotAllowedError" ? "o programa não recebeu permissão para o microfone (Windows: Configurações → Privacidade → Microfone → apps da área de trabalho)." : e.message)]);
+    return;
   }
   const tipo = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "";
   const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : {});
