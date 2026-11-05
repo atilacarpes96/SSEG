@@ -29,6 +29,15 @@ reunião de CT ou o texto de um recurso e pede o despacho.
    vazio ("robusto", "abrangente", "fundamental"), sem "vale ressaltar", "é importante destacar",
    "cabe salientar". Na dúvida, aplicar a skill `no-ai-slop` só para apontar os padrões.
 
+## Onde o documento é editado (regra do Átila, 05/11/2026)
+
+Sempre que for deixar ou mexer em algum documento de CT ou recurso: pegar o documento da tabela do
+Drive, baixar para o servidor e editar **no servidor, dentro da pasta do processo**
+(`~/SSEG/sseg/processos/<código>/`). **Nada se mexe na tabela:** nela só leitura e download, sem
+editar célula, marcar "Finalizado" ou preencher coluna, nem pela API nem pelo Chrome. O que precisar
+mudar na tabela o analista faz; a IA só avisa. Tabela alterada sem aviso já passou muito tempo sem
+ninguém ver.
+
 ## Antes de redigir: o que precisa estar na mão
 
 - **CT:** o que foi perguntado, o que foi respondido em cada ponto e o encaminhamento combinado.
@@ -73,6 +82,7 @@ não transcrever a norma.
 
 ## Nunca
 
+- Mexer nas tabelas do Drive (CT, recursos e FACTs): nelas só leitura e download.
 - Passar de 2.000 caracteres, nem cortar fundamento para caber.
 - Acrescentar ponto que não foi tratado na reunião ou alegado no recurso.
 - Decidir o recurso pelo analista.

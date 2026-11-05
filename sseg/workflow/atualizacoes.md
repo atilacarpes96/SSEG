@@ -12,6 +12,16 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 05/11/2026 — CT e recurso: documento editado no servidor, tabela só leitura
+
+- **Skills `ppci-minuta-despacho` e `ppci-abertura-sessao`:** documento de CT ou recurso a deixar ou mexer sai da tabela do Drive, vai para o servidor e é editado lá, na pasta do processo (`~/SSEG/sseg/processos/<código>/`). Nas tabelas de CT e de recursos e FACTs a IA só lê e baixa: não edita célula, não marca "Finalizado" e não preenche coluna, nem pela API nem pelo Chrome. O que precisar mudar na tabela o analista faz.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 05/11/2026. Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell). Depois rode a skill sseg-sincronizar-skills no sentido repositório → conta: devem aparecer como diferentes ppci-minuta-despacho e ppci-abertura-sessao. No fim, me diga o que ficou feito e o que depende de mim.
+```
+
 ## 03/11/2026 — Normas: IT 25/2025 Parte 4 (CBPMESP) e RT 15 Parte 01/2023 incorporadas; SSEG.exe 2.8.4 a 2.8.8
 
 - **IT 25/2025, Parte 4 — Armazenamento fracionado de líquidos igníferos** em `normas/pdf/IT25P4.pdf`, com conversão verificada (`normas/base/`, `normas/md/`) e transcrição comentada em `normas/it-25-2025-parte4-armazenamento-fracionado.md`. Vale no RS pela RT 01/2024, item 4.5.1; em vigor no CBMRS desde 01/07/2025. Índices atualizados (`00-indice-normativo.md`, `indice_normas.json` — "IT 25" passa a ser norma aceita para espuma e resfriamento no campo 4 —, `pasta-normas-local.md`).

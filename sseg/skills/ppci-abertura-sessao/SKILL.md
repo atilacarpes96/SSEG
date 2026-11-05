@@ -106,6 +106,10 @@ confirmação** — a rotina é só preparar o ambiente, não altera nada no pro
 - Abrir o projeto pela **Consulta licenciamentos** (caminho na skill `sol-cbmrs-navegador`).
   A CT em si fica em **Consulta FACT** (`#/fact`); "Análise do FACT" e os demais itens de
   FACT dão "sem autorização" no perfil do Átila.
+- **A tabela é só leitura** (regra do Átila, 05/11/2026): vale para a de CT e para a de recursos e
+  FACTs. Documento de CT ou recurso a deixar ou mexer vai da tabela do Drive para o servidor e é
+  editado lá, na pasta do processo (`~/SSEG/sseg/processos/<código>/`); detalhes em
+  `ppci-minuta-despacho`. O que precisar mudar na tabela o analista faz.
 - Registrado em 03/10/2026.
 
 ## Depois do login
