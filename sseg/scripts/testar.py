@@ -540,6 +540,11 @@ def main():
          [(_sl.achar(car_a, n) or {}).get("tipo") for n in ("Característica - Ocupação: Depósitos de mercadorias", "Características gerais",
           "Característica - Tipo de edificação", "Característica - Isolamento de risco", "Ocupação J-4")]
          == ["GERAL", "GERAL", "TIPO_EDIFICACAO", "ISOLAMENTO_RISCO", "OCUPACAO"])
+    rt_a = {"licenciamento": {"envolvidos": {"rts": [{"id": 3, "nome": "Fulano de Tal"}]}, "caracteristica": {"id": 5, "ocupacoes": []},
+            "elemGraficos": [], "especsRiscos": [], "especSeguranca": {"medidas": []}}}
+    caso("Lançar no SOL: 'ART/RRT' e 'Responsável Técnico' da coluna CIA vão ao item 'RT: <nome>' (09/11/2026)",
+         [(_sl.achar(rt_a, n) or {}).get("tipo") for n in ("ART/RRT", "ART", "RRT de execução", "Responsável Técnico", "Artigo 5")]
+         == ["RT", "RT", "RT", "RT", None])
     med_a = {"licenciamento": {"envolvidos": {}, "caracteristica": {"id": 5, "ocupacoes": []}, "elemGraficos": [], "especsRiscos": [],
              "especSeguranca": {"id": 9, "medidas": [{"id": 1, "tipo": {"nome": "Sinalização de Emergência"}, "resultado": None}]}}}
     caso("Lançar no SOL: 'Geral' vai à Característica geral; medida fora do campo 4 vai a 'Adicionar correções' (30/10/2026)",

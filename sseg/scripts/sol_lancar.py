@@ -120,7 +120,11 @@ def achar(analise, nome):
     if not iguais:
         # "Responsável Técnico" na coluna CIA × "RT: LUIZ ..." no SOL: o nome do item muda com o nome da pessoa (relato do
         # Átila, 03/11/2026: tinha de escolher à mão). Uma pessoa só desse tipo = ela; mais de uma = a que o texto nomeia.
-        tipo = ("RT" if k.startswith(("responsavel tecnico", "responsaveis tecnicos", "rt ")) or k == "rt" else
+        # "ART/RRT" (medida da coluna CIA quando a exigência é a ART ou o RRT do RT) também é o item do RT (09/11/2026)
+        pal = k.split()
+        tipo = ("RT" if k.startswith(("responsavel tecnico", "responsaveis tecnicos", "rt ", "anotacao de responsabilidade",
+                                      "registro de responsabilidade")) or k == "rt" or (pal and pal[0] in ("art", "arts", "rrt", "rrts"))
+                else
                 "RU" if k.startswith(("responsavel pelo uso", "responsaveis pelo uso", "ru ")) or k == "ru" else
                 "PROPRIETARIO" if k.startswith("proprietario") else None)
         if tipo:
