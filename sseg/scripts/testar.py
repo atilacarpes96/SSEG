@@ -45,6 +45,13 @@ def main():
             caso(f"compila {os.path.basename(f)}", False, str(e))
         else:
             caso("compila", True)
+    # 10/11/2026: 2.8.17 e 2.8.18 barradas no build porque só o VERSION subiu — o commit não sai mais assim
+    _app = os.path.join(RAIZ, "sseg", "app")
+    _v = open(os.path.join(_app, "VERSION"), encoding="utf-8").read().strip()
+    _src = open(os.path.join(_app, "sseg_app.py"), encoding="utf-8").read()
+    _nov = open(os.path.join(_app, "NOVIDADES.md"), encoding="utf-8").read()
+    caso("SSEG.exe: VERSION igual à VERSAO do sseg_app.py e com seção em NOVIDADES.md",
+         f'VERSAO = "{_v}"' in _src and f"\n## {_v}\n" in _nov, _v)
     # 2. recortes x fonte
     rc, out = rodar([os.path.join(AQUI, "gerar_recortes.py"), "--conferir"])
     caso("recortes de tabela iguais à fonte", rc == 0, out[-300:])
