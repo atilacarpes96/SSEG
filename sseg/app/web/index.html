@@ -3193,6 +3193,7 @@ const BLOCOS = {
     const processo = ctx && /^A\d{8}/.test(ctx.chave);
     const itens = d.itens || [], ok = itens.filter(x => x.veredito === "ok"), resto = itens.filter(x => x.veredito !== "ok");
     const atual = id => ((PR.reg && PR.codigo === (ctx && ctx.chave) && PR.reg.exigencias) || []).find(e => e.id === id);
+    if (d.fase === "perguntas" && processo && resto.length) return revisaoPerguntas(d, ctx, ok, resto, atual);
     const cartao = x => {
       const ex = atual(x.id), estado = el("span", { class: "discreto", style: "margin-left:auto" });
       const conta = el("span", { class: "discreto" }, (x.sugestao || "").length + " / 2000");
@@ -3214,13 +3215,16 @@ const BLOCOS = {
         const t = pedido.value.trim();
         if (!t) return avisar("Escreva o que quer mudar ou explicar.", true);
         const prop = edita ? edita.value.trim() : (x.sugestao || "");
-        chatEnviar(ctx, "Revisão final, ajuste na exigência " + x.id + (x.medida || (ex && ex.medida) ? " (" + (x.medida || ex.medida) + ")" : "") + ".\n\n" +
+        // 10/11/2026 (pedido do Átila): a correção é do modelo mais forte — o ajuste também vai ao corretor-cia
+        chatEnviar(ctx, "Revisão final, ajuste na exigência " + x.id + (x.medida || (ex && ex.medida) ? " (" + (x.medida || ex.medida) + ")" : "") + ". " +
+          "Chame o subagente corretor-cia (Agent, subagent_type \"corretor-cia\", run_in_background: false) com o código " + PR.codigo +
+          ", a pasta do processo e o texto abaixo, sem resumir nem acrescentar conclusão sua:\n\n" +
           "Pedido do analista: " + t + "\n\n" +
+          (x.problema ? "Problema apontado na revisão: " + x.problema + "\n\n" : "") +
           (prop ? "Texto proposto na revisão" + (edita ? " (já editado pelo analista)" : "") + ":\n" + prop + "\n\n" : "") +
           (ex && (ex.final || ex.rascunho) ? "Texto salvo hoje na coluna CIA:\n" + (ex.final || ex.rascunho) + "\n\n" : "") +
-          "Refaça a proposta atendendo o pedido. Se o pedido contrariar a norma ou tirar um fundamento necessário, diga isso no \"problema\" e explique; " +
-          "item novo citado tem de ser conferido no PDF antes. Responda com UM bloco sseg-revisao só com esta exigência (mesmo id, veredito corrigir, ou ok se ficar como está), " +
-          "com problema, fundamento e a sugestão com o texto INTEIRO novo, no formato da caixa do SOL. Não grave nada: o analista decide com Aplicar ou Ignorar.");
+          "Quando ele voltar, responda com UM bloco sseg-revisao só com esta exigência (mesmo id, veredito corrigir, ou ok se ficar como está), " +
+          "com o problema, o fundamento e a sugestão com o texto INTEIRO que ele escreveu. Não grave nada: o analista decide com Aplicar ou Ignorar.");
         pedido.value = ""; autoAltura(pedido);
       };
       if (pedido) {
@@ -3545,6 +3549,72 @@ function vistaCIA(k) {
   try { localStorage.setItem("sseg-cia-vista", JSON.stringify(CIA_VISTA)); } catch (e) {}
   pintarCIA();
 }
+// Revisão final em duas fases (2.8.18, pedido do Átila): o revisor aponta, o analista responde cada ponto neste quadro
+// (como o "Conferir na planta") e só então o subagente corretor-cia — o modelo mais forte — escreve o texto novo, que
+// volta no cartão de sempre com Aplicar / Ignorar. "Manter" registra como ignorada, sem passar pelo Claude.
+function revisaoPerguntas(d, ctx, ok, resto, atual) {
+  const resp = resto.map(() => ""), extra = resto.map(() => "");
+  let enviado = false;
+  const obs = el("input", { type: "text", placeholder: "observação geral para a correção (opcional)", style: "width:100%;margin-top:4px" });
+  const valor = i => [resp[i], extra[i]].filter(Boolean).join(" — ");
+  const mandar = async () => {
+    const r = resto.map((x, i) => [x, resp[i], valor(i)]).filter(z => z[2]), o = obs.value.trim();
+    if (!r.length) return SSEG.log(["✗ Responda ao menos um item."]);
+    if (enviado) return;
+    enviado = true;
+    caixa.querySelectorAll("button,input").forEach(z => z.disabled = true);
+    const manter = r.filter(z => z[1] === "Manter"), corrigir = r.filter(z => z[1] !== "Manter");
+    for (const [x] of manter) await api("processo_aplicar_revisao", [ctx.chave, x.id, "", x.fundamento || "", true]).catch(() => {});
+    if (manter.length) recarregarRegistro();
+    const falta = resto.length - r.length;
+    if (!corrigir.length) return avisar("Revisão: " + manter.length + " mantida(s) como está" + (falta ? "; " + falta + " sem resposta" : "") + ". Nada foi ao Claude.");
+    const bloco = ([x, , v]) => {
+      const ex = atual(x.id), med = x.medida || (ex && ex.medida) || "";
+      return "### " + x.id + (med ? " · " + med : "") + " (" + x.veredito + ")\n" +
+        (x.problema ? "Problema apontado na revisão: " + x.problema + "\n" : "") +
+        (x.fundamento ? "Fundamento apontado: " + x.fundamento + "\n" : "") +
+        "Resposta do analista: " + v + "\n" +
+        (ex && (ex.final || ex.rascunho) ? "Texto salvo hoje na coluna CIA:\n" + (ex.final || ex.rascunho) + "\n" : "");
+    };
+    chatEnviar(ctx, "Respostas da revisão final: o analista respondeu cada ponto. Chame o subagente corretor-cia (Agent, subagent_type \"corretor-cia\", " +
+      "run_in_background: false, e espere ele terminar) com o código " + ctx.chave + ", a pasta do processo e o texto abaixo, sem resumir nem acrescentar conclusão sua.\n\n" +
+      corrigir.map(bloco).join("\n") +
+      (o ? "\nObservação geral do analista: " + o + "\n" : "") +
+      (manter.length ? "\nMantidas pelo analista, não mexer: " + manter.map(z => z[0].id).join(", ") + ".\n" : "") +
+      "\nQuando ele voltar, responda com UM bloco sseg-revisao (sem \"fase\") só com estas exigências pelo id: veredito corrigir (ou ok se ficar como está), " +
+      "o problema, o fundamento e a sugestão com o texto INTEIRO que ele escreveu, no formato da caixa do SOL. Não grave nada: o analista decide com Aplicar ou Ignorar.");
+  };
+  const linhas = resto.flatMap((x, i) => {
+    const ex = atual(x.id), med = x.medida || (ex && ex.medida) || "";
+    const comp = el("input", { type: "text", placeholder: "o que corrigir, o que manter, o que o RT já mostrou…", style: "width:100%;display:none" });
+    comp.addEventListener("input", () => { extra[i] = comp.value.trim(); });
+    comp.addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); mandar(); } });
+    const mais = el("button", { class: "bt link", type: "button", on: { click: () => { comp.style.display = ""; mais.remove(); comp.focus(); } } }, "+ escrever");
+    const bts = ["Corrigir", "Manter", "Outro…"].map(o => el("button", { class: "bt", type: "button",
+      title: o === "Manter" ? "Fica o texto atual (registra como ignorada)" : o === "Corrigir" ? "O corretor reescreve conforme o problema apontado" : "Escreva o que quer",
+      on: { click: ev => {
+        resp[i] = o === "Outro…" ? "Outro" : o;
+        bts.forEach(z => z.classList.toggle("p", z === ev.currentTarget));
+        if (o === "Outro…") { comp.style.display = ""; comp.placeholder = "o que você quer nesta exigência?"; mais.remove(); comp.focus(); }
+      } } }, o));
+    return [
+      el("label", {}, el("b", {}, (i + 1) + ". " + x.id + (med ? " · " + med : "")), " ",
+        el("span", { class: "tag sit " + (x.veredito === "corrigir" ? "k-vermelho" : "k-laranja") }, x.veredito === "corrigir" ? "corrigir" : "conferir")),
+      x.problema ? comNormas("div", { style: "margin:2px 0" }, x.problema) : null,
+      x.fundamento ? BLOCOS["sseg-norma"]({ rotulo: x.fundamento, consulta: "" }) : null,
+      ex && (ex.final || ex.rascunho) ? el("details", {}, el("summary", { class: "discreto" }, "texto atual"), comNormas("div", { class: "txt" }, ex.final || ex.rascunho)) : null,
+      el("div", { class: "linha-bts", style: "margin:2px 0;flex-wrap:wrap" }, ...bts, mais), comp];
+  }).filter(Boolean);
+  const caixa = el("div", { class: "perguntas" },
+    el("b", {}, "Revisão final: " + resto.length + " a decidir, " + ok.length + " sem problema "), el("span", { class: "discreto" }, "(responda cada ponto antes da correção)"),
+    ok.length ? el("div", { class: "discreto" }, "✓ " + ok.map(x => x.id).join(", ") + " conferem") : null,
+    ...linhas, obs,
+    (d.observacoes || []).length ? el("div", { class: "discreto", style: "margin-top:6px" }, "Observações: " + d.observacoes.join(" · ")) : null,
+    el("div", { class: "linha-bts", style: "margin-top:8px" },
+      el("button", { class: "bt p", on: { click: mandar } }, "Mandar para correção"),
+      el("span", { class: "discreto" }, "O texto novo é escrito pelo corretor-cia (Fable 5.2) e volta com Aplicar / Ignorar.")));
+  return caixa;
+}
 // itens do SOL que não são medida, para a exigência escolher (2.6.15): o campo 3 e o texto livre; as pranchas vêm do JSON
 const ITENS_SOL_FIXOS = ["Característica geral", "Tipo de edificação", "Demais inconformidades"];
 // seção 1 do SOL (10/11/2026): "RT: <nome>" para ART/RRT; RU/Proprietário só com procurador (procuração). Sem o JSON do SOL,
@@ -3673,9 +3743,9 @@ $("#pr-revisar").onclick = () => {
   chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Revisão final da CIA deste processo: chame o subagente revisor-cia (Agent, subagent_type \"revisor-cia\", run_in_background: false, e espere ele terminar) " +
     "passando só o código " + PR.codigo + " e a pasta do processo, para ele rodar `python sseg/scripts/sseg.py revisar-cia --pasta \"<pasta>\"` " +
     "e julgar as " + salvas + " exigência(s) salvas na coluna CIA, como manda a skill ppci-revisao-cia. Não passe a ele o seu raciocínio nem as suas conclusões. " +
-    "Quando ele voltar, responda com UM bloco sseg-revisao com todas as exigências pelo id (e1, e2…): veredito ok, corrigir ou conferir; " +
-    "em corrigir, o problema em uma frase, o fundamento e a sugestão com o texto INTEIRO novo, no formato da caixa do SOL. Não grave nada (nem rascunho): " +
-    "o analista decide em cada uma com Aplicar ou Ignorar. O que não é de uma exigência vai em \"observacoes\".");
+    "Quando ele voltar, responda com UM bloco sseg-revisao com \"fase\": \"perguntas\" e todas as exigências pelo id (e1, e2…): veredito ok, corrigir ou conferir; " +
+    "em corrigir e conferir, o \"problema\" em uma frase com o que mudar dito em palavras, e o \"fundamento\". SEM \"sugestao\": o texto novo só é escrito " +
+    "depois que o analista responder cada ponto, pelo subagente corretor-cia. Não grave nada (nem rascunho). O que não é de uma exigência vai em \"observacoes\".");
 };
 // Sem notificação, aprova tudo (2.6.16, pedido do Átila): rascunho não salvo não trava mais (só aparece no aviso) e o que
 // está Reprovado no SOL (sobra de outra análise ou de um lançamento desfeito) também vira Aprovado. Aprovado fica.

@@ -21,7 +21,9 @@
    "skill": "ppci-analise-processo",
    "subagentes": [
     "localizador-normas",
-    "sol-leitor"
+    "sol-leitor",
+    "revisor-cia",
+    "corretor-cia"
    ],
    "pede_codigo": true,
    "prompt": "Analisar o processo {codigo}. Siga a skill ppci-analise-processo.",
@@ -35,7 +37,8 @@
    "titulo": "Revisar CIA",
    "skill": "ppci-revisao-cia",
    "subagentes": [
-    "revisor-cia"
+    "revisor-cia",
+    "corretor-cia"
    ],
    "pede_codigo": true,
    "prompt": "Revisa a CIA do processo {codigo}.",

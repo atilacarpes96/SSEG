@@ -17,10 +17,13 @@ python sseg/scripts/sseg.py revisar-cia --pasta "<pasta do processo>"
 (uma caixa por medida, como o "lançar no SOL" junta; `pre-analise.json` dá protocolo e campo 4;
 `cia-ultima.txt` é a CIA anterior). O texto de cada exigência: `sseg.py analise --pasta "<pasta>" ver`.
 Ler arquivo com Read e norma com `sseg.py norma <rt> --busca`/`--pagina` (a janela barra `cat`, `|`
-e `python -c`). Entrega por exigência (id, veredito ok/corrigir/conferir, problema, fundamento e o
-texto inteiro sugerido); a conversa principal mostra num bloco `sseg-revisao` e **o analista decide
-em cada uma** com Aplicar (troca o texto final; o anterior fica guardado) ou Ignorar. Ninguém grava
-sem o clique. O resto desta skill vale igual.
+e `python -c`). Entrega por exigência (id, veredito ok/corrigir/conferir, problema com o que mudar
+dito em palavras, fundamento), **sem texto novo**. Desde 10/11/2026 são duas fases: a conversa principal
+mostra o que o revisor apontou num quadro (`sseg-revisao` com `"fase": "perguntas"`) e **o analista
+responde cada ponto** (Corrigir, Manter ou o que ele quer); com as respostas, o subagente `corretor-cia`
+(Fable 5.2, o modelo mais forte, pedido do Átila) escreve o texto inteiro novo, que volta no cartão de
+sempre com Aplicar (troca o texto final; o anterior fica guardado) ou Ignorar. "Pedir ajuste" num texto
+revisado também vai ao `corretor-cia`. Ninguém grava sem o clique. O resto desta skill vale igual.
 
 Fora do SSEG.exe, roda numa **conversa nova**, depois de "atualizar a pasta" no `ppci-analise-processo`. O motivo
 de existir é ler a CIA de fora, sem o raciocínio que a produziu: na mesma conversa o modelo

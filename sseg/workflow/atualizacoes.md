@@ -12,6 +12,18 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 10/11/2026 — Revisão final em duas etapas; correção no Fable 5.2 (SSEG.exe 2.8.17 e 2.8.18)
+
+- **Revisão final no SSEG.exe:** o `revisor-cia` só aponta o problema e o fundamento, sem escrever texto. O analista responde cada ponto num quadro (Corrigir, Manter ou o que ele quer), e o subagente novo **`corretor-cia`** (`.claude/agents/corretor-cia.md`, **Fable 5.2**) escreve o texto corrigido, que volta com Aplicar e Ignorar. "Pedir ajuste" também vai ao `corretor-cia`. Skill `ppci-revisao-cia`, `revisor-cia` e `politica-modelo-e-custo.md` atualizados.
+- **CIA em construção (2.8.17):** o seletor "medida" passa a oferecer "RT: <nome>" (ART/RRT) e RU ou Proprietário com procurador (procuração).
+- Se a conta não tiver o Fable 5.2, o `corretor-cia` não roda: trocar `model:` em `.claude/agents/corretor-cia.md` para `claude-opus-5-5`.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 10/11/2026. Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell). Depois rode a skill sseg-sincronizar-skills no sentido repositório → conta: deve aparecer como diferente ppci-revisao-cia. Confira também se a minha conta tem o modelo Fable 5.2 (claude-fable-5-2), usado pelo subagente corretor-cia; se não tiver, me avise. No fim, me diga o que ficou feito e o que depende de mim.
+```
+
 ## 05/11/2026 — CT e recurso: documento editado no servidor, tabela só leitura
 
 - **Skills `ppci-minuta-despacho` e `ppci-abertura-sessao`:** documento de CT ou recurso a deixar ou mexer sai da tabela do Drive, vai para o servidor e é editado lá, na pasta do processo (`~/SSEG/sseg/processos/<código>/`). Nas tabelas de CT e de recursos e FACTs a IA só lê e baixa: não edita célula, não marca "Finalizado" e não preenche coluna, nem pela API nem pelo Chrome. O que precisar mudar na tabela o analista faz.

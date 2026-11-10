@@ -190,9 +190,9 @@ FLUXOS = [
     # id, título, grupo da política, skill, subagentes, pede código?, prompt ({codigo} quando pede)
     ("abertura", "Começar o dia", "pesado", "ppci-abertura-sessao", ["sol-leitor"], False,
      "Vou começar a analisar PPCI. Siga a skill ppci-abertura-sessao."),
-    ("analise", "Analisar processo", "pesado", "ppci-analise-processo", ["localizador-normas", "sol-leitor"], True,
+    ("analise", "Analisar processo", "pesado", "ppci-analise-processo", ["localizador-normas", "sol-leitor", "revisor-cia", "corretor-cia"], True,
      "Analisar o processo {codigo}. Siga a skill ppci-analise-processo."),
-    ("revisao", "Revisar CIA", "pesado", "ppci-revisao-cia", ["revisor-cia"], True,
+    ("revisao", "Revisar CIA", "pesado", "ppci-revisao-cia", ["revisor-cia", "corretor-cia"], True,
      "Revisa a CIA do processo {codigo}."),
     ("minuta", "Minuta ou despacho", "pesado", "ppci-minuta-despacho", ["localizador-normas"], False,
      "Preciso de uma minuta (ata de consulta técnica ou despacho de recurso). Siga a skill ppci-minuta-despacho. "),

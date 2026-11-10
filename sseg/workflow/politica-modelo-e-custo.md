@@ -72,6 +72,10 @@ médio, que também é o modelo dos subagentes mecânicos (`localizador-normas`,
    o analista sobre um fundamento. O que pega erro é abrir o PDF, não o esforço. Esforço menor
    reduz o pensamento; texto mais curto se pede no prompt. Haiku 5.5 no máximo não compensa:
    15 vezes os tokens de saída do Sonnet alto e 4 minutos por tarefa.
+   **Exceção desde 10/11/2026 (decisão do Átila):** o texto corrigido na revisão final do SSEG.exe
+   sai do subagente `corretor-cia` em **Fable 5.2**, o modelo mais forte, depois que o analista
+   responde cada ponto do revisor. É o texto que vai ao RT; o custo fica contido porque ele só
+   reescreve as exigências que o analista mandou corrigir.
    *Histórico:* de 24 a 29/09/2026 o padrão foi Opus 5.5 médio, inclusive na revisão final; de
    30/09 a 05/10/2026, Sonnet 5.5 médio em toda conversa; até 07/10/2026, Haiku 4.5 nos
    subagentes e Sonnet 5.5 médio na pergunta rápida.

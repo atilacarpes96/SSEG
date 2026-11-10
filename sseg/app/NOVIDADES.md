@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.18
+
+- **Revisão final em duas etapas: você responde antes da correção.** O botão de revisão final mostra primeiro, num quadro amarelo como o "Conferir na planta", o que o revisor achou em cada exigência, com o fundamento e o texto atual. Em cada ponto você clica Corrigir, Manter ou Outro… e, se quiser, escreve o que quer. Depois clica "Mandar para correção". Só então o texto novo é escrito, pelo modelo mais forte (Fable 5.2), e volta no cartão de sempre com Aplicar, Ignorar, Editar e Pedir ajuste. O que você mandou manter fica registrado e não vai ao Claude. "Pedir ajuste" também passa pelo Fable 5.2.
+
 ## 2.8.17
 
 - **CIA em construção: dá para escolher o RT e a procuração no campo "medida".** O seletor passa a mostrar os itens da seção 1 do SOL com o nome que aparece lá: "RT: <nome>" para ART/RRT, e "RU: <nome>" ou "Proprietário: <nome>" quando há procurador (é onde se notifica a procuração). No lançamento, a exigência vai direto para esse item, mesmo com o nome mudando de processo para processo. Sem o JSON do SOL na pasta, aparece "Responsável Técnico", que o lançador liga ao RT quando há um só.

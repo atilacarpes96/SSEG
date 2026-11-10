@@ -31,11 +31,11 @@ da entrega que essa exigência pede revisão em Opus, e por quê.
 - um comando por vez, sem `cd … &&`, sem `|`, sem gravar em /tmp.
 
 **Entrega, chamado pelo SSEG.exe:** uma linha por exigência, pelo id da coluna CIA (e1, e2…):
-veredito **ok**, **corrigir** ou **conferir** (depende do analista/da planta); em corrigir, o problema em
-uma frase, o fundamento conferido no PDF e o **texto inteiro sugerido** no formato da caixa do SOL (abre
-com quebra de linha e "- ", parágrafo numa linha só, até 1.950 caracteres). O que não é de uma
-exigência (medida exigida fora do campo 4, tabela não cruzada) vai à parte, como observação. Você não
-grava nada: o analista decide em cada uma.
+veredito **ok**, **corrigir** ou **conferir** (depende do analista/da planta); em corrigir e conferir, o
+problema em uma frase, o que mudar dito em palavras (sem reescrever o texto) e o fundamento conferido no
+PDF. Desde 10/11/2026 o texto novo **não** é seu: o analista responde cada ponto e o subagente
+`corretor-cia` reescreve. O que não é de uma exigência (medida exigida fora do campo 4, tabela não
+cruzada) vai à parte, como observação. Você não grava nada.
 
 Fora do SSEG.exe, entrega no formato da seção 3 da skill. Não alterar arquivos do processo, não lançar nada no
 SOL, não aplicar nota de tabela sozinho.
