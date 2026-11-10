@@ -89,6 +89,17 @@ def itens_da_medida(nome, anexo):
     return tabela, itens, nota
 
 
+def envolvidos(sol):
+    """Itens da seção 1 que o analista pode reprovar, com o nome exato de sol_lancar.itens ("RT: FULANO ..."): ART/RRT vai
+    no RT; procuração vai no RU ou no proprietário, que só têm o botão Analisar quando têm procurador (10/11/2026)."""
+    env, out = (sol or {}).get("envolvidos") or {}, []
+    for tipo, rotulo in (("rts", "RT"), ("rus", "RU"), ("proprietarios", "Proprietário")):
+        for p in env.get(tipo) or []:
+            if tipo == "rts" or p.get("procurador"):
+                out.append("%s: %s" % (rotulo, (p.get("nome") or "").strip()))
+    return out
+
+
 def montar(clone, pasta):
     reg = _registro(clone)
     wf = os.path.join(clone, "sseg", "workflow")
@@ -128,5 +139,5 @@ def montar(clone, pasta):
         if not velha:
             auto["4"] = "pré-análise documental (script, sem Claude): pre-analise.txt"
     return {"auto": auto, "pre_analise": pre,"codigo": os.path.basename(os.path.normpath(pasta)), "pasta": pasta, "json_sol": arq and os.path.basename(arq),
-            "passos": passos, "medidas": medidas, "elementos": elementos, "laudo": laudo, "compensatoria": anexo.get("compensatoria", ""),
+            "passos": passos, "medidas": medidas, "elementos": elementos, "envolvidos": envolvidos(sol), "laudo": laudo, "compensatoria": anexo.get("compensatoria", ""),
             "cias": [a for a in arquivos if re.match(r"CIA \d+", a)], "analise": reg.ler(pasta), "sol": links_sol(sol, sc.get("id_analise"))}

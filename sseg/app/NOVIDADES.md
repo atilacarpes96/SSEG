@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.17
+
+- **CIA em construção: dá para escolher o RT e a procuração no campo "medida".** O seletor passa a mostrar os itens da seção 1 do SOL com o nome que aparece lá: "RT: <nome>" para ART/RRT, e "RU: <nome>" ou "Proprietário: <nome>" quando há procurador (é onde se notifica a procuração). No lançamento, a exigência vai direto para esse item, mesmo com o nome mudando de processo para processo. Sem o JSON do SOL na pasta, aparece "Responsável Técnico", que o lançador liga ao RT quando há um só.
+
 ## 2.8.16
 
 - **PDF na conversa.** O botão de print (🖼) virou 📎 e aceita PDF além de print: clique e escolha, arraste o arquivo para o campo ou cole com Ctrl+V. O Claude lê o texto e vê as páginas (memorial, laudo, ART, planta, CT de outro processo). Até 3 PDFs e 24 MB por mensagem. Na janela de um processo, uma cópia fica na pasta dele ("anexo <nome>.pdf"), para o Claude reler depois sem você anexar de novo.

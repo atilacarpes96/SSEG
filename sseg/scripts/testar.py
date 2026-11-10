@@ -545,7 +545,19 @@ def main():
     caso("Lançar no SOL: 'ART/RRT' e 'Responsável Técnico' da coluna CIA vão ao item 'RT: <nome>' (09/11/2026)",
          [(_sl.achar(rt_a, n) or {}).get("tipo") for n in ("ART/RRT", "ART", "RRT de execução", "Responsável Técnico", "Artigo 5")]
          == ["RT", "RT", "RT", "RT", None])
-    med_a = {"licenciamento": {"envolvidos": {}, "caracteristica": {"id": 5, "ocupacoes": []}, "elemGraficos": [], "especsRiscos": [],
+    # seletor "medida" da CIA no SSEG.exe (10/11/2026): os itens da seção 1 saem com o nome que o lançador acha no SOL
+    sys.path.insert(0, os.path.join(RAIZ, "sseg", "app"))
+    import processo as _proc
+    env_a = {"licenciamento": {"envolvidos": {
+        "rts": [{"id": 3, "nome": "FULANO DE TAL "}, {"id": 4, "nome": "Ana Souza"}],
+        "rus": [{"id": 6, "nome": "Beltrano", "procurador": {"nome": "P"}}, {"id": 7, "nome": "Sem Procurador"}],
+        "proprietarios": [{"idLicenciamentoProprietario": 8, "nome": "Empresa X", "procurador": {"nome": "P"}}]},
+        "caracteristica": {"id": 5, "ocupacoes": []}, "elemGraficos": [], "especsRiscos": [], "especSeguranca": {"medidas": []}}}
+    sel = _proc.envolvidos(env_a["licenciamento"])
+    caso("CIA do SSEG.exe: seletor oferece 'RT: <nome>' e RU/Proprietário com procurador, e cada um casa no SOL (10/11/2026)",
+         sel == ["RT: FULANO DE TAL", "RT: Ana Souza", "RU: Beltrano", "Proprietário: Empresa X"]
+         and [(_sl.achar(env_a, n) or {}).get("id") for n in sel] == [3, 4, 6, 8], str(sel))
+    med_a ={"licenciamento": {"envolvidos": {}, "caracteristica": {"id": 5, "ocupacoes": []}, "elemGraficos": [], "especsRiscos": [],
              "especSeguranca": {"id": 9, "medidas": [{"id": 1, "tipo": {"nome": "Sinalização de Emergência"}, "resultado": None}]}}}
     caso("Lançar no SOL: 'Geral' vai à Característica geral; medida fora do campo 4 vai a 'Adicionar correções' (30/10/2026)",
          [(_sl.achar(med_a, n) or {}).get("tipo") for n in ("Geral", "Compartimentação Horizontal", "Sinalização de Emergência")]
