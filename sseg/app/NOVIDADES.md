@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.8.19
+
+- **As caixas de escrever dos quadros amarelos crescem com o texto.** No "Conferir na planta" e nas outras perguntas do Claude, no "+ escrever" de cada pergunta, na observação para o Claude e no quadro da revisão final, a caixa começa com uma linha e vai aumentando conforme você escreve, para dar para ler tudo antes de mandar. Enter continua mandando as respostas; para quebrar a linha, Shift+Enter.
+
 ## 2.8.18
 
 - **Revisão final em duas etapas: você responde antes da correção.** O botão de revisão final mostra primeiro, num quadro amarelo como o "Conferir na planta", o que o revisor achou em cada exigência, com o fundamento e o texto atual. Em cada ponto você clica Corrigir, Manter ou Outro… e, se quiser, escreve o que quer. Depois clica "Mandar para correção". Só então o texto novo é escrito, pelo modelo mais forte (Fable 5.2), e volta no cartão de sempre com Aplicar, Ignorar, Editar e Pedir ajuste. O que você mandou manter fica registrado e não vai ao Claude. "Pedir ajuste" também passa pelo Fable 5.2.

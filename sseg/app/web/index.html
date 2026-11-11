@@ -556,7 +556,8 @@ mark { background: color-mix(in srgb, var(--amarelo, #FCD733) 55%, transparent);
 .discreto { font-size: 12px; color: var(--suave); margin-top: 4px; }
 .perguntas { border: 1px solid var(--am-borda); background: var(--am-bg); border-radius: 8px; padding: 8px 10px; }
 .perguntas label { display: block; font-size: 13px; margin: 6px 0 2px; }
-.perguntas input { width: 100%; padding: 5px 8px; border: 1px solid var(--linha); border-radius: 5px; }
+.perguntas input, .perguntas textarea { width: 100%; padding: 5px 8px; border: 1px solid var(--linha); border-radius: 5px; }
+.perguntas textarea { resize: none; overflow-y: hidden; line-height: 1.4; min-height: 0; }
 .cartao-exig { border: 1px solid var(--linha); border-left: 3px solid var(--verm); border-radius: 8px; padding: 8px 10px; background: var(--cartao); }
 .cartao-exig .txt { white-space: pre-wrap; font-size: 13px; margin: 4px 0; }
 .cartao-exig textarea.rev-sug { width: 100%; font: inherit; font-size: 13px; margin: 4px 0; resize: vertical; }
@@ -3272,24 +3273,21 @@ const BLOCOS = {
     if (processo) api("processo_perguntas", [ctx.chave, qs]).then(recarregarRegistro).catch(() => {});
     let enviado = false;
     const valor = i => [resp[i], extra[i]].filter(Boolean).join(" — ");
-    const obs = el("input", { type: "text", placeholder: "observação para o Claude (opcional)", style: "width:100%;margin-top:4px" });
+    const obs = campoCresce("observação para o Claude (opcional)", "margin-top:4px", () => mandar());
     const mandar = () => {
       const r = qs.map((q, i) => [q, valor(i)]).filter(x => x[1]), o = obs.value.trim();
       if (!r.length && !o) return SSEG.log(["✗ Responda ao menos uma pergunta ou escreva uma observação."]);
       if (enviado) return;
       enviado = true;
-      caixa.querySelectorAll("button,input").forEach(x => x.disabled = true);
+      caixa.querySelectorAll("button,input,textarea").forEach(x => x.disabled = true);
       if (processo && r.length) api("processo_responder", [ctx.chave, r.map(([q, v]) => [q.texto, v])]).then(recarregarRegistro).catch(() => {});
       chatEnviar(ctx, "Respostas" + (d.titulo ? " (" + d.titulo + ")" : "") + ":\n" + r.map(([q, v]) => "- " + q.texto + " → " + v).join("\n")
         + (o ? (r.length ? "\n" : "") + "Observação: " + o : "") + "\nSiga.");
     };
-    const enterManda = c => c.addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); mandar(); } });
-    enterManda(obs);
     const linhas = qs.flatMap((q, i) => {
       const rot = el("label", {}, (i + 1) + ". " + q.texto);
-      const comp = el("input", { type: "text", placeholder: q.opcoes ? "complemento (opcional)" : (q.dica || "sua resposta"), style: "width:100%" });
+      const comp = campoCresce(q.opcoes ? "complemento (opcional)" : (q.dica || "sua resposta"), "", () => mandar());
       comp.addEventListener("input", () => { if (q.opcoes) extra[i] = comp.value.trim(); else resp[i] = comp.value.trim(); });
-      enterManda(comp);
       if (!q.opcoes) return [rot, comp];
       comp.style.display = "none";
       const mais = el("button", { class: "bt link", type: "button", title: "Escrever algo além da opção", on: { click: () => { comp.style.display = ""; mais.remove(); comp.focus(); } } }, "+ escrever");
@@ -3520,6 +3518,16 @@ function autoAltura(ta, teto = Infinity) {
   ta.style.height = h + "px";
   ta.style.overflowY = conteudo > h ? "auto" : "hidden";
 }
+// Campo de resposta dos quadros amarelos (2.8.19, pedido do Átila): começa com uma linha e cresce com o texto, para
+// ler tudo o que foi escrito. Enter manda; Shift+Enter quebra a linha.
+function campoCresce(placeholder, style, aoEnter) {
+  const ta = el("textarea", { rows: 1, placeholder, style: "width:100%;" + (style || "") });
+  const ajustar = () => autoAltura(ta, 320);
+  ta.addEventListener("input", ajustar);
+  ta.addEventListener("focus", ajustar);
+  if (aoEnter) ta.addEventListener("keydown", ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); aoEnter(); } });
+  return ta;
+}
 // sentido 1: puxar para baixo aumenta (CIA); -1: puxar para cima aumenta (chat, que cresce para cima)
 function alca(ta, sentido, teto, guardar) {
   const a = el("div", { class: "puxa", title: "Arraste para mudar a altura · duplo clique volta ao tamanho do texto" });
@@ -3555,14 +3563,14 @@ function vistaCIA(k) {
 function revisaoPerguntas(d, ctx, ok, resto, atual) {
   const resp = resto.map(() => ""), extra = resto.map(() => "");
   let enviado = false;
-  const obs = el("input", { type: "text", placeholder: "observação geral para a correção (opcional)", style: "width:100%;margin-top:4px" });
+  const obs = campoCresce("observação geral para a correção (opcional)", "margin-top:4px");
   const valor = i => [resp[i], extra[i]].filter(Boolean).join(" — ");
   const mandar = async () => {
     const r = resto.map((x, i) => [x, resp[i], valor(i)]).filter(z => z[2]), o = obs.value.trim();
     if (!r.length) return SSEG.log(["✗ Responda ao menos um item."]);
     if (enviado) return;
     enviado = true;
-    caixa.querySelectorAll("button,input").forEach(z => z.disabled = true);
+    caixa.querySelectorAll("button,input,textarea").forEach(z => z.disabled = true);
     const manter = r.filter(z => z[1] === "Manter"), corrigir = r.filter(z => z[1] !== "Manter");
     for (const [x] of manter) await api("processo_aplicar_revisao", [ctx.chave, x.id, "", x.fundamento || "", true]).catch(() => {});
     if (manter.length) recarregarRegistro();
@@ -3586,9 +3594,8 @@ function revisaoPerguntas(d, ctx, ok, resto, atual) {
   };
   const linhas = resto.flatMap((x, i) => {
     const ex = atual(x.id), med = x.medida || (ex && ex.medida) || "";
-    const comp = el("input", { type: "text", placeholder: "o que corrigir, o que manter, o que o RT já mostrou…", style: "width:100%;display:none" });
+    const comp = campoCresce("o que corrigir, o que manter, o que o RT já mostrou…", "display:none", () => mandar());
     comp.addEventListener("input", () => { extra[i] = comp.value.trim(); });
-    comp.addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); mandar(); } });
     const mais = el("button", { class: "bt link", type: "button", on: { click: () => { comp.style.display = ""; mais.remove(); comp.focus(); } } }, "+ escrever");
     const bts = ["Corrigir", "Manter", "Outro…"].map(o => el("button", { class: "bt", type: "button",
       title: o === "Manter" ? "Fica o texto atual (registra como ignorada)" : o === "Corrigir" ? "O corretor reescreve conforme o problema apontado" : "Escreva o que quer",
