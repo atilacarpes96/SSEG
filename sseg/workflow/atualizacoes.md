@@ -12,6 +12,20 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 14/11/2026 — Palpites da IA local na reanálise, em quadro azul (SSEG.exe 2.9.0)
+
+- **O que é:** na reanálise, um modelo de visão local (Ollama, `gemma4:31b-it-qat`) olha recortes da planta nova e dá um palpite sobre cada exigência da última CIA. Nunca decide: o analista responde no quadro azul do SSEG.exe, e é a resposta dele que vai ao Claude.
+- **Script novo:** `sseg/scripts/palpite_local.py` (`sseg.py palpite --pasta <processo> exigencias | procurar | preparar | rodar | ver`). Compara o texto exato das pranchas (anterior × nova), recorta, pergunta ao modelo em três tamanhos de recorte mais a contraprova na planta anterior e grava `palpites.json` na pasta do processo (vai ao servidor com a pasta; nunca ao Git). As plantas ficam na subpasta `plantas/`, que a sincronização não leva.
+- **Conversa do processo:** só age quando a mensagem traz a linha `[IA local]`, que o programa acrescenta à pré-análise da reanálise quando o PC tem a IA ligada ou a pasta já tem palpites. O Claude classifica as exigências e responde com o bloco `sseg-palpites`; o quadro é desenhado pelo programa a partir do arquivo.
+- **Quem não tem a IA local:** nada muda e nada precisa ser instalado. Só o PC de casa do Sd Carpes roda o modelo.
+- **Regras do rótulo e números dos testes:** no cabeçalho do `palpite_local.py`.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 14/11/2026. Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell) e se o SSEG.exe está na 2.9.0 ou mais novo. Não há skill nem campo Instruções a atualizar nesta leva. Me diga em uma linha que os palpites da IA local só aparecem em PC com o Ollama ligado ou em processo cujos palpites já vieram prontos pelo servidor.
+```
+
 ## 10/11/2026 — Revisão final em duas etapas; correção no Fable 5.2 (SSEG.exe 2.8.17 e 2.8.18)
 
 - **Revisão final no SSEG.exe:** o `revisor-cia` só aponta o problema e o fundamento, sem escrever texto. O analista responde cada ponto num quadro (Corrigir, Manter ou o que ele quer), e o subagente novo **`corretor-cia`** (`.claude/agents/corretor-cia.md`, **Fable 5.2**) escreve o texto corrigido, que volta com Aplicar e Ignorar. "Pedir ajuste" também vai ao `corretor-cia`. Skill `ppci-revisao-cia`, `revisor-cia` e `politica-modelo-e-custo.md` atualizados.

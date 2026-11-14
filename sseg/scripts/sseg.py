@@ -1090,6 +1090,9 @@ def main():
     sp = sub.add_parser("resumo", help="o que já está na pasta do processo: cadastro do SOL, Marcos, CIAs e arquivos")
     sp.add_argument("--pasta", required=True)
 
+    import palpite_local
+    palpite_local.args_parser(sub.add_parser("palpite", help="palpite da IA local (Ollama) nas exigências da última CIA, na reanálise"))
+
     args = ap.parse_args()
 
     if args.cmd == "norma":
@@ -1102,6 +1105,10 @@ def main():
 
     if args.cmd == "analise":
         analise_registro.principal(args)
+        return
+
+    if args.cmd == "palpite":
+        palpite_local.principal(args)
         return
 
     if args.cmd in ("sincronizar", "trazer"):

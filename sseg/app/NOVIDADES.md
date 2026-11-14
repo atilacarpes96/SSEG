@@ -4,6 +4,13 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.9.0
+
+- **Quadro azul: palpites da IA local na reanálise.** Num PC com a IA local ligada (Ollama com o modelo de visão; hoje só o PC de casa do Sd Carpes), ao mandar a pré-análise de uma reanálise ao Claude o programa baixa as plantas pela aba do SOL em que você já entrou, o Claude classifica cada exigência da última CIA e a IA local olha o recorte da planta nova. O resultado aparece num quadro azul, diferente do amarelo das perguntas do Claude: a exigência, o que mudou no texto da prancha (comparação exata, sem IA), o palpite com o grau de confiança e os recortes da planta anterior e da nova lado a lado (clique para ampliar).
+- **É palpite, não decisão.** Em cada exigência você marca Cumpriu, Não cumpriu, Em parte ou Não dá para ver, e pode escrever o que a IA errou. É a sua resposta que vai ao Claude e fica gravada ao lado do palpite, para corrigir a IA depois. O palpite só sai como firme em exigência de texto com valor (cota, distância, código), quando a resposta fica igual em três tamanhos de recorte e a IA diz "não cumpriu" na planta que recebeu a CIA. Em desenho sai como fraco; quando a IA não distingue o antes do depois, sai como inconclusivo; quando falha ou está desligada, fica sem palpite.
+- **Nos outros PCs nada muda.** Sem a IA local ligada e sem palpites prontos na pasta, a pré-análise vai ao Claude como sempre. Os palpites feitos num PC viajam com a pasta do processo pelo servidor e aparecem no outro; as plantas não viajam: cada PC baixa do SOL para a subpasta "plantas" do processo, que não sai dele.
+- **Botão "Palpites da IA local"** no bloco da pré-análise do checklist, para pedir o quadro fora da primeira mensagem.
+
 ## 2.8.19
 
 - **As caixas de escrever dos quadros amarelos crescem com o texto.** No "Conferir na planta" e nas outras perguntas do Claude, no "+ escrever" de cada pergunta, na observação para o Claude e no quadro da revisão final, a caixa começa com uma linha e vai aumentando conforme você escreve, para dar para ler tudo antes de mandar. Enter continua mandando as respostas; para quebrar a linha, Shift+Enter.

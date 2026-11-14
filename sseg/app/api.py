@@ -237,6 +237,7 @@ class Api:
         self._erros_js = []
         self._claude = None
         self._conversas = {}
+        self._palpite_rodadas = {}  # código → processo da rodada da IA local (2.9.0)
         self._eventos = []   # últimos eventos do chat (stream-json resumido), para o Reportar bug
         self._hist = {}      # eventos de cada conversa, para a outra tela (celular) montar o chat ao abrir
         self._espelho = None
@@ -1211,6 +1212,101 @@ class Api:
 
     def abrir_pasta_processo(self, codigo):
         base.abrir(self._pasta_proc(codigo))
+
+    # ---- Palpites da IA local (2.9.0, pedido do Átila em 14/11/2026). Na reanálise, um modelo de visão no Ollama do PC
+    # olha recortes da planta nova e dá palpite se cada exigência da última CIA foi cumprida. Tudo é do script do clone
+    # (palpite_local.py); aqui só a ponte: ler o palpites.json para o quadro azul, ligar a rodada em segundo plano,
+    # baixar as plantas pela aba do SOL logada (só leitura) e gravar a conferência do analista. Nunca decide nada.
+    def _palpite(self):
+        try:
+            (m,) = self._scripts_do_clone("palpite_local")
+        except ImportError:
+            raise RuntimeError("O SSEG desta pasta está atrás do programa (falta o palpite_local.py): clique em Sincronizar com o GitHub.")
+        pop = instalar.localizar().get("poppler")
+        m.POPPLER = os.path.dirname(pop) if pop else ""
+        return m
+
+    def palpites(self, codigo, rodar=True):
+        """Estado para o quadro azul: palpites.json do processo, IA local deste PC, plantas que faltam. Com item na
+        fila e a IA ligada, sobe a rodada em segundo plano (uma por processo, no Python do PC)."""
+        m, pasta = self._palpite(), self._pasta_proc(codigo)
+        e = m.estado(pasta)
+        fila = any(i.get("estado") == "fila" for i in e["palpites"].get("itens") or [])
+        if rodar and fila and e["ia"]["pronta"] and not e["rodando"] and not e["velho"]:
+            e["rodando"] = self._palpites_rodar(codigo, pasta)
+        return e
+
+    def _palpites_rodar(self, codigo, pasta):
+        p = self._palpite_rodadas.get(codigo)
+        if p and p.poll() is None:
+            return True
+        py = instalar.localizar().get("python")
+        script = os.path.join(self._clone(), "sseg", "scripts", "sseg.py")
+        if not py or not os.path.exists(script):
+            return False
+        env = {**os.environ, "PYTHONUTF8": "1"}
+        pop = instalar.localizar().get("poppler")
+        if pop:  # o pdftotext do Git (sem -bbox) vem antes no PATH
+            env["PATH"] = os.path.dirname(pop) + os.pathsep + env.get("PATH", "")
+            env["SSEG_POPPLER"] = os.path.dirname(pop)
+        self._palpite_rodadas[codigo] = subprocess.Popen(
+            [py, script, "palpite", "--pasta", pasta, "rodar"], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, creationflags=base.SEM_JANELA, env=env)
+        self._log("IA local: a rodada dos palpites de %s começou em segundo plano." % codigo)
+        return True
+
+    def palpites_recorte(self, codigo, n, k, lado="depois"):
+        """Imagem do recorte k da exigência n (planta nova, ou a anterior com lado="antes"), como data: URL."""
+        m, pasta = self._palpite(), self._pasta_proc(codigo)
+        it = next((i for i in m.ler(pasta).get("itens") or [] if i.get("n") == n), None)
+        try:
+            r = it["recortes"][k]
+            r = r["antes"] if lado == "antes" else r
+        except (TypeError, KeyError, IndexError):
+            raise RuntimeError("Não há esse recorte.")
+        try:
+            dados = m.recorte_tela(pasta, r)
+        except (RuntimeError, OSError, subprocess.SubprocessError) as e:
+            raise RuntimeError("Não consegui gerar o recorte (%s). A planta está em %s?" % (str(e)[:160], os.path.join(pasta, m.SUB)))
+        return "data:image/jpeg;base64," + base64.b64encode(dados).decode()
+
+    def palpites_plantas(self, codigo):
+        """Baixa para <pasta>/plantas/ as pranchas que faltam (as ativas e as que a última CIA analisou), pela aba do
+        SOL em que o analista já entrou. Só leitura. Depois refaz os recortes do que já estava classificado."""
+        m, pasta = self._palpite(), self._pasta_proc(codigo)
+        (sc,) = self._scripts_do_clone("sol_caixa")
+
+        def baixar(aba):
+            aba.c.s.settimeout(600)  # prancha grande em base64 passa dos 120 s da leitura de caixa
+
+            def um(ident):
+                d = sc._consultar(aba, sc.BAIXAR, "%s/%s" % (sc.ARQUIVO, ident))
+                if d["status"] != 200:
+                    raise RuntimeError("o SOL respondeu %s" % d["status"])
+                return base64.b64decode(d.get("b64") or "")
+            return m.baixar_plantas(pasta, um)
+        try:
+            r = sol_aba.na_aba_logada(baixar)
+        except PermissionError:
+            return {"ok": False, "acao": "sol", "msg": "O SOL recusou a leitura: a sessão da aba caiu. Entre de novo no SOL."}
+        except LookupError as e:
+            return {"ok": False, "acao": "sol", "msg": str(e)}
+        except OSError as e:
+            return {"ok": False, "acao": "chrome", "msg": str(e)}
+        if r["baixadas"]:
+            self._log("IA local: %d prancha(s) de %s baixada(s) do SOL para a pasta do processo (subpasta plantas, não sai do PC)."
+                      % (len(r["baixadas"]), codigo), *("  ! " + f for f in r["falhas"]))
+            if m.ler(pasta).get("itens"):
+                try:
+                    m.preparar(pasta, [])  # a classificação já gravada vale: só os recortes são refeitos
+                except RuntimeError:
+                    pass
+        return dict(r, ok=not r["falhas"], msg="; ".join(r["falhas"]))
+
+    def palpites_responder(self, codigo, respostas):
+        """Conferência do analista em cada exigência ({n: {resposta, nota}}): fica no palpites.json, ao lado do palpite."""
+        self._palpite().responder(self._pasta_proc(codigo), respostas)
+        return True
 
     # ---------------------------------------------------------------- chat
     def _cota_ler(self):

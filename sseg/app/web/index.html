@@ -558,6 +558,23 @@ mark { background: color-mix(in srgb, var(--amarelo, #FCD733) 55%, transparent);
 .perguntas label { display: block; font-size: 13px; margin: 6px 0 2px; }
 .perguntas input, .perguntas textarea { width: 100%; padding: 5px 8px; border: 1px solid var(--linha); border-radius: 5px; }
 .perguntas textarea { resize: none; overflow-y: hidden; line-height: 1.4; min-height: 0; }
+/* Quadro azul (2.9.0): o que vem da IA local. Amarelo = pergunta do Claude; azul = palpite da IA local, que nunca decide. */
+.perguntas.azul { border-color: var(--az-borda); border-left: 4px solid var(--azul); background: var(--azul-bg); }
+.pal-item { border-top: 1px solid var(--az-borda); margin-top: 8px; padding-top: 8px; }
+.pal-ex { font-size: 13px; margin: 3px 0; white-space: pre-wrap; }
+.pal-fatos { margin: 2px 0 4px; padding-left: 18px; font-size: 12.5px; }
+.pal { border-left: 4px solid var(--suave); background: var(--cartao); border-radius: 0 6px 6px 0; padding: 5px 9px; margin: 5px 0; font-size: 13px; }
+.pal b { font-size: 14px; }
+.pal.verde { border-color: var(--ok); } .pal.verde b { color: var(--ok); }
+.pal.vermelho { border-color: var(--verm); } .pal.vermelho b { color: var(--verm); }
+.pal.ambar { border-color: var(--c-meta); } .pal.ambar b { color: var(--c-meta); }
+.pal small { display: block; color: var(--suave); font-size: 11.5px; }
+.pal-par { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px; margin: 5px 0; }
+.pal-par figure { margin: 0; }
+.pal-par img { width: 100%; display: block; border: 1px solid var(--linha); border-radius: 5px; background: #fff; cursor: zoom-in; }
+.pal-par figcaption { font-size: 11.5px; color: var(--suave); }
+.pal-zoom { position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,.82); overflow: auto; cursor: zoom-out; padding: 12px; }
+.pal-zoom img { display: block; margin: auto; max-width: none; background: #fff; }
 .cartao-exig { border: 1px solid var(--linha); border-left: 3px solid var(--verm); border-radius: 8px; padding: 8px 10px; background: var(--cartao); }
 .cartao-exig .txt { white-space: pre-wrap; font-size: 13px; margin: 4px 0; }
 .cartao-exig textarea.rev-sug { width: 100%; font: inherit; font-size: 13px; margin: 4px 0; resize: vertical; }
@@ -3307,7 +3324,149 @@ const BLOCOS = {
         processo ? el("button", { class: "bt", on: { click: () => api("abrir_pasta_processo", [ctx.chave]) } }, "Abrir a pasta do processo") : null));
     return caixa;
   },
+  "sseg-palpites": (d, ctx) => palpitesBloco(d || {}, ctx),
 };
+
+// ---- Quadro AZUL: palpites da IA local (2.9.0, pedido do Átila em 14/11/2026). Na reanálise, um modelo de visão no
+// PC olha recortes da planta nova e dá palpite sobre cada exigência da última CIA. O programa desenha tudo a partir do
+// palpites.json do processo (o Claude não copia veredito): o que foi conferido sem IA, o palpite com o grau de
+// confiança, os recortes antes e depois, e a conferência do analista — que fica gravada ao lado do palpite (é a
+// correção da IA) e vai ao Claude da conversa. A rodada da IA anda em segundo plano; o quadro se atualiza sozinho.
+const PALP_RESP = [["cumpriu", "Cumpriu"], ["nao_cumpriu", "Não cumpriu"], ["parcial", "Em parte"], ["nao_da", "Não dá para ver"]];
+const PALP_MARGEM = { 60: "recorte padrão", 30: "recorte mais apertado", 100: "recorte mais largo" };
+const PALP_NOME = { cumpriu: "Cumpriu", nao_cumpriu: "Não cumpriu", nao_sei: "Não sei" };
+function palpiteZoom(src) {
+  const z = el("div", { class: "pal-zoom", title: "Clique para fechar" }, el("img", { src, alt: "recorte da planta" }));
+  z.onclick = () => z.remove();
+  document.body.append(z);
+}
+function palpitesBloco(d, ctx) {
+  const processo = ctx && /^A\d{8}/.test(ctx.chave);
+  const topo = el("div", {}), corpo = el("div", {}), pe = el("div", {});
+  const caixa = el("div", { class: "perguntas azul" },
+    el("b", {}, "Palpites da IA local "), el("span", { class: "discreto" }, "(palpite, não decisão: quem responde é você)"), topo, corpo, pe);
+  const st = { resp: {}, nota: {}, pal: {}, chave: "", itens: [] };
+  const palpiteDe = (it, e) => {
+    if (it.estado === "pronto" && it.rotulo) {
+      const linhas = (it.rodadas || []).map(r => ["Planta nova, " + (PALP_MARGEM[r.margem] || ""), r]);
+      if (it.controle) linhas.push(["Planta anterior (o certo aqui é \"não cumpriu\")", it.controle]);
+      return el("div", { class: "pal " + it.rotulo.classe }, el("b", {}, it.rotulo.titulo), " ", it.rotulo.explicacao,
+        it.confianca ? el("small", {}, it.confianca) : null,
+        el("details", {}, el("summary", { class: "discreto" }, "o que a IA disse que leu"),
+          el("table", {}, el("tbody", {}, ...linhas.map(([rot, r]) => el("tr", {}, el("td", {}, rot), el("td", {}, PALP_NOME[r.veredito] || ""), el("td", {}, r.evidencia || "")))))));
+    }
+    if (it.estado === "rodando") return el("div", { class: "pal" }, el("b", {}, "A IA local está olhando esta exigência…"));
+    if (it.estado === "fila") return el("div", { class: "pal" }, el("b", {}, e.ia.pronta ? "Na fila da IA local" : "Sem palpite"), " ",
+      e.ia.pronta ? "(uns 3 minutos por exigência)." : e.ia.motivo + " Valem os fatos e os recortes.");
+    if (it.estado === "falhou") return el("div", { class: "pal" }, el("b", {}, "Sem palpite"), " A IA falhou nesta exigência (" + (it.erro || "erro") + ").");
+    return el("div", { class: "pal" }, el("b", {}, "Sem palpite"), " ", it.motivo || "");
+  };
+  const cartao = (it, e) => {
+    const pal = el("div", {});
+    st.pal[it.n] = pal;
+    if (it.conferencia && st.resp[it.n] == null) { st.resp[it.n] = it.conferencia.resposta; st.nota[it.n] = it.conferencia.nota || ""; }
+    const recs = el("div", {});
+    (it.recortes || []).forEach((r, k) => {
+      const fig = (lado, leg) => {
+        const img = el("img", { alt: leg, title: "Clique para ampliar" });
+        img.onclick = () => img.src && palpiteZoom(img.src);
+        const f = el("figure", {}, img, el("figcaption", {}, leg));
+        if (!e.demo) window.pywebview.api.palpites_recorte(ctx.chave, it.n, k, lado).then(u => { img.src = u; })
+          .catch(err => f.replaceChildren(el("figcaption", {}, leg + ": sem imagem (" + String(err && err.message || err).slice(0, 120) + ")")));
+        return f;
+      };
+      const qual = it.recortes.length > 1 ? "Recorte " + (k + 1) + " · " : "";
+      recs.append(el("div", { class: "pal-par" },
+        r.antes ? fig("antes", qual + "planta anterior (recebeu a CIA)") : null,
+        fig("depois", qual + (r.nao_reenviada ? "planta ativa, não reenviada (é a que a CIA analisou)" : "planta nova"))));
+    });
+    const nota = campoCresce("o que a IA ou a comparação errou, ou o que você viu (opcional)", "", () => mandar());
+    nota.value = st.nota[it.n] || ""; nota.style.display = nota.value ? "" : "none";
+    nota.addEventListener("input", () => { st.nota[it.n] = nota.value.trim(); });
+    const mais = el("button", { class: "bt link", type: "button", on: { click: () => { nota.style.display = ""; mais.remove(); nota.focus(); } } }, "+ escrever");
+    const bts = PALP_RESP.map(([v, t]) => el("button", { class: "bt" + (st.resp[it.n] === v ? " p" : ""), type: "button", on: { click: ev => {
+      st.resp[it.n] = st.resp[it.n] === v ? null : v;
+      bts.forEach(x => x.classList.toggle("p", x === ev.currentTarget && st.resp[it.n] === v));
+    } } }, t));
+    return el("div", { class: "pal-item" },
+      el("div", {}, el("b", {}, "Exigência nº " + it.n + " "), el("span", { class: "tag" }, it.tipo_nome || ""), el("span", { class: "discreto" }, [it.secao, it.sub].filter(Boolean).join(" / "))),
+      comNormas("div", { class: "pal-ex" }, it.exigencia || ""),
+      (it.fatos || []).length ? el("div", {}, el("span", { class: "discreto" }, "Conferido sem IA (texto exato do PDF):"), el("ul", { class: "pal-fatos" }, ...it.fatos.map(f => el("li", {}, f)))) : null,
+      pal, recs,
+      el("div", { class: "linha-bts", style: "margin-top:4px;flex-wrap:wrap" }, el("span", { class: "discreto", style: "margin:0" }, "Sua conferência:"), ...bts, nota.value ? null : mais), nota);
+  };
+  const mandar = async () => {
+    const r = st.itens.filter(it => st.resp[it.n]);
+    if (!r.length) return avisar("Marque a sua conferência em ao menos uma exigência.");
+    const pac = {};
+    r.forEach(it => { pac[it.n] = { resposta: st.resp[it.n], nota: st.nota[it.n] || "" }; });
+    const nome = v => (PALP_RESP.find(x => x[0] === v) || [])[1] || v;
+    if (processo) await api("palpites_responder", [ctx.chave, pac]);
+    chatEnviar(ctx, "Conferência do analista nas exigências da última CIA (quadro da IA local; vale esta resposta, não o palpite):\n" +
+      r.map(it => "- nº " + it.n + " [" + (it.sub || it.secao || "") + "] " + (it.exigencia || "").slice(0, 110) + ((it.exigencia || "").length > 110 ? "…" : "") +
+        " → " + nome(st.resp[it.n]) + (st.nota[it.n] ? " — " + st.nota[it.n] : "")).join("\n") + "\nSiga.");
+    pe.querySelector(".discreto").textContent = "✓ " + r.length + " resposta(s) mandada(s) e gravada(s) ao lado do palpite.";
+  };
+  const pintar = e => {
+    const itens = (e.palpites && e.palpites.itens) || [];
+    const comCartao = itens.filter(i => ["texto", "desenho", "ausencia"].includes(i.tipo));
+    const semCartao = itens.filter(i => !comCartao.includes(i));
+    const pend = comCartao.filter(i => i.estado === "fila" || i.estado === "rodando").length;
+    const avisos = [];
+    if (!itens.length) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, "Ainda não há palpites preparados para este processo."));
+    if (e.velho) avisos.push(el("p", { class: "sub", style: "margin:4px 0;color:var(--verm)" }, "Atenção: " + e.velho + ". Peça ao Claude para preparar de novo."));
+    if (pend && e.ia.pronta) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, "A IA local está olhando as plantas: " + (comCartao.length - pend) + " de " + comCartao.length + " prontas. Pode ir respondendo."));
+    if (itens.length && !e.ia.pronta && pend) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, e.ia.motivo));
+    if ((e.faltam_plantas || []).length && processo) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, "Falta(m) " + e.faltam_plantas.length + " planta(s) na pasta do processo. ",
+      el("button", { class: "bt", on: { click: async ev => { const r = await api("palpites_plantas", [ctx.chave], ev.currentTarget);
+        avisar(r.ok ? "✓ Plantas baixadas do SOL." : "✗ " + (r.msg || "não consegui baixar"), !r.ok); carregar(); } } }, "Buscar no SOL")));
+    topo.replaceChildren(...avisos);
+    const chave = JSON.stringify(itens.map(i => [i.n, i.exigencia, i.assinatura]));
+    if (chave !== st.chave) {  // lista nova (ou preparada de novo): monta os cartões; senão só o palpite de cada um muda
+      st.chave = chave; st.itens = comCartao; st.pal = {};
+      corpo.replaceChildren(...comCartao.map(it => cartao(it, e)),
+        semCartao.length ? el("div", { class: "pal-item discreto" }, "Sem palpite (não se confere na planta): " +
+          semCartao.map(i => "nº " + i.n + (i.motivo ? " (" + i.motivo.replace(/\.$/, "") + ")" : "")).join(" · ")) : null);
+      pe.replaceChildren(comCartao.length ? el("div", { class: "linha-bts", style: "margin-top:8px" },
+        el("button", { class: "bt p", on: { click: mandar } }, "Mandar respostas"),
+        el("span", { class: "discreto", style: "margin:0" }, "Pode mandar só as que já olhou. A resposta também corrige a IA.")) : "");
+    }
+    for (const it of comCartao) if (st.pal[it.n]) st.pal[it.n].replaceChildren(palpiteDe(it, e));
+    return pend && e.ia.pronta && !e.velho;
+  };
+  let voltas = 0;
+  const carregar = async () => {
+    if (!caixa.isConnected && ++voltas > 8) return;  // o quadro saiu da tela
+    let e;
+    try { e = await window.pywebview.api.palpites(ctx.chave); }
+    catch (err) { topo.replaceChildren(el("p", { class: "sub", style: "margin:4px 0" }, "Não consegui ler os palpites: " + String(err && err.message || err).slice(0, 200))); return; }
+    if (pintar(e)) setTimeout(carregar, 6000);
+  };
+  if (d.demo) pintar(Object.assign({ demo: true, ia: { pronta: true }, faltam_plantas: [] }, d.demo));
+  else if (!processo) topo.replaceChildren(el("p", { class: "sub", style: "margin:4px 0" }, "Os palpites aparecem na janela de um processo."));
+  else setTimeout(carregar, 0);
+  return caixa;
+}
+// Na reanálise, a 1ª mensagem com a pré-análise leva junto a linha "[IA local]" — só quando este PC tem a IA ligada
+// (Ollama) ou a pasta já tem palpites. Sem isso devolve "" e nada muda para o analista.
+async function linhaIALocal(codigo) {
+  if (!(((PR.dados || {}).marcos || {}).analise >= 2)) return "";
+  let e;
+  try { e = await window.pywebview.api.palpites(codigo, false); } catch (err) { return ""; }
+  if (!e || !e.reanalise) return "";
+  if (((e.palpites || {}).itens || []).length && !e.velho)
+    return "\n\n[IA local] apresentar: já há palpites da IA local para esta reanálise na pasta (palpites.json). Comece a resposta pelo bloco sseg-palpites.";
+  if (!e.ia.pronta || !e.poppler) return "";
+  if (e.faltam_plantas.length) {
+    avisar("Buscando as plantas no SOL para a IA local…");
+    let r;
+    try { r = await window.pywebview.api.palpites_plantas(codigo); } catch (err) { r = { ok: false, msg: String(err && err.message || err) }; }
+    if (!r.ok && !(r.baixadas || []).length)
+      return "\n\n[IA local] sem plantas: o programa não conseguiu baixar as plantas do SOL (" + (r.msg || "sem aba do SOL logada").slice(0, 200) +
+        "). Diga isso em uma linha e siga a reanálise sem palpites.";
+  }
+  return "\n\n[IA local] preparar: este PC tem a IA local ligada e as plantas estão na pasta do processo (subpasta plantas). Prepare os palpites das exigências da última CIA e comece a resposta pelo bloco sseg-palpites.";
+}
 
 async function abrirProcesso(codigo) {
   const d = await api("processo_abrir", [codigo]);
@@ -3420,15 +3579,22 @@ function pintarChecklist() {
     el("p", { class: "sub" }, "Ainda não feita para este processo."), refazerPre));
   if (d.pre_analise) {
     const pa = d.pre_analise, cor = l => l.startsWith("XX") ? "var(--verm)" : l.startsWith("!!") ? "var(--creme-txt)" : "var(--suave)";
-    const mandar = () => { fechar(); chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto);
-      api("processo_marcar", [PR.codigo, "marcas", "pre_analise", pa.data]).then(recarregarRegistro); };
+    // 2.9.0: na reanálise, a mesma mensagem leva o pedido dos palpites da IA local (linhaIALocal: "" quando não há IA nem palpite)
+    const mandar = async () => { fechar(); const cod = PR.codigo, fluxo = PR.fluxo, ia = await linhaIALocal(cod);
+      chatEnviar(ctxDe(cod, fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto + ia);
+      api("processo_marcar", [cod, "marcas", "pre_analise", pa.data]).then(recarregarRegistro); };
     const conteudo = [
       pa.velha ? el("p", { class: "sub", style: "color:var(--verm)" }, "O JSON do SOL mudou depois da pré-análise: clique em Refazer pré-análise.") : null,
       pa.marcas.length ? el("div", { class: "pre-marcas" }, ...pa.marcas.map(l => el("div", { style: "color:" + cor(l) }, l)))
         : el("p", { class: "sub" }, "Nenhum ponto marcado."),
       el("div", { style: "margin-top:6px" }, el("button", { class: "bt chamativo", title: "Abre a saída inteira do script; de lá, manda ao chat", on: { click: () => modal("Pré-análise documental", "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
         el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]) } }, "Revisar e mandar pro chat")),
-      refazerPre];
+      refazerPre,
+      // 2.9.0: pedir os palpites da IA local fora da 1ª mensagem (só reanálise; sem IA neste PC e sem palpite pronto, avisa)
+      (d.marcos || {}).analise >= 2 ? el("button", { class: "bt link", title: "Pede ao Claude os palpites da IA local sobre as exigências da última CIA (quadro azul). Só em PC com a IA local ligada, ou quando os palpites já vieram prontos.",
+        on: { click: async ev => { const b = ev.currentTarget; b.disabled = true; const ia = await linhaIALocal(PR.codigo); b.disabled = false;
+          if (!ia) return avisar("Sem IA local ligada neste PC e sem palpites prontos para este processo.");
+          chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Palpites da IA local para esta reanálise." + ia); } } }, "Palpites da IA local") : null];
     // já mandada ao Claude (2.3.16): encolhe numa linha; pré-análise refeita (data nova) volta aberta
     if ((r.marcas || {}).pre_analise === pa.data)
       out.push(el("details", { class: "bloco discreto" }, el("summary", {}, el("b", {}, "Pré-análise documental (script)"),
@@ -4299,7 +4465,11 @@ SSEG.tour = async passo => {
       "```sseg-status", JSON.stringify({ estado: "parado", texto: "Parado: preciso de você", processo: fake.codigo, criterio: "critério (b) do 5.1.2" }), "```",
       "```sseg-dados", JSON.stringify({ itens: [{ rotulo: "Área", valor: "3.605,26 m²" }, { rotulo: "Altura", valor: "4,85 m" }, { rotulo: "População", valor: "470" }, { rotulo: "Protocolo", valor: "27/08/2026" }] }), "```",
       "```sseg-definidora", JSON.stringify({ titulo: "Definidora: empate no (a), I-1 marcada pelo RT", hipoteses: [{ ocupacao: "I-1", nota: "risco baixo", tabela: "6I.1", medidas: 8, efeito: "nenhum", ok: true }, { ocupacao: "J-2", nota: "risco baixo", tabela: "6J.1", medidas: 8, efeito: "nenhum", ok: true }], conclusao: "As 8 medidas são as mesmas nas duas: a definidora não muda o campo 4.", norma: { rotulo: "RT 01/2024, item 5.1.2", consulta: "definidora" } }), "```",
-      "```sseg-perguntas", JSON.stringify({ titulo: "Conferir na planta", perguntas: [{ id: "q1", texto: "O depósito é da mesma empresa?", tipo: "simnao" }, { id: "q2", texto: "Acionador a até 5 m do acesso principal?", opcoes: ["Ok", "Não"] }] }), "```"].join("\n") });
+      "```sseg-perguntas", JSON.stringify({ titulo: "Conferir na planta", perguntas: [{ id: "q1", texto: "O depósito é da mesma empresa?", tipo: "simnao" }, { id: "q2", texto: "Acionador a até 5 m do acesso principal?", opcoes: ["Ok", "Não"] }] }), "```",
+      "```sseg-palpites", JSON.stringify({ demo: { palpites: { itens: [{ n: 1, tipo: "texto", tipo_nome: "Texto com valor", secao: "Saída de Emergência", exigencia: "REITERO: a largura da porta da escada deverá ser de no mínimo 1,10 m.",
+        fatos: ["Prancha Térreo, neste trecho: entrou no texto: 1,10; saiu do texto: 0,90."], recortes: [], estado: "pronto", rodadas: [], confianca: "",
+        rotulo: { classe: "verde", titulo: "Palpite: Cumpriu", explicacao: "Igual nos três tamanhos de recorte e a IA disse 'não cumpriu' na planta anterior." } },
+        { n: 2, tipo: "remissiva", motivo: "Remete às exigências acima." }] } } }), "```"].join("\n") });
     SSEG.chat(fake.codigo, { t: "sub_ini", id: "x1", tipo: "localizador-normas", desc: "itens da RT 11 sobre largura", modelo: "claude-haiku-5-5" });
     trabalhando(ctx, true);
     document.querySelector("#t-processo details.medida").open = true;

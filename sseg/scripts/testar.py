@@ -829,8 +829,9 @@ def main():
             return True
         except ValueError:
             return False
-    caso("chat: os 7 blocos visuais ensinados ao Claude são JSON válido",
-         {t for t, _ in blocos} == {"sseg-status", "sseg-dados", "sseg-definidora", "sseg-perguntas", "sseg-exigencia", "sseg-norma", "sseg-revisao"}
+    caso("chat: os 8 blocos visuais ensinados ao Claude são JSON válido",
+         {t for t, _ in blocos} == {"sseg-status", "sseg-dados", "sseg-definidora", "sseg-perguntas", "sseg-exigencia", "sseg-norma", "sseg-revisao",
+                                    "sseg-palpites"}
          and all(_json_ok(b) for _, b in blocos), str([t for t, b in blocos if not _json_ok(b)]))
     # 15b. planilha "Distribuição Análise" → <código>/distribuicao.json → estado na caixa (2.1.13)
     import distribuicao as dist, datetime as _dt, io, zipfile as _zp
@@ -1242,6 +1243,114 @@ def main():
              n == 1 and f["processo"]["area_construida"] == 350.5 and f["medidas"][0]["medida"] == "Extintores"
              and c["total"] == 1 and c["linhas"][0]["trechos"][0]["achado"] == "barra antipânico" and p["total"] == 1
              and sol_consulta.consultar("mapa", {}, db)[0][1] == -29.7, f"{n} {c} {p['total']}")
+    # 22. palpite da IA local (2.9.0): só o que é do script, sem Ollama. O rótulo nunca passa de "fraco" fora do tipo
+    # texto, conflito e contraprova que falha viram inconclusivo, e sem IA no PC o item fica na fila (nunca "não sei").
+    import palpite_local as pl_m, sincronizar as _sinc
+    r_ = lambda *vs: [{"veredito": v, "evidencia": ""} for v in vs]
+    c_ = lambda v: {"veredito": v, "evidencia": ""}
+    caso("palpite: rótulo firme só em texto, igual nos três recortes e com 'não cumpriu' na planta anterior",
+         pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"))["titulo"] == "Palpite: Não cumpriu"
+         and pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"))["classe"] == "verde"
+         and pl_m.conclusao("desenho", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"))["titulo"] == "Palpite fraco: Cumpriu"
+         and pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), None)["titulo"] == "Palpite fraco: Cumpriu")
+    caso("palpite: recorte que muda a resposta, 'não sei' e 'cumpriu' na planta anterior saem como inconclusivo, sem veredito",
+         all(x["titulo"] == "Inconclusivo" and not x["veredito"] for x in (
+             pl_m.conclusao("texto", r_("cumpriu", "nao_cumpriu", "cumpriu"), c_("nao_cumpriu")),
+             pl_m.conclusao("texto", r_("nao_sei", "nao_sei", "nao_sei"), c_("nao_cumpriu")),
+             pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), c_("cumpriu")))))
+    caso("palpite: recortes que discordam viram 'não sei' (nunca 'cumpriu')",
+         pl_m.agregar(r_("cumpriu", "nao_cumpriu")) == "nao_sei" and pl_m.agregar(r_("cumpriu", "nao_sei")) == "cumpriu"
+         and pl_m.agregar(r_("nao_sei", "nao_sei")) == "nao_sei")
+    _cia = ("O PPCI apresentou as seguintes inconformidades em relação às normas aplicáveis:\n\nMedidas de Segurança\n"
+            "Saída de Emergência\n      1. Outros\n              - REITERO: a distância máxima a percorrer continua acima de 10 m,\n"
+            "              conforme a planta.\nElementos Gráficos\nPlanta Baixa\n      1. Outros\n              - Inconformidades já citadas acima.\n\n"
+            "O PPCI deverá ser encaminhado para nova análise.\n")
+    ex_ = pl_m.partir(_cia)
+    caso("palpite: a CIA vira exigências numeradas, com a seção e a prancha",
+         len(ex_) == 2 and ex_[0][0] == "Saída de Emergência" and ex_[0][2].endswith("conforme a planta.")
+         and ex_[1][:2] == ("Elementos Gráficos", "Planta Baixa"), str(ex_))
+    ws_ = [("dist.", 10, 100, 30, 108, "Dist."), ("max.", 32, 100, 50, 108, "máx."), ("a", 52, 100, 56, 108, "a"),
+           ("percorrer", 58, 100, 95, 108, "percorrer"), ("4", 5, 105, 9, 113, "4"), ("ate", 10, 106, 22, 114, "até"),
+           ("a", 24, 106, 28, 114, "a"), ("saida", 30, 106, 50, 114, "saída"), ("=", 52, 106, 56, 114, "="), ("15,48", 58, 106, 80, 114, "15,48")]
+    caso("palpite: o termo é achado com quebra de linha e um rótulo do desenho no meio (e sem acento)",
+         len(pl_m.ocorrencias(ws_, "Dist. máx. a percorrer até a saída")) == 1 and not pl_m.ocorrencias(ws_, "até o hidrante"))
+    caso("palpite: palpites.json sobe ao servidor com a pasta; a trava e o temporário não",
+         _sinc.chave_valida("A00000001AA001/palpites.json") and not _sinc.chave_valida("A00000001AA001/.palpites.lock")
+         and not _sinc.chave_valida("A00000001AA001/.palpites-123.json"))
+
+    def _pdf(linhas, w=900, h=700):
+        """PDF mínimo de uma página, com texto em posições dadas (x, y a partir do topo)."""
+        txt = "BT /F1 9 Tf " + " ".join("1 0 0 1 %d %d Tm (%s) Tj" % (x, h - y, t) for x, y, t in linhas) + " ET"
+        objs = [b"<< /Type /Catalog /Pages 2 0 R >>", b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+                ("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %d %d] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>" % (w, h)).encode(),
+                ("<< /Length %d >>\nstream\n%s\nendstream" % (len(txt.encode("latin-1")), txt)).encode("latin-1"),
+                b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"]
+        out, offs = b"%PDF-1.4\n", []
+        for i, o in enumerate(objs, 1):
+            offs.append(len(out))
+            out += b"%d 0 obj\n" % i + o + b"\nendobj\n"
+        x = len(out)
+        out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objs) + 1) + b"".join(b"%010d 00000 n \n" % o for o in offs)
+        return out + b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objs) + 1, x)
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = os.path.join(tmp, "A00000001AA001")
+        os.makedirs(os.path.join(pasta, "plantas"))
+        for n_ in ("cia-100.txt", "cia-200.txt", "cia-ultima.txt"):
+            open(os.path.join(pasta, n_), "w", encoding="utf-8").write(_cia)
+        eg = lambda sit, ident, nome, tipo, desc: {"situacao": sit, "tipo": tipo, "descricao": desc, "arquivo": {"id": ident, "nomeArquivo": nome}}
+        json.dump({"numero": "A00000001AA001", "elemGraficos": [
+            eg("INATIVO", 50, "R00.pdf", "PLANTA_BAIXA", "Planta Baixa"),      # anterior à penúltima CIA: fora
+            eg("INATIVO", 150, "R01.pdf", "PLANTA_BAIXA", "Planta Baixa"),     # a que a última CIA analisou
+            eg("ATIVO", 250, "R02.pdf", "PLANTA_BAIXA", "Planta Baixa"),       # reenviada
+            eg("ATIVO", 120, "IMPL.pdf", "IMPLANTACAO", "Implantação")]},     # ativa e não reenviada
+            open(os.path.join(pasta, "api-1.json"), "w", encoding="utf-8"))
+        pls = {p["id"]: p for p in pl_m.plantas(pasta)}
+        caso("palpite: pranchas da reanálise (reenviada, não reenviada, a que a última CIA analisou; a mais antiga fica fora)",
+             sorted(pls) == [120, 150, 250] and pls[150]["lado"] == "antes" and pls[120]["nao_reenviada"] and not pls[250]["nao_reenviada"]
+             and pls[250]["arquivo"] == "depois-250-R02.pdf" and not pls[250]["tem"], str(pls))
+        cur_ = [{"n": 1, "tipo": "texto", "esperado": "distância máxima a percorrer de no máximo 10 m", "termo": "Dist. max. a percorrer", "prancha": "planta baixa"},
+                {"n": 2, "tipo": "remissiva"}]
+        d0 = pl_m.preparar(pasta, cur_)
+        caso("palpite: sem a planta na pasta o item fica sem palpite e diz qual falta",
+             d0["itens"][0]["estado"] == "sem_palpite" and "Falta baixar" in d0["itens"][0]["motivo"] and d0["itens"][1]["motivo"].startswith("Remete"),
+             str(d0["itens"][0]))
+        try:
+            pl_m.preparar(pasta, [{"n": 1, "tipo": "texto", "termo": "x"}])
+            sem_valor = False
+        except RuntimeError:
+            sem_valor = True
+        caso("palpite: exigência de texto sem o valor esperado não é aceita (sem valor, sem palpite)", sem_valor)
+        if pl_m.tem_poppler():
+            comuns = [(60 + 70 * (i % 10), 60 + 40 * (i // 10), "AMB%02d" % i) for i in range(30)]
+            open(os.path.join(pasta, "plantas", "antes-150-R01.pdf"), "wb").write(
+                _pdf(comuns + [(300, 400, "Dist. max. a percorrer"), (300, 411, "= 13,76 m")]))
+            open(os.path.join(pasta, "plantas", "depois-250-R02.pdf"), "wb").write(
+                _pdf(comuns + [(300, 400, "Dist. max. a percorrer"), (300, 411, "= 15,48 m")]))
+            d1 = pl_m.preparar(pasta, [])  # a classificação gravada vale: só os recortes são refeitos
+            it1 = d1["itens"][0]
+            caso("palpite: com as plantas, recorte na nova, contraprova na anterior e o texto que entrou e saiu no trecho",
+                 it1["estado"] == "fila" and len(it1["recortes"]) == 1 and it1["recortes"][0]["antes"]["pdf"] == "antes-150-R01.pdf"
+                 and any("entrou no texto: 15,48" in f and "saiu do texto: 13,76" in f for f in it1["fatos"]), str(it1)[:500])
+            caso("palpite: o recorte sai do PDF como imagem (PNG para a IA, JPEG para a tela)",
+                 pl_m.recorte(os.path.join(pasta, "plantas", "depois-250-R02.pdf"), 1, it1["recortes"][0]["caixa"], 60).startswith(b"\x89PNG")
+                 and pl_m.recorte_tela(pasta, it1["recortes"][0]).startswith(b"\xff\xd8"))
+            _oll, pl_m.OLLAMA = pl_m.OLLAMA, "http://127.0.0.1:9"
+            feitos_, motivo_ = pl_m.rodar(pasta, aviso=lambda *_: None)
+            pl_m.OLLAMA = _oll
+            caso("palpite: sem Ollama neste PC nada roda e o item continua na fila (não vira 'não sei')",
+                 feitos_ == 0 and "não está ligada" in motivo_ and pl_m.ler(pasta)["itens"][0]["estado"] == "fila", motivo_)
+            pl_m.responder(pasta, {"1": {"resposta": "nao_cumpriu", "nota": "continua 15,48 m"}, "2": {"resposta": "talvez"}})
+            d2 = pl_m.preparar(pasta, [])
+            caso("palpite: a conferência do analista fica gravada no item e sobrevive a preparar de novo",
+                 d2["itens"][0]["conferencia"]["resposta"] == "nao_cumpriu" and "conferencia" not in d2["itens"][1]
+                 and d2["itens"][0]["tipo"] == "texto" and not pl_m.valido(pasta), str(d2["itens"][0].get("conferencia")))
+            open(os.path.join(pasta, "cia-300.txt"), "w", encoding="utf-8").write(_cia)
+            caso("palpite: CIA nova depois dos palpites marca o arquivo como antigo", "CIA anterior" in pl_m.valido(pasta), pl_m.valido(pasta))
+    _ins = _chat.INSTRUCOES.format(codigo="A00000001AA001", pasta="P")
+    caso("palpite: a conversa só prepara com a linha [IA local], grava pelo sseg.py e apresenta com o bloco azul",
+         # 14/11/2026: o heredoc com JSON foi barrado na janela ("brace with quote character"); o argumento entre aspas simples passa
+         'palpite --pasta "P" preparar \'[{"n": 1, "tipo": "texto"' in _ins and "<<'FIM'\n[{" not in _ins and "[IA local]" in _ins
+         and "```sseg-palpites" in _chat.GUIA_VISUAL and '"sseg-palpites"' in js and "perguntas azul" in js and "linhaIALocal" in js)
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)
