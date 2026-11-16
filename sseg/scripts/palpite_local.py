@@ -187,6 +187,29 @@ def _api(pasta):
     return _ler_json(arqs[-1], {}) if arqs else {}
 
 
+TIPOS_PRANCHA = (("PLANTA_BAIXA", "Planta baixa"), ("IMPLANTACAO", "Implantação"), ("CORTE", "Corte"))
+
+
+def rotulo_tipo(tipo):
+    return dict(TIPOS_PRANCHA).get(tipo) or (tipo or "Elemento gráfico").replace("_", " ").capitalize()
+
+
+def nome_no_sol(lado, tipo, descricao, nome, ident):
+    """Nome do arquivo na pasta, igual ao que o SOL mostra do elemento gráfico: "<tipo> - <descrição> (<id>).pdf".
+    O botão de baixar do SOL entrega um nome que não diz qual prancha é (pedido do Átila, 16/11/2026). O id do
+    arquivo no SOL vai no fim: é ele que liga o PDF ao elemento, e duas pranchas podem ter a mesma descrição."""
+    desc = " ".join(re.sub(r'[\\/:*?"<>|\x00-\x1f]+', " ", descricao or os.path.splitext(nome or "")[0]).split()).strip(" .")[:80].strip()
+    rot = rotulo_tipo(tipo)
+    base = desc if sem_acento(desc).startswith(sem_acento(rot)) else ("%s - %s" % (rot, desc) if desc else rot)
+    return ("anterior - " if lado == "antes" else "") + "%s (%s).pdf" % (base, ident)
+
+
+def _ja_baixada(nomes, ident):
+    """O PDF deste id que já está em plantas/, no nome novo ("... (<id>).pdf") ou no antigo ("depois-<id>-...")."""
+    rx = re.compile(r"(?:^(?:antes|depois)-%s-.*| \(%s\))\.pdf$" % (ident, ident), re.I)
+    return next((n for n in nomes if rx.search(n)), None)
+
+
 def plantas(pasta):
     """Pranchas do processo para a reanálise: [{lado, id, arquivo, nome, tipo, descricao, nao_reenviada, tem}].
     lado "depois" = ATIVA (a que o analista vai analisar); "antes" = a que a última CIA analisou e o RT trocou.
@@ -195,6 +218,10 @@ def plantas(pasta):
     ultima = ids[-1] if ids else 0
     penultima = ids[-2] if len(ids) > 1 else 0
     out = []
+    try:
+        nomes = sorted(os.listdir(os.path.join(pasta, SUB)))
+    except OSError:
+        nomes = []
     for e in _api(pasta).get("elemGraficos") or []:
         a = e.get("arquivo") or {}
         ident = a.get("id")
@@ -204,11 +231,12 @@ def plantas(pasta):
         if not (ativo or penultima < ident < ultima):
             continue
         lado = "depois" if ativo else "antes"
-        nome = re.sub(r"[^\w.-]+", "_", a.get("nomeArquivo") or "planta.pdf")
-        arq = "%s-%s-%s" % (lado, ident, nome if nome.lower().endswith(".pdf") else nome + ".pdf")
+        desc = " ".join(str(e.get("descricao") or "").split())
+        # o que já foi baixado vale com o nome que tem (palpites.json guarda o nome); o que falta nasce com o do SOL
+        arq = _ja_baixada(nomes, ident) or nome_no_sol(lado, e.get("tipo") or "", desc, a.get("nomeArquivo") or "", ident)
         cam = os.path.join(pasta, SUB, arq)
         out.append({"lado": lado, "id": ident, "arquivo": arq, "nome": a.get("nomeArquivo") or "", "tipo": e.get("tipo") or "",
-                    "descricao": " ".join(str(e.get("descricao") or "").split()),
+                    "descricao": desc,
                     "nao_reenviada": bool(ativo and ultima and ident < ultima),
                     "tem": os.path.isfile(cam) and os.path.getsize(cam) > 0})
     return out
@@ -381,13 +409,63 @@ def recorte_tela(pasta, r, margem=60, dpi=170):
     return dados
 
 
-def baixar_plantas(pasta, buscar):
+def elementos(pasta):
+    """Elementos gráficos ATIVOS agrupados por tipo, para os botões da janela do processo:
+    [{tipo, rotulo, itens: [{id, descricao, arquivo, tem, nao_reenviada}]}], planta baixa, implantação, corte e o resto."""
+    ordem = [t for t, _r in TIPOS_PRANCHA]
+    grupos = {}
+    for p in plantas(pasta):
+        if p["lado"] == "depois":
+            grupos.setdefault(p["tipo"], []).append({k: p[k] for k in ("id", "descricao", "arquivo", "tem", "nao_reenviada")})
+    return [{"tipo": t, "rotulo": rotulo_tipo(t), "itens": sorted(grupos[t], key=lambda x: x["id"])}
+            for t in sorted(grupos, key=lambda t: (ordem.index(t) if t in ordem else len(ordem), t))]
+
+
+def nomes_do_sol(pasta):
+    """Passa para o nome do SOL as pranchas baixadas antes de 16/11/2026 ("depois-<id>-..."), com os arquivos de apoio
+    ao lado, e acerta o nome onde o palpites.json o cita (o quadro azul acha o recorte por ele). Com a rodada da IA
+    local em andamento não mexe. Devolve quantas mudou."""
+    if rodando(pasta):
+        return 0
+    d = os.path.join(pasta, SUB)
+    troca = {}
+    for p in plantas(pasta):
+        velho = p["arquivo"]
+        if not p["tem"] or not re.match(r"(antes|depois)-\d+-", velho):
+            continue
+        novo = nome_no_sol(p["lado"], p["tipo"], p["descricao"], p["nome"], p["id"])
+        try:
+            os.replace(os.path.join(d, velho), os.path.join(d, novo))
+        except OSError:
+            continue  # PDF aberto no leitor: fica com o nome antigo, que continua valendo
+        troca[velho] = novo
+        for f in os.listdir(d):
+            if f.startswith(velho + "."):  # caches ao lado do PDF (.bbox.json, .camadas.json)
+                try:
+                    os.replace(os.path.join(d, f), os.path.join(d, novo + f[len(velho):]))
+                except OSError:
+                    pass
+    if troca and os.path.exists(caminho(pasta)):
+        def acertar(x):
+            if isinstance(x, dict):
+                for k, v in x.items():
+                    x[k] = troca.get(v, v) if isinstance(v, str) else acertar(v)
+            elif isinstance(x, list):
+                for k, v in enumerate(x):
+                    x[k] = troca.get(v, v) if isinstance(v, str) else acertar(v)
+            return x
+        _atualizar(pasta, acertar)
+    return len(troca)
+
+
+def baixar_plantas(pasta, buscar, lados=("depois", "antes")):
     """Traz para <pasta>/plantas/ as pranchas que faltam. buscar(id do arquivo no SOL) devolve os bytes do PDF: quem
-    chama é o SSEG.exe, pela aba do SOL em que o analista já entrou (só leitura). Devolve {baixadas, falhas}."""
+    chama é o SSEG.exe, pela aba do SOL em que o analista já entrou (só leitura). Devolve {baixadas, falhas}.
+    lados=("depois",): só as ativas (botão "Elementos gráficos"); as anteriores só servem aos palpites da IA local."""
     os.makedirs(os.path.join(pasta, SUB), exist_ok=True)
     baixadas, falhas = [], []
     for p in plantas(pasta):
-        if p["tem"]:
+        if p["tem"] or p["lado"] not in lados:
             continue
         try:
             dados = buscar(p["id"])

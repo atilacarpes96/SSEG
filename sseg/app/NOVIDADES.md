@@ -4,6 +4,13 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.12.0
+
+- **Botão "Baixar elementos gráficos"** na faixa de cima do processo, ao lado de "Memorial SSEG". É um script, sem IA, e serve a qualquer PC. Ele traz do SOL, pela aba em que você já entrou, os elementos gráficos **ativos** do processo (na reanálise, só os que ainda não estão na pasta) e guarda na pasta do processo, subpasta `plantas`.
+- **O arquivo fica com o nome que aparece no SOL**, no lugar do nome sem sentido que o botão de baixar do SOL dá: "Planta baixa - Pavilhão (2678394).pdf", "Corte AA (2667635).pdf". O número no fim é o do arquivo no SOL.
+- **Depois de baixar, aparecem os botões Planta baixa, Implantação e Corte.** Cada um abre as pranchas daquele tipo no leitor de PDF do computador; com mais de uma planta baixa, abre todas. Fechou sem querer? É só clicar de novo: a prancha continua na pasta.
+- **A mesma pasta serve às Camadas das pranchas e aos Palpites da IA local**, que não baixam de novo o que já está lá. As pranchas baixadas antes desta versão passam para o nome do SOL sozinhas.
+
 ## 2.11.0
 
 - **Selo em cada botão dizendo quem faz o trabalho:** cinza **⚙ script** (roda aqui no PC, sem IA), azul **◆ IA local** (a IA do seu PC, que dá palpite) e laranja **✳ Claude** (vai para o chat). A legenda fica no bloco da pré-análise. Está nos botões da pré-análise, nos de mandar respostas e pedir ao Claude, na revisão final, no "Lançar no SOL" e no quadro azul dos palpites.

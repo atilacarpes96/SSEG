@@ -1307,7 +1307,13 @@ def main():
         pls = {p["id"]: p for p in pl_m.plantas(pasta)}
         caso("palpite: pranchas da reanálise (reenviada, não reenviada, a que a última CIA analisou; a mais antiga fica fora)",
              sorted(pls) == [120, 150, 250] and pls[150]["lado"] == "antes" and pls[120]["nao_reenviada"] and not pls[250]["nao_reenviada"]
-             and pls[250]["arquivo"] == "depois-250-R02.pdf" and not pls[250]["tem"], str(pls))
+             and pls[250]["arquivo"] == "Planta Baixa (250).pdf" and pls[150]["arquivo"] == "anterior - Planta Baixa (150).pdf"
+             and pls[120]["arquivo"] == "Implantação (120).pdf" and not pls[250]["tem"], str(pls))
+        caso("elementos gráficos: nome do arquivo como o SOL mostra, sem caractere proibido e sem repetir o tipo",
+             pl_m.nome_no_sol("depois", "PLANTA_BAIXA", "Pavilhão", "x.pdf", 7) == "Planta baixa - Pavilhão (7).pdf"
+             and pl_m.nome_no_sol("depois", "CORTE", "Corte AA", "x.pdf", 8) == "Corte AA (8).pdf"
+             and pl_m.nome_no_sol("depois", "IMPLANTACAO", "Situação/Localização: 1?", "x.pdf", 9) == "Implantação - Situação Localização 1 (9).pdf"
+             and pl_m.nome_no_sol("antes", "FACHADA", "", "FACH_R01.pdf", 5) == "anterior - Fachada - FACH_R01 (5).pdf")
         cur_ = [{"n": 1, "tipo": "texto", "esperado": "distância máxima a percorrer de no máximo 10 m", "termo": "Dist. max. a percorrer", "prancha": "planta baixa"},
                 {"n": 2, "tipo": "remissiva"}]
         d0 = pl_m.preparar(pasta, cur_)
@@ -1344,8 +1350,22 @@ def main():
             caso("palpite: a conferência do analista fica gravada no item e sobrevive a preparar de novo",
                  d2["itens"][0]["conferencia"]["resposta"] == "nao_cumpriu" and "conferencia" not in d2["itens"][1]
                  and d2["itens"][0]["tipo"] == "texto" and not pl_m.valido(pasta), str(d2["itens"][0].get("conferencia")))
+            # 2.12.0: prancha baixada com o nome antigo continua valendo e passa para o nome do SOL, com o palpites.json junto
+            caso("elementos gráficos: prancha de nome antigo é achada pelo id", pl_m.plantas(pasta)[1]["arquivo"] == "depois-250-R02.pdf"
+                 and [(g["rotulo"], [i["tem"] for i in g["itens"]]) for g in pl_m.elementos(pasta)] == [("Planta baixa", [True]), ("Implantação", [False])])
+            _nren = pl_m.nomes_do_sol(pasta)
+            _dren = json.dumps(pl_m.ler(pasta), ensure_ascii=False)
+            caso("elementos gráficos: renomeia para o nome do SOL, leva o cache ao lado e acerta o palpites.json",
+                 _nren == 2 and os.path.exists(os.path.join(pasta, "plantas", "Planta Baixa (250).pdf"))
+                 and os.path.exists(os.path.join(pasta, "plantas", "Planta Baixa (250).pdf.bbox.json"))
+                 and "depois-250" not in _dren and "antes-150" not in _dren and "anterior - Planta Baixa (150).pdf" in _dren
+                 and pl_m.recorte_tela(pasta, pl_m.ler(pasta)["itens"][0]["recortes"][0]).startswith(b"\xff\xd8"), _dren[:300])
             open(os.path.join(pasta, "cia-300.txt"), "w", encoding="utf-8").write(_cia)
             caso("palpite: CIA nova depois dos palpites marca o arquivo como antigo", "CIA anterior" in pl_m.valido(pasta), pl_m.valido(pasta))
+        _pedidos = []
+        _rb = pl_m.baixar_plantas(pasta, lambda i: _pedidos.append(i) or b"%PDF-1.4 teste", ("depois",))
+        caso("elementos gráficos: o botão baixa só as ativas que faltam, já com o nome do SOL",
+             _pedidos == [120] and not _rb["falhas"] and os.path.exists(os.path.join(pasta, "plantas", "Implantação (120).pdf")), str((_pedidos, _rb)))
     _ins = _chat.INSTRUCOES.format(codigo="A00000001AA001", pasta="P")
     caso("palpite: a conversa só prepara com a linha [IA local], grava pelo sseg.py e apresenta com o bloco azul",
          # 14/11/2026: o heredoc com JSON foi barrado na janela ("brace with quote character"); o argumento entre aspas simples passa

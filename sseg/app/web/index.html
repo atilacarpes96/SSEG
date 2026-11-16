@@ -92,6 +92,8 @@ h2:first-child { margin-top: 0; }
 .bts-sol .bt:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
 .bts-sol .bt:last-child { border-radius: 0 6px 6px 0; }
 .bts-sol .bt:hover:not(:disabled) { background: color-mix(in srgb, var(--cor) 14%, var(--bt)); }
+.bts-sol .s-el { --cor: var(--c-parado); } .bts-sol .s-pr { --cor: var(--c-meta); }
+.bts-sol .bt:only-child { border-radius: 6px; }
 .bts-sol .s-lic { --cor: var(--c-aguarda); } .bts-sol .s-an { --cor: var(--c-analise); } .bts-sol .s-mem { --cor: var(--c-ct); }
 .bt.concluir { background: var(--c-fechado); border-color: var(--c-fechado); color: #fff; font-weight: 600; }
 .bt.concluir:hover:not(:disabled) { background: color-mix(in srgb, var(--c-fechado) 85%, #000); }
@@ -934,6 +936,7 @@ footer { color: var(--suave); }
           <div class="bts-sol" role="group" aria-label="SOL">
             <button class="bt s-lic" id="pr-sol-lic" title="Abre no navegador">Licenciamento no SOL</button><button class="bt s-an" id="pr-sol-an" title="Abre no navegador">Análise técnica no SOL</button><button class="bt s-mem" id="pr-ficha" title="Abre a ficha deste processo na aba Processos (base do SOL no servidor, sem entrar no SOL): edificação, medidas, envolvidos, análises, CIAs e linha do tempo">Memorial SSEG</button>
           </div>
+          <div class="bts-sol so-pc" id="pr-elem" role="group" aria-label="Elementos gráficos"></div>
           <button class="bt concluir" id="pr-concluir" title="Depois de emitir a CIA ou o CA no SOL: guarda o memorial desta análise (se ainda não guardou), baixa a CIA e salva no servidor e na pasta dos prints">✓ Concluir processo</button>
           <button class="bt link" id="pr-laudo" hidden>laudo de inviabilidade</button>
           <button class="bt link so-pc" id="pr-pasta">abrir pasta</button>
@@ -1332,7 +1335,8 @@ const AJUDA = {
       "A CIA em construção junta as exigências salvas. Antes de lançar, faça a \"revisão final\": um revisor lê a CIA de fora.",
       "\"lançar no SOL\" (grava as exigências no campo Outros e aprova o resto; mostra tudo e pede confirmação; não emite CIA nem CA) → emitir no SOL → \"Concluir processo\", marcando CIA ou CA (guarda o memorial, baixa a CIA e salva).",
       "Na exigência, marque a prancha onde está o erro: ao lançar, a prancha leva \"- Inconformidades já citadas acima.\"",
-      "Os botões \"Licenciamento no SOL\" e \"Análise técnica no SOL\" levam à aba do SOL em que você já entrou."],
+      "Os botões \"Licenciamento no SOL\" e \"Análise técnica no SOL\" levam à aba do SOL em que você já entrou.",
+      "\"Baixar elementos gráficos\" traz do SOL as pranchas ativas para a pasta do processo (subpasta plantas), com o nome que aparece no SOL. Depois ficam os botões Planta baixa, Implantação e Corte: cada um abre as pranchas daquele tipo no leitor de PDF do computador, quantas vezes precisar."],
     legenda: [["k-vermelho", "corrigir", "a revisão final achou erro"], ["k-laranja", "conferir", "a revisão final pede para olhar de novo"],
       ["k-verde", "Recurso deferido", ""], ["k-roxo", "FACT", "consulta técnica ligada ao processo"]] },
   busca: { titulo: "Buscar normas", serve: "Procurar uma palavra ou um item nas normas do projeto e no banco de notificações.",
@@ -3463,6 +3467,37 @@ function palpitesBloco(d, ctx) {
   else setTimeout(carregar, 0);
   return caixa;
 }
+// ---- Elementos gráficos (2.12.0, pedido do Átila em 16/11/2026): baixa do SOL as pranchas ativas para a pasta do
+// processo com o nome que o SOL mostra e abre no leitor de PDF do PC, por tipo. Script, sem IA: serve a qualquer PC,
+// e a prancha fica pronta para as camadas e para os palpites da IA local.
+async function pintarElementos(baixar, botao) {
+  const cod = PR.codigo, caixa = $("#pr-elem");
+  if (!caixa || ESPELHO) return;
+  if (!baixar) caixa.replaceChildren();
+  let r;
+  try {
+    if (baixar) { avisar("Baixando os elementos gráficos do SOL para a pasta do processo…"); r = await api("elementos", [cod, true], botao); }
+    else r = await window.pywebview.api.elementos(cod, false);
+  } catch (e) { return; }
+  if (cod !== PR.codigo || !r) return;
+  const grupos = r.grupos || [], todos = grupos.flatMap(g => g.itens), faltam = todos.filter(i => !i.tem).length;
+  if (baixar) avisar(r.ok ? (r.baixadas.length ? "✓ " + r.baixadas.length + " elemento(s) gráfico(s) na pasta do processo." : "✓ Os elementos gráficos já estavam na pasta.")
+    : "✗ " + (r.msg || "Não consegui baixar.") + (r.acao === "sol" ? " Entre no SOL pelo Chrome e tente de novo." : r.acao === "chrome" ? " O Chrome pede \"Permitir\" a cada conexão." : ""), !r.ok && !r.acao);
+  const bts = [];
+  if (faltam || !todos.length) bts.push(el("button", { class: "bt s-el",
+    title: "Baixa do SOL, pela aba em que você já entrou, os elementos gráficos ativos deste processo (na reanálise, os novos) para a pasta do processo, com o nome que aparece no SOL. Sem IA.",
+    on: { click: ev => pintarElementos(true, ev.currentTarget) } }, selo("script"), todos.length ? "Baixar elementos gráficos (" + faltam + ")" : "Baixar elementos gráficos"));
+  for (const g of grupos) {
+    const tem = g.itens.filter(i => i.tem);
+    if (!tem.length) continue;
+    bts.push(el("button", { class: "bt s-pr",
+      title: "Abre no leitor de PDF do computador:\n" + tem.map(i => "• " + (i.descricao || i.arquivo) + (i.nao_reenviada ? " (não reenviada)" : "")).join("\n") + (tem.length < g.itens.length ? "\nFalta baixar " + (g.itens.length - tem.length) + "." : ""),
+      on: { click: ev => api("elementos_abrir", [cod, tem.map(i => i.id)], ev.currentTarget) } },
+      g.rotulo + (g.itens.length > 1 ? " (" + (tem.length < g.itens.length ? tem.length + " de " : "") + g.itens.length + ")" : "")));
+  }
+  caixa.replaceChildren(...bts);
+}
+
 // ---- Camadas das pranchas (2.10.0, pedido do Átila em 16/11/2026): o conferidor sseg/scripts/camadas.py lê do PDF o
 // nome, a cor e o texto de cada camada e cruza com o campo 4. Sem IA: são fatos do PDF, não exigência. Achado é o que
 // separou CIAs que cobraram camada das que não cobraram na medição de 16/11/2026; observação é o que saiu igual nos dois.
@@ -3538,6 +3573,7 @@ function renderProcesso(d) {
   $("#pr-laudo").hidden = !d.laudo;
   pintarSituacao(d.caixa || { estado: "sem" });
   pintarConcluir();
+  pintarElementos();
   pintarCota();
   pintarChecklist(); pintarCIA();
 }

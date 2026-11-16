@@ -242,13 +242,15 @@ def medidas_campo4(api):
 
 
 def pranchas_ativas(pasta, api):
-    """[(rótulo, caminho)] das pranchas ATIVAS já baixadas em <pasta>/plantas/ (depois-<id>-*.pdf)."""
+    """[(rótulo, caminho)] das pranchas ATIVAS já baixadas em <pasta>/plantas/: "<nome do SOL> (<id>).pdf" e, nas
+    baixadas antes de 16/11/2026, "depois-<id>-*.pdf"."""
     out = []
     for e in api.get("elemGraficos") or []:
         if e.get("situacao") != "ATIVO":
             continue
         ident = (e.get("arquivo") or {}).get("id")
-        achou = glob.glob(os.path.join(pasta, "plantas", "depois-%s-*.pdf" % ident)) if ident else []
+        achou = [x for pad in ("* (%s).pdf", "depois-%s-*.pdf")
+                 for x in glob.glob(os.path.join(glob.escape(os.path.join(pasta, "plantas")), pad % ident))] if ident else []
         rot = " ".join(str(e.get("descricao") or e.get("tipo") or "").split()) or str(ident)
         out.append((rot, achou[0] if achou else None, e.get("tipo") or ""))
     return out

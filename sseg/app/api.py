@@ -1270,9 +1270,10 @@ class Api:
             raise RuntimeError("Não consegui gerar o recorte (%s). A planta está em %s?" % (str(e)[:160], os.path.join(pasta, m.SUB)))
         return "data:image/jpeg;base64," + base64.b64encode(dados).decode()
 
-    def palpites_plantas(self, codigo):
+    def palpites_plantas(self, codigo, so_ativas=False):
         """Baixa para <pasta>/plantas/ as pranchas que faltam (as ativas e as que a última CIA analisou), pela aba do
-        SOL em que o analista já entrou. Só leitura. Depois refaz os recortes do que já estava classificado."""
+        SOL em que o analista já entrou. Só leitura. Depois refaz os recortes do que já estava classificado.
+        so_ativas: só as que o analista vai analisar (botão "Elementos gráficos")."""
         m, pasta = self._palpite(), self._pasta_proc(codigo)
         (sc,) = self._scripts_do_clone("sol_caixa")
 
@@ -1284,7 +1285,7 @@ class Api:
                 if d["status"] != 200:
                     raise RuntimeError("o SOL respondeu %s" % d["status"])
                 return base64.b64decode(d.get("b64") or "")
-            return m.baixar_plantas(pasta, um)
+            return m.baixar_plantas(pasta, um, ("depois",)) if so_ativas else m.baixar_plantas(pasta, um)
         try:
             r = sol_aba.na_aba_logada(baixar)
         except PermissionError:
@@ -1294,7 +1295,7 @@ class Api:
         except OSError as e:
             return {"ok": False, "acao": "chrome", "msg": str(e)}
         if r["baixadas"]:
-            self._log("IA local: %d prancha(s) de %s baixada(s) do SOL para a pasta do processo (subpasta plantas, não sai do PC)."
+            self._log("%d prancha(s) de %s baixada(s) do SOL para a pasta do processo (subpasta plantas, não sai do PC)."
                       % (len(r["baixadas"]), codigo), *("  ! " + f for f in r["falhas"]))
             if m.ler(pasta).get("itens"):
                 try:
@@ -1307,6 +1308,36 @@ class Api:
         """Conferência do analista em cada exigência ({n: {resposta, nota}}): fica no palpites.json, ao lado do palpite."""
         self._palpite().responder(self._pasta_proc(codigo), respostas)
         return True
+
+    # ---- Elementos gráficos (2.12.0, pedido do Átila em 16/11/2026): baixar do SOL as pranchas ativas para a pasta do
+    # processo, com o nome que o SOL mostra, e abrir no leitor de PDF do PC por tipo. Script, sem IA; serve a qualquer PC.
+    # É a mesma subpasta plantas/ dos palpites e das camadas: quem baixa por aqui já deixa a prancha pronta para eles.
+    def elementos(self, codigo, baixar=False):
+        """{ok, msg, acao, grupos: [{tipo, rotulo, itens: [{id, descricao, arquivo, tem, nao_reenviada}]}], baixadas}."""
+        m, pasta = self._palpite(), self._pasta_proc(codigo)
+        if not hasattr(m, "elementos"):
+            raise RuntimeError("O SSEG desta pasta está atrás do programa: clique em Sincronizar com o GitHub.")
+        r = {"ok": True, "msg": "", "baixadas": []}
+        if baixar:
+            if not m.plantas(pasta):
+                return {"ok": False, "msg": "Sem o JSON do SOL na pasta do processo (ou o processo não tem elemento gráfico): "
+                                            "leia o processo no SOL primeiro.", "grupos": [], "baixadas": []}
+            r = self.palpites_plantas(codigo, True)
+            m.nomes_do_sol(pasta)
+        return dict(r, grupos=m.elementos(pasta))
+
+    def elementos_abrir(self, codigo, ids):
+        """Abre no leitor de PDF do PC as pranchas ativas pedidas (ids do arquivo no SOL). Devolve quantas abriu."""
+        m, pasta = self._palpite(), self._pasta_proc(codigo)
+        quer = {int(i) for i in ids}
+        n = 0
+        for p in m.plantas(pasta):
+            if p["lado"] == "depois" and p["tem"] and p["id"] in quer:
+                base.abrir(os.path.join(pasta, m.SUB, p["arquivo"]))
+                n += 1
+        if not n:
+            raise RuntimeError("Não achei o PDF na pasta do processo: baixe os elementos gráficos de novo.")
+        return n
 
     def camadas(self, codigo):
         """Camadas das pranchas × campo 4 (2.10.0, sseg/scripts/camadas.py), sem IA. Baixa do SOL as pranchas ativas que
