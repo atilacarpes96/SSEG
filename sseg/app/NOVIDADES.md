@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.11.0
+
+- **Selo em cada botão dizendo quem faz o trabalho:** cinza **⚙ script** (roda aqui no PC, sem IA), azul **◆ IA local** (a IA do seu PC, que dá palpite) e laranja **✳ Claude** (vai para o chat). A legenda fica no bloco da pré-análise. Está nos botões da pré-análise, nos de mandar respostas e pedir ao Claude, na revisão final, no "Lançar no SOL" e no quadro azul dos palpites.
+- **"Camadas das pranchas" confere também o número de ordem** de extintores, hidrantes e mangotinhos e acionadores de alarme (RT 05 Parte 08, Anexo A: "Junto ao símbolo, deverá ser informado o número de ordem"), só nas plantas baixas: número repetido, buraco na sequência, camada com texto mas sem número, e número que ficou fora da camada da medida.
+- **Menos alarme falso nas camadas:** a coluna de legenda que se repete igual em todas as pranchas não conta mais como "a mesma medida em duas camadas".
+
 ## 2.10.0
 
 - **Botão "Camadas das pranchas"** no bloco da pré-análise, em qualquer análise (primeira ou reanálise). O programa baixa do SOL as pranchas que faltam, pela aba em que você já entrou, e lê do próprio PDF o nome de cada camada, a cor dos traços e o texto que está dentro dela. Depois cruza com o campo 4. Não usa IA: o que aparece é o que está gravado no PDF.

@@ -11,7 +11,7 @@
   --ok: #2E7D32; --haiku: #3FA34D; --sonnet: #2F6FD6; --opus: #E8772E;
   --fundo2: #FBF9F8; --bt: #F7F3F1; --bt-h: #EFE8E5; --rosa: #FDF1F0; --rosa-borda: #F3D3D1; --creme: #FEF4EA;
   --creme-txt: #9A4A0E; --am-bg: #FFFBEA; --am-borda: #F2E3A0; --az-bg: #F4F7FD; --az-borda: #B9CBEE; --ponto: #C9C0BC;
-  --campo: #FFFFFF; --azul: #2F6FD6; --azul-bg: #E8F0FC;
+  --campo: #FFFFFF; --azul: #2F6FD6; --azul-bg: #E8F0FC; --claude: #B4532F; --claude-bg: #FBEDE6;
   --c-analise: #C9620F; --c-aguarda: #2F6FD6; --c-prazo: #C32725; --c-ct: #7B4FC4; --c-fechado: #2E7D32; --c-meta: #8A6D00; --c-parado: #7A6E6A;
   --raio: 8px; --sombra: 0 1px 2px rgba(60,30,20,.08), 0 4px 14px rgba(60,30,20,.06);
 }
@@ -19,7 +19,7 @@
   --verm: #E5534F; --verm-claro: #F06B67; --fundo: #1C1918; --cartao: #262220; --texto: #EDE6E3; --suave: #A99D98; --linha: #3A3431;
   --ok: #5DBB63; --fundo2: #221E1C; --bt: #302B29; --bt-h: #3A3431; --rosa: #3A2422; --rosa-borda: #5A3330; --creme: #3A2C1E;
   --creme-txt: #F2B27A; --am-bg: #332D17; --am-borda: #5C5126; --az-bg: #1D2738; --az-borda: #34507F; --ponto: #5A524E;
-  --campo: #1F1B1A; --azul: #6E9CF0; --azul-bg: #1D2738; color-scheme: dark;
+  --campo: #1F1B1A; --azul: #6E9CF0; --azul-bg: #1D2738; --claude: #E9926B; --claude-bg: #3A261D; color-scheme: dark;
   --c-analise: #F2A65A; --c-aguarda: #6E9CF0; --c-prazo: #F06B67; --c-ct: #B49AF0; --c-fechado: #5DBB63; --c-meta: #E8C547; --c-parado: #A99D98; } }
 * { box-sizing: border-box; }
 input, textarea { background: var(--campo); color: var(--texto); }
@@ -99,6 +99,16 @@ h2:first-child { margin-top: 0; }
 .bt.concluir.feito:hover:not(:disabled) { background: color-mix(in srgb, var(--azul) 85%, #000); }
 .bt.chamativo { background: var(--azul-bg); border: 1px solid var(--azul); color: var(--azul); font-weight: 600; padding: 5px 12px; font-size: 13px; text-decoration: none; }
 .bt.chamativo:hover:not(:disabled) { background: var(--azul); color: #fff; }
+/* 2.11.0 (pedido do Átila): quem faz o trabalho do botão. script = roda aqui, sem IA; IA local = Ollama no PC;
+   Claude = vai para o chat (gasta a conta) */
+.quem { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .02em; line-height: 1; padding: 2px 5px 2px 4px;
+  border-radius: 4px; border: 1px solid; margin-right: 5px; vertical-align: 1px; text-decoration: none; white-space: nowrap; }
+.quem.script { color: var(--suave); background: var(--bt); border-color: var(--linha); }
+.quem.ia { color: var(--azul); background: var(--azul-bg); border-color: var(--az-borda); }
+.quem.claude { color: var(--claude); background: var(--claude-bg); border-color: color-mix(in srgb, var(--claude) 40%, transparent); }
+.legenda-selos { font-size: 11.5px; color: var(--suave); margin: 2px 0 6px; }
+.legenda-selos .quem { margin-left: 8px; }
+.legenda-selos .quem:first-child { margin-left: 0; }
 .pranchas { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 12px; margin: 2px 0 4px; }
 .pranchas label { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
 .linha-bts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -947,7 +957,7 @@ footer { color: var(--suave); }
         </div>
         <div class="col-borda" data-borda="2" title="Arraste para mudar a largura das colunas (duplo clique volta ao padrão)"></div>
         <div class="coluna" data-col="cia">
-          <h2>CIA em construção <button class="bt link copiar-cia" id="pr-copiar-cia" title="Copia a CIA inteira, no formato da caixa do SOL">⧉ copiar</button><span class="cia-etapas"><button class="bt etapa rev" id="pr-revisar" title="Revisão final da CIA pelo subagente revisor-cia (Sonnet 5.5, lê a CIA de fora, sem o raciocínio desta conversa), aqui mesmo. Faça antes de lançar no SOL."><i>1</i>Revisão final</button><button class="bt etapa lan so-pc" id="pr-lancar" title="Grava as exigências salvas no campo Outros de cada item no SOL e aprova o resto; sem exigência (CA), aprova tudo. Mostra tudo antes e pede confirmação; não emite a CIA nem o CA."><i>2</i>Lançar no SOL</button></span></h2>
+          <h2>CIA em construção <button class="bt link copiar-cia" id="pr-copiar-cia" title="Copia a CIA inteira, no formato da caixa do SOL">⧉ copiar</button><span class="cia-etapas"><button class="bt etapa rev" id="pr-revisar" title="Revisão final da CIA pelo subagente revisor-cia (Sonnet 5.5, lê a CIA de fora, sem o raciocínio desta conversa), aqui mesmo. Faça antes de lançar no SOL."><i>1</i><span class="quem claude" title="Vai para o chat do Claude">✳ Claude</span>Revisão final</button><button class="bt etapa lan so-pc" id="pr-lancar" title="Grava as exigências salvas no campo Outros de cada item no SOL e aprova o resto; sem exigência (CA), aprova tudo. Mostra tudo antes e pede confirmação; não emite a CIA nem o CA."><i>2</i><span class="quem script" title="Roda aqui no PC, sem IA">⚙ script</span>Lançar no SOL</button></span></h2>
           <div class="rola" id="pr-cia"></div>
         </div>
       </div>
@@ -1376,11 +1386,17 @@ $("#b-detalhes").onclick = () => $("#detalhes").classList.toggle("aberto");
   larga.addEventListener("change", situar); situar(); }
 
 // ---- janelinha
+const SELOS = { script: ["⚙ script", "Roda aqui no PC, sem IA"], ia: ["◆ IA local", "IA local (Ollama) no seu PC; dá palpite, não decide"],
+  claude: ["✳ Claude", "Vai para o chat do Claude"] };
+const selo = tipo => el("span", { class: "quem " + tipo, title: SELOS[tipo][1] }, SELOS[tipo][0]);
+const legendaSelos = () => el("div", { class: "legenda-selos" }, selo("script"), "sem IA", selo("ia"), "no seu PC", selo("claude"), "vai para o chat");
 function modal(titulo, sub, meio, botoes) {
-  $("#m-titulo").textContent = titulo;
+  // título pode vir com selo: [selo("script"), "Camadas das pranchas"]; botão que manda ao Claude ganha o selo sozinho
+  $("#m-titulo").replaceChildren(...[].concat(titulo).filter(x => x != null));
   $("#m-sub").textContent = sub || "";
   $("#m-meio").replaceChildren(...[].concat(meio));
-  $("#m-pe").replaceChildren(...botoes.map(([txt, fn, prim]) => el("button", { class: "bt" + (prim ? " p" : ""), on: { click: ev => fn(ev.currentTarget) } }, txt)));
+  $("#m-pe").replaceChildren(...botoes.map(([txt, fn, prim]) => el("button", { class: "bt" + (prim ? " p" : ""), on: { click: ev => fn(ev.currentTarget) } },
+    /Claude|pro chat/.test(txt) ? selo("claude") : null, txt)));
   $("#fundo-modal").classList.add("aberto");
 }
 const fechar = () => $("#fundo-modal").classList.remove("aberto");
@@ -3271,7 +3287,7 @@ const BLOCOS = {
           el("button", { class: "bt", title: "Corrigir o texto sugerido aqui mesmo antes de Aplicar", on: { click: ev => editar(ev.currentTarget) } }, "Editar"),
           conta, estado) : null,
         pedido ? el("div", { class: "rev-pedir" }, pedido,
-          el("button", { class: "bt", title: "Manda a explicação ou o pedido ao Claude desta conversa (Ctrl+Enter)", on: { click: pedir } }, "Pedir ajuste")) : null);
+          el("button", { class: "bt", title: "Manda a explicação ou o pedido ao Claude desta conversa (Ctrl+Enter)", on: { click: pedir } }, selo("claude"), "Pedir ajuste")) : null);
     };
     return el("div", {},
       el("b", {}, "Revisão final: " + resto.length + " a decidir, " + ok.length + " sem problema"),
@@ -3319,7 +3335,7 @@ const BLOCOS = {
       el("b", {}, (d.titulo || "Perguntas") + (processo ? " " : ""), processo ? el("span", { class: "discreto" }, "(vão também para o checklist)") : null),
       ...linhas, obs,
       el("div", { class: "linha-bts", style: "margin-top:8px" },
-        el("button", { class: "bt p", on: { click: mandar } }, "Mandar respostas"),
+        el("button", { class: "bt p", on: { click: mandar } }, selo("claude"), "Mandar respostas"),
         el("span", { class: "discreto" }, "Pode mandar só as que souber."),
         processo ? el("button", { class: "bt", on: { click: () => api("abrir_pasta_processo", [ctx.chave]) } }, "Abrir a pasta do processo") : null));
     return caixa;
@@ -3344,7 +3360,7 @@ function palpitesBloco(d, ctx) {
   const processo = ctx && /^A\d{8}/.test(ctx.chave);
   const topo = el("div", {}), corpo = el("div", {}), pe = el("div", {});
   const caixa = el("div", { class: "perguntas azul" },
-    el("b", {}, "Palpites da IA local "), el("span", { class: "discreto" }, "(palpite, não decisão: quem responde é você)"), topo, corpo, pe);
+    selo("ia"), el("b", {}, "Palpites da IA local "), el("span", { class: "discreto" }, "(palpite, não decisão: quem responde é você)"), topo, corpo, pe);
   const st = { resp: {}, nota: {}, pal: {}, chave: "", itens: [] };
   const palpiteDe = (it, e) => {
     if (it.estado === "pronto" && it.rotulo) {
@@ -3428,7 +3444,7 @@ function palpitesBloco(d, ctx) {
         semCartao.length ? el("div", { class: "pal-item discreto" }, "Sem palpite (não se confere na planta): " +
           semCartao.map(i => "nº " + i.n + (i.motivo ? " (" + i.motivo.replace(/\.$/, "") + ")" : "")).join(" · ")) : null);
       pe.replaceChildren(comCartao.length ? el("div", { class: "linha-bts", style: "margin-top:8px" },
-        el("button", { class: "bt p", on: { click: mandar } }, "Mandar respostas"),
+        el("button", { class: "bt p", on: { click: mandar } }, selo("claude"), "Mandar respostas"),
         el("span", { class: "discreto", style: "margin:0" }, "Pode mandar só as que já olhou. A resposta também corrige a IA.")) : "");
     }
     for (const it of comCartao) if (st.pal[it.n]) st.pal[it.n].replaceChildren(palpiteDe(it, e));
@@ -3473,7 +3489,7 @@ async function camadasAbrir(codigo, fluxo, botao) {
     el("details", { style: "margin-top:8px" }, el("summary", {}, "Camadas de cada prancha"), ...inv));
   const mandar = () => { fechar(); chatEnviar(ctxDe(codigo, fluxo, ""),
     "Camadas das pranchas (conferidor do SSEG, lido do PDF, sem IA). São fatos do PDF, não exigência: veja se algum vira notificação, com modelo do banco e o item conferido.\n\n" + r.texto); };
-  modal("Camadas das pranchas", "Lido do PDF, sem IA. Fatos para você conferir, não exigência pronta.", meio,
+  modal([selo("script"), "Camadas das pranchas"], "Lido do PDF, sem IA. Fatos para você conferir, não exigência pronta.", meio,
     [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]);
 }
 
@@ -3604,7 +3620,7 @@ function pintarChecklist() {
   // pré-análise documental (2.3.8): o que o script já leu, para não refazer
   const auto = d.auto || {};
   const refazerPre = el("button", { class: "bt link", title: "Roda o script de novo agora (sem Claude): use depois de pôr arquivos na pasta ou de o SOL mudar",
-    on: { click: async ev => { const b = ev.currentTarget; await api("processo_pre_analise", [PR.codigo], b); renderProcesso(await api("processo_abrir", [PR.codigo])); avisar("✓ Pré-análise refeita."); } } }, "Refazer pré-análise");
+    on: { click: async ev => { const b = ev.currentTarget; await api("processo_pre_analise", [PR.codigo], b); renderProcesso(await api("processo_abrir", [PR.codigo])); avisar("✓ Pré-análise refeita."); } } }, selo("script"), "Refazer pré-análise");
   if (!d.pre_analise && d.json_sol) out.push(el("div", { class: "bloco" }, el("b", {}, "Pré-análise documental (script)"),
     el("p", { class: "sub" }, "Ainda não feita para este processo."), refazerPre));
   if (d.pre_analise) {
@@ -3614,20 +3630,21 @@ function pintarChecklist() {
       chatEnviar(ctxDe(cod, fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto + ia);
       api("processo_marcar", [cod, "marcas", "pre_analise", pa.data]).then(recarregarRegistro); };
     const conteudo = [
+      legendaSelos(),
       pa.velha ? el("p", { class: "sub", style: "color:var(--verm)" }, "O JSON do SOL mudou depois da pré-análise: clique em Refazer pré-análise.") : null,
       pa.marcas.length ? el("div", { class: "pre-marcas" }, ...pa.marcas.map(l => el("div", { style: "color:" + cor(l) }, l)))
         : el("p", { class: "sub" }, "Nenhum ponto marcado."),
-      el("div", { style: "margin-top:6px" }, el("button", { class: "bt chamativo", title: "Abre a saída inteira do script; de lá, manda ao chat", on: { click: () => modal("Pré-análise documental", "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
-        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]) } }, "Revisar e mandar pro chat")),
+      el("div", { style: "margin-top:6px" }, el("button", { class: "bt chamativo", title: "Abre a saída inteira do script; de lá, manda ao chat", on: { click: () => modal([selo("script"), "Pré-análise documental"], "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
+        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]) } }, selo("claude"), "Revisar e mandar pro chat")),
       refazerPre,
       // 2.9.0: pedir os palpites da IA local fora da 1ª mensagem (só reanálise; sem IA neste PC e sem palpite pronto, avisa)
       (d.marcos || {}).analise >= 2 ? el("button", { class: "bt link", title: "Pede ao Claude os palpites da IA local sobre as exigências da última CIA (quadro azul). Só em PC com a IA local ligada, ou quando os palpites já vieram prontos.",
         on: { click: async ev => { const b = ev.currentTarget; b.disabled = true; const ia = await linhaIALocal(PR.codigo); b.disabled = false;
           if (!ia) return avisar("Sem IA local ligada neste PC e sem palpites prontos para este processo.");
-          chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Palpites da IA local para esta reanálise." + ia); } } }, "Palpites da IA local") : null,
+          chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Palpites da IA local para esta reanálise." + ia); } } }, selo("ia"), "Palpites da IA local") : null,
       // 2.10.0: camadas das pranchas × campo 4, lidas do PDF pelo script (sem IA), em qualquer análise
       el("button", { class: "bt link", title: "Lê do PDF das pranchas o nome de cada camada, a cor e o texto que está nela e cruza com o campo 4 (RTISOL 6.3.6.1.2.4 e Notas 01 e 02). Sem IA. Baixa do SOL as pranchas que faltam.",
-        on: { click: ev => camadasAbrir(PR.codigo, PR.fluxo, ev.currentTarget) } }, "Camadas das pranchas")];
+        on: { click: ev => camadasAbrir(PR.codigo, PR.fluxo, ev.currentTarget) } }, selo("script"), "Camadas das pranchas")];
     // já mandada ao Claude (2.3.16): encolhe numa linha; pré-análise refeita (data nova) volta aberta
     if ((r.marcas || {}).pre_analise === pa.data)
       out.push(el("details", { class: "bloco discreto" }, el("summary", {}, el("b", {}, "Pré-análise documental (script)"),
@@ -3692,7 +3709,7 @@ function contarRespostas() {
   const b = $("#mandar-resp"); if (!b || !PR.reg) return;
   const n = PR.reg.pendencias.filter(p => (p.resposta || "").trim() && !p.enviada && !p.feita).length;
   b.style.display = n ? "" : "none";
-  b.textContent = "Mandar " + n + " resposta(s) ao Claude";
+  b.replaceChildren(selo("claude"), "Mandar " + n + " resposta(s) ao Claude");
 }
 function salvarResposta(p) {
   return api("processo_atualizar", [PR.codigo, "pendencias", p.id, { resposta: p.resposta || "", enviada: false }]).then(() => delete PR.sujos["p" + p.id]);
@@ -3817,7 +3834,7 @@ function revisaoPerguntas(d, ctx, ok, resto, atual) {
     ...linhas, obs,
     (d.observacoes || []).length ? el("div", { class: "discreto", style: "margin-top:6px" }, "Observações: " + d.observacoes.join(" · ")) : null,
     el("div", { class: "linha-bts", style: "margin-top:8px" },
-      el("button", { class: "bt p", on: { click: mandar } }, "Mandar para correção"),
+      el("button", { class: "bt p", on: { click: mandar } }, selo("claude"), "Mandar para correção"),
       el("span", { class: "discreto" }, "O texto novo é escrito pelo corretor-cia (Fable 5.2) e volta com Aplicar / Ignorar.")));
   return caixa;
 }
@@ -3895,7 +3912,7 @@ function pintarCIA() {
       pranchas, ta, el("div", { class: "linha-fund" }, fund, cit),
       el("div", { class: "rod" },
         el("button", { class: "bt p", on: { click: salvar } }, "Salvar"),
-        el("button", { class: "bt", title: "Manda o texto da caixa ao chat como achado; o rascunho volta para este item", on: { click: pedir } }, "Pedir ao Claude"),
+        el("button", { class: "bt", title: "Manda o texto da caixa ao chat como achado; o rascunho volta para este item", on: { click: pedir } }, selo("claude"), "Pedir ao Claude"),
         el("button", { class: "bt", title: "Copia o texto deste item no formato da caixa Especificar do SOL", on: { click: copiarItem } }, "Copiar"),
         st,
         CIA_VISTA.agrupar ? null : el("button", { class: "bt link", title: "subir", on: { click: () => api("processo_mover", [PR.codigo, e.id, -1]).then(recarregarRegistro) } }, "↑"),
