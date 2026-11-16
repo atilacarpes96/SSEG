@@ -1380,6 +1380,13 @@ def main():
          and [f["texto"][:6] for f in _r["fatos"] if f["item"] == "sem_camadas"] == ["2º pav"], str(_r["fatos"]))
     _inv2 = {"camadas": ["EXTINTORES", "EXT-NUMERO", "EXT-DMP"], "por_camada": {n: {"tracos": 30, "vermelho": 30, "texto": ""}
                                                                                 for n in ("EXTINTORES", "EXT-NUMERO", "EXT-DMP")}}
+    def _pav(n):  # "6 EXTINTORES" muda por pavimento; "EXTINTORES" é a legenda, igual em todas
+        return {"camadas": ["6 EXTINTORES", "EXTINTORES"], "por_camada": {
+            "6 EXTINTORES": {"tracos": 10 + n, "vermelho": 10 + n, "texto": "EXT %d" % n},
+            "EXTINTORES": {"tracos": 39, "vermelho": 0, "texto": "PQS"}}}
+    _r3 = cm_m.conferir(_med[:1], [("P%d" % n, _pav(n), "PLANTA_BAIXA") for n in range(3)])
+    caso("camadas: camada idêntica em 3 pranchas é legenda (51398): não conta como segunda camada nem pela cor",
+         not [f for f in _r3["fatos"] if f["item"] in ("varias_camadas", "cor")], str(_r3["fatos"]))
     _r = cm_m.conferir(_med[:1], [("Térreo", _inv2, "PLANTA_BAIXA")])
     caso("camadas: a mesma medida em duas camadas é dita; a camada de distância dela não conta",
          [f["texto"] for f in _r["fatos"] if f["item"] == "varias_camadas"] == ['Extintores em 2 camadas (Térreo): "EXTINTORES"; "EXT-NUMERO".']

@@ -252,6 +252,19 @@ def conferir(medidas, pranchas):
     mapa = {}
     sem_camadas = []
     varias = {}        # (medida, camadas) → pranchas em que ela está assim espalhada
+    # camada idêntica (mesmos traços e mesmo texto) em 3 ou mais pranchas, até no corte: é legenda ou bloco
+    # repetido, não a medida desenhada em cada pavimento (51398: "EXTINTORES" ao lado de "6 EXTINTORES")
+    assinaturas = {}
+    vistas = set()     # a mesma prancha enviada mais de uma vez (15410) não faz a camada parecer legenda
+    for _rot, inv, _tipo in pranchas:
+        chave = json.dumps(inv.get("por_camada") or {}, sort_keys=True, ensure_ascii=False)
+        if chave in vistas:
+            continue
+        vistas.add(chave)
+        for nome, c in (inv.get("por_camada") or {}).items():
+            if c.get("tracos") or c.get("texto"):
+                assinaturas.setdefault(nome, []).append((c.get("tracos", 0), c.get("texto") or ""))
+    repetidas = {n for n, sig in assinaturas.items() if max(sig.count(x) for x in sig) >= 3}
     for rot, inv, _tipo in pranchas:
         nomes = inv.get("camadas") or []
         por = inv.get("por_camada") or {}
@@ -265,7 +278,7 @@ def conferir(medidas, pranchas):
         for nome in nomes:
             k, dist = medida_da_camada(nome)
             c = por.get(nome) or {}
-            if k in MEDIDAS and not dist and (c.get("tracos") or c.get("texto")):
+            if k in MEDIDAS and not dist and (c.get("tracos") or c.get("texto")) and nome not in repetidas:
                 por_med.setdefault(k, []).append(nome)
         for k, ns in sorted(por_med.items()):
             if len(ns) >= 2:
@@ -281,7 +294,7 @@ def conferir(medidas, pranchas):
                 texto_med[k] = texto_med.get(k, "") + " · " + (c.get("texto") or "")
                 # 6.3.6.1.2.3: cor vermelha
                 if (c.get("tracos", 0) >= 20 and c.get("vermelho", 0) < 0.5 * c["tracos"]
-                        and not re.search(LEGENDA, sem_acento(nome))):
+                        and not re.search(LEGENDA, sem_acento(nome)) and nome not in repetidas):
                     fato("6.3.6.1.2.3", "cor", "%s · camada \"%s\": %d de %d traços em vermelho." % (
                         rot, nome, c.get("vermelho", 0), c["tracos"]))
                 # Nota 01: distância em camada de medida que não leva distância
