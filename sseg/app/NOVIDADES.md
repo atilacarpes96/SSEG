@@ -4,6 +4,14 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.10.0
+
+- **Botão "Camadas das pranchas"** no bloco da pré-análise, em qualquer análise (primeira ou reanálise). O programa baixa do SOL as pranchas que faltam, pela aba em que você já entrou, e lê do próprio PDF o nome de cada camada, a cor dos traços e o texto que está dentro dela. Depois cruza com o campo 4. Não usa IA: o que aparece é o que está gravado no PDF.
+- **O que ele aponta:** medida do campo 4 sem camada própria (e onde está o texto dela), a mesma medida espalhada em várias camadas, texto de uma medida na camada de outra, camada da saída sem ocupação, área ou população (Nota 02 do 6.3.6.1.2.4 da RTISOL), medida que só se confere no memorial desenhada em planta sem laudo, planta baixa sem camadas e prancha com o texto convertido em desenho (aí ele diz para conferir na planta, em vez de acusar falta).
+- **Achados e observações.** Num teste com 40 primeiras análises, ele achou o problema de camada em 19 das 20 CIAs que cobraram camada. O que saiu quase igual nas CIAs que não cobraram (falta do texto "DMP", cor, viaturas e isolamento sem camada) fica separado, como observação.
+- **São fatos, não exigência.** "Mandar ao Claude" leva o resultado para a conversa; o Claude escolhe o modelo do banco e confere o item antes de propor a notificação, e quem decide é você.
+- **O instalador passa a instalar o PyMuPDF** (20 MB, no Python do PC), que é o que lê as camadas do PDF. Se faltar, o botão tenta instalar uma vez.
+
 ## 2.9.0
 
 - **Quadro azul: palpites da IA local na reanálise.** Num PC com a IA local ligada (Ollama com o modelo de visão; hoje só o PC de casa do Sd Carpes), ao mandar a pré-análise de uma reanálise ao Claude o programa baixa as plantas pela aba do SOL em que você já entrou, o Claude classifica cada exigência da última CIA e a IA local olha o recorte da planta nova. O resultado aparece num quadro azul, diferente do amarelo das perguntas do Claude: a exigência, o que mudou no texto da prancha (comparação exata, sem IA), o palpite com o grau de confiança e os recortes da planta anterior e da nova lado a lado (clique para ampliar).

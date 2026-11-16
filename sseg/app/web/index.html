@@ -3447,6 +3447,36 @@ function palpitesBloco(d, ctx) {
   else setTimeout(carregar, 0);
   return caixa;
 }
+// ---- Camadas das pranchas (2.10.0, pedido do Átila em 16/11/2026): o conferidor sseg/scripts/camadas.py lê do PDF o
+// nome, a cor e o texto de cada camada e cruza com o campo 4. Sem IA: são fatos do PDF, não exigência. Achado é o que
+// separou CIAs que cobraram camada das que não cobraram na medição de 16/11/2026; observação é o que saiu igual nos dois.
+async function camadasAbrir(codigo, fluxo, botao) {
+  avisar("Lendo as camadas das pranchas (a 1ª vez baixa as pranchas do SOL e pode levar um minuto)…");
+  const r = await api("camadas", [codigo], botao);
+  if (!r) return;
+  if (!r.ok) return avisar(r.msg || "Não consegui ler as camadas.");
+  const linha = f => el("div", { class: "pal" + (f.obs ? "" : " ambar"), style: "margin:4px 0" },
+    el("small", {}, f.grupo), f.texto);
+  const achados = r.fatos.filter(f => !f.obs), obs = r.fatos.filter(f => f.obs);
+  const inv = Object.entries(r.camadas || {}).map(([rot, cams]) => {
+    const med = cams.filter(c => !["base", "outra"].includes(c[1])).map(c => c[0]);
+    return el("div", { style: "font-size:12.5px;margin:2px 0" }, el("b", {}, rot + ": "),
+      cams.length ? cams.length + " camadas; de medida: " + (med.join("; ") || "nenhuma") : "sem camadas");
+  });
+  const meio = el("div", { class: "lista", style: "max-height:520px;font-family:inherit;white-space:normal" },
+    (r.faltam || []).length ? el("p", { class: "sub", style: "color:var(--verm)" }, "Pranchas que não deu para baixar: " + r.faltam.join("; ")) : null,
+    ...(r.erros || []).map(e => el("p", { class: "sub", style: "color:var(--verm)" }, e)),
+    el("b", {}, achados.length ? "Achados (" + achados.length + ")" : "Nenhum achado"),
+    ...achados.map(linha),
+    obs.length ? el("details", { style: "margin-top:8px" }, el("summary", {}, "Observações (" + obs.length + ") — fracas: saíram quase igual com e sem notificação nas CIAs medidas"),
+      ...obs.map(linha)) : null,
+    el("details", { style: "margin-top:8px" }, el("summary", {}, "Camadas de cada prancha"), ...inv));
+  const mandar = () => { fechar(); chatEnviar(ctxDe(codigo, fluxo, ""),
+    "Camadas das pranchas (conferidor do SSEG, lido do PDF, sem IA). São fatos do PDF, não exigência: veja se algum vira notificação, com modelo do banco e o item conferido.\n\n" + r.texto); };
+  modal("Camadas das pranchas", "Lido do PDF, sem IA. Fatos para você conferir, não exigência pronta.", meio,
+    [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]);
+}
+
 // Na reanálise, a 1ª mensagem com a pré-análise leva junto a linha "[IA local]" — só quando este PC tem a IA ligada
 // (Ollama) ou a pasta já tem palpites. Sem isso devolve "" e nada muda para o analista.
 async function linhaIALocal(codigo) {
@@ -3594,7 +3624,10 @@ function pintarChecklist() {
       (d.marcos || {}).analise >= 2 ? el("button", { class: "bt link", title: "Pede ao Claude os palpites da IA local sobre as exigências da última CIA (quadro azul). Só em PC com a IA local ligada, ou quando os palpites já vieram prontos.",
         on: { click: async ev => { const b = ev.currentTarget; b.disabled = true; const ia = await linhaIALocal(PR.codigo); b.disabled = false;
           if (!ia) return avisar("Sem IA local ligada neste PC e sem palpites prontos para este processo.");
-          chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Palpites da IA local para esta reanálise." + ia); } } }, "Palpites da IA local") : null];
+          chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Palpites da IA local para esta reanálise." + ia); } } }, "Palpites da IA local") : null,
+      // 2.10.0: camadas das pranchas × campo 4, lidas do PDF pelo script (sem IA), em qualquer análise
+      el("button", { class: "bt link", title: "Lê do PDF das pranchas o nome de cada camada, a cor e o texto que está nela e cruza com o campo 4 (RTISOL 6.3.6.1.2.4 e Notas 01 e 02). Sem IA. Baixa do SOL as pranchas que faltam.",
+        on: { click: ev => camadasAbrir(PR.codigo, PR.fluxo, ev.currentTarget) } }, "Camadas das pranchas")];
     // já mandada ao Claude (2.3.16): encolhe numa linha; pré-análise refeita (data nova) volta aberta
     if ((r.marcas || {}).pre_analise === pa.data)
       out.push(el("details", { class: "bloco discreto" }, el("summary", {}, el("b", {}, "Pré-análise documental (script)"),

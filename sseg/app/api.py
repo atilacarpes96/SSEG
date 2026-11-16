@@ -1308,6 +1308,40 @@ class Api:
         self._palpite().responder(self._pasta_proc(codigo), respostas)
         return True
 
+    def camadas(self, codigo):
+        """Camadas das pranchas × campo 4 (2.10.0, sseg/scripts/camadas.py), sem IA. Baixa do SOL as pranchas ativas que
+        faltam (a mesma subpasta plantas/ do quadro azul) e roda o conferidor no Python do PC: o PyMuPDF que ele usa é
+        instalado no Python do PC pelo instalador, não está dentro do .exe. Devolve {ok, msg, acao, fatos, camadas, texto}."""
+        pasta = self._pasta_proc(codigo)
+        m = self._palpite()
+        if any(p["lado"] == "depois" and not p["tem"] for p in m.plantas(pasta)):
+            r = self.palpites_plantas(codigo)
+            if r.get("acao"):
+                return {"ok": False, "acao": r["acao"], "msg": "Para ler as camadas o programa baixa as pranchas do SOL: " + r.get("msg", "")}
+        py = instalar.localizar().get("python")
+        script = os.path.join(self._clone(), "sseg", "scripts", "sseg.py")
+        if not py or not os.path.exists(script):
+            return {"ok": False, "msg": "Sem o Python do PC ou sem o sseg.py no clone."}
+        p = subprocess.run([py, script, "camadas", "--pasta", pasta, "--json"], capture_output=True, timeout=600,
+                           stdin=subprocess.DEVNULL, creationflags=base.SEM_JANELA, env={**os.environ, "PYTHONUTF8": "1"})
+        if p.returncode:
+            erro = p.stderr.decode("utf-8", "replace").strip()
+            if "PyMuPDF" in erro:
+                instalar.pacotes_pip(py, lambda *_: None)  # tenta instalar uma vez e roda de novo
+                p = subprocess.run([py, script, "camadas", "--pasta", pasta, "--json"], capture_output=True, timeout=600,
+                                   stdin=subprocess.DEVNULL, creationflags=base.SEM_JANELA, env={**os.environ, "PYTHONUTF8": "1"})
+            if p.returncode:
+                erro = p.stderr.decode("utf-8", "replace").strip()
+                return {"ok": False, "msg": ("Falta o PyMuPDF no Python do PC e não consegui instalar (pip install pymupdf==1.28.2)."
+                                             if "PyMuPDF" in erro else "O conferidor parou: " + erro[-300:])}
+        r = json.loads(p.stdout.decode("utf-8"))
+        (cm,) = self._scripts_do_clone("camadas")
+        for f in r["fatos"]:
+            f["obs"] = cm.observacao(f)
+        self._log("Camadas das pranchas de %s: %d achado(s), %d observação(ões)." % (
+            codigo, sum(not f["obs"] for f in r["fatos"]), sum(f["obs"] for f in r["fatos"])))
+        return dict(r, ok=True, texto=cm.relatorio(r))
+
     # ---------------------------------------------------------------- chat
     def _cota_ler(self):
         return self._cfg().get("cota")
