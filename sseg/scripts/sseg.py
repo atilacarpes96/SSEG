@@ -1093,6 +1093,9 @@ def main():
     import palpite_local
     palpite_local.args_parser(sub.add_parser("palpite", help="palpite da IA local (Ollama) nas exigências da última CIA, na reanálise"))
 
+    import camadas
+    camadas.args_parser(sub.add_parser("camadas", help="camadas (layers) das pranchas × medidas do campo 4, lidas do PDF, sem IA"))
+
     args = ap.parse_args()
 
     if args.cmd == "norma":
@@ -1109,6 +1112,10 @@ def main():
 
     if args.cmd == "palpite":
         palpite_local.principal(args)
+        return
+
+    if args.cmd == "camadas":
+        camadas.principal(args)
         return
 
     if args.cmd in ("sincronizar", "trazer"):

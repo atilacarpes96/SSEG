@@ -1351,6 +1351,51 @@ def main():
          # 14/11/2026: o heredoc com JSON foi barrado na janela ("brace with quote character"); o argumento entre aspas simples passa
          'palpite --pasta "P" preparar \'[{"n": 1, "tipo": "texto"' in _ins and "<<'FIM'\n[{" not in _ins and "[IA local]" in _ins
          and "```sseg-palpites" in _chat.GUIA_VISUAL and '"sseg-palpites"' in js and "perguntas azul" in js and "linhaIALocal" in js)
+    # 23. camadas das pranchas (sem IA, sem PyMuPDF: a conferência recebe o inventário já lido do PDF)
+    import camadas as cm_m
+    caso("camadas: nomes de camada viram medida (prefixo, sigla, abreviação, erro de digitação)",
+         cm_m.medida_da_camada("PI-EXT")[0] == "extintores" and cm_m.medida_da_camada("MED. SEG. ISOL. RISCO")[0] == "isolamento"
+         and cm_m.medida_da_camada("PI- BARRA AINTI-PÂNICO")[0] == "saida" and cm_m.medida_da_camada("Incêndio_hidrante")[0] == "hidrantes"
+         and cm_m.medida_da_camada("HIDRANTE URBANO")[0] == "hidrante_urbano" and cm_m.medida_da_camada("PI - ARQUITETURA")[0] == "base"
+         and cm_m.medida_da_camada("EXT-DMP") == ("extintores", True) and cm_m.medida_da_camada("01 - SOS")[0] == "sinalizacao")
+    _med = [{"chave": "extintores", "nome": "Extintores de Incêndio", "laudo": False},
+            {"chave": "saida", "nome": "Saída de Emergência", "laudo": False},
+            {"chave": "alarme", "nome": "Alarme de Incêndio", "laudo": False},
+            {"chave": "deteccao", "nome": "Detecção de Incêndio", "laudo": False}]
+    _inv = {"camadas": ["PI-EXT", "PI-SAIDA", "PI-DETECCAO", "ARQ"], "por_camada": {
+        "PI-EXT": {"tracos": 50, "vermelho": 50, "texto": "PQS 2-A:20-B:C · DMP= 20m · ALM-1 · ALM-2 · ALM-3"},
+        "PI-SAIDA": {"tracos": 30, "vermelho": 5, "texto": "1,20 · D-1 · 40 pessoas"},
+        "PI-DETECCAO": {"tracos": 10, "vermelho": 10, "texto": ""},
+        "ARQ": {"tracos": 900, "vermelho": 0, "texto": "Sala 45,20m² · Depósito 30,00m² · " + "NOTA GERAL " * 150}}}
+    _r = cm_m.conferir(_med, [("Térreo", _inv, "PLANTA_BAIXA")])
+    _it = {f["item"] for f in _r["fatos"]}
+    _n2 = next((f["texto"] for f in _r["fatos"] if f["item"] == "nota02"), "")
+    caso("camadas: alarme sem camada (com o texto dele na de extintores), mistura, cor, L.2 sem laudo e Nota 02",
+         {"sem_camada", "mistura", "cor", "fora_coluna_A", "nota02"} <= _it and "sem área" in _n2 and "ARQ" in _n2
+         and any("Alarme" in f["texto"] and "PI-EXT" in f["texto"] for f in _r["fatos"] if f["item"] == "sem_camada"), str(_r["fatos"]))
+    _r = cm_m.conferir([dict(_med[3], laudo=True)], [("Térreo", _inv, "PLANTA_BAIXA"), ("2º pav", {"camadas": []}, "PLANTA_BAIXA"),
+                                                     ("Termo", {"camadas": []}, "CORTE")])
+    caso("camadas: detecção de laudo de inviabilidade não é 'fora da coluna A'; planta baixa sem camadas é dita, corte não",
+         "fora_coluna_A" not in {f["item"] for f in _r["fatos"]}
+         and [f["texto"][:6] for f in _r["fatos"] if f["item"] == "sem_camadas"] == ["2º pav"], str(_r["fatos"]))
+    _inv2 = {"camadas": ["EXTINTORES", "EXT-NUMERO", "EXT-DMP"], "por_camada": {n: {"tracos": 30, "vermelho": 30, "texto": ""}
+                                                                                for n in ("EXTINTORES", "EXT-NUMERO", "EXT-DMP")}}
+    _r = cm_m.conferir(_med[:1], [("Térreo", _inv2, "PLANTA_BAIXA")])
+    caso("camadas: a mesma medida em duas camadas é dita; a camada de distância dela não conta",
+         [f["texto"] for f in _r["fatos"] if f["item"] == "varias_camadas"] == ['Extintores em 2 camadas (Térreo): "EXTINTORES"; "EXT-NUMERO".']
+         and cm_m.observacao({"item": "cor", "texto": ""}) and not cm_m.observacao({"item": "nota02", "texto": ""})
+         and cm_m.observacao({"item": "sem_camada", "texto": "Acesso de viaturas (campo 4): ..."})
+         and not cm_m.observacao({"item": "sem_camada", "texto": "Alarme (campo 4): ..."}),
+         str(_r["fatos"]))
+    _r = cm_m.conferir([], [("Térreo", _inv, "PLANTA_BAIXA")])
+    caso("camadas: sem o campo 4 no JSON, nada de 'medida não marcada'", {f["item"] for f in _r["fatos"]} >= {"sem_campo4"}
+         and "camada_sem_medida" not in {f["item"] for f in _r["fatos"]}, str(_r["fatos"]))
+    _r = cm_m.conferir(_med[:2], [("Térreo", {"camadas": ["PI-EXT", "PI-SAIDA"], "por_camada": {
+        "PI-EXT": {"tracos": 50, "vermelho": 50, "texto": ""}, "PI-SAIDA": {"tracos": 40, "vermelho": 40, "texto": ""}}}, "PLANTA_BAIXA")])
+    caso("camadas: texto convertido em desenho vira 'conferir na planta', nunca 'sem área/população' nem 'sem DMP'",
+         {f["item"] for f in _r["fatos"]} == {"ilegivel"}, str(_r["fatos"]))
+    caso("camadas: ocupação entre parênteses sem hífen conta; folha A1 solta não",
+         cm_m.sinais("ESCRITÓRIO (D1) · 4 pessoas")["ocupacao"] == 1 and cm_m.sinais("FOLHA A1")["ocupacao"] == 0)
     print(f"testar.py: {oks} ok, {len(falhas)} falha(s)")
     for f in falhas:
         print("FALHA", f)

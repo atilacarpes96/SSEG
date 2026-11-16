@@ -49,6 +49,10 @@ BAIXAR_A_MAO = {
     "node": "https://nodejs.org (versão LTS)",
     "claude": "PowerShell: irm https://claude.ai/install.ps1 | iex",
 }
+# pacotes do pip que não bloqueiam o programa: sem eles, só a função que os usa avisa que falta.
+# PyMuPDF fixo na 1.28.2 (16/11/2026): a 2.x traz onnxruntime, pymupdf4llm e layout (~200 MB); a 1.28 vem sozinha
+# (20 MB) e é a versão do servidor. Usado por sseg/scripts/camadas.py (camadas das pranchas).
+PACOTES_PIP = [("pymupdf", "pymupdf==1.28.2", "PyMuPDF (camadas das pranchas)")]
 INICIO_BLOCO, FIM_BLOCO = "# >>> SSEG (programa) >>>", "# <<< SSEG (programa) <<<"
 
 
@@ -245,10 +249,29 @@ def instalar(escrever=print):
         escrever("✓ %s instalado" % nome if rc == 0 else "✗ %s não instalou (código %s)" % (nome, rc))
     achados = localizar()
     ajustar(achados, escrever)
+    pacotes_pip(achados.get("python"), escrever)
     resto = faltando(achados)
     for k in resto:
         escrever("✗ Ainda falta %s. Baixar à mão: %s" % (dict((c, n) for c, n, _ in PROGRAMAS)[k], BAIXAR_A_MAO[k]))
     return resto
+
+
+def pacotes_pip(py, escrever=print):
+    """Instala no Python do usuário os pacotes de PACOTES_PIP que faltam. Falha aqui não para a instalação."""
+    if not py:
+        return
+    for modulo, requisito, nome in PACOTES_PIP:
+        try:
+            ok = subprocess.run([py, "-c", "import %s" % modulo], capture_output=True, timeout=60,
+                                creationflags=SEM_JANELA).returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            ok = False
+        if ok:
+            continue
+        escrever("→ Instalando %s…" % nome)
+        rc = _rodar([py, "-m", "pip", "install", "--user", "--disable-pip-version-check", "--no-warn-script-location",
+                     requisito], escrever)
+        escrever("✓ %s instalado" % nome if rc == 0 else "✗ %s não instalou (código %s): o resto do SSEG funciona" % (nome, rc))
 
 
 # ---------------------------------------------------------------------- Claude Code
