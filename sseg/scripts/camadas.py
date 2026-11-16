@@ -15,6 +15,9 @@ O QUE CONFERE (RT de Implantação do SOL-CBMRS, conferido no PDF oficial em 16/
   6.3.6.1.2.3  medidas na cor vermelha
   6.3.6.1.2.6.1 itens fora da coluna "A" da Tabela L.1 (RT 05 P1.1) na planta são objeto de CIA — medida de
                laudo de inviabilidade deferido continua sendo representada (regra de trabalho de 02/09/2026)
+  RT 05 Parte 08, Anexo A (coluna Observação, conferido no PDF em 16/11/2026): "Junto ao símbolo, deverá ser
+               informado o número de ordem" — extintores, hidrantes e mangotinhos, acionador de alarme. Só nas
+               plantas baixas: número repetido, buraco na sequência, camada sem número, número fora da camada
 
 USO
   python sseg/scripts/sseg.py camadas --pasta "<pasta do processo>"          relatório
@@ -33,7 +36,7 @@ import sys
 import unicodedata
 from collections import Counter
 
-VERSAO_CACHE = 1
+VERSAO_CACHE = 2  # 2: pedaços de texto lado a lado na mesma linha viram um texto só
 
 
 def sem_acento(t):
@@ -185,10 +188,27 @@ def ler_pdf(pdf):
             c["tracos"] += 1
             if _vermelho(x.get("color") or x.get("fill")):
                 c["vermelho"] += 1
+        ultimo = {}    # camada -> (origem do último caractere, direção, tamanho) do último texto dela
         for t in pag.get_texttrace():
-            s = "".join(chr(ch[0]) for ch in t.get("chars") or () if ch[0] >= 32).strip()
-            if s:
-                cam(t.get("layer"))["texto"].append(s)
+            chars = [ch for ch in t.get("chars") or () if ch[0] >= 32]
+            s = "".join(chr(ch[0]) for ch in chars).strip()
+            if not s:
+                continue
+            textos = cam(t.get("layer"))["texto"]
+            ini, fim = chars[0][2], chars[-1][2]
+            dx, dy = t.get("dir") or (1, 0)
+            tam = t.get("size") or 1
+            u = ultimo.get(t.get("layer"))
+            # o PDF guarda "Nº 1" e "0" em pedaços separados (46239): junta o que continua a mesma linha
+            if u and textos:
+                ox, oy = ini[0] - u[0][0], ini[1] - u[0][1]
+                ao_longo, de_lado = ox * dx + oy * dy, abs(-ox * dy + oy * dx)
+                if abs(u[1][0] - dx) + abs(u[1][1] - dy) < 0.05 and 0 < ao_longo < 1.6 * tam and de_lado < 0.3 * tam:
+                    textos[-1] += (" " if ao_longo > 0.9 * tam else "") + s
+                    ultimo[t.get("layer")] = (fim, (dx, dy), tam)
+                    continue
+            textos.append(s)
+            ultimo[t.get("layer")] = (fim, (dx, dy), tam)
     d = {"v": VERSAO_CACHE, "camadas": nomes, "pag": len(doc),
          "por_camada": {k: {"tracos": v["tracos"], "vermelho": v["vermelho"], "texto": " · ".join(v["texto"])[:20000]}
                         for k, v in por.items()}}
@@ -234,6 +254,130 @@ def pranchas_ativas(pasta, api):
     return out
 
 
+# ------------------------------------------------------------------ número de ordem (RT 05 Parte 08, Anexo A)
+
+# "Junto ao símbolo, deverá ser informado o número de ordem" (coluna Observação do Anexo A: extintor, hidrante e
+# mangotinho, acionador de alarme). Um texto da camada é número de ordem quando é só o número, com prefixo curto
+# conhecido e, no pavimento tipo, o pavimento: "02", "A-03", "ALM- 1", "EXT- 85", "09 - 2° PAV.".
+ORDEM = ("extintores", "hidrantes", "alarme")
+_PREFIXOS = (r"E|EX|EXT|A|AL|ALM|ALR|AC|ACM|H|HD|HDR|HID|M|MG|N|NO|NR|NUM"
+             r"|EXTINTOR|HIDRANTE|MANGOTINHO|ACIONADOR|ALARME|H/M")  # "HIDRANTE 02" (1906), "H/M1" (18168)
+_NUMERO = re.compile(r"^(?:(?:%s)\s*[-.:]?\s*)?0*(\d{1,3})(?:\s*-\s*\d{1,2}\s*\S{0,2}\s*PAV.*|\s+-\s+\D.*)?$" % _PREFIXOS)
+# ("H 10 - TIPO 3", 1509: número, traço e a descrição do equipamento)
+
+
+# fora da camada da medida só vale número com o prefixo dela ("EXT- 1" fora de camada, 49826)
+# ("E-1", "H-3" são ocupação e "E5" é placa de sinalização: prefixo de uma letra só não vale fora da camada)
+_PREFIXO_DA_MEDIDA = {"extintores": r"EX|EXT", "hidrantes": r"HD|HDR|HID|MG|H/M", "alarme": r"AL|ALM|ALR|AC|ACM"}
+# "SHSC T3 Nº 02" (49961) e "N° 75, 76" (bateria, 1764); não "n° 14/2016" (número de RT) nem "EXTINTOR Nº 01= 18,50 M"
+# (distância a percorrer citando o extintor, 50906)
+_NO = re.compile(r"(?<![A-Z])N[O°]\s*\.?\s*(\d{1,3}(?:\s*[,E]\s*\d{1,3})*)(?![\d.,/=]|\s*=)")
+
+
+def numeros(texto, medida=None):
+    """Números de ordem no texto de uma camada (textos separados por " · "). Com medida: só os de prefixo dela."""
+    rx = _NUMERO if not medida else re.compile(
+        r"^(?:%s)\s*[-.:]?\s*0*(\d{1,3})(?:\s*-\s*\d{1,2}\s*\S{0,2}\s*PAV.*)?$" % _PREFIXO_DA_MEDIDA[medida])
+    out = []
+    for t in (texto or "").split(" · "):
+        u = sem_acento(t).strip()
+        m = rx.match(u)
+        if m:
+            if int(m.group(1)) > 0:
+                out.append(int(m.group(1)))
+        elif not medida:
+            for m in _NO.finditer(u):
+                out.extend(n for n in map(int, re.findall(r"\d+", m.group(1))) if n > 0)
+    return out
+
+
+def _faixas(ns):
+    """[1, 2, 3, 7] -> "01–03, 07"."""
+    out, ini = [], None
+    for i, n in enumerate(ns):
+        if ini is None:
+            ini = n
+        if i + 1 == len(ns) or ns[i + 1] != n + 1:
+            out.append("%02d" % ini if ini == n else "%02d–%02d" % (ini, n))
+            ini = None
+    return ", ".join(out)
+
+
+def numeros_de_ordem(no_campo4, pranchas, repetidas, fato):
+    vistas = set()
+    nums = {}          # medida -> [(número, rótulo da prancha)]
+    sem = {}           # medida -> [pranchas (planta baixa) com a camada desenhada e nenhum número]
+    longe = {}         # medida -> {(prancha, camada): quantos} números com o prefixo dela em outra camada
+    for rot, inv, tipo in pranchas:
+        if tipo not in ("PLANTA_BAIXA", ""):
+            continue  # a implantação e o corte repetem o equipamento da planta baixa (49826: extintor 38)
+        por = inv.get("por_camada") or {}
+        chave = json.dumps(por, sort_keys=True, ensure_ascii=False)
+        if chave in vistas:
+            continue
+        vistas.add(chave)
+        desenhada, proprios, outros = set(), {}, {}
+        for nome, c in por.items():
+            if nome in repetidas or re.search(LEGENDA, sem_acento(nome)):
+                continue
+            k, dist = medida_da_camada(nome) if nome else ("base", False)
+            if k in ORDEM and not dist:
+                if c.get("tracos"):
+                    desenhada.add(k)
+                proprios.setdefault(k, []).extend((n, nome) for n in numeros(c.get("texto")))
+            else:
+                for med in ORDEM:
+                    ns = numeros(c.get("texto"), med)
+                    if ns:
+                        outros.setdefault(med, {})[nome or "fora de camada"] = ns
+        for k in ORDEM:
+            if proprios.get(k):
+                nums.setdefault(k, []).extend((n, rot, nome) for n, nome in proprios[k])
+            elif k in desenhada:
+                if outros.get(k):
+                    for camada, ns in outros[k].items():
+                        longe.setdefault(k, {})[(rot, camada)] = len(ns)
+                        nums.setdefault(k, []).extend((n, rot, camada) for n in ns)
+                else:
+                    sem.setdefault(k, []).append((rot, any((por.get(n) or {}).get("texto") for n in por
+                                                           if medida_da_camada(n)[0] == k)))
+    for k in ORDEM:
+        if k not in no_campo4:
+            continue
+        nome = MEDIDAS[k][0]
+        if longe.get(k):
+            fato("RT 05 P08 Anexo A", "ordem_fora_da_camada", "%s: o número de ordem não está na camada da medida; "
+                 "achei em %s." % (nome, "; ".join("%s · \"%s\" (%d)" % (r, c, q) for (r, c), q in longe[k].items())))
+        for com_texto, item, frase in ((True, "ordem_sem_numero", "a camada tem texto, mas nenhum número de ordem"),
+                                       (False, "ordem_sem_texto", "a camada não tem texto nenhum (o número pode ter "
+                                                                  "virado desenho)")):
+            rots = [r for r, t in sem.get(k, ()) if bool(t) == com_texto]
+            if rots:
+                fato("RT 05 P08 Anexo A", item, "%s: %s em %s; conferir na planta." % (
+                    nome, frase, ", ".join(rots) if len(rots) <= 4 else "%d plantas baixas" % len(rots)))
+        if not nums.get(k):
+            continue
+        onde_n, por_camada_n = {}, Counter()
+        for n, rot, camada in nums[k]:
+            onde_n.setdefault(n, []).append(rot)
+            por_camada_n[(n, rot, camada)] += 1
+        # repetido: na mesma camada ou em pranchas diferentes. Em duas camadas da mesma prancha (28689: "EXTINTOR" e
+        # "INVIABILIDADE_EXTINTOR", cada uma de 01 em diante) já sai como "várias camadas"
+        dup = sorted(n for n, rots in onde_n.items()
+                     if len(set(rots)) > 1 or any(q >= 2 for (m, _r, _c), q in por_camada_n.items() if m == n))
+        if dup:
+            fato("RT 05 P08 Anexo A", "ordem_repetido", "%s: número de ordem repetido: %s." % (nome, "; ".join(
+                "%02d (%s)" % (n, ", ".join(sorted(set(onde_n[n])))) if len(set(onde_n[n])) > 1
+                else "%02d (%d vezes em %s)" % (n, len(onde_n[n]), onde_n[n][0]) for n in dup[:6])
+                + ("; e mais %d" % (len(dup) - 6) if len(dup) > 6 else "")))
+        maior = max(onde_n)
+        falta = [i for i in range(1, maior + 1) if i not in onde_n]
+        if falta and maior <= 400 and len(falta) <= maior / 2:
+            fato("RT 05 P08 Anexo A", "ordem_buraco", "%s: a numeração vai até %02d e não aparece %s. O equipamento "
+                 "pode estar sem número, ou o número pode estar em desenho; conferir na planta." % (
+                     nome, maior, _faixas(falta)))
+
+
 # ------------------------------------------------------------------ conferência (sem PDF: recebe os inventários)
 
 def conferir(medidas, pranchas):
@@ -264,7 +408,7 @@ def conferir(medidas, pranchas):
         for nome, c in (inv.get("por_camada") or {}).items():
             if c.get("tracos") or c.get("texto"):
                 assinaturas.setdefault(nome, []).append((c.get("tracos", 0), c.get("texto") or ""))
-    repetidas = {n for n, sig in assinaturas.items() if max(sig.count(x) for x in sig) >= 3}
+    repetidas = {n for n, sig in assinaturas.items() if n and max(sig.count(x) for x in sig) >= 3}
     for rot, inv, _tipo in pranchas:
         nomes = inv.get("camadas") or []
         por = inv.get("por_camada") or {}
@@ -380,6 +524,8 @@ def conferir(medidas, pranchas):
              "pelo texto; conferir na planta." % letras)
         return {"fatos": fatos, "camadas": mapa}
 
+    numeros_de_ordem(no_campo4, pranchas, repetidas, fato)
+
     # Nota 01: medida que leva distância e não tem texto de distância na própria camada nem camada de distância dela
     dist_camadas = {(k if k in MEDIDAS else None) for rot in mapa for _n, k, d in mapa[rot] if d}
     sem_d = [MEDIDAS[k][0] for k in COM_DISTANCIA
@@ -438,7 +584,7 @@ def processo(pasta):
 
 # Medição de 16/11/2026 (40 processos de CIA única, 20 com e 20 sem notificação de camada): estes fatos saíram quase
 # na mesma proporção nos dois grupos e ficam como observação, não como achado.
-FRACOS = ("sem_distancia", "cor", "distancia_fora")
+FRACOS = ("sem_distancia", "cor", "distancia_fora", "ordem_sem_texto")
 SECUNDARIAS = ("Acesso de viaturas", "Isolamento", "Iluminação", "Hidrante urbano")
 
 

@@ -1387,6 +1387,27 @@ def main():
     _r3 = cm_m.conferir(_med[:1], [("P%d" % n, _pav(n), "PLANTA_BAIXA") for n in range(3)])
     caso("camadas: camada idêntica em 3 pranchas é legenda (51398): não conta como segunda camada nem pela cor",
          not [f for f in _r3["fatos"] if f["item"] in ("varias_camadas", "cor")], str(_r3["fatos"]))
+    caso("camadas: número de ordem lido do texto (RT 05 P08 Anexo A) sem pegar capacidade, ocupação nem norma",
+         cm_m.numeros("02 · A-03 · ALM- 1 · EXT- 85 · 09 - 2° PAV. · H 10 - TIPO 3 · HIDRANTE 04 · SHSC T3 Nº 05 · "
+                      "N° 75, 76 · 2A/20BC · 4-A:40-B:C · 20.000 L · 6 KG · RTCBMRS n° 22/2023 · EXTINTOR Nº 01= 18,50 M")
+         == [2, 3, 1, 85, 9, 10, 4, 5, 75, 76]
+         and cm_m.numeros("E-1 · E5 · EXT- 7", "extintores") == [7])
+
+    def _pb(ext, fora=""):
+        return {"camadas": ["EXT", ""], "por_camada": {"EXT": {"tracos": 40, "vermelho": 40, "texto": ext},
+                                                        "": {"tracos": 5, "vermelho": 0, "texto": fora},
+                                                        "ARQ": {"tracos": 9, "vermelho": 0, "texto": "SALA " * 120}}}
+    _m_ext = [{"chave": "extintores", "nome": "Extintores de Incêndio", "laudo": False}]
+    _o = cm_m.conferir(_m_ext, [("Térreo", _pb("01 · PQS · 02 · 02 · 05"), "PLANTA_BAIXA"),
+                                ("Implantação", _pb("01"), "IMPLANTACAO"),
+                                ("Portaria", _pb("PQS ABC · 4-A:40-B:C"), "PLANTA_BAIXA"),
+                                ("Guarita", _pb("", "EXT- 06 · E-1"), "PLANTA_BAIXA")])
+    _ot = {f["item"]: f["texto"] for f in _o["fatos"] if f["grupo"].startswith("RT 05 P08")}
+    caso("camadas: número de ordem repetido, buraco, sem número e fora da camada; implantação não conta",
+         _ot.get("ordem_repetido") == "Extintores: número de ordem repetido: 02 (2 vezes em Térreo)."
+         and "não aparece 03–04" in _ot.get("ordem_buraco", "")
+         and "Portaria" in _ot.get("ordem_sem_numero", "")
+         and _ot.get("ordem_fora_da_camada", "").endswith('Guarita · "fora de camada" (1).'), str(_ot))
     _r = cm_m.conferir(_med[:1], [("Térreo", _inv2, "PLANTA_BAIXA")])
     caso("camadas: a mesma medida em duas camadas é dita; a camada de distância dela não conta",
          [f["texto"] for f in _r["fatos"] if f["item"] == "varias_camadas"] == ['Extintores em 2 camadas (Térreo): "EXTINTORES"; "EXT-NUMERO".']
