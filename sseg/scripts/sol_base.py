@@ -54,6 +54,8 @@ import argparse
 import datetime
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -302,6 +304,88 @@ def baixar_cias(s, ids):
     return feitas
 
 
+# ------------------------------------------------------------------ 3b. retratos (IA local, 17/11/2026)
+
+RETRATOS = os.path.join(BASE, "retratos")
+RETRATAR = {"NCA", "AGUARDANDO_CIENCIA"}  # CIA lançada e o RT ainda não reenviou: a planta é a que foi analisada
+
+
+def retratar(s, k, d=None):
+    """Guarda o processo como estava na última CIA: plantas ativas, documentos dos envolvidos, o JSON do
+    licenciamento e o texto da CIA, em retratos/<id>/<arquivo da CIA>/. Quando a análise seguinte sair (CA = tudo
+    cumprido; CIA = o REITERO diz o que não foi), o par vira item da bateria da IA local com a planta certa, de
+    qualquer analista da seção (pedido do Átila em 17/11/2026, coleta ampla com o aval da chefia). Só prancha
+    incluída até o dia da CIA; a que o RT já trocou fica registrada em meta.json. Devolve quantos arquivos baixou."""
+    import documentos
+    d = d or _ler(os.path.join(BASE, "proc", k + ".json"), {})
+    lic = d.get("licenciamento") or {}
+    if lic.get("situacao") not in RETRATAR:
+        return 0
+    r = resumo_do(lic, d.get("marcos") or [], d.get("historico") or {})
+    if not r["cias"] or (r.get("ultima") or {}).get("resultado") != "CIA":
+        return 0
+    cia, dia = r["cias"][-1], r["ultima"]["data"]
+    pasta = os.path.join(RETRATOS, k, str(cia))
+    meta = _ler(os.path.join(pasta, "meta.json"), {})
+    if meta.get("completo"):
+        return 0
+    os.makedirs(os.path.join(pasta, "plantas"), exist_ok=True)
+    feitos, trocadas, falhas = 0, [], []
+    for e in lic.get("elemGraficos") or []:
+        a = e.get("arquivo") or {}
+        if e.get("situacao") != "ATIVO" or not a.get("id"):
+            continue
+        incl = time.strftime("%Y-%m-%d", time.localtime((e.get("dthInclusao") or 0) / 1000))
+        if incl > dia:
+            trocadas.append({"id": a["id"], "tipo": e.get("tipo"), "incluida": incl})
+            continue
+        nome = re.sub(r"[^\w.\- ]+", "_", a.get("nomeArquivo") or "prancha.pdf")
+        arq = os.path.join(pasta, "plantas", "%s-%s-%s" % (e.get("tipo") or "OUTRO", a["id"], nome))
+        if os.path.exists(arq):
+            continue
+        try:
+            dados = s.pdf(a["id"])
+            if not dados.startswith(b"%PDF"):
+                raise RuntimeError("não é PDF")
+            with open(arq + ".parte", "wb") as fh:
+                fh.write(dados)
+            os.replace(arq + ".parte", arq)
+            feitos += 1
+        except (RuntimeError, OSError) as x:
+            falhas.append("prancha %s: %s" % (a["id"], str(x)[:80]))
+    n, f2 = documentos.baixar(pasta, lic, s.pdf)
+    feitos += n
+    falhas += f2
+    _gravar(os.path.join(pasta, "licenciamento.json"), d)
+    txt = os.path.join(BASE, "cia", "%s.txt" % cia)
+    if os.path.exists(txt):
+        shutil.copyfile(txt, os.path.join(pasta, "cia.txt"))
+    _gravar(os.path.join(pasta, "meta.json"), {
+        "id": k, "numero": lic.get("numero"), "cia": cia, "data_cia": dia, "analista": r["ultima"].get("quem"),
+        "analise": r["analises"], "situacao": lic.get("situacao"), "retratado_em": agora(),
+        "plantas_trocadas": trocadas, "falhas": falhas, "completo": not falhas})
+    return feitos
+
+
+def retratar_todos(limite=None):
+    """Passada única (e de recuperação): retrata todos os processos da base em NCA/aguardando ciência."""
+    s = Sessao()
+    estado = _ler(ESTADO, {})
+    ks = [k for k, v in estado.items() if (v.get("situacao") in RETRATAR)]
+    ks = ks[:limite] if limite else ks
+    tot = 0
+    for i, k in enumerate(ks, 1):
+        try:
+            tot += retratar(s, k)
+        except (RuntimeError, OSError, ValueError, KeyError) as e:
+            print("  %s: %s" % (k, str(e)[:150]))
+        if i % 25 == 0:
+            print("  retratos: %d de %d processos, %d arquivos" % (i, len(ks), tot))
+            sys.stdout.flush()
+    print("Retratos: %d processos, %d arquivos baixados." % (len(ks), tot))
+    return 0
+
+
 # ------------------------------------------------------------------ 4. índice
 
 def _guerra():
@@ -430,7 +514,7 @@ def rodar(completo=False, limite=None):
     _gravar(os.path.join(BASE, "rodada.json"), meta)
     s = None
     estado = _ler(ESTADO, {})
-    feitos = erros = cias = 0
+    feitos = erros = cias = retratados = 0
     try:
         s = Sessao()
         itens, total = listar(s)
@@ -462,6 +546,10 @@ def rodar(completo=False, limite=None):
                 cias += baixar_cias(s, r["cias"])
             except (RuntimeError, OSError, subprocess.SubprocessError) as e:
                 print("  %s: CIA não lida (%s)" % (l["numero"], str(e)[:150]))
+            try:  # o processo como estava na CIA, para a bateria da IA local
+                retratados += retratar(s, k)
+            except (RuntimeError, OSError, ValueError, KeyError) as e:
+                print("  %s: retrato não feito (%s)" % (l["numero"], str(e)[:150]))
             if i % 50 == 0:
                 _gravar(ESTADO, estado)
                 if i % 500 == 0:  # a aba Processos vê o andamento sem esperar o fim da rodada
@@ -477,7 +565,7 @@ def rodar(completo=False, limite=None):
         return 2
     finally:
         _gravar(ESTADO, estado)
-        meta.update(fim=agora(), detalhes=feitos, erros=erros, cias=cias,
+        meta.update(fim=agora(), detalhes=feitos, erros=erros, cias=cias, retratos=retratados,
                     consultas=s.consultas if s else 0, minutos=round((time.time() - inicio) / 60, 1))
         _gravar(os.path.join(BASE, "rodada.json"), meta)
         n = gerar_indice(estado=estado)
@@ -501,7 +589,18 @@ def main():
     ap.add_argument("--resumos", action="store_true", help="recalcula os resumos dos proc/*.json (sem SOL) e o índice")
     ap.add_argument("--limite", type=int, help="no máximo N detalhes nesta rodada")
     ap.add_argument("--pastas", action="store_true", help="só copia os Marcos da base para as pastas dos processos")
+    ap.add_argument("--retratos", action="store_true", help="retrata todos os processos em NCA/aguardando ciência "
+                                                               "(passada única; a rodada normal já retrata os que mudam)")
     a = ap.parse_args()
+    if a.retratos:
+        import fcntl
+        trava = open(os.path.join(BASE, ".rodando"), "w")
+        try:
+            fcntl.flock(trava, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            print("Outra rodada da base já está em andamento.")
+            return 1
+        return retratar_todos(a.limite)
     if a.pastas:
         print("Pastas com Marcos atualizados: %d." % preencher_pastas())
         return 0
