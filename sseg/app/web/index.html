@@ -3506,6 +3506,21 @@ async function pintarElementos(baixar, botao) {
       on: { click: ev => api("elementos_abrir", [cod, tem.map(i => i.id)], ev.currentTarget) } },
       g.rotulo + (g.itens.length > 1 ? " (" + (tem.length < g.itens.length ? tem.length + " de " : "") + g.itens.length + ")" : "")));
   }
+  // 2.13.5: a última CIA ao lado das pranchas — baixa do SOL na 1ª vez (cia-<id>.pdf, com o texto para o Claude) e abre
+  if (r.cia) {
+    const c = r.cia, dt = (c.data || "").split("-").reverse().join("/");
+    bts.push(el("button", { class: "bt s-pr",
+      title: (c.tem ? "Abre no leitor de PDF do computador" : "Baixa do SOL, pela aba em que você já entrou, e abre no leitor de PDF")
+        + " a última CIA" + (dt ? " (" + dt + (c.analista ? ", " + c.analista : "") + ")" : "")
+        + ". Fica na pasta do processo como " + c.arquivo + ", com o texto, para o Claude e os scripts lerem.",
+      on: { click: async ev => {
+        if (!c.tem) avisar("Baixando a última CIA do SOL para a pasta do processo…");
+        const x = await api("cia_abrir", [cod], ev.currentTarget);
+        if (!x) return;
+        if (!x.ok) return avisar("✗ " + (x.msg || "Não consegui abrir a CIA.") + (x.acao === "sol" ? " Entre no SOL pelo Chrome e tente de novo." : x.acao === "chrome" ? " O Chrome pede \"Permitir\" a cada conexão." : ""));
+        if (x.baixou) { avisar("✓ Última CIA na pasta do processo (" + x.arquivo + ")."); pintarElementos(false); }
+      } } }, (c.tem ? "" : "Baixar ") + "Última CIA" + (dt ? " (" + dt + ")" : "")));
+  }
   caixa.replaceChildren(...bts);
 }
 

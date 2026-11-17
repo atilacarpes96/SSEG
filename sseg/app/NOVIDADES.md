@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.5
+
+- **Botão "Última CIA" junto dos elementos gráficos.** Na reanálise, ao lado de Planta baixa, Implantação e Corte, aparece "Baixar Última CIA (data)": baixa do SOL, pela aba em que você já entrou, o PDF da CIA anterior para a pasta do processo e abre no leitor de PDF. Depois o botão vira "Última CIA (data)" e só abre. O texto fica ao lado (cia-ultima.txt), e o Claude e os palpites leem dali.
+- Primeira análise não tem o botão.
+
 ## 2.13.4
 
 - **O laudo de inviabilidade vai junto quando você inicia a análise.** O passo 2 ("Revisar e mandar pro chat") leva, além da pré-análise, as medidas do campo 4 marcadas com inviabilidade (total ou parcial) e o texto do laudo que está no SOL, com o lembrete de que a compensatória tem de estar no campo 4 e em planta e de que o que o laudo dispensa não vira exigência. Antes, o Claude só via o laudo se lembrasse de procurar.

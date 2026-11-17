@@ -1324,7 +1324,42 @@ class Api:
                                             "leia o processo no SOL primeiro.", "grupos": [], "baixadas": []}
             r = self.palpites_plantas(codigo, True)
             m.nomes_do_sol(pasta)
-        return dict(r, grupos=m.elementos(pasta))
+        return dict(r, grupos=m.elementos(pasta), cia=m.ultima_cia(pasta) if hasattr(m, "ultima_cia") else None)
+
+    # 2.13.5 (pedido do Átila, 17/11/2026): a última CIA ao lado dos elementos gráficos. O servidor já manda o texto
+    # (cia-<id>.txt); o PDF não sobe nem desce, então este botão o baixa pela aba do SOL para a pasta do processo, onde
+    # o analista abre e o Claude e os scripts leem (cia-<id>.pdf, cia-ultima.txt).
+    def cia_abrir(self, codigo):
+        """Abre o PDF da última CIA no leitor do PC; baixa do SOL antes, se ainda não estiver na pasta."""
+        m, pasta = self._palpite(), self._pasta_proc(codigo)
+        if not hasattr(m, "ultima_cia"):
+            raise RuntimeError("O SSEG desta pasta está atrás do programa: clique em Sincronizar com o GitHub.")
+        u = m.ultima_cia(pasta)
+        if not u:
+            return {"ok": False, "msg": "Não há CIA anterior nos Marcos deste processo (primeira análise, ou o servidor ainda não leu os Marcos)."}
+        if not u["tem"]:
+            (sc,) = self._scripts_do_clone("sol_caixa")
+
+            def baixar(aba):
+                aba.c.s.settimeout(300)
+                d = sc._consultar(aba, sc.BAIXAR, "%s/%s" % (sc.ARQUIVO, u["id"]))
+                if d["status"] != 200:
+                    raise RuntimeError("o SOL respondeu %s" % d["status"])
+                return base64.b64decode(d.get("b64") or "")
+            try:
+                dados = sol_aba.na_aba_logada(baixar)
+            except PermissionError:
+                return {"ok": False, "acao": "sol", "msg": "O SOL recusou a leitura: a sessão da aba caiu. Entre de novo no SOL."}
+            except LookupError as e:
+                return {"ok": False, "acao": "sol", "msg": str(e)}
+            except OSError as e:
+                return {"ok": False, "acao": "chrome", "msg": str(e)}
+            except RuntimeError as e:
+                return {"ok": False, "msg": "Não consegui baixar a CIA: %s." % e}
+            m.gravar_cia(pasta, u["id"], dados)
+            self._log("Última CIA de %s (%s) baixada do SOL para a pasta do processo: %s." % (codigo, u["data"], u["arquivo"]))
+        base.abrir(os.path.join(pasta, u["arquivo"]))
+        return dict(m.ultima_cia(pasta), ok=True, baixou=not u["tem"])
 
     def elementos_abrir(self, codigo, ids):
         """Abre no leitor de PDF do PC as pranchas ativas pedidas (ids do arquivo no SOL). Devolve quantas abriu."""

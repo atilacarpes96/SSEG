@@ -446,6 +446,36 @@ def elementos(pasta):
             for t in sorted(grupos, key=lambda t: (ordem.index(t) if t in ordem else len(ordem), t))]
 
 
+def ultima_cia(pasta):
+    """A última CIA do processo, pelos Marcos que o servidor baixa (marcos-resumo.json): {id, data, analista, arquivo,
+    tem}. None na primeira análise ou sem os Marcos. O PDF fica na pasta do processo como cia-<id>.pdf, o mesmo nome
+    que o Claude e os scripts procuram (2.13.5, pedido do Átila em 17/11/2026)."""
+    u = (_ler_json(os.path.join(pasta, "marcos-resumo.json"), {}) or {}).get("ultima_cia") or {}
+    if not u.get("arquivo"):
+        return None
+    arq = "cia-%s.pdf" % u["arquivo"]
+    return {"id": int(u["arquivo"]), "data": u.get("data") or "", "analista": u.get("responsavel") or "", "arquivo": arq,
+            "tem": os.path.exists(os.path.join(pasta, arq))}
+
+
+def gravar_cia(pasta, ident, dados):
+    """PDF da CIA baixado do SOL → cia-<id>.pdf, o texto em cia-<id>.txt e, se for a última, cia-ultima.txt (o que a
+    pré-análise, os palpites e o Claude leem). Devolve o caminho do PDF."""
+    if not dados.startswith(b"%PDF"):
+        raise RuntimeError("o SOL não devolveu um PDF")
+    pdf = os.path.join(pasta, "cia-%s.pdf" % ident)
+    tmp = pdf + ".parte"
+    with open(tmp, "wb") as fh:
+        fh.write(dados)
+    os.replace(tmp, pdf)
+    txt = os.path.splitext(pdf)[0] + ".txt"
+    r = _rodar([_exe("pdftotext"), "-layout", pdf, txt], 120)
+    u = ultima_cia(pasta)
+    if not r.returncode and u and u["id"] == int(ident):
+        shutil.copyfile(txt, os.path.join(pasta, "cia-ultima.txt"))
+    return pdf
+
+
 def nomes_do_sol(pasta):
     """Passa para o nome do SOL as pranchas baixadas antes de 16/11/2026 ("depois-<id>-..."), com os arquivos de apoio
     ao lado, e acerta o nome onde o palpites.json o cita (o quadro azul acha o recorte por ele). Com a rodada da IA
