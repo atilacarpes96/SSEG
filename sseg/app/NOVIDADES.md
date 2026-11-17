@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.8
+
+- **A IA local classifica sozinha as exigências da reanálise.** Antes, quem dizia onde olhar em cada planta era o Claude, na conversa. Agora, no PC com a IA local, o programa faz tudo em segundo plano: a IA lê a CIA, diz o tipo de cada exigência e a palavra da planta onde ela se confere, e o programa confere se a palavra existe mesmo na prancha. O quadro azul mostra "A IA local está lendo as exigências…" enquanto isso. O Claude só apresenta o quadro.
+- **Resumo dos scripts e da IA local junto da pré-análise** (resumo-ia.md na pasta do processo). Documento de envolvido que diverge do SOL, carimbo de assinatura sem certificado e achado das camadas vão ao chat no passo 2; o Claude transforma em pergunta amarela. Os palpites das exigências ficam no quadro azul.
+
 ## 2.13.7
 
 - **Certificado digital dos documentos também no PC.** A conferência das assinaturas dos documentos dos envolvidos (ART/RRT, procurações) lia o certificado só no servidor, porque o Poppler do Windows vem sem o programa que faz isso (pdfsig). Agora o PC usa o pyHanko, que o instalador põe no Python junto com o PyMuPDF. Nos 20 documentos da caixa de 17/11/2026 o resultado foi igual ao do servidor: quem assinou, quando, se o arquivo foi mexido depois e se é só carimbo impresso de "assinado com gov.br", sem certificado.

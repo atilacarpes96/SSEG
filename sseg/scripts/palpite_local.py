@@ -1257,7 +1257,14 @@ def automatico(pasta, aviso=print):
                 os.remove(marca)
             except OSError:
                 pass
-    return rodar(pasta, aviso=aviso)
+    r = rodar(pasta, aviso=aviso)
+    try:  # o resumo que vai ao chat no passo 2 (amarelo × azul) acompanha os palpites
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import resumo_ia
+        resumo_ia.gravar(pasta)
+    except Exception:  # noqa: BLE001 — o resumo nunca derruba a rodada
+        pass
+    return r
 
 
 # ------------------------------------------------------------------ linha de comando

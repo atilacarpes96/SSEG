@@ -3712,12 +3712,13 @@ function pintarChecklist() {
     // chat, que leva numa mensagem só a pré-análise, as camadas lidas e, na reanálise, o pedido dos palpites da IA local.
     const mandar = async () => { fechar(); const cod = PR.codigo, fluxo = PR.fluxo, ia = await linhaIALocal(cod);
       const cam = PR.camadas && PR.camadas.codigo === cod ? "\n\n" + CAMADAS_PEDIDO + PR.camadas.texto : "";
-      chatEnviar(ctxDe(cod, fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto + laudoBloco + cam + ia);
+      const ri = pa.resumo_ia ? "\n\nRESUMO DOS SCRIPTS E DA IA LOCAL (resumo-ia.md, feito antes de abrir o processo):\n" + pa.resumo_ia : "";
+      chatEnviar(ctxDe(cod, fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto + laudoBloco + ri + cam + ia);
       api("processo_marcar", [cod, "marcas", "pre_analise", pa.data]).then(recarregarRegistro); };
     const abrirPre = () => {
       const cam = PR.camadas && PR.camadas.codigo === PR.codigo;
       modal([selo("script"), "Pré-análise documental"], "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
-        el("div", {}, el("p", { class: "pre-dica" }, "Vai junto ao chat: a pré-análise" + (temLaudo ? ", o laudo de inviabilidade" + (marcadas.length ? " (" + marcadas.length + " medida(s) marcada(s))" : "") : "") +
+        el("div", {}, el("p", { class: "pre-dica" }, "Vai junto ao chat: a pré-análise" + (pa.resumo_ia ? ", o resumo dos scripts e da IA local" : "") + (temLaudo ? ", o laudo de inviabilidade" + (marcadas.length ? " (" + marcadas.length + " medida(s) marcada(s))" : "") : "") +
           (cam ? ", as camadas das pranchas (" + PR.camadas.achados + " achado(s))" : ", sem as camadas (o passo 1 não foi feito)") +
           (reanalise ? " e, se este PC tiver a IA local, o pedido dos palpites." : ".")),
           el("div", { class: "lista", style: "max-height:440px" }, pa.texto)),

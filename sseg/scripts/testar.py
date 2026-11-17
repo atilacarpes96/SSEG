@@ -1411,6 +1411,18 @@ def main():
     caso("palpite (2.13.8): o programa chama 'auto' (a IA local classifica) e a conversa só apresenta",
          hasattr(pl_m, "automatico") and '"auto" if hasattr(self._palpite(), "automatico")' in open(os.path.join(RAIZ, "sseg", "app", "api.py"), encoding="utf-8").read()
          and "[IA local] em andamento" in _chat.INSTRUCOES and "[IA local] em andamento" in js)
+    import resumo_ia as ri_m
+    with tempfile.TemporaryDirectory() as _t:
+        open(os.path.join(_t, "documentos-ia.md"), "w", encoding="utf-8").write(
+            "## Cada documento × SOL\n\n### 1-ART.pdf (1 pág.)\n\n- ✓ **RT FULANO**: nome encontrado\n- ✗ **área**: documento 100 m² × SOL 120 m²\n")
+        open(os.path.join(_t, "camadas.txt"), "w", encoding="utf-8").write(
+            "CAMADAS\nACHADOS:\n[campo 4] Camada de Alarme e a medida não está marcada no campo 4.\nOBSERVAÇÕES (fracas):\n- [x] cor\n")
+        json.dump({"itens": [{"n": 1, "rotulo": {"titulo": "Palpite: Cumpriu"}}, {"n": 2, "estado": "fila"}]},
+                  open(os.path.join(_t, "palpites.json"), "w", encoding="utf-8"))
+        _ri = ri_m.gravar(_t)
+    caso("resumo-ia (2.13.8): divergência de documento e achado de camada no amarelo, palpite no azul, sem as observações fracas",
+         "1-ART.pdf: área: documento 100 m² × SOL 120 m²" in _ri and "[campo 4] Camada de Alarme" in _ri and "cor" not in _ri
+         and "nº 1: Palpite: Cumpriu" in _ri and "nº 2: na fila" in _ri and _ri.index("AMARELA") < _ri.index("AZUL"), _ri)
     # 22b. prancha com o texto convertido em desenho (17/11/2026): comparação do valor sem IA; com PyMuPDF, a cota
     # sintética (traços curtos ao lado de uma linha longa) é achada e o palpite sai com uma leitura de mentira
     import cotas_desenho as cd_m

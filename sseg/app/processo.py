@@ -138,6 +138,12 @@ def montar(clone, pasta):
                "marcas": [l for l in texto.splitlines() if l.startswith(("XX", "!!", "??"))]}
         if not velha:
             auto["4"] = "pré-análise documental (script, sem Claude): pre-analise.txt"
+        # 2.13.8 (pedido do Átila): resumo dos scripts e da IA local (documentos, camadas, palpites), feito antes de
+        # abrir o processo; vai ao chat junto com a pré-análise no passo 2
+        ri = os.path.join(pasta, "resumo-ia.md")
+        if os.path.exists(ri):
+            with open(ri, encoding="utf-8") as fh:
+                pre["resumo_ia"] = fh.read()
     return {"auto": auto, "pre_analise": pre,"codigo": os.path.basename(os.path.normpath(pasta)), "pasta": pasta, "json_sol": arq and os.path.basename(arq),
             "passos": passos, "medidas": medidas, "elementos": elementos, "envolvidos": envolvidos(sol), "laudo": laudo, "compensatoria": anexo.get("compensatoria", ""),
             "cias": [a for a in arquivos if re.match(r"CIA \d+", a)], "analise": reg.ler(pasta), "sol": links_sol(sol, sc.get("id_analise"))}
