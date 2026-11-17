@@ -21,7 +21,7 @@ e `python -c`). Entrega por exigência (id, veredito ok/corrigir/conferir, probl
 dito em palavras, fundamento), **sem texto novo**. Desde 10/11/2026 são duas fases: a conversa principal
 mostra o que o revisor apontou num quadro (`sseg-revisao` com `"fase": "perguntas"`) e **o analista
 responde cada ponto** (Corrigir, Manter ou o que ele quer); com as respostas, o subagente `corretor-cia`
-(Fable 5.2, o modelo mais forte, pedido do Átila) escreve o texto inteiro novo, que volta no cartão de
+(Opus 5.5 desde 17/11/2026; de 10 a 17/11 foi o Fable 5.2, que ficava sem cota) escreve o texto inteiro novo, que volta no cartão de
 sempre com Aplicar (troca o texto final; o anterior fica guardado) ou Ignorar. "Pedir ajuste" num texto
 revisado também vai ao `corretor-cia`. Ninguém grava sem o clique. O resto desta skill vale igual.
 

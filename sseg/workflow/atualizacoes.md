@@ -12,15 +12,15 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
-## 17/11/2026 — Corretor da revisão final cai para o Opus 5.5 quando o Fable 5.2 está sem cota (SSEG.exe 2.13.1)
+## 17/11/2026 — Corretor da revisão final no Opus 5.5 (SSEG.exe 2.13.2)
 
-- **O que mudou:** o `corretor-cia` continua no Fable 5.2. Quando ele falha por cota (erro 429, "out of usage credits"), a conversa do processo chama o corretor de novo com o Opus 5.5 e avisa numa linha que o texto saiu do Opus. Antes, a correção parava até a cota voltar.
-- **Onde:** regra na conversa do processo do SSEG.exe (`sseg/app/chat.py`) e na `politica-modelo-e-custo.md`. Nenhuma skill nem campo Instruções mudou.
+- **O que mudou:** o subagente `corretor-cia` (`.claude/agents/corretor-cia.md`) passou do Fable 5.2 para o Opus 5.5 (decisão do Sd Carpes): a cota semanal do Fable acabava antes e a correção travava com erro 429. A 2.13.1 trocava de modelo só na falta de cota; a 2.13.2 tira essa regra.
+- **Onde:** `.claude/agents/corretor-cia.md`, a conversa do processo do SSEG.exe, a `politica-modelo-e-custo.md` e uma linha da skill `ppci-revisao-cia` (o nome do modelo). Campo Instruções não mudou.
 
 ### Prompt para atualizar
 
 ```text
-Atualize o meu lado do SSEG para a versão de 17/11/2026. Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell) e se o SSEG.exe está na 2.13.1 ou mais novo. Não há skill nem campo Instruções a atualizar nesta leva. Me diga em uma linha se ficou tudo em dia.
+Atualize o meu lado do SSEG para a versão de 17/11/2026. Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell) e se o SSEG.exe está na 2.13.2 ou mais novo. Confira também que .claude/agents/corretor-cia.md diz model: claude-opus-5-5. A skill ppci-revisao-cia mudou numa linha (o corretor agora é Opus 5.5): rode a skill sseg-sincronizar-skills para ela. O campo Instruções não muda. Me diga em uma linha se ficou tudo em dia.
 ```
 
 ## 14/11/2026 — Palpites da IA local na reanálise, em quadro azul (SSEG.exe 2.9.0)

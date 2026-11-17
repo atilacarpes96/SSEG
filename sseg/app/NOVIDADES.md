@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.2
+
+- **O corretor da revisão final passa a usar o Opus 5.5.** O Fable 5.2 saiu (decisão do Átila, 17/11/2026): a cota dele acabava antes e travava a correção. A regra da 2.13.1 de trocar de modelo quando o Fable ficava sem cota deixou de ser necessária e saiu.
+
 ## 2.13.1
 
 - **A correção da revisão final não trava mais quando o Fable 5.2 fica sem cota.** O corretor das exigências usa o Fable 5.2, o modelo mais forte. Quando a cota semanal dele acaba ("out of usage credits"), o Claude chama o corretor de novo com o Opus 5.5 e avisa numa linha que o texto saiu do Opus. Antes, a correção parava e pedia para recarregar créditos.
