@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.4
+
+- **O laudo de inviabilidade vai junto quando você inicia a análise.** O passo 2 ("Revisar e mandar pro chat") leva, além da pré-análise, as medidas do campo 4 marcadas com inviabilidade (total ou parcial) e o texto do laudo que está no SOL, com o lembrete de que a compensatória tem de estar no campo 4 e em planta e de que o que o laudo dispensa não vira exigência. Antes, o Claude só via o laudo se lembrasse de procurar.
+- A janela do passo 2 avisa o que vai junto: "a pré-análise, o laudo de inviabilidade (N medida(s) marcada(s)), as camadas…". Processo sem laudo não muda nada.
+
 ## 2.13.3
 
 - **Pré-análise em passos numerados**, no mesmo desenho do "1 Revisão final / 2 Lançar no SOL" da CIA: **1 Camadas das pranchas** (script: baixa as pranchas e confere as camadas) → **2 Revisar e mandar pro chat**. Uma frase embaixo diz por onde começar.

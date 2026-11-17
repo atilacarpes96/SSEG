@@ -3679,16 +3679,26 @@ function pintarChecklist() {
     const pa = d.pre_analise, cor = l => l.startsWith("XX") ? "var(--verm)" : l.startsWith("!!") ? "var(--creme-txt)" : "var(--suave)";
     // 2.9.0: na reanálise, a mesma mensagem leva o pedido dos palpites da IA local (linhaIALocal: "" quando não há IA nem palpite)
     const reanalise = (d.marcos || {}).analise >= 2;
+    // 2.13.4 (pedido do Átila): o laudo de inviabilidade vai na mensagem que inicia a análise, não só quando o Claude
+    // lembra de rodar o resumo. Mesmo texto do laudo_resumo do sseg.py: medidas marcadas no campo 4 + texto do laudo.
+    const marcadas = (d.medidas || []).filter(m => m.inviabilidade && m.inviabilidade !== "NAO_POSSUI")
+      .map(m => m.nome + " (" + (m.inviabilidade === "POSSUI_TOTAL" ? "total" : "parcial") + ")");
+    const temLaudo = !!(d.laudo || marcadas.length);
+    const laudoBloco = !temLaudo ? "" : "\n\nLAUDO DE INVIABILIDADE — considerar desde o início da análise (skill ppci-analise-processo, seção 9): " +
+      "a compensatória do laudo deferido tem de estar no campo 4 e representada em planta; o que o laudo dispensa não vira exigência.\n" +
+      "Medidas do campo 4 com inviabilidade: " + (marcadas.length ? marcadas.join("; ") : "nenhuma marcada, mas há texto de laudo: conferir se falta marcar no campo 4") + "\n" +
+      (d.laudo ? "Texto do laudo:\n" + d.laudo : "Medida marcada com inviabilidade e SEM texto de laudo no SOL: conferir.");
     // 2.13.1 (pedido do Átila): ordem clara. 1 Camadas (script: baixa as pranchas e confere) → 2 Revisar e mandar pro
     // chat, que leva numa mensagem só a pré-análise, as camadas lidas e, na reanálise, o pedido dos palpites da IA local.
     const mandar = async () => { fechar(); const cod = PR.codigo, fluxo = PR.fluxo, ia = await linhaIALocal(cod);
       const cam = PR.camadas && PR.camadas.codigo === cod ? "\n\n" + CAMADAS_PEDIDO + PR.camadas.texto : "";
-      chatEnviar(ctxDe(cod, fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto + cam + ia);
+      chatEnviar(ctxDe(cod, fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto + laudoBloco + cam + ia);
       api("processo_marcar", [cod, "marcas", "pre_analise", pa.data]).then(recarregarRegistro); };
     const abrirPre = () => {
       const cam = PR.camadas && PR.camadas.codigo === PR.codigo;
       modal([selo("script"), "Pré-análise documental"], "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
-        el("div", {}, el("p", { class: "pre-dica" }, "Vai junto ao chat: a pré-análise" + (cam ? ", as camadas das pranchas (" + PR.camadas.achados + " achado(s))" : ", sem as camadas (o passo 1 não foi feito)") +
+        el("div", {}, el("p", { class: "pre-dica" }, "Vai junto ao chat: a pré-análise" + (temLaudo ? ", o laudo de inviabilidade" + (marcadas.length ? " (" + marcadas.length + " medida(s) marcada(s))" : "") : "") +
+          (cam ? ", as camadas das pranchas (" + PR.camadas.achados + " achado(s))" : ", sem as camadas (o passo 1 não foi feito)") +
           (reanalise ? " e, se este PC tiver a IA local, o pedido dos palpites." : ".")),
           el("div", { class: "lista", style: "max-height:440px" }, pa.texto)),
         [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]); };
