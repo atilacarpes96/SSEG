@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.6
+
+- **PPCI de outro analista que caiu na sua caixa agora tem o prazo da planilha.** Quando a linha da planilha ainda está aberta (sem conclusão), é a mesma análise que só mudou de mãos: vale a data de distribuição dela, e o vencimento sai igual ao da planilha. Antes o prazo ficava em branco e só aparecia "N dias no SOL", que conta outra coisa.
+- Se a linha da planilha já está concluída, ela é da análise anterior do outro analista e continua sem contar. O prazo aparece quando a planilha trouxer a linha nova.
+
 ## 2.13.5
 
 - **Botão "Última CIA" junto dos elementos gráficos.** Na reanálise, ao lado de Planta baixa, Implantação e Corte, aparece "Baixar Última CIA (data)": baixa do SOL, pela aba em que você já entrou, o PDF da CIA anterior para a pasta do processo e abre no leitor de PDF. Depois o botão vira "Última CIA (data)" e só abre. O texto fica ao lado (cia-ultima.txt), e o Claude e os palpites leem dali.

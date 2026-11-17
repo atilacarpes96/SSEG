@@ -304,8 +304,9 @@ def main():
         os.remove(os.path.join(raiz, "A00000002AA001", "sol-caixa.json"))
         import api as _api_m
         dist_o = {"analista": "Sd Riccardi", "distribuido": "2026-09-28", "tipo": "7º"}
-        caso("caixa: PPCI do outro na minha caixa do SOL é meu e sem o prazo da planilha dele (2.7.8)",
-             _api_m._dist_minha(dist_o, "Sd Carpes", {"lido_em": "2026-10-30"}, "2026-10-30") == ({}, True)
+        caso("caixa: PPCI do outro na minha caixa do SOL é meu; linha aberta mantém o prazo da planilha, concluída não conta (2.7.8, 2.13.6)",
+             _api_m._dist_minha(dist_o, "Sd Carpes", {"lido_em": "2026-10-30"}, "2026-10-30") == (dist_o, True)
+             and _api_m._dist_minha(dict(dist_o, concluido="2026-10-01"), "Sd Carpes", {"lido_em": "2026-10-30"}, "2026-10-30") == ({}, True)
              and _api_m._dist_minha(dist_o, "Sd Carpes", {"lido_em": "2026-10-29"}, "2026-10-30") == (dist_o, False)
              and _api_m._dist_minha(dist_o, "Sd Riccardi", {}, "2026-10-30") == (dist_o, True)
              and _api_m._dist_minha(dist_o, "Sd Carpes", {"lido_em": "2026-10-30", "saiu_em": "2026-10-30"}, "2026-10-30") == ({}, True))

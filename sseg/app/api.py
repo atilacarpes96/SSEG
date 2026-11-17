@@ -165,7 +165,10 @@ def _dist_minha(dist, eu, sc, ultima_leitura):
     if _e_meu(dist, eu):
         return dist, True
     if sc.get("lido_em") and sc.get("lido_em") == ultima_leitura and not sc.get("saiu_em"):
-        return {}, True
+        # 2.13.6 (relato do Átila, 17/11/2026: reanálises do Sgt Magalhães redistribuídas a ele saíam sem prazo e a
+        # planilha dava 15/11 e 19/11): linha ainda aberta é esta mesma análise, que só mudou de mãos — vale a data
+        # de distribuição dela, e o prazo é o da planilha. Linha concluída é a análise anterior do outro: não conta.
+        return (dict(dist), True) if dist.get("distribuido") and not dist.get("concluido") else ({}, True)
     # 2.7.11: saiu da minha caixa (concluí) depois da distribuição do outro — continua meu, para descer como concluído
     if sc.get("saiu_em") and (sc.get("lido_em") or "") >= (dist.get("distribuido") or ""):
         return {}, True
