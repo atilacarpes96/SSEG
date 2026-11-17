@@ -1269,6 +1269,17 @@ def main():
     caso("palpite: a CIA vira exigências numeradas, com a seção e a prancha",
          len(ex_) == 2 and ex_[0][0] == "Saída de Emergência" and ex_[0][2].endswith("conforme a planta.")
          and ex_[1][:2] == ("Elementos Gráficos", "Planta Baixa"), str(ex_))
+    # 17/11/2026: CIAs de outro analista (Sgt Magalhães) davam 0 exigências — texto sem "- ", texto na linha do
+    # "1. Outros" e opção pronta do SOL no próprio item
+    _cia2 = ("apresentou as seguintes inconformidades\n\nMedidas de Segurança\n\nSaída de Emergência\n\n"
+             "            1. Outros\n               Deverá haver patamares em ambos os lados\n               do vão de porta.\n"
+             "Hidrantes e Mangotinhos\n           1. Outros Deverá adequar o volume\n              da reserva técnica.\n"
+             "Correções Adicionais\n            1. Ausência de marcação no campo do item “Extintores\n               de incêndio”.\n")
+    ex2_ = pl_m.partir(_cia2)
+    caso("palpite: a CIA sem hífen, com o texto na linha do '1. Outros' e com opção pronta do SOL também vira exigências",
+         [x[2] for x in ex2_] == ["Deverá haver patamares em ambos os lados do vão de porta.",
+                                 "Deverá adequar o volume da reserva técnica.",
+                                 "Ausência de marcação no campo do item “Extintores de incêndio”."], str(ex2_))
     ws_ = [("dist.", 10, 100, 30, 108, "Dist."), ("max.", 32, 100, 50, 108, "máx."), ("a", 52, 100, 56, 108, "a"),
            ("percorrer", 58, 100, 95, 108, "percorrer"), ("4", 5, 105, 9, 113, "4"), ("ate", 10, 106, 22, 114, "até"),
            ("a", 24, 106, 28, 114, "a"), ("saida", 30, 106, 50, 114, "saída"), ("=", 52, 106, 56, 114, "="), ("15,48", 58, 106, 80, 114, "15,48")]

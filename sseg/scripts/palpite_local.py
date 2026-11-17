@@ -150,6 +150,7 @@ def partir(texto):
         corpo = corpo[:m.start()]
     linhas = [l for l in corpo.replace("\f", "\n").splitlines()[1:] if not RODAPE.match(l)]
     secao, sub, out, atual = "", "", [], None
+    sem_hifen = False
     for l in linhas:
         s = l.strip()
         if not s:
@@ -159,9 +160,26 @@ def partir(texto):
             atual = [secao, sub, s[2:].strip()]
             out.append(atual)
         elif ITEM_NUM.match(l) and ind > 4:
-            atual = None  # "1. Outros": rótulo do SOL
+            rot = re.sub(r"^\d+\.\s+", "", s)
+            if rot.lower().startswith("outros"):
+                resto = re.sub(r"^-\s*", "", rot[6:].strip())
+                atual = None  # "1. Outros": rótulo do SOL; o texto vem abaixo
+                sem_hifen = True
+                if resto:  # "1. Outros Deverá adequar...": o texto começa na linha do rótulo
+                    atual = [secao, sub, resto]
+                    out.append(atual)
+                    sem_hifen = False
+            else:  # opção pronta do SOL ("1. Ausência de marcação ..."): o próprio item é a exigência
+                atual = [secao, sub, rot]
+                out.append(atual)
+                sem_hifen = False
         elif ind >= 12 and atual is not None:
             atual[2] += " " + s  # continuação do texto
+        elif ind >= 12 and sem_hifen:
+            # 17/11/2026: há analista (Sgt Magalhães) que escreve a exigência logo abaixo do "1. Outros", sem "- ".
+            # Sem isto a CIA dele dava 0 exigências e a reanálise não tinha palpite nem conferência
+            atual = [secao, sub, s]
+            out.append(atual)
         elif ind < 8:
             if s in ("Medidas de Segurança", "Elementos Gráficos"):
                 secao, sub = s, ""
