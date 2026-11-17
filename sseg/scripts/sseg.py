@@ -1012,6 +1012,29 @@ SCHEMA = {
 }
 
 
+def laudo_resumo(api):
+    """Laudo de inviabilidade e as medidas do campo 4 marcadas com ele (17/11/2026, pedido do Átila: o laudo entra no
+    começo da análise, não só quando alguém lembra). O texto vai inteiro: separar as compensatórias é do analista."""
+    import html as _h
+    esp = api.get("especSeguranca") or {}
+    bruto = (esp.get("laudo") or {}).get("txtClob") or ""
+    t = re.sub(r"(?i)<br\s*/?>|</p\s*>|</div\s*>|</li\s*>", "\n", bruto)
+    t = _h.unescape(re.sub(r"<[^>]+>", "", t)).replace("\xa0", " ")
+    t = re.sub(r"\n{3,}", "\n\n", "\n".join(re.sub(r"[ \t]+", " ", l).strip() for l in t.splitlines())).strip()
+    marcadas = ["%s (%s)" % (((m.get("tipo") or {}).get("nome") or "?").strip(),
+                             "total" if m.get("inviabilidade") == "POSSUI_TOTAL" else "parcial")
+                for m in esp.get("medidas") or [] if (m.get("inviabilidade") or "NAO_POSSUI") != "NAO_POSSUI"]
+    if not t and not marcadas:
+        return "LAUDO DE INVIABILIDADE: não há (nenhuma medida do campo 4 marcada e sem texto de laudo)."
+    L = ["LAUDO DE INVIABILIDADE — considerar desde o início da análise (skill ppci-analise-processo, seção 9): "
+         "a compensatória do laudo deferido tem de estar no campo 4 e representada em planta; o que o laudo "
+         "dispensa não vira exigência."]
+    L.append("Medidas do campo 4 com inviabilidade: " + ("; ".join(marcadas) if marcadas else
+             "nenhuma marcada, mas há texto de laudo: conferir se falta marcar no campo 4"))
+    L.append("Texto do laudo:\n" + t if t else "Medida marcada com inviabilidade e SEM texto de laudo no SOL: conferir.")
+    return "\n".join(L)
+
+
 def resumo_pasta(pasta):
     """Tudo o que já está na pasta, para o Claude não perguntar ao analista nem procurar no SOL (17/10/2026)."""
     import glob as _g
@@ -1021,6 +1044,7 @@ def resumo_pasta(pasta):
     apis = sorted(_g.glob(os.path.join(pasta, "api-*.json")), key=os.path.getmtime)
     if apis:
         L.append(pre_analise.cadastro(_load(apis[-1])))
+        L.append(laudo_resumo(_load(apis[-1])))
     else:
         L.append("Sem api-<ID>.json: o cadastro do SOL ainda não veio (o servidor baixa na leitura da caixa).")
     mr = os.path.join(pasta, "marcos-resumo.json")
