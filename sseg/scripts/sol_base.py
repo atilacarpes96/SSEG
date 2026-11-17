@@ -319,13 +319,17 @@ def retratar(s, k, d=None):
     import documentos
     d = d or _ler(os.path.join(BASE, "proc", k + ".json"), {})
     lic = d.get("licenciamento") or {}
-    if lic.get("situacao") not in RETRATAR:
-        return 0
     r = resumo_do(lic, d.get("marcos") or [], d.get("historico") or {})
-    if not r["cias"] or (r.get("ultima") or {}).get("resultado") != "CIA":
+    ult = r.get("ultima") or {}
+    if lic.get("situacao") in RETRATAR and r["cias"] and ult.get("resultado") == "CIA":
+        cia, dia = r["cias"][-1], ult["data"]
+        pasta = os.path.join(RETRATOS, k, str(cia))
+    elif ult.get("resultado") == "CA" and os.path.isdir(os.path.join(RETRATOS, k)):
+        # fecha o par: a CIA anterior foi retratada e esta análise aprovou — a planta corrigida é a de agora
+        cia, dia = "CA-%s" % ult.get("data"), ult.get("data")
+        pasta = os.path.join(RETRATOS, k, cia)
+    else:
         return 0
-    cia, dia = r["cias"][-1], r["ultima"]["data"]
-    pasta = os.path.join(RETRATOS, k, str(cia))
     meta = _ler(os.path.join(pasta, "meta.json"), {})
     if meta.get("completo"):
         return 0
@@ -358,10 +362,11 @@ def retratar(s, k, d=None):
     falhas += f2
     _gravar(os.path.join(pasta, "licenciamento.json"), d)
     txt = os.path.join(BASE, "cia", "%s.txt" % cia)
-    if os.path.exists(txt):
+    if ult.get("resultado") == "CIA" and os.path.exists(txt):
         shutil.copyfile(txt, os.path.join(pasta, "cia.txt"))
     _gravar(os.path.join(pasta, "meta.json"), {
-        "id": k, "numero": lic.get("numero"), "cia": cia, "data_cia": dia, "analista": r["ultima"].get("quem"),
+        "id": k, "numero": lic.get("numero"), "cia": cia, "data_cia": dia, "analista": ult.get("quem"),
+        "resultado": ult.get("resultado"),
         "analise": r["analises"], "situacao": lic.get("situacao"), "retratado_em": agora(),
         "plantas_trocadas": trocadas, "falhas": falhas, "completo": not falhas})
     return feitos
