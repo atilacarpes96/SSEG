@@ -1493,6 +1493,15 @@ def main():
          # 17/11/2026: agente colado ao número (49678) e lista do pavimento tipo (49433); cota "2,50" não
          and cm_m.numeros("E01-PQS · E04 - PQS · EXT 02 CO2 · N48,50,52,54 · 2,50 · 1,20,30 · 02 AP") == [1, 4, 2, 48, 50, 52, 54])
 
+    import documentos as _doc
+    _api_d = {"envolvidos": {"rts": [{"nome": "RT X", "arquivo": {"id": 1, "nomeArquivo": "art.pdf"}, "arquivos": [{"id": 1, "nomeArquivo": "art.pdf"}]}],
+                             "rus": [{"nome": "RU Y", "arquivo": None, "arquivos": [], "procurador": {"nome": "RT X", "arquivo": {"id": 2, "nomeArquivo": "proc.pdf"}}}],
+                             "proprietarios": [{"nome": "P Z", "procurador": {"nome": "RT X", "arquivo": {"id": 3, "nomeArquivo": "proc2.pdf"}}}]}}
+    caso("documentos: ART do RT e procurações dos envolvidos, sem repetir arquivo (17/11/2026)",
+         [(x["id"], x["papel"]) for x in _doc.lista(_api_d)] == [(1, "RT"), (2, "Procuração (responsável pelo uso)"), (3, "Procuração (proprietário)")]
+         and bool(_doc.CARIMBO.search("Assinado utilizando o(s) seguinte(s) selo(s) do gov.br")),
+         str(_doc.lista(_api_d)))
+
     def _pb(ext, fora=""):
         return {"camadas": ["EXT", ""], "por_camada": {"EXT": {"tracos": 40, "vermelho": 40, "texto": ext},
                                                         "": {"tracos": 5, "vermelho": 0, "texto": fora},

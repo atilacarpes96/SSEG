@@ -349,7 +349,8 @@ def pre_analisar(codigo, forcar=False):
     resumo_arq = os.path.join(pasta, "marcos-resumo.json")
     cia_arq = os.path.join(pasta, "cia-ultima.txt")  # o sol_caixa.py baixa: refaz quando chega CIA nova
     anteriores = glob.glob(os.path.join(pasta, "anterior-api-*.json"))  # JSON da análise anterior (2.3.23)
-    base = max([os.path.getmtime(a) for a in [api_arq, resumo_arq, cia_arq] + anteriores if os.path.exists(a)])
+    docs_dir = os.path.join(pasta, "documentos")  # documentos dos envolvidos (documentos.py): refaz quando chegam
+    base = max([os.path.getmtime(a) for a in [api_arq, resumo_arq, cia_arq, docs_dir] + anteriores if os.path.exists(a)])
     if not forcar and os.path.exists(saida_txt) and os.path.getmtime(saida_txt) >= base:
         return "em-dia", "já feita"
     with open(api_arq, encoding="utf-8") as fh:
@@ -387,6 +388,11 @@ def pre_analisar(codigo, forcar=False):
         except OSError:
             cia_txt = ""
         cab += secao_reanalise(api, anterior_de(pasta, marcos["analise"]), marcos, cia_txt)
+        try:  # assinatura digital dentro do PDF de cada documento de envolvido (pdfsig, sem IA)
+            import documentos
+            cab += documentos.secao(pasta, api, cia_txt)
+        except Exception as e:  # noqa: BLE001 — a pré-análise sai mesmo sem esta seção
+            cab += "Documentos dos envolvidos: não consegui ler (%s).\n\n" % e
     else:
         cab += ("1ª ANÁLISE: conferência completa do processo (definidora, tabela, normas do campo 4, travas e "
                 "o que só a planta responde).\n\n")

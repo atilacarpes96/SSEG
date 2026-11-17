@@ -247,6 +247,31 @@ def baixar_cias(aba, codigo, linha, raiz=None):
             shutil.copyfile(ultima, destino)
 
 
+def baixar_documentos(aba, codigo, ident, linha, raiz=None):
+    """Reanálise (17/11/2026): documentos dos envolvidos (ART/RRT, procurações) para <pasta>/documentos/, onde a
+    pré-análise lê a assinatura digital com o pdfsig (documentos.py). Só o que falta; erro vira aviso."""
+    import documentos
+    pasta = os.path.join(raiz or PROCESSOS, str(codigo))
+    if not os.path.exists(os.path.join(pasta, "cia-ultima.txt")):
+        return  # 1ª análise: nada a conferir contra CIA
+    try:
+        with open(os.path.join(pasta, "api-%s.json" % ident), encoding="utf-8") as fh:
+            api = json.load(fh)
+    except (OSError, ValueError):
+        return
+
+    def um(i):
+        d = _consultar(aba, BAIXAR, "%s/%s" % (ARQUIVO, i))
+        if d["status"] != 200:
+            raise RuntimeError("SOL respondeu %s" % d["status"])
+        return base64.b64decode(d.get("b64") or "")
+    n, falhas = documentos.baixar(pasta, api, um)
+    if n:
+        linha["documentos"] = n
+    if falhas:
+        linha["aviso"] = "documentos: " + "; ".join(falhas)[:300]
+
+
 # ------------------------------------------------------------------ caixa
 
 def _achar(item, *nomes):
@@ -570,6 +595,7 @@ def levantar(forcar=False):
             except RuntimeError as e:
                 linha["aviso"] = "marcos: %s" % e
             baixar_cias(aba, codigo, linha)  # a CIA anterior chega pronta: o Claude não baixa mais no chat
+            baixar_documentos(aba, codigo, ident, linha)
             print_memorial(os.path.join(PROCESSOS, str(codigo)), linha)
         resumo.append(linha)
     sairam = []
