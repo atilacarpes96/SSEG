@@ -165,13 +165,7 @@ def ler_pdf(pdf):
                 return d
     except (OSError, ValueError):
         pass
-    try:
-        import pymupdf as fitz
-    except ImportError:
-        try:
-            import fitz
-        except ImportError:
-            raise RuntimeError("falta o PyMuPDF neste Python (pip install pymupdf==1.28.2; o instalador do SSEG já instala)")
+    fitz = tem_pymupdf()
     doc = fitz.open(pdf)
     nomes = sorted({v.get("name") or "" for v in (doc.get_ocgs() or {}).values()})
     por = {}
@@ -520,7 +514,7 @@ def conferir(medidas, pranchas):
     # texto convertido em desenho: sem texto legível nas plantas baixas, as conferências pelo texto não valem
     letras = sum(len(c.get("texto") or "") for _r, inv, t in pranchas if t in ("PLANTA_BAIXA", "")
                  for c in (inv.get("por_camada") or {}).values())
-    if letras < 1500:
+    if letras < 1500 and any(t in ("PLANTA_BAIXA", "") for _r, _i, t in pranchas):  # nenhuma planta lida: não há o que medir
         fato("texto", "ilegivel", "As plantas baixas têm só %d letras de texto legível no PDF (o texto deve ter sido "
              "convertido em desenho): distância (Nota 01) e ocupação, área e população (Nota 02) não foram conferidas "
              "pelo texto; conferir na planta." % letras)
@@ -567,10 +561,23 @@ def conferir(medidas, pranchas):
 
 # ------------------------------------------------------------------ processo inteiro
 
+def tem_pymupdf():
+    try:
+        import pymupdf as fitz
+    except ImportError:
+        try:
+            import fitz
+        except ImportError:
+            raise RuntimeError("falta o PyMuPDF neste Python (pip install pymupdf==1.28.2; o instalador do SSEG já instala)")
+    return fitz
+
+
 def processo(pasta):
     api = _api(pasta)
     medidas = medidas_campo4(api)
     pranchas, faltam, erros = [], [], []
+    tem_pymupdf()  # sem ele, sai com erro antes de ler: o SSEG.exe instala e roda de novo (antes cada prancha virava
+    # um erro, o script saía com 0 e o "0 letras de texto legível" aparecia como achado)
     for rot, cam, tipo in pranchas_ativas(pasta, api):
         if not cam:
             faltam.append(rot)
