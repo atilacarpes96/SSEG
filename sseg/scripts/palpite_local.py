@@ -738,8 +738,12 @@ def _rodar_cotas(pasta, it, marca):
     for x in (certos or conferir)[:MAX_RECORTES]:
         a = x["alvo"]
         r = {"pdf": a["pdf"], "pagina": a["pagina"], "caixa": _caixa_cota(x), "prancha": a["prancha"]}
-        if a.get("antes"):
-            r["antes"] = {"pdf": a["antes"]["pdf"], "pagina": a["antes"]["pagina"], "caixa": _caixa_cota(x)}
+        if a.get("antes"):  # mesma posição na anterior (sem texto não há como medir o deslocamento): só se cabe na folha
+            _ws, tam = palavras(os.path.join(pasta, SUB, a["antes"]["pdf"]))
+            w, h = tam.get(a["antes"]["pagina"], (0, 0))
+            cx = _caixa_cota(x)
+            if cx[2] <= w and cx[3] <= h:
+                r["antes"] = {"pdf": a["antes"]["pdf"], "pagina": a["antes"]["pagina"], "caixa": cx}
         recs.append(r)
     return {"rodadas": [dict(nova, margem="cotas")], "controle": ctrl, "rotulo": rot, "recortes": recs}
 
