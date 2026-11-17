@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.1
+
+- **A correção da revisão final não trava mais quando o Fable 5.2 fica sem cota.** O corretor das exigências usa o Fable 5.2, o modelo mais forte. Quando a cota semanal dele acaba ("out of usage credits"), o Claude chama o corretor de novo com o Opus 5.5 e avisa numa linha que o texto saiu do Opus. Antes, a correção parava e pedia para recarregar créditos.
+
 ## 2.13.0
 
 - **Palpites da IA local também em prancha com o texto convertido em desenho.** Quando o PDF da prancha não tem texto (cada letra virou traço, como no corte que só mostra "1215" desenhado), não havia onde apontar o recorte e a exigência ficava sem palpite. Agora, em exigência de valor ("altura descendente de 12,15 m"), a IA local lê as cotas da prancha uma a uma, duas vezes cada, e o programa procura o valor: 12,15 m, 12.15 e 1215 (em centímetros) contam como o mesmo número.

@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 17/11/2026 — Corretor da revisão final cai para o Opus 5.5 quando o Fable 5.2 está sem cota (SSEG.exe 2.13.1)
+
+- **O que mudou:** o `corretor-cia` continua no Fable 5.2. Quando ele falha por cota (erro 429, "out of usage credits"), a conversa do processo chama o corretor de novo com o Opus 5.5 e avisa numa linha que o texto saiu do Opus. Antes, a correção parava até a cota voltar.
+- **Onde:** regra na conversa do processo do SSEG.exe (`sseg/app/chat.py`) e na `politica-modelo-e-custo.md`. Nenhuma skill nem campo Instruções mudou.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 17/11/2026. Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell) e se o SSEG.exe está na 2.13.1 ou mais novo. Não há skill nem campo Instruções a atualizar nesta leva. Me diga em uma linha se ficou tudo em dia.
+```
+
 ## 14/11/2026 — Palpites da IA local na reanálise, em quadro azul (SSEG.exe 2.9.0)
 
 - **O que é:** na reanálise, um modelo de visão local (Ollama, `gemma4:31b-it-qat`) olha recortes da planta nova e dá um palpite sobre cada exigência da última CIA. Nunca decide: o analista responde no quadro azul do SSEG.exe, e é a resposta dele que vai ao Claude.
