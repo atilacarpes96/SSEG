@@ -1383,6 +1383,34 @@ def main():
          # 14/11/2026: o heredoc com JSON foi barrado na janela ("brace with quote character"); o argumento entre aspas simples passa
          'palpite --pasta "P" preparar \'[{"n": 1, "tipo": "texto"' in _ins and "<<'FIM'\n[{" not in _ins and "[IA local]" in _ins
          and "```sseg-palpites" in _chat.GUIA_VISUAL and '"sseg-palpites"' in js and "perguntas azul" in js and "linhaIALocal" in js)
+    # 22c. classificação pela IA local (2.13.8): o termo que a IA propõe só vale se está escrito na prancha nova; senão
+    # vale uma palavra da própria exigência que apareça em poucos lugares; sem nenhuma, a exigência fica com o motivo
+    _pal_orig, _oll_orig = pl_m.palavras, pl_m._ollama
+    pl_m.palavras = lambda pdf: ({1: [("moega", 10, 10, 20, 20, "MOEGA"), ("sala", 50, 50, 60, 60, "SALA")] + [("rampa", 9, i, 9, i, "RAMPA") for i in range(20)]}, {1: (600, 600)})
+    _todas = [{"lado": "depois", "tem": True, "descricao": "PPCI", "nome": "x.pdf", "arquivo": "x.pdf"}]
+    try:
+        _c1 = pl_m._termo_valido("P", _todas, {"tipo": "ausencia", "termo": "VIATURA", "termo_antes": "", "prancha": "", "motivo": ""},
+                                 "Deverá informar ocupação, área e população da MOEGA e da RAMPA")
+        _c2 = pl_m._termo_valido("P", _todas, {"tipo": "desenho", "termo": "PATAMAR", "termo_antes": "", "prancha": "", "motivo": ""},
+                                 "patamares nos dois lados das portas")
+        _c3 = pl_m._termo_valido("P", _todas, {"tipo": "fora_da_planta", "termo": "ART", "termo_antes": "", "prancha": "", "motivo": "x"}, "ART")
+        pl_m._ollama = lambda caminho, dados=None, timeout=900: {"message": {"content": json.dumps(
+            {"tipo": "texto", "esperado": "", "termo": "SALA", "termo_antes": "", "prancha": "", "motivo": ""})}}
+        pl_m.exigencias, _ex_orig = (lambda p: [("Elementos Gráficos", "PPCI", "Cotar a sala")]), pl_m.exigencias
+        pl_m.plantas, _pl_orig = (lambda p: _todas), pl_m.plantas
+        try:
+            _cl = pl_m.classificar("P")
+        finally:
+            pl_m.exigencias, pl_m.plantas = _ex_orig, _pl_orig
+    finally:
+        pl_m.palavras, pl_m._ollama = _pal_orig, _oll_orig
+    caso("palpite (2.13.8): termo que não está na planta é trocado por palavra da exigência que está; sem nenhuma, fica o motivo",
+         _c1["termo"] == "MOEGA" and not _c2["termo"] and _c2["motivo"] and _c3["termo"] == "ART"
+         and _cl == [{"tipo": "ausencia", "esperado": "Cotar a sala", "termo": "SALA", "termo_antes": "", "prancha": "", "motivo": "", "n": 1}],
+         str((_c1, _c2, _cl)))
+    caso("palpite (2.13.8): o programa chama 'auto' (a IA local classifica) e a conversa só apresenta",
+         hasattr(pl_m, "automatico") and '"auto" if hasattr(self._palpite(), "automatico")' in open(os.path.join(RAIZ, "sseg", "app", "api.py"), encoding="utf-8").read()
+         and "[IA local] em andamento" in _chat.INSTRUCOES and "[IA local] em andamento" in js)
     # 22b. prancha com o texto convertido em desenho (17/11/2026): comparação do valor sem IA; com PyMuPDF, a cota
     # sintética (traços curtos ao lado de uma linha longa) é achada e o palpite sai com uma leitura de mentira
     import cotas_desenho as cd_m

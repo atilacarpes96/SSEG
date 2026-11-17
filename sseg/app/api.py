@@ -1234,8 +1234,11 @@ class Api:
         fila e a IA ligada, sobe a rodada em segundo plano (uma por processo, no Python do PC)."""
         m, pasta = self._palpite(), self._pasta_proc(codigo)
         e = m.estado(pasta)
-        fila = any(i.get("estado") == "fila" for i in e["palpites"].get("itens") or [])
-        if rodar and fila and e["ia"]["pronta"] and not e["rodando"] and not e["velho"]:
+        itens = e["palpites"].get("itens") or []
+        fila = any(i.get("estado") == "fila" for i in itens)
+        # 2.13.8: sem classificação (ou de uma CIA anterior), a IA local classifica sozinha; não precisa mais do Claude
+        falta_classificar = e.get("reanalise") and (not itens or e["velho"]) and hasattr(m, "automatico")
+        if rodar and (fila and not e["velho"] or falta_classificar) and e["ia"]["pronta"] and not e["rodando"]:
             e["rodando"] = self._palpites_rodar(codigo, pasta)
         return e
 
@@ -1253,7 +1256,9 @@ class Api:
             env["PATH"] = os.path.dirname(pop) + os.pathsep + env.get("PATH", "")
             env["SSEG_POPPLER"] = os.path.dirname(pop)
         self._palpite_rodadas[codigo] = subprocess.Popen(
-            [py, script, "palpite", "--pasta", pasta, "rodar"], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            # 2.13.8: "auto" classifica pela IA local o que ainda não foi classificado e roda; clone antigo só tem "rodar"
+            [py, script, "palpite", "--pasta", pasta, "auto" if hasattr(self._palpite(), "automatico") else "rodar"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL, creationflags=base.SEM_JANELA, env=env)
         self._log("IA local: a rodada dos palpites de %s começou em segundo plano." % codigo)
         return True

@@ -3444,8 +3444,11 @@ function palpitesBloco(d, ctx) {
     const semCartao = itens.filter(i => !comCartao.includes(i));
     const pend = comCartao.filter(i => i.estado === "fila" || i.estado === "rodando").length;
     const avisos = [];
-    if (!itens.length) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, "Ainda não há palpites preparados para este processo."));
-    if (e.velho) avisos.push(el("p", { class: "sub", style: "margin:4px 0;color:var(--verm)" }, "Atenção: " + e.velho + ". Peça ao Claude para preparar de novo."));
+    // 2.13.8: sem itens e com a rodada correndo é a IA local classificando as exigências (não precisa do Claude)
+    const classificando = e.rodando && (!itens.length || e.velho);
+    if (classificando) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, "A IA local está lendo as exigências da última CIA e escolhendo onde olhar em cada planta. Pode ir respondendo."));
+    else if (!itens.length) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, e.ia.pronta ? "Ainda não há palpites para este processo." : "Ainda não há palpites para este processo. " + e.ia.motivo));
+    if (e.velho && !classificando) avisos.push(el("p", { class: "sub", style: "margin:4px 0;color:var(--verm)" }, "Atenção: " + e.velho + "." + (e.ia.pronta ? " A IA local vai classificar de novo." : "")));
     if (pend && e.ia.pronta) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, "A IA local está olhando as plantas: " + (comCartao.length - pend) + " de " + comCartao.length + " prontas. Pode ir respondendo."));
     if (itens.length && !e.ia.pronta && pend) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, e.ia.motivo));
     if ((e.faltam_plantas || []).length && processo) avisos.push(el("p", { class: "sub", style: "margin:4px 0" }, "Falta(m) " + e.faltam_plantas.length + " planta(s) na pasta do processo. ",
@@ -3463,7 +3466,7 @@ function palpitesBloco(d, ctx) {
         el("span", { class: "discreto", style: "margin:0" }, "Pode mandar só as que já olhou. A resposta também corrige a IA.")) : "");
     }
     for (const it of comCartao) if (st.pal[it.n]) st.pal[it.n].replaceChildren(palpiteDe(it, e));
-    return pend && e.ia.pronta && !e.velho;
+    return (pend && e.ia.pronta && !e.velho) || classificando;
   };
   let voltas = 0;
   const carregar = async () => {
@@ -3577,7 +3580,9 @@ async function linhaIALocal(codigo) {
       return "\n\n[IA local] sem plantas: o programa não conseguiu baixar as plantas do SOL (" + (r.msg || "sem aba do SOL logada").slice(0, 200) +
         "). Diga isso em uma linha e siga a reanálise sem palpites.";
   }
-  return "\n\n[IA local] preparar: este PC tem a IA local ligada e as plantas estão na pasta do processo (subpasta plantas). Prepare os palpites das exigências da última CIA e comece a resposta pelo bloco sseg-palpites.";
+  // 2.13.8 (pedido do Átila): quem classifica as exigências é a IA local, não o Claude; o programa já dispara a rodada
+  try { await window.pywebview.api.palpites(codigo, true); } catch (err) { /* sem rodada: o quadro diz o motivo */ }
+  return "\n\n[IA local] em andamento: a IA local deste PC está classificando as exigências da última CIA e conferindo as plantas, em segundo plano. Comece a resposta pelo bloco sseg-palpites.";
 }
 
 async function abrirProcesso(codigo) {

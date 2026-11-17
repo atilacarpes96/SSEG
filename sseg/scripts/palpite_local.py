@@ -1120,6 +1120,146 @@ def texto_ver(d):
     return "\n".join(L)
 
 
+# ------------------------------------------------------------------ classificação pela IA local (17/11/2026)
+# Pedido do Átila: a classificação das exigências não depende do Claude; a IA local classifica e o Claude só apresenta
+# o quadro azul. A IA diz o tipo, o valor esperado e a palavra escrita na planta; o código confere se a palavra existe
+# nas pranchas (e, se não existe, procura uma palavra da própria exigência que exista em poucos lugares).
+
+ESQ_CLASS = {"type": "object", "required": ["tipo", "esperado", "termo", "termo_antes", "prancha", "motivo"],
+             "properties": {"tipo": {"type": "string", "enum": list(TIPOS)}, "esperado": {"type": "string"},
+                            "termo": {"type": "string"}, "termo_antes": {"type": "string"},
+                            "prancha": {"type": "string"}, "motivo": {"type": "string"}}}
+P_CLASS = """Você organiza a conferência de uma reanálise de PPCI (prevenção de incêndio, Corpo de Bombeiros do RS).
+A exigência abaixo foi feita na análise anterior. Classifique como ela se confere agora, sem decidir se foi cumprida.
+
+Seção da CIA: {secao}
+Exigência: "{exig}"
+Pranchas do processo (descrição no SOL): {pranchas}
+
+Responda só com JSON:
+- tipo: "texto" (confere-se um VALOR escrito na planta: cota, largura, distância, área, população, código, divisão),
+  "desenho" (símbolo, traçado, posição ou quantidade de elemento desenhado), "ausencia" (algo que tinha de passar a
+  existir na planta: nota, legenda, rótulo, representação), "fora_da_planta" (documento: ART/RRT, procuração, contrato,
+  assinatura; cadastro do SOL: campo de medidas, área, riscos específicos; memorial) ou "remissiva" (só remete a
+  inconformidades já citadas).
+- esperado: o que tem de estar escrito para estar cumprida, com o valor quando houver (obrigatório em "texto").
+- termo: palavras que provavelmente estão ESCRITAS na planta no ponto em que se confere (nome do ambiente, rótulo,
+  título da nota, sigla). Curto (1 a 3 palavras), em maiúsculas como em planta. Vazio se não houver.
+- termo_antes: texto que estava na planta anterior e devia sair ou mudar (vazio se não houver).
+- prancha: parte da descrição da prancha onde se confere (ex.: "corte", "implantação"), vazio se não souber.
+- motivo: só para fora_da_planta, remissiva ou quando não há lugar escrito para apontar: diga em uma frase por quê."""
+
+PALAVRAS_FRACAS = set("deve deverá devera conforme item observar sendo para pela pelo como entre sobre ainda ambos ambas "
+                      "planta prancha projeto representar representado representada informar informada informado "
+                      "apresentar edificacao medidas seguranca segurança incendio incêndio".split())
+
+
+def _onde(pasta, todas, termo, lado="depois", prancha=""):
+    """[(prancha, n)] das pranchas do lado pedido em que o termo está escrito."""
+    filtro = sem_acento(prancha)
+    out = []
+    for p in todas:
+        if p["lado"] != lado or not p["tem"] or (filtro and filtro not in sem_acento(p["descricao"] + " " + p["nome"] + " " + p["arquivo"])):
+            continue
+        ws, _t = palavras(os.path.join(pasta, SUB, p["arquivo"]))
+        n = sum(len(ocorrencias(ws[pg], termo)) for pg in ws)
+        if n:
+            out.append((p, n))
+    return out
+
+
+def _termo_valido(pasta, todas, c, texto):
+    """Confere o termo proposto; se não está escrito nas pranchas novas, tenta o termo_antes nas anteriores e depois uma
+    palavra da própria exigência que apareça em 1 a MAX_RECORTES lugares. Devolve a classificação ajustada."""
+    if c["tipo"] not in COM_RECORTE:
+        return c
+    for campo, lado in (("termo", "depois"), ("termo_antes", "antes")):
+        t = (c.get(campo) or "").strip()
+        if t:
+            achou = _onde(pasta, todas, t, lado, c.get("prancha") or "") or _onde(pasta, todas, t, lado)
+            if achou and sum(n for _p, n in achou) <= MAX_RECORTES * 3:
+                if not _onde(pasta, todas, t, lado, c.get("prancha") or ""):
+                    c["prancha"] = ""
+                return c
+            c[campo] = ""
+    cands = [w for w in re.findall(r"[A-Za-zÀ-ÿ]{5,}", texto) if sem_acento(w) not in PALAVRAS_FRACAS]
+    melhor = None
+    for w in dict.fromkeys(cands):
+        achou = _onde(pasta, todas, w, "depois", c.get("prancha") or "")
+        n = sum(k for _p, k in achou)
+        if 1 <= n <= MAX_RECORTES and (melhor is None or n < melhor[1]):
+            melhor = (w.upper(), n)
+    if melhor:
+        c["termo"] = melhor[0]
+        return c
+    c["motivo"] = c.get("motivo") or "A IA local não achou na planta nova uma palavra escrita no ponto desta exigência."
+    return c
+
+
+def classificar(pasta, aviso=None):
+    """Classificação de cada exigência da última CIA pela IA local, já conferida contra as pranchas. [{n, tipo, ...}]."""
+    ex = exigencias(pasta)
+    todas = plantas(pasta)
+    descr = "; ".join(sorted({p["descricao"] or p["nome"] for p in todas if p["lado"] == "depois"})) or "(nenhuma)"
+    out = []
+    for n, (secao, sub, texto) in enumerate(ex, 1):
+        r = _ollama("/api/chat", {"model": MODELO, "messages": [{"role": "user", "content": P_CLASS.format(
+            secao=" / ".join(x for x in (secao, sub) if x) or "(sem seção)", exig=texto, pranchas=descr)}],
+            "format": ESQ_CLASS, "stream": False, "think": False, "keep_alive": "30m",
+            "options": {"temperature": 0, "seed": 0, "num_ctx": 4096, "num_predict": 400}})
+        try:
+            c = json.loads((r.get("message") or {}).get("content", ""))
+        except ValueError:
+            c = {"tipo": "fora_da_planta", "motivo": "a IA local não classificou esta exigência"}
+        c = {k: str(c.get(k) or "").strip() for k in ("tipo", "esperado", "termo", "termo_antes", "prancha", "motivo")}
+        if c["tipo"] not in TIPOS:
+            c["tipo"] = "fora_da_planta"
+        if c["tipo"] == "texto" and not c["esperado"]:
+            c["tipo"] = "ausencia"
+        if c["tipo"] in COM_RECORTE and not c["esperado"]:
+            c["esperado"] = texto[:300]
+        c = _termo_valido(pasta, todas, c, texto + " " + c["esperado"])
+        if c["tipo"] in COM_RECORTE and not (c["termo"] or c["termo_antes"] or c["motivo"]):
+            c["motivo"] = "sem lugar escrito na planta para apontar o recorte"
+        c["n"] = n
+        out.append(c)
+        if aviso:
+            aviso("exigência %d: %s%s" % (n, c["tipo"], " · termo \"%s\"" % (c["termo"] or c["termo_antes"]) if c["termo"] or c["termo_antes"] else ""))
+    return out
+
+
+def automatico(pasta, aviso=print):
+    """O que o SSEG.exe roda em segundo plano na reanálise: classifica pela IA local quando ainda não há classificação
+    válida (nada do Claude é preciso), prepara e roda. Classificação já gravada (pela IA ou pelo Claude) é mantida."""
+    ok, motivo = ia_local()
+    if not ok:
+        return 0, motivo
+    if not exigencias(pasta):
+        return 0, "Sem exigências da última CIA na pasta."
+    d = ler(pasta)
+    if not d.get("itens") or valido(pasta, d) or not any(i.get("tipo") for i in d.get("itens") or []):
+        marca = os.path.join(pasta, SUB, ".rodando")   # o quadro azul mostra "classificando" enquanto isto corre
+        if rodando(pasta):
+            return 0, "Já há uma rodada da IA local neste processo."
+        os.makedirs(os.path.join(pasta, SUB), exist_ok=True)
+
+        def toque(t):
+            with open(marca, "w") as fh:
+                fh.write("classificando")
+            aviso(t)
+        try:
+            toque("classificando as exigências da última CIA")
+            cur = classificar(pasta, toque)
+            preparar(pasta, cur)
+            _atualizar(pasta, lambda x: x.update(classificado_por="IA local (%s)" % MODELO))
+        finally:
+            try:
+                os.remove(marca)
+            except OSError:
+                pass
+    return rodar(pasta, aviso=aviso)
+
+
 # ------------------------------------------------------------------ linha de comando
 
 def args_parser(sp):
@@ -1134,6 +1274,8 @@ def args_parser(sp):
     p.add_argument("--de-novo", action="store_true", help="tenta de novo os que falharam")
     sub.add_parser("ver", help="mostra o palpites.json")
     sub.add_parser("estado", help="JSON com o estado (uso do programa)")
+    sub.add_parser("classificar", help="a IA local classifica as exigências (JSON na saída, nada gravado)")
+    sub.add_parser("auto", help="classifica pela IA local se faltar, prepara e roda (o que o SSEG.exe chama)")
 
 
 def principal(args):
@@ -1164,6 +1306,12 @@ def principal(args):
         print(texto_ver(ler(pasta)))
     elif args.acao == "estado":
         print(json.dumps(estado(pasta), ensure_ascii=False))
+    elif args.acao == "classificar":
+        ok, motivo = ia_local()
+        print(json.dumps(classificar(pasta, lambda t: print(t, file=sys.stderr)), ensure_ascii=False, indent=1) if ok else motivo)
+    elif args.acao == "auto":
+        n, motivo = automatico(pasta)
+        print(motivo or "%d item(ns) rodado(s)." % n)
 
 
 if __name__ == "__main__":
