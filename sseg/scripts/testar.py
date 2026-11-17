@@ -1371,6 +1371,72 @@ def main():
          # 14/11/2026: o heredoc com JSON foi barrado na janela ("brace with quote character"); o argumento entre aspas simples passa
          'palpite --pasta "P" preparar \'[{"n": 1, "tipo": "texto"' in _ins and "<<'FIM'\n[{" not in _ins and "[IA local]" in _ins
          and "```sseg-palpites" in _chat.GUIA_VISUAL and '"sseg-palpites"' in js and "perguntas azul" in js and "linhaIALocal" in js)
+    # 22b. prancha com o texto convertido em desenho (17/11/2026): comparação do valor sem IA; com PyMuPDF, a cota
+    # sintética (traços curtos ao lado de uma linha longa) é achada e o palpite sai com uma leitura de mentira
+    import cotas_desenho as cd_m
+    caso("cotas desenhadas: o valor esperado sai do texto em metros (sem 'P3', 'A-2' nem '1/50'; milhar e cm/mm)",
+         cd_m.valores("porta P3 de no mínimo 1,10 m e 90 cm") == [1.1, 0.9] and cd_m.valores("A-2 com 1.496,51 m²") == [1496.51]
+         and cd_m.valores("escala 1/50") == [] and cd_m.valores("largura 2.400 mm") == [2.4] and cd_m.valores("altura 12,15m") == [12.15])
+    caso("cotas desenhadas: a leitura bate pelos algarismos (12,15 = 1215 cm; '|' é o 1) e não por aproximação",
+         cd_m.bate("12|5", 12.15) and cd_m.bate("1215", 12.15) and cd_m.bate("12,15", 12.15) and not cd_m.bate("1,25", 12.15)
+         and not cd_m.bate("1215", 12.5) and cd_m.bate("120", 1.2) and not cd_m.bate("9", 0.9) and not cd_m.bate("", 1.2))
+    _cert, _conf = cd_m.procurar([{"id": "a", "a": "1215", "b": "12|5"}, {"id": "b", "a": "1,25", "b": "1215"}, {"id": "c", "a": "Sala"}], [12.15])
+    caso("cotas desenhadas: as duas leituras iguais contam; só uma igual vai para conferir",
+         [x["id"] for x in _cert] == ["a"] and [x["id"] for x in _conf] == ["b"])
+    try:
+        import pymupdf as _fz
+    except ImportError:
+        _fz = None
+    if _fz and pl_m.tem_poppler():
+        def _pdf_cota(arq, x0=300, y0=300):
+            doc = _fz.open()
+            pg = doc.new_page(width=600, height=600)
+            for i in range(14):  # "número": zigue-zague de traços curtos, 26 x 6 pt
+                pg.draw_line((x0 + 2 * i, y0 + (6 if i % 2 else 0)), (x0 + 2 * i + 2, y0 + (0 if i % 2 else 6)), width=0.3)
+            pg.draw_line((x0 - 40, y0 + 9), (x0 + 70, y0 + 9), width=0.3)   # linha de cota logo abaixo
+            pg.draw_line((50, 50), (50, 500), width=0.3)                      # linha qualquer, longe
+            doc.save(arq)
+        with tempfile.TemporaryDirectory() as tmp:
+            pasta = os.path.join(tmp, "A00000002AA001")
+            os.makedirs(os.path.join(pasta, "plantas"))
+            _cia2 = ("apresentou as seguintes inconformidades\nElementos Gráficos\nCorte\n            - Informar a altura de 12,15 m.\n"
+                     "O PPCI deverá ser encaminhado para nova análise\n")
+            for n_ in ("cia-100.txt", "cia-200.txt", "cia-ultima.txt"):
+                open(os.path.join(pasta, n_), "w", encoding="utf-8").write(_cia2)
+            json.dump({"elemGraficos": [{"situacao": "INATIVO", "tipo": "CORTE", "descricao": "Corte", "arquivo": {"id": 150, "nomeArquivo": "C0.pdf"}},
+                                        {"situacao": "ATIVO", "tipo": "CORTE", "descricao": "Corte", "arquivo": {"id": 250, "nomeArquivo": "C1.pdf"}}]},
+                      open(os.path.join(pasta, "api-1.json"), "w", encoding="utf-8"))
+            _pdf_cota(os.path.join(pasta, "plantas", "Corte (250).pdf"))
+            _pdf_cota(os.path.join(pasta, "plantas", "anterior - Corte (150).pdf"), 200, 200)
+            with _fz.open(os.path.join(pasta, "plantas", "Corte (250).pdf")) as _doc:
+                _cs = cd_m.candidatos(_doc[0])
+                _png = cd_m.imagem(_doc[0], _cs[0]) if _cs else b""
+            caso("cotas desenhadas: a cota feita de traços é achada pela linha ao lado e recortada como PNG",
+                 len(_cs) == 1 and abs(_cs[0]["ang"]) < 1 and _png.startswith(b"\x89PNG"), str(_cs))
+            d3 = pl_m.preparar(pasta, [{"n": 1, "tipo": "texto", "esperado": "altura de 12,15 m", "motivo": "texto em desenho"}])
+            it3 = d3["itens"][0]
+            caso("cotas desenhadas: sem palavra no PDF a exigência de valor vai para a leitura de cotas, com a anterior",
+                 it3["estado"] == "fila" and it3["cotas"][0]["pdf"] == "Corte (250).pdf" and it3["cotas"][0]["antes"]["pdf"] == "anterior - Corte (150).pdf"
+                 and "convertido em desenho" in it3["fatos"][0] and not it3["motivo"], str(it3)[:400])
+            _lidos = {}
+            def _falso(png, _n=[0]):
+                _n[0] += 1
+                _lidos[_n[0]] = png[:4]
+                return "1215" if _n[0] <= 2 else "Sala"   # nova: 1215 nas duas leituras; anterior: palavra
+            _orig = (pl_m.ia_local, pl_m._transcrever)
+            pl_m.ia_local, pl_m._transcrever = (lambda: (True, "")), _falso
+            try:
+                pl_m.rodar(pasta, aviso=lambda *_: None)
+            finally:
+                pl_m.ia_local, pl_m._transcrever = _orig
+            it4 = pl_m.ler(pasta)["itens"][0]
+            caso("cotas desenhadas: valor achado na nova e não na anterior sai, no máximo, como palpite fraco, com o recorte",
+                 it4["estado"] == "pronto" and it4["rotulo"]["titulo"] == "Palpite fraco: Cumpriu" and it4["controle"]["veredito"] == "nao_cumpriu"
+                 and len(it4["recortes"]) == 1 and it4["recortes"][0]["antes"] and len(_lidos) == 3, str(it4)[:500])
+            d5 = pl_m.preparar(pasta, [])
+            caso("cotas desenhadas: preparar de novo mantém o palpite e os recortes; a leitura fica em cache ao lado do PDF",
+                 d5["itens"][0]["estado"] == "pronto" and len(d5["itens"][0]["recortes"]) == 1
+                 and os.path.exists(os.path.join(pasta, "plantas", "Corte (250).pdf.cotas.json")))
     # 23. camadas das pranchas (sem IA, sem PyMuPDF: a conferência recebe o inventário já lido do PDF)
     import camadas as cm_m
     caso("camadas: nomes de camada viram medida (prefixo, sigla, abreviação, erro de digitação)",

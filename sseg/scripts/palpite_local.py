@@ -25,7 +25,14 @@ REGRAS (testes de 13 e 14/11/2026 com o gemma4:31b-it-qat)
   - Memorial, cadastro e exigência remissiva: sem palpite.
   - Falha, demora ou Ollama fora do ar: sem palpite. Nunca "não sei" inventado.
 
+PRANCHA COM O TEXTO CONVERTIDO EM DESENHO (17/11/2026; cotas_desenho.py)
+  O pdftotext não acha palavra nenhuma, então não há termo para apontar o recorte. Em exigência de texto com valor
+  ("12,15 m"), a IA lê as cotas da prancha uma a uma (duas leituras cada) e o código procura o valor. O palpite
+  sai no máximo como fraco: o método foi testado em um processo só. Não achar o valor nunca vira "não cumpriu"
+  (o filtro pode deixar a cota de fora). A leitura fica em cache ao lado do PDF; a primeira custa minutos.
+
 Só biblioteca padrão; Poppler (pdftotext, pdftoppm) e, para o palpite, o Ollama em http://localhost:11434.
+A leitura de cotas desenhadas pede também o PyMuPDF (o instalador do SSEG já instala).
 """
 
 import base64
@@ -543,6 +550,8 @@ def _assinatura(it):
     base = [it["exigencia"], it["tipo"], it.get("esperado"), it.get("termo"), it.get("termo_antes"),
             [[r["pdf"], r["pagina"], r["caixa"], (r.get("antes") or {}).get("pdf"), (r.get("antes") or {}).get("caixa")] for r in it.get("recortes") or []],
             MODELO, list(MARGENS), hashlib.sha1(PROMPT.encode()).hexdigest()[:8]]
+    if it.get("cotas"):   # só entra quando há: a assinatura dos itens antigos não muda
+        base.append([[c["pdf"], c["pagina"], (c.get("antes") or {}).get("pdf")] for c in it["cotas"]] + [P_COTA])
     return hashlib.sha1(json.dumps(base, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:16]
 
 
@@ -619,6 +628,122 @@ def _recortes(pasta, cfg, todas):
     return recs, fatos, ""
 
 
+# ------------------------------------------------------------------ prancha com o texto convertido em desenho
+
+SEM_TEXTO = 60    # página com menos palavras que isto no pdftotext: o texto virou traço
+MAX_PRANCHAS_COTA = 2
+P_COTA = ("Recorte de planta de PPCI com um único texto (em geral uma cota em metros, como 1,20). Transcreva exatamente o "
+          "texto escrito. Se não houver texto legível, responda texto vazio. Não invente.")
+ESQ_COTA = {"type": "object", "properties": {"texto": {"type": "string"}}, "required": ["texto"]}
+
+
+def _cd():
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import cotas_desenho
+    return cotas_desenho
+
+
+def _alvos_cotas(pasta, it, todas):
+    """Exigência de texto com valor numa prancha sem texto: [{pdf, pagina, prancha, antes}] para ler as cotas, e os
+    fatos. Vazio quando não se aplica (sem valor no esperado, prancha com texto, nada baixado)."""
+    if it["tipo"] != "texto" or not _cd().valores(it.get("esperado")):
+        return [], []
+    filtro = sem_acento(it.get("prancha") or "")
+    serve = lambda p: not filtro or filtro in sem_acento(p["descricao"] + " " + p["nome"] + " " + p["arquivo"])
+    alvos = []
+    for p in todas:
+        if p["lado"] != "depois" or not p["tem"] or p["nao_reenviada"] or not serve(p):
+            continue
+        ws, _t = palavras(os.path.join(pasta, SUB, p["arquivo"]))
+        for pag in sorted(ws):
+            if len(ws[pag]) < SEM_TEXTO:
+                a = par_anterior(todas, p)
+                alvos.append({"pdf": p["arquivo"], "pagina": pag, "prancha": _rotulo_planta(p),
+                              "antes": {"pdf": a["arquivo"], "pagina": pag} if a and a["tem"] else None})
+    if not alvos or len(alvos) > MAX_PRANCHAS_COTA:
+        return [], ["Texto convertido em desenho em %d prancha(s): para ler as cotas, diga em \"prancha\" qual delas." % len(alvos)] if alvos else []
+    fatos = ["%s: o texto está convertido em desenho (o PDF não tem palavras). A IA vai ler as cotas uma a uma e "
+             "procurar %s." % (a["prancha"], " ou ".join(_cd_valor(v) for v in _cd().valores(it["esperado"]))) for a in alvos]
+    return alvos, fatos
+
+
+def _cd_valor(v):
+    return ("%.2f" % v).replace(".", ",") + " m"
+
+
+def _transcrever(png):
+    r = _ollama("/api/chat", {
+        "model": MODELO, "messages": [{"role": "user", "content": P_COTA, "images": [base64.b64encode(png).decode()]}],
+        "format": ESQ_COTA, "stream": False, "think": False, "keep_alive": "30m",
+        "options": {"temperature": 0, "seed": 0, "num_ctx": 4096, "num_predict": 80}})
+    try:
+        t = str(json.loads((r.get("message") or {}).get("content", "")).get("texto", ""))
+    except Exception:  # noqa: BLE001
+        raise RuntimeError("resposta fora do formato na leitura de cota")
+    return "" if t.strip().lower() in ("texto vazio", "vazio") else t.strip()
+
+
+def _caixa_cota(c):
+    return [round(c["x"] - 45), round(c["y"] - 30), round(c["x"] + 45), round(c["y"] + 30)]
+
+
+def _rodar_cotas(pasta, it, marca):
+    """Lê as cotas das pranchas alvo, procura o valor esperado e monta o resultado (rodadas, controle, rótulo e os
+    recortes onde o valor apareceu). A planta anterior só é lida se o valor apareceu na nova."""
+    cd = _cd()
+    vs = cd.valores(it["esperado"])
+    toque = lambda: os.utime(marca)
+    t0 = time.time()
+    certos, conferir, lidas = [], [], 0
+    for a in it["cotas"]:
+        leit = cd.ler(os.path.join(pasta, SUB, a["pdf"]), a["pagina"] - 1, _transcrever, MODELO, toque=toque)
+        lidas += len(leit)
+        c, f = cd.procurar(leit, vs)
+        certos += [dict(x, alvo=a) for x in c]
+        conferir += [dict(x, alvo=a) for x in f]
+    quais = " ou ".join(_cd_valor(v) for v in vs)
+    ondes = lambda xs: "; ".join("%s: \"%s\"%s" % (x["alvo"]["prancha"], x["a"], "" if x.get("b") in (None, x["a"]) else " / \"%s\"" % x["b"]) for x in xs[:4])
+    seg = round(time.time() - t0, 1)
+    if certos:
+        nova = {"veredito": "cumpriu", "evidencia": "%s escrito em %d lugar(es), com as duas leituras iguais: %s." % (quais, len(certos), ondes(certos)), "segundos": seg}
+    elif conferir:
+        nova = {"veredito": "nao_sei", "evidencia": "Uma das duas leituras achou %s e a outra discordou: %s." % (quais, ondes(conferir)), "segundos": seg}
+    else:
+        nova = {"veredito": "nao_sei", "evidencia": "Não achei %s entre as %d cotas lidas." % (quais, lidas), "segundos": seg}
+    ctrl, antes_achou = None, None
+    alvos_antes = [a for a in it["cotas"] if a.get("antes")]
+    if certos and alvos_antes:
+        t1, ac = time.time(), []
+        for a in alvos_antes:
+            leit = cd.ler(os.path.join(pasta, SUB, a["antes"]["pdf"]), a["antes"]["pagina"] - 1, _transcrever, MODELO, toque=toque)
+            ac += cd.procurar(leit, vs)[0]
+        antes_achou = bool(ac)
+        ctrl = {"veredito": "cumpriu" if ac else "nao_cumpriu", "segundos": round(time.time() - t1, 1),
+                "evidencia": ("%s também está escrito na planta anterior (%d lugar(es))." % (quais, len(ac))) if ac else
+                             "%s não aparece entre as cotas lidas da planta anterior." % quais}
+    expl = " Leitura das cotas uma a uma (texto convertido em desenho): método novo, testado em um processo só."
+    if certos and antes_achou:
+        rot = {"classe": "ambar", "titulo": "Inconclusivo", "veredito": "",
+               "explicacao": "%s está escrito na planta nova, mas já estava na anterior, que recebeu a exigência: achar o valor não prova a correção. Olhe o recorte." % quais}
+    elif certos:
+        rot = {"classe": "ambar", "titulo": "Palpite fraco: Cumpriu", "veredito": "cumpriu",
+               "explicacao": ("%s aparece escrito na planta nova%s." % (quais, " e não aparecia na anterior" if antes_achou is False else ", sem a planta anterior para comparar")) + expl}
+    elif conferir:
+        rot = {"classe": "ambar", "titulo": "Inconclusivo", "veredito": "",
+               "explicacao": "As duas leituras da IA discordaram onde %s pode estar escrito. Olhe o recorte." % quais}
+    else:
+        rot = {"classe": "ambar", "titulo": "Inconclusivo", "veredito": "",
+               "explicacao": "Não achei %s entre as %d cotas lidas. Isso não prova que falta: a cota pode ter ficado fora do filtro. Olhe a planta." % (quais, lidas)}
+    recs = []
+    for x in (certos or conferir)[:MAX_RECORTES]:
+        a = x["alvo"]
+        r = {"pdf": a["pdf"], "pagina": a["pagina"], "caixa": _caixa_cota(x), "prancha": a["prancha"]}
+        if a.get("antes"):
+            r["antes"] = {"pdf": a["antes"]["pdf"], "pagina": a["antes"]["pagina"], "caixa": _caixa_cota(x)}
+        recs.append(r)
+    return {"rodadas": [dict(nova, margem="cotas")], "controle": ctrl, "rotulo": rot, "recortes": recs}
+
+
 def preparar(pasta, curadoria):
     """curadoria: [{n, tipo, esperado, termo, termo_antes, prancha, motivo}] (uma por exigência da última CIA; as que
     faltarem ficam "não preparada"). Monta recortes e fatos, mantém o palpite e a conferência do que não mudou e
@@ -653,16 +778,26 @@ def preparar(pasta, curadoria):
                   "motivo": (c.get("motivo") or "").strip(), "fatos": [], "recortes": [], "estado": "sem_palpite"}
             if not it["tipo"]:
                 it["motivo"] = "Esta exigência não foi preparada para a IA local."
-            elif it["tipo"] in COM_RECORTE and not (it["termo"] or it["termo_antes"]):
-                pass  # exigência de planta sem ponto escrito para o recorte: fica o motivo dado na classificação
             elif it["tipo"] in COM_RECORTE:
-                try:
-                    it["recortes"], it["fatos"], motivo = _recortes(pasta, it, todas)
-                except (RuntimeError, OSError, subprocess.SubprocessError) as e:
-                    motivo = "Não deu para ler a planta (%s)." % str(e)[:160]
+                motivo = it["motivo"]  # sem termo: fica o motivo dado na classificação
+                if it["termo"] or it["termo_antes"]:
+                    try:
+                        it["recortes"], it["fatos"], motivo = _recortes(pasta, it, todas)
+                    except (RuntimeError, OSError, subprocess.SubprocessError) as e:
+                        motivo = "Não deu para ler a planta (%s)." % str(e)[:160]
+                if not it["recortes"]:  # nenhum lugar escrito: a prancha pode ter o texto convertido em desenho
+                    try:
+                        alvos, fatos_c = _alvos_cotas(pasta, it, todas)
+                    except (RuntimeError, OSError, subprocess.SubprocessError):
+                        alvos, fatos_c = [], []
+                    if alvos:
+                        it["cotas"], it["fatos"], motivo = alvos, fatos_c, ""
+                    elif fatos_c:
+                        it["fatos"] = it["fatos"] + fatos_c
                 if motivo:
                     it["motivo"] = motivo
                 else:
+                    it["motivo"] = ""
                     it["estado"] = "fila"
             elif not it["motivo"]:
                 it["motivo"] = ("Remete às exigências acima." if it["tipo"] == "remissiva" else
@@ -673,7 +808,8 @@ def preparar(pasta, curadoria):
                 if velho.get("conferencia"):
                     it["conferencia"] = velho["conferencia"]
                 if it["estado"] == "fila" and velho.get("assinatura") == it["assinatura"] and velho.get("estado") == "pronto":
-                    it.update({k: velho[k] for k in ("estado", "rodadas", "controle", "rotulo", "feito_em") if k in velho})
+                    guarda = ("estado", "rodadas", "controle", "rotulo", "feito_em") + (("recortes",) if it.get("cotas") else ())
+                    it.update({k: velho[k] for k in guarda if k in velho})
             itens.append(it)
         d.clear()
         d.update({"versao": 1, "processo": os.path.basename(os.path.normpath(pasta)), "cia": ids[-1] if ids else 0,
@@ -813,20 +949,23 @@ def rodar(pasta, de_novo=False, aviso=print):
             antes = [r["antes"] for r in novos if r.get("antes")]
             res = {"estado": "pronto", "feito_em": time.strftime("%Y-%m-%dT%H:%M:%S"), "rodadas": [], "controle": None}
             try:
-                perg = pergunta(it)
-                for m in MARGENS:
-                    os.utime(marca)
-                    res["rodadas"].append(dict(_rodada(pasta, it, novos, m, perg), margem=m))
-                if antes:
-                    os.utime(marca)
-                    res["controle"] = _rodada(pasta, it, antes, MARGENS[0], perg)
-                res["rotulo"] = conclusao(it["tipo"], res["rodadas"], res["controle"])
+                if it.get("cotas"):  # prancha com o texto convertido em desenho: lê as cotas, sem os três tamanhos
+                    res.update(_rodar_cotas(pasta, it, marca))
+                else:
+                    perg = pergunta(it)
+                    for m in MARGENS:
+                        os.utime(marca)
+                        res["rodadas"].append(dict(_rodada(pasta, it, novos, m, perg), margem=m))
+                    if antes:
+                        os.utime(marca)
+                        res["controle"] = _rodada(pasta, it, antes, MARGENS[0], perg)
+                    res["rotulo"] = conclusao(it["tipo"], res["rodadas"], res["controle"])
             except Exception as e:  # noqa: BLE001 — um item com problema não derruba os outros; nunca vira "não sei"
                 res = {"estado": "falhou", "erro": "%s: %s" % (type(e).__name__, str(e)[:300]), "feito_em": res["feito_em"]}
             def gravar(x, n=n, ass=ass, res=res):
                 alvo = _item(x, n)
                 if alvo and alvo.get("assinatura") == ass:  # a conversa pode ter preparado de novo no meio da rodada
-                    for k in ("rodadas", "controle", "rotulo", "erro"):
+                    for k in ("rodadas", "controle", "rotulo", "erro") + (("recortes",) if alvo.get("cotas") else ()):
                         alvo.pop(k, None)
                     alvo.update(res)
             _atualizar(pasta, gravar)

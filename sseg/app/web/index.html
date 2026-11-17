@@ -3353,7 +3353,7 @@ const BLOCOS = {
 // confiança, os recortes antes e depois, e a conferência do analista — que fica gravada ao lado do palpite (é a
 // correção da IA) e vai ao Claude da conversa. A rodada da IA anda em segundo plano; o quadro se atualiza sozinho.
 const PALP_RESP = [["cumpriu", "Cumpriu"], ["nao_cumpriu", "Não cumpriu"], ["parcial", "Em parte"], ["nao_da", "Não dá para ver"]];
-const PALP_MARGEM = { 60: "recorte padrão", 30: "recorte mais apertado", 100: "recorte mais largo" };
+const PALP_MARGEM = { 60: "recorte padrão", 30: "recorte mais apertado", 100: "recorte mais largo", cotas: "cotas lidas uma a uma" };
 const PALP_NOME = { cumpriu: "Cumpriu", nao_cumpriu: "Não cumpriu", nao_sei: "Não sei" };
 function palpiteZoom(src) {
   const z = el("div", { class: "pal-zoom", title: "Clique para fechar" }, el("img", { src, alt: "recorte da planta" }));
@@ -3377,7 +3377,8 @@ function palpitesBloco(d, ctx) {
     }
     if (it.estado === "rodando") return el("div", { class: "pal" }, el("b", {}, "A IA local está olhando esta exigência…"));
     if (it.estado === "fila") return el("div", { class: "pal" }, el("b", {}, e.ia.pronta ? "Na fila da IA local" : "Sem palpite"), " ",
-      e.ia.pronta ? "(uns 3 minutos por exigência)." : e.ia.motivo + " Valem os fatos e os recortes.");
+      e.ia.pronta ? (it.cotas ? "(prancha com o texto em desenho: a IA lê as cotas uma a uma; na primeira vez leva bem mais que 3 minutos)."
+        : "(uns 3 minutos por exigência).") : e.ia.motivo + " Valem os fatos e os recortes.");
     if (it.estado === "falhou") return el("div", { class: "pal" }, el("b", {}, "Sem palpite"), " A IA falhou nesta exigência (" + (it.erro || "erro") + ").");
     return el("div", { class: "pal" }, el("b", {}, "Sem palpite"), " ", it.motivo || "");
   };
@@ -3411,7 +3412,7 @@ function palpitesBloco(d, ctx) {
     return el("div", { class: "pal-item" },
       el("div", {}, el("b", {}, "Exigência nº " + it.n + " "), el("span", { class: "tag" }, it.tipo_nome || ""), el("span", { class: "discreto" }, [it.secao, it.sub].filter(Boolean).join(" / "))),
       comNormas("div", { class: "pal-ex" }, it.exigencia || ""),
-      (it.fatos || []).length ? el("div", {}, el("span", { class: "discreto" }, "Conferido sem IA (texto exato do PDF):"), el("ul", { class: "pal-fatos" }, ...it.fatos.map(f => el("li", {}, f)))) : null,
+      (it.fatos || []).length ? el("div", {}, el("span", { class: "discreto" }, it.cotas ? "Conferido sem IA:" : "Conferido sem IA (texto exato do PDF):"), el("ul", { class: "pal-fatos" }, ...it.fatos.map(f => el("li", {}, f)))) : null,
       pal, recs,
       el("div", { class: "linha-bts", style: "margin-top:4px;flex-wrap:wrap" }, el("span", { class: "discreto", style: "margin:0" }, "Sua conferência:"), ...bts, nota.value ? null : mais), nota);
   };

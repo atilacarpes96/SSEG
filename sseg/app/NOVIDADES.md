@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.0
+
+- **Palpites da IA local também em prancha com o texto convertido em desenho.** Quando o PDF da prancha não tem texto (cada letra virou traço, como no corte que só mostra "1215" desenhado), não havia onde apontar o recorte e a exigência ficava sem palpite. Agora, em exigência de valor ("altura descendente de 12,15 m"), a IA local lê as cotas da prancha uma a uma, duas vezes cada, e o programa procura o valor: 12,15 m, 12.15 e 1215 (em centímetros) contam como o mesmo número.
+- **O palpite sai no máximo como fraco**, porque o método é novo. Achou o valor na planta nova e não na anterior: "Palpite fraco: Cumpriu", com o recorte das duas. Achou nas duas: inconclusivo (o valor já estava lá). Não achou: inconclusivo, nunca "não cumpriu", porque a cota pode ter ficado fora do filtro.
+- **Na primeira vez demora** (uns 7 segundos por cota, e um corte tem perto de 100), mas a leitura fica guardada ao lado da prancha: outra exigência na mesma prancha não lê de novo.
+
 ## 2.12.0
 
 - **Botão "Baixar elementos gráficos"** na faixa de cima do processo, ao lado de "Memorial SSEG". É um script, sem IA, e serve a qualquer PC. Ele traz do SOL, pela aba em que você já entrou, os elementos gráficos **ativos** do processo (na reanálise, só os que ainda não estão na pasta) e guarda na pasta do processo, subpasta `plantas`.
