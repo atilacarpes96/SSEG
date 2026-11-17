@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.3
+
+- **Pré-análise em passos numerados**, no mesmo desenho do "1 Revisão final / 2 Lançar no SOL" da CIA: **1 Camadas das pranchas** (script: baixa as pranchas e confere as camadas) → **2 Revisar e mandar pro chat**. Uma frase embaixo diz por onde começar.
+- **Uma mensagem só ao chat.** Se o passo 1 foi feito, o passo 2 leva junto a pré-análise e as camadas (o botão 1 mostra "✓ N achado(s)"); na reanálise, leva também o pedido dos palpites da IA local, como antes. Ao fechar as camadas, o botão principal já é "Continuar: 2. Revisar e mandar pro chat".
+- "Refazer pré-análise" e "Pedir os palpites de novo" ficam como links menores, embaixo dos passos.
+
 ## 2.13.2
 
 - **O corretor da revisão final passa a usar o Opus 5.5.** O Fable 5.2 saiu (decisão do Átila, 17/11/2026): a cota dele acabava antes e travava a correção. A regra da 2.13.1 de trocar de modelo quando o Fable ficava sem cota deixou de ser necessária e saiu.

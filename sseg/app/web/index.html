@@ -336,6 +336,15 @@ main.processo { padding: 0; overflow: hidden; }
 .bt.etapa.lan { --cor: var(--verm); background: var(--verm); border-color: var(--verm); color: #fff; }
 .bt.etapa.lan i { background: #fff; color: var(--verm); }
 .bt.etapa.lan:hover:not(:disabled) { background: var(--verm-claro); }
+/* 2.13.1: passos da pré-análise (1 camadas → 2 mandar pro chat), no mesmo desenho das etapas da CIA */
+.pre-etapas { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.pre-etapas .seta { color: var(--suave); font-size: 13px; }
+.bt.etapa.env { --cor: var(--azul); background: var(--azul); border-color: var(--azul); color: #fff; }
+.bt.etapa.env i { background: #fff; color: var(--azul); }
+.bt.etapa.env:hover:not(:disabled) { filter: brightness(1.08); }
+.bt.etapa .feito-tag { font-weight: 400; font-size: 11px; opacity: .85; }
+.pre-dica { font-size: 12px; color: var(--suave); margin: 4px 0 2px; }
+.pre-links { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; }
 .rola { flex: 1; overflow-y: auto; padding: 10px 14px; }
 /* 2.8.0: colunas da janela do processo com largura ajustável (arrastar a borda) e o checklist minimizável */
 .colunas { grid-template-columns: var(--cols, minmax(260px, 1.25fr) 7px minmax(200px, 1fr) 7px minmax(240px, 1fr)); }
@@ -1332,6 +1341,7 @@ const AJUDA = {
     passos: ["Memorial SSEG abre a ficha do processo na aba Processos, lida da base do servidor, sem entrar no SOL. O print do memorial do SOL fica na pasta, um por análise (\"memorial SOL 1.pdf\", \"memorial SOL 2.pdf\"…), para comparar o que o RT mudou.",
       "As setas ← → no topo voltam e avançam entre as páginas, como no navegador; ⟳ lê a página de novo.",
       "Na Conversa, o Claude só trabalha quando você pede. O Checklist mostra o que falta conferir.",
+      "Na pré-análise, siga os números: 1 \"Camadas das pranchas\" (script: baixa as pranchas e confere as camadas) → 2 \"Revisar e mandar pro chat\", que leva numa mensagem só a pré-análise, as camadas e, na reanálise, o pedido dos palpites da IA local.",
       "A CIA em construção junta as exigências salvas. Antes de lançar, faça a \"revisão final\": um revisor lê a CIA de fora.",
       "\"lançar no SOL\" (grava as exigências no campo Outros e aprova o resto; mostra tudo e pede confirmação; não emite CIA nem CA) → emitir no SOL → \"Concluir processo\", marcando CIA ou CA (guarda o memorial, baixa a CIA e salva).",
       "Na exigência, marque a prancha onde está o erro: ao lançar, a prancha leva \"- Inconformidades já citadas acima.\"",
@@ -3499,6 +3509,7 @@ async function pintarElementos(baixar, botao) {
   caixa.replaceChildren(...bts);
 }
 
+const CAMADAS_PEDIDO = "Camadas das pranchas (conferidor do SSEG, lido do PDF, sem IA). São fatos do PDF, não exigência: veja se algum vira notificação, com modelo do banco e o item conferido.\n\n";
 // ---- Camadas das pranchas (2.10.0, pedido do Átila em 16/11/2026): o conferidor sseg/scripts/camadas.py lê do PDF o
 // nome, a cor e o texto de cada camada e cruza com o campo 4. Sem IA: são fatos do PDF, não exigência. Achado é o que
 // separou CIAs que cobraram camada das que não cobraram na medição de 16/11/2026; observação é o que saiu igual nos dois.
@@ -3523,10 +3534,14 @@ async function camadasAbrir(codigo, fluxo, botao) {
     obs.length ? el("details", { style: "margin-top:8px" }, el("summary", {}, "Observações (" + obs.length + ") — fracas: saíram quase igual com e sem notificação nas CIAs medidas"),
       ...obs.map(linha)) : null,
     el("details", { style: "margin-top:8px" }, el("summary", {}, "Camadas de cada prancha"), ...inv));
-  const mandar = () => { fechar(); chatEnviar(ctxDe(codigo, fluxo, ""),
-    "Camadas das pranchas (conferidor do SSEG, lido do PDF, sem IA). São fatos do PDF, não exigência: veja se algum vira notificação, com modelo do banco e o item conferido.\n\n" + r.texto); };
+  const mandar = () => { fechar(); chatEnviar(ctxDe(codigo, fluxo, ""), CAMADAS_PEDIDO + r.texto); };
+  // 2.13.1: lidas antes de mandar a pré-análise, as camadas vão junto no passo 2 (uma mensagem só ao chat)
+  PR.camadas = { codigo, texto: r.texto, achados: achados.length };
+  if (botao && !botao.querySelector(".feito-tag")) botao.append(el("span", { class: "feito-tag" }, "✓ " + achados.length + " achado(s)"));
+  const passo2 = codigo === PR.codigo && PR.preAbrir && !PR.preEnviada;
   modal([selo("script"), "Camadas das pranchas"], "Lido do PDF, sem IA. Fatos para você conferir, não exigência pronta.", meio,
-    [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]);
+    passo2 ? [["Continuar: 2. Revisar e mandar pro chat", () => { fechar(); PR.preAbrir(); }, true], ["Mandar só as camadas", mandar], ["Fechar", fechar]]
+      : [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]);
 }
 
 // Na reanálise, a 1ª mensagem com a pré-análise leva junto a linha "[IA local]" — só quando este PC tem a IA ligada
@@ -3663,25 +3678,44 @@ function pintarChecklist() {
   if (d.pre_analise) {
     const pa = d.pre_analise, cor = l => l.startsWith("XX") ? "var(--verm)" : l.startsWith("!!") ? "var(--creme-txt)" : "var(--suave)";
     // 2.9.0: na reanálise, a mesma mensagem leva o pedido dos palpites da IA local (linhaIALocal: "" quando não há IA nem palpite)
+    const reanalise = (d.marcos || {}).analise >= 2;
+    // 2.13.1 (pedido do Átila): ordem clara. 1 Camadas (script: baixa as pranchas e confere) → 2 Revisar e mandar pro
+    // chat, que leva numa mensagem só a pré-análise, as camadas lidas e, na reanálise, o pedido dos palpites da IA local.
     const mandar = async () => { fechar(); const cod = PR.codigo, fluxo = PR.fluxo, ia = await linhaIALocal(cod);
-      chatEnviar(ctxDe(cod, fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto + ia);
+      const cam = PR.camadas && PR.camadas.codigo === cod ? "\n\n" + CAMADAS_PEDIDO + PR.camadas.texto : "";
+      chatEnviar(ctxDe(cod, fluxo, ""), "Leia a pré-análise documental já feita (pre-analise.txt na pasta do processo) e siga a partir dela, sem refazer o check.\n\n" + pa.texto + cam + ia);
       api("processo_marcar", [cod, "marcas", "pre_analise", pa.data]).then(recarregarRegistro); };
+    const abrirPre = () => {
+      const cam = PR.camadas && PR.camadas.codigo === PR.codigo;
+      modal([selo("script"), "Pré-análise documental"], "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
+        el("div", {}, el("p", { class: "pre-dica" }, "Vai junto ao chat: a pré-análise" + (cam ? ", as camadas das pranchas (" + PR.camadas.achados + " achado(s))" : ", sem as camadas (o passo 1 não foi feito)") +
+          (reanalise ? " e, se este PC tiver a IA local, o pedido dos palpites." : ".")),
+          el("div", { class: "lista", style: "max-height:440px" }, pa.texto)),
+        [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]); };
+    PR.preAbrir = abrirPre;
+    PR.preEnviada = (r.marcas || {}).pre_analise === pa.data;
+    const camLidas = PR.camadas && PR.camadas.codigo === PR.codigo;
     const conteudo = [
       legendaSelos(),
       pa.velha ? el("p", { class: "sub", style: "color:var(--verm)" }, "O JSON do SOL mudou depois da pré-análise: clique em Refazer pré-análise.") : null,
       pa.marcas.length ? el("div", { class: "pre-marcas" }, ...pa.marcas.map(l => el("div", { style: "color:" + cor(l) }, l)))
         : el("p", { class: "sub" }, "Nenhum ponto marcado."),
-      el("div", { style: "margin-top:6px" }, el("button", { class: "bt chamativo", title: "Abre a saída inteira do script; de lá, manda ao chat", on: { click: () => modal([selo("script"), "Pré-análise documental"], "Saída do sseg.py check sobre o JSON do SOL. Insumo, não conclusão.",
-        el("div", { class: "lista", style: "max-height:480px" }, pa.texto), [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]) } }, selo("claude"), "Revisar e mandar pro chat")),
-      refazerPre,
-      // 2.9.0: pedir os palpites da IA local fora da 1ª mensagem (só reanálise; sem IA neste PC e sem palpite pronto, avisa)
-      (d.marcos || {}).analise >= 2 ? el("button", { class: "bt link", title: "Pede ao Claude os palpites da IA local sobre as exigências da última CIA (quadro azul). Só em PC com a IA local ligada, ou quando os palpites já vieram prontos.",
-        on: { click: async ev => { const b = ev.currentTarget; b.disabled = true; const ia = await linhaIALocal(PR.codigo); b.disabled = false;
-          if (!ia) return avisar("Sem IA local ligada neste PC e sem palpites prontos para este processo.");
-          chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Palpites da IA local para esta reanálise." + ia); } } }, selo("ia"), "Palpites da IA local") : null,
-      // 2.10.0: camadas das pranchas × campo 4, lidas do PDF pelo script (sem IA), em qualquer análise
-      el("button", { class: "bt link", title: "Lê do PDF das pranchas o nome de cada camada, a cor e o texto que está nela e cruza com o campo 4 (RTISOL 6.3.6.1.2.4 e Notas 01 e 02). Sem IA. Baixa do SOL as pranchas que faltam.",
-        on: { click: ev => camadasAbrir(PR.codigo, PR.fluxo, ev.currentTarget) } }, selo("script"), "Camadas das pranchas")];
+      el("div", { class: "pre-etapas" },
+        // 2.10.0: camadas das pranchas × campo 4, lidas do PDF pelo script (sem IA), em qualquer análise
+        el("button", { class: "bt etapa rev", title: "Primeiro passo. Baixa do SOL as pranchas que faltam, lê do PDF o nome de cada camada, a cor e o texto que está nela e cruza com o campo 4 (RTISOL 6.3.6.1.2.4 e Notas 01 e 02). Sem IA. O resultado vai junto no passo 2.",
+          on: { click: ev => camadasAbrir(PR.codigo, PR.fluxo, ev.currentTarget) } }, el("i", {}, "1"), selo("script"), "Camadas das pranchas",
+          camLidas ? el("span", { class: "feito-tag" }, "✓ " + PR.camadas.achados + " achado(s)") : null),
+        el("span", { class: "seta" }, "→"),
+        el("button", { class: "bt etapa env", title: "Abre a saída inteira do script e manda ao chat, numa mensagem só, com as camadas lidas no passo 1" + (reanalise ? " e o pedido dos palpites da IA local" : ""),
+          on: { click: abrirPre } }, el("i", {}, "2"), selo("claude"), "Revisar e mandar pro chat")),
+      el("p", { class: "pre-dica" }, "Comece pelo 1: ele baixa as pranchas e o que achar vai junto no 2." +
+        (reanalise ? " Na reanálise, o 2 também pede os palpites da IA local (quadro azul), se este PC tiver a IA." : "")),
+      el("div", { class: "pre-links" }, refazerPre,
+        // 2.9.0: pedir os palpites da IA local fora da 1ª mensagem (só reanálise; sem IA neste PC e sem palpite pronto, avisa)
+        reanalise ? el("button", { class: "bt link", title: "Pede de novo ao Claude os palpites da IA local sobre as exigências da última CIA (quadro azul). Só em PC com a IA local ligada, ou quando os palpites já vieram prontos.",
+          on: { click: async ev => { const b = ev.currentTarget; b.disabled = true; const ia = await linhaIALocal(PR.codigo); b.disabled = false;
+            if (!ia) return avisar("Sem IA local ligada neste PC e sem palpites prontos para este processo.");
+            chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Palpites da IA local para esta reanálise." + ia); } } }, selo("ia"), "Pedir os palpites de novo") : null)];
     // já mandada ao Claude (2.3.16): encolhe numa linha; pré-análise refeita (data nova) volta aberta
     if ((r.marcas || {}).pre_analise === pa.data)
       out.push(el("details", { class: "bloco discreto" }, el("summary", {}, el("b", {}, "Pré-análise documental (script)"),
