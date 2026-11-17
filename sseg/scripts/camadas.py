@@ -258,8 +258,15 @@ def pranchas_ativas(pasta, api):
 ORDEM = ("extintores", "hidrantes", "alarme")
 _PREFIXOS = (r"E|EX|EXT|A|AL|ALM|ALR|AC|ACM|H|HD|HDR|HID|M|MG|N|NO|NR|NUM"
              r"|EXTINTOR|HIDRANTE|MANGOTINHO|ACIONADOR|ALARME|H/M")  # "HIDRANTE 02" (1906), "H/M1" (18168)
-_NUMERO = re.compile(r"^(?:(?:%s)\s*[-.:]?\s*)?0*(\d{1,3})(?:\s*-\s*\d{1,2}\s*\S{0,2}\s*PAV.*|\s+-\s+\D.*)?$" % _PREFIXOS)
+# agente do extintor colado ao número: "E01-PQS", "EXT 02 CO2" (49678, 17/11/2026: a camada tinha a numeração e o
+# script dizia que não)
+_AGENTE = r"(?:\s*-\s*|\s+)(?:PQS|PQ|CO2|AP|AGUA|ABC|BC|AB|ESPUMA|EM|H2O|CLASSE)\b.*"
+_NUMERO = re.compile(r"^(?:(?:%s)\s*[-.:]?\s*)?0*(\d{1,3})(?:\s*-\s*\d{1,2}\s*\S{0,2}\s*PAV.*|\s+-\s+\D.*)?$"
+                     % _PREFIXOS)
+_NUMERO_AGENTE = re.compile(r"^(?:%s)\s*[-.:]?\s*0*(\d{1,3})%s$" % (_PREFIXOS, _AGENTE))  # com prefixo, sempre
 # ("H 10 - TIPO 3", 1509: número, traço e a descrição do equipamento)
+# lista do pavimento tipo, um número por andar: "N48,50,52,54" (49433)
+_LISTA = re.compile(r"^(?:%s)\s*[-.:]?\s*(\d{1,3}(?:\s*,\s*\d{1,3}){2,})$" % _PREFIXOS)  # com prefixo: "2,50" é cota
 
 
 # fora da camada da medida só vale número com o prefixo dela ("EXT- 1" fora de camada, 49826)
@@ -273,14 +280,17 @@ _NO = re.compile(r"(?<![A-Z])N[O°]\s*\.?\s*(\d{1,3}(?:\s*[,E]\s*\d{1,3})*)(?![\
 def numeros(texto, medida=None):
     """Números de ordem no texto de uma camada (textos separados por " · "). Com medida: só os de prefixo dela."""
     rx = _NUMERO if not medida else re.compile(
-        r"^(?:%s)\s*[-.:]?\s*0*(\d{1,3})(?:\s*-\s*\d{1,2}\s*\S{0,2}\s*PAV.*)?$" % _PREFIXO_DA_MEDIDA[medida])
+        r"^(?:%s)\s*[-.:]?\s*0*(\d{1,3})(?:\s*-\s*\d{1,2}\s*\S{0,2}\s*PAV.*%s)?$"
+        % (_PREFIXO_DA_MEDIDA[medida], "|" + _AGENTE if medida == "extintores" else ""))
     out = []
     for t in (texto or "").split(" · "):
         u = sem_acento(t).strip()
-        m = rx.match(u)
+        m = rx.match(u) or (not medida and _NUMERO_AGENTE.match(u))
         if m:
             if int(m.group(1)) > 0:
                 out.append(int(m.group(1)))
+        elif not medida and _LISTA.match(u):
+            out.extend(n for n in map(int, re.findall(r"\d+", _LISTA.match(u).group(1))) if n > 0)
         elif not medida:
             for m in _NO.finditer(u):
                 out.extend(n for n in map(int, re.findall(r"\d+", m.group(1))) if n > 0)

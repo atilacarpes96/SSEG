@@ -1489,7 +1489,9 @@ def main():
          cm_m.numeros("02 · A-03 · ALM- 1 · EXT- 85 · 09 - 2° PAV. · H 10 - TIPO 3 · HIDRANTE 04 · SHSC T3 Nº 05 · "
                       "N° 75, 76 · 2A/20BC · 4-A:40-B:C · 20.000 L · 6 KG · RTCBMRS n° 22/2023 · EXTINTOR Nº 01= 18,50 M")
          == [2, 3, 1, 85, 9, 10, 4, 5, 75, 76]
-         and cm_m.numeros("E-1 · E5 · EXT- 7", "extintores") == [7])
+         and cm_m.numeros("E-1 · E5 · EXT- 7", "extintores") == [7]
+         # 17/11/2026: agente colado ao número (49678) e lista do pavimento tipo (49433); cota "2,50" não
+         and cm_m.numeros("E01-PQS · E04 - PQS · EXT 02 CO2 · N48,50,52,54 · 2,50 · 1,20,30 · 02 AP") == [1, 4, 2, 48, 50, 52, 54])
 
     def _pb(ext, fora=""):
         return {"camadas": ["EXT", ""], "por_camada": {"EXT": {"tracos": 40, "vermelho": 40, "texto": ext},
