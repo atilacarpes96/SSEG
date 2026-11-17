@@ -1501,6 +1501,18 @@ def main():
          [(x["id"], x["papel"]) for x in _doc.lista(_api_d)] == [(1, "RT"), (2, "Procuração (responsável pelo uso)"), (3, "Procuração (proprietário)")]
          and bool(_doc.CARIMBO.search("Assinado utilizando o(s) seguinte(s) selo(s) do gov.br")),
          str(_doc.lista(_api_d)))
+    try:
+        import pyhanko  # noqa: F401
+        with tempfile.TemporaryDirectory() as _t:
+            _p0 = os.path.join(_t, "sem.pdf")
+            open(_p0, "wb").write(_pdf([(50, 50, "PROCURACAO")]))
+            _p1 = os.path.join(_t, "quebrada.pdf")   # campo de assinatura sem certificado legível (como a do 49826)
+            open(_p1, "wb").write(_pdf([(50, 50, "PROCURACAO"), (50, 80, "/ByteRange [0 1 2 3]")]))
+            # sem pdfsig no PATH (o PC Windows): o pyHanko responde
+            caso("documentos: sem o pdfsig (PC Windows), o pyHanko lê o certificado; campo quebrado não vira 'sem assinatura'",
+                 _doc._pyhanko(_p0) == [] and _doc._pyhanko(_p1) == [{"nome": "", "quando": "", "integra": False}])
+    except ImportError:
+        pass
 
     def _pb(ext, fora=""):
         return {"camadas": ["EXT", ""], "por_camada": {"EXT": {"tracos": 40, "vermelho": 40, "texto": ext},

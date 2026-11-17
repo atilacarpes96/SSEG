@@ -98,7 +98,13 @@ def assinaturas(pdf):
             r["certificados"].append({"nome": g("Signer Certificate Common Name"), "quando": g("Signing Time"),
                                       "integra": "is Valid" in g("Signature Validation")})
     except (OSError, subprocess.SubprocessError):
-        r["erro"] = "pdfsig não rodou"
+        # 17/11/2026: o Poppler do Windows (winget) vem sem o pdfsig; no PC quem lê o certificado é o pyHanko
+        try:
+            r["certificados"] = _pyhanko(pdf)
+        except ImportError:
+            r["erro"] = "pdfsig e pyHanko ausentes: certificado não conferido"
+        except Exception as e:  # noqa: BLE001 — PDF que o pyHanko não abre: não vira "sem assinatura"
+            r["erro"] = "certificado não conferido (%s)" % str(e)[:120]
     try:
         t = subprocess.run([_exe("pdftotext"), "-l", "30", pdf, "-"], capture_output=True, text=True, errors="replace",
                            timeout=60, creationflags=SEM_JANELA).stdout
@@ -108,6 +114,33 @@ def assinaturas(pdf):
     except (OSError, subprocess.SubprocessError):
         pass
     return r
+
+
+def _pyhanko(pdf):
+    """Mesmo resultado do pdfsig -nocert (conferido em 20 documentos da caixa, 17/11/2026): nome do certificado, data e se
+    a assinatura confere com o conteúdo. Sem raízes confiáveis: a cadeia do ITI não é conferida. Campo de assinatura que
+    o pyHanko não consegue ler (CMS quebrado; o pdfsig dá "Unknown Validation Failure") entra como não íntegro."""
+    import logging
+    from pyhanko.pdf_utils.reader import PdfFileReader
+    from pyhanko.sign.validation import validate_pdf_signature
+    logging.getLogger("pyhanko").setLevel(logging.ERROR)
+    logging.getLogger("pyhanko_certvalidator").setLevel(logging.ERROR)
+    out = []
+    with open(pdf, "rb") as fh:
+        for s in PdfFileReader(fh, strict=False).embedded_signatures:
+            try:
+                st = validate_pdf_signature(s)
+                integra = bool(st.intact and st.valid)
+            except Exception:  # noqa: BLE001
+                integra = False
+            cert = s.signer_cert
+            quando = s.self_reported_timestamp
+            out.append({"nome": cert.subject.native.get("common_name", "") if cert else "",
+                        "quando": quando.strftime("%b %d %Y %H:%M:%S") if quando else "", "integra": integra})
+    with open(pdf, "rb") as fh:
+        campos = fh.read().count(b"/ByteRange")
+    out += [{"nome": "", "quando": "", "integra": False} for _ in range(max(0, campos - len(out)))]
+    return out
 
 
 def exigencias_de_assinatura(cia_txt):

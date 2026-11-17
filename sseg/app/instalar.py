@@ -52,7 +52,10 @@ BAIXAR_A_MAO = {
 # pacotes do pip que não bloqueiam o programa: sem eles, só a função que os usa avisa que falta.
 # PyMuPDF fixo na 1.28.2 (16/11/2026): a 2.x traz onnxruntime, pymupdf4llm e layout (~200 MB); a 1.28 vem sozinha
 # (20 MB) e é a versão do servidor. Usado por sseg/scripts/camadas.py (camadas das pranchas).
-PACOTES_PIP = [("pymupdf", "pymupdf==1.28.2", "PyMuPDF (camadas das pranchas)")]
+# pyHanko (17/11/2026): o Poppler do Windows vem sem o pdfsig; é ele que lê o certificado digital dos documentos dos
+# envolvidos no PC (sseg/scripts/documentos.py), com o mesmo resultado do pdfsig do servidor.
+PACOTES_PIP = [("pymupdf", "pymupdf==1.28.2", "PyMuPDF (camadas das pranchas)"),
+               ("pyhanko", "pyhanko==0.38.1", "pyHanko (certificado digital dos documentos)")]
 INICIO_BLOCO, FIM_BLOCO = "# >>> SSEG (programa) >>>", "# <<< SSEG (programa) <<<"
 
 

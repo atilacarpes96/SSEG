@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.7
+
+- **Certificado digital dos documentos também no PC.** A conferência das assinaturas dos documentos dos envolvidos (ART/RRT, procurações) lia o certificado só no servidor, porque o Poppler do Windows vem sem o programa que faz isso (pdfsig). Agora o PC usa o pyHanko, que o instalador põe no Python junto com o PyMuPDF. Nos 20 documentos da caixa de 17/11/2026 o resultado foi igual ao do servidor: quem assinou, quando, se o arquivo foi mexido depois e se é só carimbo impresso de "assinado com gov.br", sem certificado.
+
 ## 2.13.6
 
 - **PPCI de outro analista que caiu na sua caixa agora tem o prazo da planilha.** Quando a linha da planilha ainda está aberta (sem conclusão), é a mesma análise que só mudou de mãos: vale a data de distribuição dela, e o vencimento sai igual ao da planilha. Antes o prazo ficava em branco e só aparecia "N dias no SOL", que conta outra coisa.
