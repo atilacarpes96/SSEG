@@ -1012,6 +1012,12 @@ def rodar(pasta, de_novo=False, aviso=print):
                         os.utime(marca)
                         res["controle"] = _rodada(pasta, it, antes, MARGENS[0], perg)
                     res["rotulo"] = conclusao(it["tipo"], res["rodadas"], res["controle"])
+                    # 2.13.9: classificação feita pela IA local (medida em 18/11/2026: tipo igual ao do Claude em 8 de
+                    # 16) segura o palpite em "fraco": verde e vermelho só com a classificação conferida
+                    rot = res["rotulo"]
+                    if str(d.get("classificado_por") or "").startswith("IA local") and rot.get("classe") in ("verde", "vermelho"):
+                        res["rotulo"] = dict(rot, classe="ambar", titulo=rot["titulo"].replace("Palpite:", "Palpite fraco:"),
+                                             explicacao=rot["explicacao"] + " Fraco porque quem escolheu onde olhar foi a IA local, ainda em teste.")
             except Exception as e:  # noqa: BLE001 — um item com problema não derruba os outros; nunca vira "não sei"
                 res = {"estado": "falhou", "erro": "%s: %s" % (type(e).__name__, str(e)[:300]), "feito_em": res["feito_em"]}
             def gravar(x, n=n, ass=ass, res=res):
@@ -1151,7 +1157,11 @@ Responda só com JSON:
 
 PALAVRAS_FRACAS = set("deve deverá devera conforme item observar sendo para pela pelo como entre sobre ainda ambos ambas "
                       "planta prancha projeto representar representado representada informar informada informado "
-                      "apresentar edificacao medidas seguranca segurança incendio incêndio".split())
+                      "apresentar edificacao medidas seguranca segurança incendio incêndio "
+                      # 18/11/2026: "MESMA" (de "na mesma camada") venceu "MOEGA" na medição da classificação
+                      "mesma mesmo mesmas mesmos camada camadas cada todos todas outro outra outros outras devem "
+                      "previsto prevista previstas previstos exigida exigido aplicavel aplicaveis caso quando "
+                      "acordo forma maneira demais respectivo respectiva indicar indicado indicada".split())
 
 
 def _onde(pasta, todas, termo, lado="depois", prancha=""):
@@ -1182,13 +1192,15 @@ def _termo_valido(pasta, todas, c, texto):
                     c["prancha"] = ""
                 return c
             c[campo] = ""
-    cands = [w for w in re.findall(r"[A-Za-zÀ-ÿ]{5,}", texto) if sem_acento(w) not in PALAVRAS_FRACAS]
-    melhor = None
-    for w in dict.fromkeys(cands):
+    cands = [w for w in re.findall(r"[A-Za-zÀ-ÿ]{4,}", texto) if sem_acento(w) not in PALAVRAS_FRACAS and (len(w) >= 5 or w.isupper())]
+    # palavra em MAIÚSCULAS na exigência ("MOEGA", "PCF") é nome próprio do projeto: vem antes das outras
+    cands = sorted(dict.fromkeys(cands), key=lambda w: not w.isupper())
+    melhor, nota = None, None   # nota = (está em maiúsculas na exigência, -ocorrências): maior é melhor
+    for w in cands:
         achou = _onde(pasta, todas, w, "depois", c.get("prancha") or "")
         n = sum(k for _p, k in achou)
-        if 1 <= n <= MAX_RECORTES and (melhor is None or n < melhor[1]):
-            melhor = (w.upper(), n)
+        if 1 <= n <= MAX_RECORTES and (nota is None or (w.isupper(), -n) > nota):
+            melhor, nota = (w.upper(), n), (w.isupper(), -n)
     if melhor:
         c["termo"] = melhor[0]
         return c

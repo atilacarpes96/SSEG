@@ -1386,11 +1386,11 @@ def main():
     # 22c. classificação pela IA local (2.13.8): o termo que a IA propõe só vale se está escrito na prancha nova; senão
     # vale uma palavra da própria exigência que apareça em poucos lugares; sem nenhuma, a exigência fica com o motivo
     _pal_orig, _oll_orig = pl_m.palavras, pl_m._ollama
-    pl_m.palavras = lambda pdf: ({1: [("moega", 10, 10, 20, 20, "MOEGA"), ("sala", 50, 50, 60, 60, "SALA")] + [("rampa", 9, i, 9, i, "RAMPA") for i in range(20)]}, {1: (600, 600)})
+    pl_m.palavras = lambda pdf: ({1: [("moega", 10, 10, 20, 20, "MOEGA"), ("moega", 30, 30, 40, 40, "MOEGA"), ("mesma", 70, 70, 80, 80, "MESMA"), ("sala", 50, 50, 60, 60, "SALA")] + [("rampa", 9, i, 9, i, "RAMPA") for i in range(20)]}, {1: (600, 600)})
     _todas = [{"lado": "depois", "tem": True, "descricao": "PPCI", "nome": "x.pdf", "arquivo": "x.pdf"}]
     try:
         _c1 = pl_m._termo_valido("P", _todas, {"tipo": "ausencia", "termo": "VIATURA", "termo_antes": "", "prancha": "", "motivo": ""},
-                                 "Deverá informar ocupação, área e população da MOEGA e da RAMPA")
+                                 "O número de ordem deve ficar na mesma camada; deverá informar ocupação, área e população da MOEGA e da RAMPA")
         _c2 = pl_m._termo_valido("P", _todas, {"tipo": "desenho", "termo": "PATAMAR", "termo_antes": "", "prancha": "", "motivo": ""},
                                  "patamares nos dois lados das portas")
         _c3 = pl_m._termo_valido("P", _todas, {"tipo": "fora_da_planta", "termo": "ART", "termo_antes": "", "prancha": "", "motivo": "x"}, "ART")

@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.13.9
+
+- **Palpite mais cauteloso quando quem classificou foi a IA local.** Medido em 18/11/2026 nas reanálises da caixa: a IA local acertou todas as exigências de documento e de cadastro, mas confundiu "valor escrito", "desenho" e "tinha de passar a existir" em metade das exigências de planta. Enquanto isso não melhora, o palpite dessas exigências sai no máximo como "fraco", nunca verde ou vermelho.
+- **Melhor escolha do lugar na planta:** palavra comum da exigência ("mesma", "camada", "cada"…) não serve mais de ponto do recorte, e a palavra em MAIÚSCULAS na exigência (o nome do ambiente, como "MOEGA") vem primeiro.
+
 ## 2.13.8
 
 - **A IA local classifica sozinha as exigências da reanálise.** Antes, quem dizia onde olhar em cada planta era o Claude, na conversa. Agora, no PC com a IA local, o programa faz tudo em segundo plano: a IA lê a CIA, diz o tipo de cada exigência e a palavra da planta onde ela se confere, e o programa confere se a palavra existe mesmo na prancha. O quadro azul mostra "A IA local está lendo as exigências…" enquanto isso. O Claude só apresenta o quadro.
