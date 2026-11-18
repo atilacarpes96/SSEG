@@ -37,6 +37,10 @@ def ler(pasta):
     d.setdefault("exigencias", [])   # {id, medida, rascunho, final, fundamento, origem, quando}
     d.setdefault("chat", {})         # {sessao, pct_5h}
     d.setdefault("marcas", {})       # "pre_analise": data da pré-análise mandada ao Claude (o quadro encolhe)
+    # 2.14.0 (ideia do Átila, 18/11/2026): o que foi batido no chat aparece no checklist com cor. Chave = a mesma de
+    # "itens" ("medida|item") ou "passo:N"; {estado: ok | exigencia | ver, nota, exig (id na coluna CIA), quando}.
+    # É a leitura do Claude: a marca do analista em "itens"/"passos" manda por cima.
+    d.setdefault("vistos", {})
     return d
 
 
@@ -184,6 +188,47 @@ def marcar(pasta, grupo, chave, valor):
     return d
 
 
+VISTO = {"ok": "conforme", "exigencia": "vira exigência", "ver": "falta ver"}
+
+
+def visto(pasta, chave, estado, nota="", exig=""):
+    """O Claude marca o resultado de um item do checklist que foi conferido (ou que ficou pendente) no chat.
+    estado None/"" apaga a marca."""
+    d = ler(pasta)
+    if not estado:
+        d["vistos"].pop(chave, None)
+    elif estado not in VISTO:
+        raise ValueError("estado inválido: %r (use ok, exigencia ou ver)" % estado)
+    else:
+        d["vistos"][chave] = {"estado": estado, "nota": (nota or "").strip()[:300], "exig": exig or "", "quando": time.time()}
+    gravar(pasta, d)
+    return d
+
+
+def _checklist(pasta):
+    """[(código, chave, rótulo)] dos itens que o Claude pode marcar: P<n> (passos) e M<medida>.<item> (Anexo L), na
+    mesma ordem da janela. Monta pelo processo.py do app (sseg/app), que é quem desenha o checklist."""
+    import sys
+    clone = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    app = os.path.join(clone, "sseg", "app")
+    if app not in sys.path:
+        sys.path.insert(0, app)
+    import processo
+    j = processo.montar(clone, pasta)
+    out = [("P%d" % p["n"], "passo:%d" % p["n"], "%s" % p["t"]) for p in j["passos"]]
+    for a, m in enumerate(j["medidas"], 1):
+        for b, i in enumerate(m["itens"], 1):
+            out.append(("M%d.%d" % (a, b), m["nome"] + "|" + i, "%s — %s" % (m["nome"], i)))
+    return out
+
+
+def chave_de(pasta, codigo):
+    for c, k, r in _checklist(pasta):
+        if c.upper() == codigo.strip().upper():
+            return k, r
+    raise ValueError("item %r não existe no checklist deste processo (veja: sseg.py analise itens)" % codigo)
+
+
 def _data(v, campo):
     v = (v or "").strip()
     if v and not (len(v) == 10 and v[4] == v[7] == "-" and (v[:4] + v[5:7] + v[8:]).isdigit()):
@@ -229,6 +274,7 @@ def args_parser(sp):
     p.add_argument("texto", help='texto, ou "-" para ler da entrada (heredoc) — o jeito certo para texto com quebra de linha')
     p.add_argument("--medida", default="")
     p.add_argument("--fundamento", default="", help='ex.: "RT 11/2016, item 5.4.2"')
+    p.add_argument("--item", default="", help="código do item do checklist (ex.: M3.2): fica vermelho, ligado a esta exigência")
     p = sub.add_parser("rascunho", help="rascunho para um item que já existe na coluna CIA (pedido pelo analista)")
     p.add_argument("id", help="id do item (ex.: e3)")
     p.add_argument("texto", help='texto, ou "-" para ler da entrada (heredoc)')
@@ -240,6 +286,11 @@ def args_parser(sp):
     p.add_argument("n", type=int, nargs="+")
     p = sub.add_parser("descartar", help="tira da coluna CIA um rascunho sem texto final salvo (ex.: e2); o salvo é do analista")
     p.add_argument("ids", nargs="+")
+    sub.add_parser("itens", help="lista o checklist com os códigos (P6, M3.2) e o que já está marcado")
+    p = sub.add_parser("visto", help="resultado de itens do checklist conferidos no chat: visto ok M3.1 M3.2 --nota ...")
+    p.add_argument("estado", choices=["ok", "exigencia", "ver", "apagar"])
+    p.add_argument("codigos", nargs="+", help="códigos de sseg.py analise itens (P6, M3.2)")
+    p.add_argument("--nota", default="", help="por quê, em uma linha (aparece ao passar o mouse)")
     sub.add_parser("ver", help="mostra o registro (pendências e o texto final da CIA)")
     p = sub.add_parser("sol-pdf", help="arquivo do SOL baixado em base64 (sol-arquivo-<id>.b64.json) → PDF + texto")
     p.add_argument("id", help="id do arquivo no SOL (GET /solcbm/api/v1/adm/arquivo/<id>)")
@@ -313,8 +364,27 @@ def principal(args):
         else:
             print("pendência %s registrada" % p["id"])
     elif args.acao == "exigencia":
+        k = chave_de(args.pasta, args.item)[0] if args.item else ""
         e = exigencia(args.pasta, args.texto, args.medida, args.fundamento)
-        print("exigência %s registrada como rascunho (o analista salva o texto final)" % e["id"])
+        if k:
+            visto(args.pasta, k, "exigencia", (args.texto.strip().lstrip("- ").splitlines() or [""])[0][:200], e["id"])
+        print("exigência %s registrada como rascunho (o analista salva o texto final)%s" % (e["id"], "; item %s em vermelho" % args.item if k else ""))
+    elif args.acao == "itens":
+        d = ler(args.pasta)
+        for c, k, r in _checklist(args.pasta):
+            an = d["passos"].get(k[6:]) if k.startswith("passo:") else d["itens"].get(k)
+            v = d["vistos"].get(k)
+            marca = (["analista: %s" % ("feito" if an is True else an)] if an else []) + (["seu: %s" % VISTO[v["estado"]]] if v else [])
+            print("%-6s %s%s" % (c, r, "   [%s]" % "; ".join(marca) if marca else ""))
+    elif args.acao == "visto":
+        feitos = []
+        for c in args.codigos:
+            k, _r = chave_de(args.pasta, c)
+            visto(args.pasta, k, None if args.estado == "apagar" else args.estado, args.nota)
+            if k.startswith("passo:") and args.estado in ("ok", "exigencia"):
+                marcar(args.pasta, "passos", k[6:], True)   # conferido = passo feito
+            feitos.append(c)
+        print("%s: %s" % ("apagado(s)" if args.estado == "apagar" else VISTO[args.estado], ", ".join(feitos)))
     elif args.acao == "resolver":
         feitas = [i for i in args.ids if atualizar(args.pasta, "pendencias", i, feita=True)]
         print("resolvida(s): %s" % (", ".join(feitas) or "nenhuma (ids não existem)"))

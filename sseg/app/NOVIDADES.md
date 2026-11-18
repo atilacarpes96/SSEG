@@ -4,6 +4,12 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.14.0
+
+- **Checklist com cor: o que foi batido no chat já aparece como conforme, exigência ou falta ver.** Na janela do processo, cada passo do fluxo e cada item das medidas ganha uma faixa e uma etiqueta: verde (conforme), vermelha (vira exigência) ou amarela (falta ver). Quem marca é o Claude, logo que conclui o item na conversa, com o porquê (passe o mouse na etiqueta). Exigência que ele grava ligada a um item deixa o item vermelho e diz qual é (e3, e4…) na coluna CIA.
+- **O seu ✓/✗ continua mandando.** Se você marcar igual, a etiqueta do Claude some; se marcar diferente, ela fica com "≠" para você ver a divergência. No resumo de cada medida, as bolinhas contam o que só o Claude marcou.
+- **Palpites da IA local com o porquê no título** ("Parece cumprida: cota lida 1,4 m, exigido mín. 1,2 m"; "Inconclusivo: a IA também diz cumpriu na planta anterior") e uma linha a mais no "o que a IA disse que leu": a conta do programa com a cota que a IA leu.
+
 ## 2.13.9
 
 - **Palpite mais cauteloso quando quem classificou foi a IA local.** Medido em 18/11/2026 nas reanálises da caixa: a IA local acertou todas as exigências de documento e de cadastro, mas confundiu "valor escrito", "desenho" e "tinha de passar a existir" em metade das exigências de planta. Enquanto isso não melhora, o palpite dessas exigências sai no máximo como "fraco", nunca verde ou vermelho.

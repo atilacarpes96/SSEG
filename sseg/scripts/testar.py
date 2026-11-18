@@ -805,6 +805,21 @@ def main():
              and m["medidas"][0]["tabela"] == "L.2" and m["medidas"][0]["nota"] and sai["tabela"] == "L.1"
              and any(i.startswith("Planta: i)") for i in sai["itens"]) and sai["itens"][-1].startswith("Compensatórias")
              and m["medidas"][2]["itens"] == ["Memorial descritivo", "Planta: localização"], str([(x["nome"], x["tabela"], len(x["itens"])) for x in m["medidas"]]))
+        # 2.14.0: resultado do que foi batido no chat (verde/vermelho/amarelo), pelos códigos P<n> e M<medida>.<item>
+        k_sai, _r = reg.chave_de(pasta, "m2.1")
+        reg.visto(pasta, k_sai, "ver", "olhar a largura na planta")
+        reg.visto(pasta, reg.chave_de(pasta, "P6")[0], "ok", "sem empate")
+        recusa_v = []
+        for ruim in (lambda: reg.chave_de(pasta, "M9.9"), lambda: reg.visto(pasta, k_sai, "talvez")):
+            try:
+                ruim()
+            except ValueError:
+                recusa_v.append(1)
+        vv = reg.ler(pasta)["vistos"]
+        reg.visto(pasta, "passo:6", None)
+        caso("checklist: o Claude marca conforme / falta ver pelo código; código ou estado inválido recusado; vazio apaga",
+             k_sai == "Saída de Emergência|Memorial descritivo" and vv[k_sai]["estado"] == "ver" and vv["passo:6"]["nota"] == "sem empate"
+             and len(recusa_v) == 2 and "passo:6" not in reg.ler(pasta)["vistos"] and reg.ler(pasta)["exigencias"], str(vv))
         caso("janela do processo: laudo do SOL sai sem HTML (<p>, &nbsp;)",
              processo.texto_do_html("<p>Rampas:</p><p>&nbsp;</p><p>A edifica&ccedil;&atilde;o</p>") == "Rampas:\n\nA edificação")
         evs = []

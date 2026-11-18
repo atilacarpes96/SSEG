@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 18/11/2026 — Checklist com cor: conforme, exigência ou falta ver (SSEG.exe 2.14.0)
+
+- **O que mudou:** na janela do processo, o Claude marca o resultado de cada passo e de cada item das medidas logo que conclui no chat (`sseg.py analise itens` lista os códigos P6, M3.2; `sseg.py analise visto ok|exigencia|ver <códigos> --nota "..."`; `exigencia ... --item M3.2` deixa o item vermelho e ligado à exigência). Fica em `analise.json` ("vistos"), na pasta do processo, nunca no Git. A marca ✓/✗ do analista manda por cima. Ideia do Sd Carpes.
+- **Onde:** `sseg/scripts/analise_registro.py` (chega pelo pull) e a tela e as instruções da conversa do processo (`sseg/app/`), que chegam com o SSEG.exe 2.14.0. Sem skill nem campo Instruções.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 18/11/2026 (checklist com cor). Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell) e se o SSEG.exe está na 2.14.0 ou mais novo. Não há skill nem campo Instruções a atualizar. Me diga em uma linha se ficou em dia.
+```
+
 ## 18/11/2026 — Palpites da IA local dizem o porquê; conta com a cota lida
 
 - **O que mudou:** o título de cada palpite do quadro azul já traz o motivo ("Parece cumprida: cota lida 1,40 m, exigido mín. 1,20 m", "Inconclusivo: a IA também diz \"cumpriu\" na planta anterior", "Palpite fraco (Cumpriu): sem a planta anterior para comparar"...). Exigência de valor com número ganha uma leitura a mais: a IA só lê a cota do elemento, e o programa faz a conta. Verde/vermelho só quando a conta e o veredito da IA concordam (0 erro em 21 itens guardados da bateria de 18/11/2026).

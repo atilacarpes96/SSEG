@@ -422,6 +422,15 @@ details.medida .itens { padding: 0 9px 8px; }
 .item button { border: 1px solid var(--linha); background: var(--campo); border-radius: 4px; padding: 0 6px; font-size: 12px; }
 .item button.on.ok { background: var(--ok); color: #fff; border-color: var(--ok); }
 .item button.on.x { background: var(--verm); color: #fff; border-color: var(--verm); }
+/* 2.14.0: o que o Claude conferiu no chat (analise.json "vistos"); a marca do analista manda por cima */
+.visto { font-size: 10.5px; border-radius: 4px; padding: 0 5px; margin-left: 4px; font-weight: 600; white-space: nowrap; border: 1px solid; cursor: help; }
+.visto.ok { color: var(--ok); border-color: var(--ok); }
+.visto.exigencia { color: var(--verm); border-color: var(--verm); }
+.visto.ver { color: var(--creme-txt); border-color: var(--am-borda); background: var(--am-bg); }
+.item.v-ok { box-shadow: inset 3px 0 var(--ok); padding-left: 6px; }
+.item.v-exigencia { box-shadow: inset 3px 0 var(--verm); padding-left: 6px; }
+.item.v-ver { box-shadow: inset 3px 0 var(--amarelo); padding-left: 6px; }
+.vis-resumo { font-size: 11px; font-weight: 700; }
 /* CIA */
 .exig { border: 1px solid var(--linha); border-radius: 6px; padding: 8px 10px; margin-bottom: 9px; background: var(--cartao); }
 .exig .cab { display: flex; gap: 6px; align-items: baseline; font-size: 12px; color: var(--suave); flex-wrap: wrap; }
@@ -3660,8 +3669,17 @@ function pintarCota() {
 }
 
 // ---- checklist
+// 2.14.0 (ideia do Átila, 18/11/2026): resultado do que foi batido no chat. vc = marca do Claude, an = do analista.
+const VISTO_TXT = { ok: "✓ conforme", exigencia: "✗ exigência", ver: "? falta ver" };
+function vistoTag(vc, an) {
+  if (!vc || (an && an === vc.estado)) return null;
+  const diverge = an && an !== true && vc.estado !== "ver";
+  return el("span", { class: "visto " + vc.estado, title: (diverge ? "O Claude marcou diferente de você no chat. " : "Conferido no chat pelo Claude (o seu ✓/✗ manda). ") +
+    (vc.nota || "") + (vc.exig ? " · exigência " + vc.exig + " na coluna CIA" : "") }, (diverge ? "≠ " : "") + VISTO_TXT[vc.estado]);
+}
 function pintarChecklist() {
   const d = PR.dados, r = PR.reg, out = [];
+  const vistos = r.vistos || {};
   // pendências
   const pend = el("div", { class: "bloco" }, el("b", {}, "Pendências"));
   const abertas = r.pendencias.filter(p => !p.feita).length;
@@ -3767,25 +3785,31 @@ function pintarChecklist() {
     // div, não label: só o quadradinho marca — clicar na linha marcava sem querer (2.3.11)
     fluxo.append(el("div", { class: "ck" + (feito ? " feito" : ""), title: porScript ? "Feito por script: " + porScript : "" },
       el("input", { type: "checkbox", checked: feito, disabled: !!porScript, on: { change: ev => api("processo_marcar", [PR.codigo, "passos", String(p.n), ev.target.checked || null]).then(recarregarRegistro) } }),
-      el("span", {}, p.n + ". " + p.t, porScript ? el("span", { class: "ok-tag", style: "margin-left:4px;font-size:10.5px" }, "auto") : null, p.marca ? el("span", { class: "marca-tag" }, p.marca === "seu" ? "seu" : p.marca === "para" ? "para e pergunta" : p.marca === "subagente" ? "subagente" : "conversa nova") : null, el("small", {}, p.d))));
+      el("span", {}, p.n + ". " + p.t, porScript ? el("span", { class: "ok-tag", style: "margin-left:4px;font-size:10.5px" }, "auto") : null, vistoTag(vistos["passo:" + p.n]), p.marca ? el("span", { class: "marca-tag" }, p.marca === "seu" ? "seu" : p.marca === "para" ? "para e pergunta" : p.marca === "subagente" ? "subagente" : "conversa nova") : null, el("small", {}, p.d))));
   }
   out.push(fluxo);
   // medidas
   const med = el("div", { class: "bloco" }, el("b", {}, "Medidas, na ordem do SOL"));
   if (!d.medidas.length) med.append(el("p", { class: "sub" }, "Sem o JSON do SOL na pasta do processo, não há medidas para listar."));
+  else if (Object.keys(vistos).length) med.append(el("p", { class: "sub", style: "margin:0 0 6px" },
+    "Faixa colorida = o que o Claude conferiu no chat: verde conforme, vermelho vira exigência, amarelo falta ver. Passe o mouse para ver o porquê; o seu ✓/✗ manda."));
   for (const m of d.medidas) {
     const chaves = m.itens.map(i => m.nome + "|" + i);
     const feitos = chaves.filter(k => r.itens[k]).length;
+    const soClaude = est => chaves.filter(k => !r.itens[k] && vistos[k] && vistos[k].estado === est).length;
+    const resumo = [["ok", "var(--ok)"], ["exigencia", "var(--verm)"], ["ver", "var(--creme-txt)"]].map(([e, c]) => [soClaude(e), e, c]).filter(x => x[0])
+      .map(([n, e, c]) => el("span", { class: "vis-resumo", style: "color:" + c, title: n + " item(ns) " + { ok: "conforme(s)", exigencia: "que vira(m) exigência", ver: "que falta(m) ver" }[e] + " pelo Claude no chat" }, " ●" + n));
     const det = el("details", { class: "medida" },
       el("summary", {}, el("b", {}, m.nome), el("span", { class: "tag" }, m.tabela),
         m.inviabilidade !== "NAO_POSSUI" ? el("span", { class: "marca-tag" }, m.inviabilidade === "POSSUI_TOTAL" ? "laudo total" : "laudo parcial") : null,
-        el("span", { class: "cont" }, feitos + "/" + chaves.length)),
+        el("span", { class: "cont" }, feitos + "/" + chaves.length, ...resumo)),
       el("div", { class: "itens" },
         el("div", { class: "sub", style: "margin:2px 0 4px" }, m.norma),
         m.nota ? el("div", { class: "sub", style: "margin:2px 0 4px" }, m.nota) : null,
         ...m.itens.map(i => {
           const k = m.nome + "|" + i, v = r.itens[k];
-          return el("div", { class: "item" }, el("span", {}, i),
+          const vc = vistos[k];
+          return el("div", { class: "item" + (vc && !v ? " v-" + vc.estado : "") }, el("span", {}, i, vistoTag(vc, v)),
             el("button", { class: "ok" + (v === "ok" ? " on" : ""), title: "conforme", on: { click: () => marcarItem(k, v === "ok" ? null : "ok") } }, "✓"),
             el("button", { class: "x" + (v === "exigencia" ? " on" : ""), title: "vira exigência na CIA", on: { click: () => itemExigencia(m, i, k, v) } }, "✗"));
         })));
