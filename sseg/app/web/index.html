@@ -430,6 +430,8 @@ details.medida .itens { padding: 0 9px 8px; }
 .item.v-ok { box-shadow: inset 3px 0 var(--ok); padding-left: 6px; }
 .item.v-exigencia { box-shadow: inset 3px 0 var(--verm); padding-left: 6px; }
 .item.v-ver { box-shadow: inset 3px 0 var(--amarelo); padding-left: 6px; }
+.visto.ia { color: var(--az-borda); border-color: var(--az-borda); background: var(--az-bg); }
+.item.v-ia { box-shadow: inset 3px 0 var(--az-borda); padding-left: 6px; }
 .vis-resumo { font-size: 11px; font-weight: 700; }
 /* CIA */
 .exig { border: 1px solid var(--linha); border-radius: 6px; padding: 8px 10px; margin-bottom: 9px; background: var(--cartao); }
@@ -3670,12 +3672,13 @@ function pintarCota() {
 
 // ---- checklist
 // 2.14.0 (ideia do Átila, 18/11/2026): resultado do que foi batido no chat. vc = marca do Claude, an = do analista.
-const VISTO_TXT = { ok: "✓ conforme", exigencia: "✗ exigência", ver: "? falta ver" };
+const VISTO_TXT = { ok: "✓ conforme", exigencia: "✗ exigência", ver: "? falta ver", ia: "◆ palpite da IA" };
 function vistoTag(vc, an) {
   if (!vc || (an && an === vc.estado)) return null;
-  const diverge = an && an !== true && vc.estado !== "ver";
+  const diverge = an && an !== true && vc.estado !== "ver" && vc.estado !== "ia";
   return el("span", { class: "visto " + vc.estado, title: (diverge ? "O Claude marcou diferente de você no chat. " : "Conferido no chat pelo Claude (o seu ✓/✗ manda). ") +
-    (vc.nota || "") + (vc.exig ? " · exigência " + vc.exig + " na coluna CIA" : "") }, (diverge ? "≠ " : "") + VISTO_TXT[vc.estado]);
+    (vc.palpite ? "Palpite nº " + vc.palpite + " do quadro azul, à espera da sua conferência. " : "") + (vc.nota || "") + (vc.exig ? " · exigência " + vc.exig + " na coluna CIA" : "") },
+    (diverge ? "≠ " : "") + VISTO_TXT[vc.estado] + (vc.palpite ? " nº " + vc.palpite : ""));
 }
 function pintarChecklist() {
   const d = PR.dados, r = PR.reg, out = [];
@@ -3792,13 +3795,13 @@ function pintarChecklist() {
   const med = el("div", { class: "bloco" }, el("b", {}, "Medidas, na ordem do SOL"));
   if (!d.medidas.length) med.append(el("p", { class: "sub" }, "Sem o JSON do SOL na pasta do processo, não há medidas para listar."));
   else if (Object.keys(vistos).length) med.append(el("p", { class: "sub", style: "margin:0 0 6px" },
-    "Faixa colorida = o que o Claude conferiu no chat: verde conforme, vermelho vira exigência, amarelo falta ver. Passe o mouse para ver o porquê; o seu ✓/✗ manda."));
+    "Faixa colorida = o que o Claude conferiu no chat: verde conforme, vermelho vira exigência, amarelo falta ver, azul depende de um palpite da IA local. Passe o mouse para ver o porquê; o seu ✓/✗ manda."));
   for (const m of d.medidas) {
     const chaves = m.itens.map(i => m.nome + "|" + i);
     const feitos = chaves.filter(k => r.itens[k]).length;
     const soClaude = est => chaves.filter(k => !r.itens[k] && vistos[k] && vistos[k].estado === est).length;
-    const resumo = [["ok", "var(--ok)"], ["exigencia", "var(--verm)"], ["ver", "var(--creme-txt)"]].map(([e, c]) => [soClaude(e), e, c]).filter(x => x[0])
-      .map(([n, e, c]) => el("span", { class: "vis-resumo", style: "color:" + c, title: n + " item(ns) " + { ok: "conforme(s)", exigencia: "que vira(m) exigência", ver: "que falta(m) ver" }[e] + " pelo Claude no chat" }, " ●" + n));
+    const resumo = [["ok", "var(--ok)"], ["exigencia", "var(--verm)"], ["ver", "var(--creme-txt)"], ["ia", "var(--az-borda)"]].map(([e, c]) => [soClaude(e), e, c]).filter(x => x[0])
+      .map(([n, e, c]) => el("span", { class: "vis-resumo", style: "color:" + c, title: n + " item(ns) " + { ok: "conforme(s)", exigencia: "que vira(m) exigência", ver: "que falta(m) ver", ia: "à espera do palpite da IA" }[e] + " pelo Claude no chat" }, " ●" + n));
     const det = el("details", { class: "medida" },
       el("summary", {}, el("b", {}, m.nome), el("span", { class: "tag" }, m.tabela),
         m.inviabilidade !== "NAO_POSSUI" ? el("span", { class: "marca-tag" }, m.inviabilidade === "POSSUI_TOTAL" ? "laudo total" : "laudo parcial") : null,

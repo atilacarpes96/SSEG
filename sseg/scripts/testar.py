@@ -816,10 +816,12 @@ def main():
             except ValueError:
                 recusa_v.append(1)
         vv = reg.ler(pasta)["vistos"]
+        reg.visto(pasta, k_sai, "ia", "Parece cumprida", palpite=2)
+        vv["ia"] = reg.ler(pasta)["vistos"][k_sai]
         reg.visto(pasta, "passo:6", None)
         caso("checklist: o Claude marca conforme / falta ver pelo código; código ou estado inválido recusado; vazio apaga",
              k_sai == "Saída de Emergência|Memorial descritivo" and vv[k_sai]["estado"] == "ver" and vv["passo:6"]["nota"] == "sem empate"
-             and len(recusa_v) == 2 and "passo:6" not in reg.ler(pasta)["vistos"] and reg.ler(pasta)["exigencias"], str(vv))
+             and len(recusa_v) == 2 and vv["ia"]["estado"] == "ia" and vv["ia"]["palpite"] == 2 and "passo:6" not in reg.ler(pasta)["vistos"] and reg.ler(pasta)["exigencias"], str(vv))
         caso("janela do processo: laudo do SOL sai sem HTML (<p>, &nbsp;)",
              processo.texto_do_html("<p>Rampas:</p><p>&nbsp;</p><p>A edifica&ccedil;&atilde;o</p>") == "Rampas:\n\nA edificação")
         evs = []

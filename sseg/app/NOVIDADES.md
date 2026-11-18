@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.14.1
+
+- **Azul no checklist para o que depende de um palpite da IA local.** Na reanálise, o item cuja conferência está num palpite do quadro azul fica com faixa e etiqueta azuis ("◆ palpite da IA nº 2"). Quando você responde o palpite, o Claude troca para verde ou vermelho.
+
 ## 2.14.0
 
 - **Checklist com cor: o que foi batido no chat já aparece como conforme, exigência ou falta ver.** Na janela do processo, cada passo do fluxo e cada item das medidas ganha uma faixa e uma etiqueta: verde (conforme), vermelha (vira exigência) ou amarela (falta ver). Quem marca é o Claude, logo que conclui o item na conversa, com o porquê (passe o mouse na etiqueta). Exigência que ele grava ligada a um item deixa o item vermelho e diz qual é (e3, e4…) na coluna CIA.

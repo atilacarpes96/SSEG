@@ -188,10 +188,10 @@ def marcar(pasta, grupo, chave, valor):
     return d
 
 
-VISTO = {"ok": "conforme", "exigencia": "vira exigência", "ver": "falta ver"}
+VISTO = {"ok": "conforme", "exigencia": "vira exigência", "ver": "falta ver", "ia": "palpite da IA local"}
 
 
-def visto(pasta, chave, estado, nota="", exig=""):
+def visto(pasta, chave, estado, nota="", exig="", palpite=None):
     """O Claude marca o resultado de um item do checklist que foi conferido (ou que ficou pendente) no chat.
     estado None/"" apaga a marca."""
     d = ler(pasta)
@@ -201,6 +201,8 @@ def visto(pasta, chave, estado, nota="", exig=""):
         raise ValueError("estado inválido: %r (use ok, exigencia ou ver)" % estado)
     else:
         d["vistos"][chave] = {"estado": estado, "nota": (nota or "").strip()[:300], "exig": exig or "", "quando": time.time()}
+        if palpite:   # 2.14.1: azul = depende do palpite nº N do quadro azul (reanálise), ainda sem a sua conferência
+            d["vistos"][chave]["palpite"] = int(palpite)
     gravar(pasta, d)
     return d
 
@@ -288,9 +290,10 @@ def args_parser(sp):
     p.add_argument("ids", nargs="+")
     sub.add_parser("itens", help="lista o checklist com os códigos (P6, M3.2) e o que já está marcado")
     p = sub.add_parser("visto", help="resultado de itens do checklist conferidos no chat: visto ok M3.1 M3.2 --nota ...")
-    p.add_argument("estado", choices=["ok", "exigencia", "ver", "apagar"])
+    p.add_argument("estado", choices=["ok", "exigencia", "ver", "ia", "apagar"])
     p.add_argument("codigos", nargs="+", help="códigos de sseg.py analise itens (P6, M3.2)")
     p.add_argument("--nota", default="", help="por quê, em uma linha (aparece ao passar o mouse)")
+    p.add_argument("--palpite", type=int, help='com "ia": nº do palpite no quadro azul')
     sub.add_parser("ver", help="mostra o registro (pendências e o texto final da CIA)")
     p = sub.add_parser("sol-pdf", help="arquivo do SOL baixado em base64 (sol-arquivo-<id>.b64.json) → PDF + texto")
     p.add_argument("id", help="id do arquivo no SOL (GET /solcbm/api/v1/adm/arquivo/<id>)")
@@ -380,7 +383,7 @@ def principal(args):
         feitos = []
         for c in args.codigos:
             k, _r = chave_de(args.pasta, c)
-            visto(args.pasta, k, None if args.estado == "apagar" else args.estado, args.nota)
+            visto(args.pasta, k, None if args.estado == "apagar" else args.estado, args.nota, palpite=args.palpite)
             if k.startswith("passo:") and args.estado in ("ok", "exigencia"):
                 marcar(args.pasta, "passos", k[6:], True)   # conferido = passo feito
             feitos.append(c)
