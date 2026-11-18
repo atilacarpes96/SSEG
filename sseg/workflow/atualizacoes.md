@@ -12,6 +12,18 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 18/11/2026 — Palpites da IA local dizem o porquê; conta com a cota lida
+
+- **O que mudou:** o título de cada palpite do quadro azul já traz o motivo ("Parece cumprida: cota lida 1,40 m, exigido mín. 1,20 m", "Inconclusivo: a IA também diz \"cumpriu\" na planta anterior", "Palpite fraco (Cumpriu): sem a planta anterior para comparar"...). Exigência de valor com número ganha uma leitura a mais: a IA só lê a cota do elemento, e o programa faz a conta. Verde/vermelho só quando a conta e o veredito da IA concordam (0 erro em 21 itens guardados da bateria de 18/11/2026).
+- **Retorno para o treino:** a conferência do analista grava também o código do motivo, o veredito da IA e a leitura da cota. Isso permite medir, por motivo, onde a IA erra.
+- **Onde:** só `sseg/scripts/palpite_local.py` (vai pelo `git pull`), mais uma linha no quadro azul (`sseg/app/web/index.html`). Os palpites já prontos de exigência com número são refeitos na próxima rodada. Sem skill nem campo Instruções.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 18/11/2026. Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell). Não há skill nem campo Instruções a atualizar nesta leva: a mudança é no palpite_local.py, que só roda em PC com a IA local ligada. Me diga em uma linha se ficou em dia.
+```
+
 ## 17/11/2026 — Corretor da revisão final no Opus 5.5 (SSEG.exe 2.13.2)
 
 - **O que mudou:** o subagente `corretor-cia` (`.claude/agents/corretor-cia.md`) passou do Fable 5.2 para o Opus 5.5 (decisão do Sd Carpes): a cota semanal do Fable acabava antes e a correção travava com erro 429. A 2.13.1 trocava de modelo só na falta de cota; a 2.13.2 tira essa regra.

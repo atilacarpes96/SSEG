@@ -3380,6 +3380,7 @@ function palpitesBloco(d, ctx) {
     if (it.estado === "pronto" && it.rotulo) {
       const linhas = (it.rodadas || []).map(r => ["Planta nova, " + (PALP_MARGEM[r.margem] || ""), r]);
       if (it.controle) linhas.push(["Planta anterior (o certo aqui é \"não cumpriu\")", it.controle]);
+      if (it.leitura) linhas.push(["Conta do programa com a cota que a IA leu (recorte apertado)", it.leitura]);
       return el("div", { class: "pal " + it.rotulo.classe }, el("b", {}, it.rotulo.titulo), " ", it.rotulo.explicacao,
         it.confianca ? el("small", {}, it.confianca) : null,
         el("details", {}, el("summary", { class: "discreto" }, "o que a IA disse que leu"),
@@ -4620,7 +4621,7 @@ SSEG.tour = async passo => {
       "```sseg-perguntas", JSON.stringify({ titulo: "Conferir na planta", perguntas: [{ id: "q1", texto: "O depósito é da mesma empresa?", tipo: "simnao" }, { id: "q2", texto: "Acionador a até 5 m do acesso principal?", opcoes: ["Ok", "Não"] }] }), "```",
       "```sseg-palpites", JSON.stringify({ demo: { palpites: { itens: [{ n: 1, tipo: "texto", tipo_nome: "Texto com valor", secao: "Saída de Emergência", exigencia: "REITERO: a largura da porta da escada deverá ser de no mínimo 1,10 m.",
         fatos: ["Prancha Térreo, neste trecho: entrou no texto: 1,10; saiu do texto: 0,90."], recortes: [], estado: "pronto", rodadas: [], confianca: "",
-        rotulo: { classe: "verde", titulo: "Palpite: Cumpriu", explicacao: "Igual nos três tamanhos de recorte e a IA disse 'não cumpriu' na planta anterior." } },
+        rotulo: { classe: "verde", titulo: "Parece cumprida: cota lida 1,1 m, exigido mín. 1,1 m", explicacao: "O veredito da IA e a conta do programa com a cota que ela leu concordam; e na planta anterior ela disse \"não cumpriu\"." } },
         { n: 2, tipo: "remissiva", motivo: "Remete às exigências acima." }] } } }), "```"].join("\n") });
     SSEG.chat(fake.codigo, { t: "sub_ini", id: "x1", tipo: "localizador-normas", desc: "itens da RT 11 sobre largura", modelo: "claude-haiku-5-5" });
     trabalhando(ctx, true);

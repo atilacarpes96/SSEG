@@ -1249,13 +1249,28 @@ def main():
     import palpite_local as pl_m, sincronizar as _sinc
     r_ = lambda *vs: [{"veredito": v, "evidencia": ""} for v in vs]
     c_ = lambda v: {"veredito": v, "evidencia": ""}
-    caso("palpite: rótulo firme só em texto, igual nos três recortes e com 'não cumpriu' na planta anterior",
-         pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"))["titulo"] == "Palpite: Não cumpriu"
+    caso("palpite: rótulo firme só em texto, igual nos três recortes e com 'não cumpriu' na planta anterior; o título diz o porquê",
+         pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"))["motivo"] == "continua_igual"
+         and pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"))["classe"] == "vermelho"
          and pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"))["classe"] == "verde"
-         and pl_m.conclusao("desenho", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"))["titulo"] == "Palpite fraco: Cumpriu"
-         and pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), None)["titulo"] == "Palpite fraco: Cumpriu")
+         and pl_m.conclusao("desenho", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"))["motivo"] == "tipo_fraco"
+         and pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), None)["titulo"].startswith("Palpite fraco (Cumpriu): sem a planta anterior"))
+    _lt = lambda v, lido: {"veredito": v, "comparacao": "minimo", "exigido": 1.2, "lido": lido}
+    _ok = pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"), _lt("cumpriu", 1.4))
+    _dis = pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"), _lt("nao_cumpriu", 0.9))
+    _sem = pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), None, _lt("nao_sei", None))
+    caso("palpite: com número, verde só quando a conta com a cota lida concorda; discordância e cota não lida ficam âmbar",
+         _ok["classe"] == "verde" and "1,4 m" in _ok["titulo"] and "1,2 m" in _ok["titulo"] and _ok["motivo"] == "conta_confirma"
+         and _dis["classe"] == "ambar" and not _dis["veredito"] and _dis["motivo"] == "conta_discorda" and "0,9 m" in _dis["titulo"]
+         and _sem["classe"] == "ambar" and _sem["motivo"] == "conta_sem_leitura", str((_ok, _dis, _sem)))
+    caso("palpite: a conta compara o número lido (cm vira m; taxa por área arredonda para baixo; sem leitura = não sei)",
+         pl_m.numerico({"comparacao": "minimo", "exigido": 1.2, "valor_no_elemento": 110, "area_m2": None})["veredito"] == "nao_cumpriu"
+         and pl_m.numerico({"comparacao": "minimo", "exigido": 120, "valor_no_elemento": 1.2, "area_m2": None})["veredito"] == "cumpriu"
+         and pl_m.numerico({"comparacao": "taxa_pessoas_por_m2", "exigido": 1, "valor_no_elemento": 34, "area_m2": 34.72})["veredito"] == "cumpriu"
+         and pl_m.numerico({"comparacao": "minimo", "exigido": 1.2, "valor_no_elemento": None, "area_m2": None})["veredito"] == "nao_sei"
+         and pl_m.com_numero({"tipo": "texto", "exigencia": "largura mínima de 1,20 m"}) and not pl_m.com_numero({"tipo": "desenho", "exigencia": "1,20 m"}))
     caso("palpite: recorte que muda a resposta, 'não sei' e 'cumpriu' na planta anterior saem como inconclusivo, sem veredito",
-         all(x["titulo"] == "Inconclusivo" and not x["veredito"] for x in (
+         all(x["titulo"].startswith("Inconclusivo:") and not x["veredito"] and x["motivo"] for x in (
              pl_m.conclusao("texto", r_("cumpriu", "nao_cumpriu", "cumpriu"), c_("nao_cumpriu")),
              pl_m.conclusao("texto", r_("nao_sei", "nao_sei", "nao_sei"), c_("nao_cumpriu")),
              pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), c_("cumpriu")))))
@@ -1483,7 +1498,7 @@ def main():
                 pl_m.ia_local, pl_m._transcrever = _orig
             it4 = pl_m.ler(pasta)["itens"][0]
             caso("cotas desenhadas: valor achado na nova e não na anterior sai, no máximo, como palpite fraco, com o recorte",
-                 it4["estado"] == "pronto" and it4["rotulo"]["titulo"] == "Palpite fraco: Cumpriu" and it4["controle"]["veredito"] == "nao_cumpriu"
+                 it4["estado"] == "pronto" and it4["rotulo"]["titulo"].startswith("Palpite fraco (Cumpriu):") and it4["controle"]["veredito"] == "nao_cumpriu"
                  and len(it4["recortes"]) == 1 and it4["recortes"][0]["antes"] and len(_lidos) == 3, str(it4)[:500])
             d5 = pl_m.preparar(pasta, [])
             caso("cotas desenhadas: preparar de novo mantém o palpite e os recortes; a leitura fica em cache ao lado do PDF",

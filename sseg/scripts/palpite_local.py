@@ -600,6 +600,8 @@ def _assinatura(it):
             MODELO, list(MARGENS), hashlib.sha1(PROMPT.encode()).hexdigest()[:8]]
     if it.get("cotas"):   # só entra quando há: a assinatura dos itens antigos não muda
         base.append([[c["pdf"], c["pagina"], (c.get("antes") or {}).get("pdf")] for c in it["cotas"]] + [P_COTA])
+    if com_numero(it):    # 18/11/2026: exigência com número ganha a conta com a cota lida (refaz o palpite)
+        base.append([MARGEM_LEITURA, hashlib.sha1(PROMPT_NUM.encode()).hexdigest()[:8]])
     return hashlib.sha1(json.dumps(base, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:16]
 
 
@@ -771,16 +773,17 @@ def _rodar_cotas(pasta, it, marca):
                              "%s não aparece entre as cotas lidas da planta anterior." % quais}
     expl = " Leitura das cotas uma a uma (texto convertido em desenho): método novo, testado em um processo só."
     if certos and antes_achou:
-        rot = {"classe": "ambar", "titulo": "Inconclusivo", "veredito": "",
+        rot = {"classe": "ambar", "titulo": "Inconclusivo: %s já estava na planta anterior" % quais, "veredito": "", "motivo": "cotas_ja_estava",
                "explicacao": "%s está escrito na planta nova, mas já estava na anterior, que recebeu a exigência: achar o valor não prova a correção. Olhe o recorte." % quais}
     elif certos:
-        rot = {"classe": "ambar", "titulo": "Palpite fraco: Cumpriu", "veredito": "cumpriu",
+        rot = {"classe": "ambar", "veredito": "cumpriu", "motivo": "cotas_achou",
+               "titulo": "Palpite fraco (Cumpriu): %s escrito na planta nova%s" % (quais, ", e não na anterior" if antes_achou is False else ""),
                "explicacao": ("%s aparece escrito na planta nova%s." % (quais, " e não aparecia na anterior" if antes_achou is False else ", sem a planta anterior para comparar")) + expl}
     elif conferir:
-        rot = {"classe": "ambar", "titulo": "Inconclusivo", "veredito": "",
+        rot = {"classe": "ambar", "titulo": "Inconclusivo: as duas leituras da cota discordam", "veredito": "", "motivo": "cotas_discordam",
                "explicacao": "As duas leituras da IA discordaram onde %s pode estar escrito. Olhe o recorte." % quais}
     else:
-        rot = {"classe": "ambar", "titulo": "Inconclusivo", "veredito": "",
+        rot = {"classe": "ambar", "titulo": "Inconclusivo: não achei %s nas cotas lidas" % quais, "veredito": "", "motivo": "cotas_nao_achou",
                "explicacao": "Não achei %s entre as %d cotas lidas. Isso não prova que falta: a cota pode ter ficado fora do filtro. Olhe a planta." % (quais, lidas)}
     recs = []
     for x in (certos or conferir)[:MAX_RECORTES]:
@@ -860,7 +863,7 @@ def preparar(pasta, curadoria):
                 if velho.get("conferencia"):
                     it["conferencia"] = velho["conferencia"]
                 if it["estado"] == "fila" and velho.get("assinatura") == it["assinatura"] and velho.get("estado") == "pronto":
-                    guarda = ("estado", "rodadas", "controle", "rotulo", "feito_em") + (("recortes",) if it.get("cotas") else ())
+                    guarda = ("estado", "rodadas", "controle", "leitura", "rotulo", "feito_em") + (("recortes",) if it.get("cotas") else ())
                     it.update({k: velho[k] for k in guarda if k in velho})
             itens.append(it)
         d.clear()
@@ -946,27 +949,144 @@ def _rodada(pasta, it, recs, margem, perg):
     return {"veredito": agregar(partes), "evidencia": ev, "segundos": round(sum(p["segundos"] for p in partes), 1)}
 
 
-def conclusao(tipo, rodadas, ctrl):
-    """Rótulo honesto do palpite: {classe, titulo, explicacao, veredito}. veredito só vem quando há palpite a mostrar."""
+# ------------------------------------------------------------------ conta com a cota lida (18/11/2026)
+# Bateria da IA local (servidor, ~/ia-local/bateria/PLACAR.md, rodadas 1–3): em exigência com número, o modelo LÊ o
+# valor escrito no elemento e o CÓDIGO compara com o exigido. Palpite firme só quando a conta e o veredito da IA
+# concordam: 0 erro em 21 itens da parte guardada (15 respondidos, 6 "não sei"), com o recorte mais apertado (30).
+NUM = re.compile(r"\d+[,.]?\d*\s*(m²|m2|metros?|m\b|cm|mm|pessoas?)|pessoa por m|por m²|\bm[ií]nim|\bm[aá]xim", re.I)
+MARGEM_LEITURA = 30
+ESQ_NUM = {"type": "object", "properties": {
+    "comparacao": {"type": "string", "enum": ["minimo", "maior_que", "maximo", "taxa_pessoas_por_m2"]},
+    "exigido": {"type": "number"}, "valor_no_elemento": {"type": ["number", "null"]},
+    "area_m2": {"type": ["number", "null"]}, "evidencia": {"type": "string"}},
+    "required": ["comparacao", "exigido", "valor_no_elemento", "area_m2", "evidencia"]}
+# O mesmo texto da bateria (harness/bateria_num.py). Mudou aqui, os números da bateria deixam de valer.
+PROMPT_NUM = """Você lê uma planta de PPCI (prevenção de incêndio) para um analista do Corpo de Bombeiros. A imagem é {onde}.
+
+{pergunta}
+
+NÃO decida se cumpriu: só preencha o JSON; quem compara é um programa.
+- "comparacao": o que a exigência pede. "minimo" (pelo menos X), "maior_que" (maior que X), "maximo" (no máximo X),
+  "taxa_pessoas_por_m2" (população proporcional à área).
+- "exigido": o número da exigência. Larguras e distâncias SEMPRE em metros (90 cm = 0.9). Na taxa: pessoas por m².
+- "valor_no_elemento": o número que está ESCRITO na imagem no elemento citado (a cota de largura em metros; na taxa, o
+  número de pessoas escrito). null se o elemento ou a cota não aparece, está ilegível, ou você não tem certeza de que a
+  cota é desse elemento. Não calcule nem estime pela escala.
+- "area_m2": só na taxa, a área escrita no próprio elemento; senão null.
+- "evidencia": copie exatamente o que leu e onde está na imagem."""
+COMPARA = {"minimo": "mín.", "maior_que": "maior que", "maximo": "máx.", "taxa_pessoas_por_m2": "mín."}
+
+
+def com_numero(it):
+    return it.get("tipo") == "texto" and bool(NUM.search("%s %s" % (it.get("exigencia") or "", it.get("esperado") or "")))
+
+
+def numerico(j):
+    """A conta: {veredito, comparacao, exigido, lido} a partir do que a IA leu. Sem valor lido = nao_sei."""
+    v, x, c = j.get("valor_no_elemento"), j.get("exigido"), j.get("comparacao")
+    out = {"veredito": "nao_sei", "comparacao": c, "exigido": x, "lido": v}
+    if v is None or x is None:
+        return out
+    if c != "taxa_pessoas_por_m2":
+        v = v / 100 if v >= 20 else v      # cota em cm escrita como 110
+        x = x / 100 if x >= 20 else x
+        ok = v >= x - 1e-6 if c == "minimo" else v > x + 1e-6 if c == "maior_que" else v <= x + 1e-6
+    else:
+        a = j.get("area_m2")
+        if not a:
+            return out
+        x = int(a * x + 1e-6)             # "na ordem de": 34,72 m² x 1 = 34 pessoas, 35 atende
+        ok = v >= x
+    out.update(veredito="cumpriu" if ok else "nao_cumpriu", exigido=x, lido=v)
+    return out
+
+
+def fmt_valor(x, c):
+    if x is None:
+        return "?"
+    if c == "taxa_pessoas_por_m2":
+        return "%d pessoas" % round(x)
+    return ("%.2f" % x).rstrip("0").rstrip(".").replace(".", ",") + " m"
+
+
+def _leitura(pasta, it, recs):
+    """Conta com a cota lida em cada recorte novo (margem 30). Recortes que discordam: nao_sei."""
+    partes, t0 = [], time.time()
+    for k, r in enumerate(recs, 1):
+        onde = ("recorte %d de %d: " % (k, len(recs)) if len(recs) > 1 else "") + "recorte da prancha em volta do elemento citado"
+        png = recorte(os.path.join(pasta, SUB, r["pdf"]), r["pagina"], r["caixa"], MARGEM_LEITURA)
+        resp = _ollama("/api/chat", {
+            "model": MODELO, "messages": [{"role": "user", "content": PROMPT_NUM.format(pergunta=pergunta(it), onde=onde),
+                                           "images": [base64.b64encode(png).decode()]}],
+            "format": ESQ_NUM, "stream": False, "think": False, "keep_alive": "30m",
+            "options": {"temperature": 0, "seed": 0, "num_ctx": NUM_CTX, "num_predict": NUM_PREDICT}})
+        try:
+            j = json.loads((resp.get("message") or {}).get("content", ""))
+            p = numerico(j)
+            p["evidencia"] = str(j.get("evidencia", ""))
+        except Exception:  # noqa: BLE001
+            p = {"veredito": "nao_sei", "evidencia": "resposta fora do formato"}
+        partes.append(p)
+    lidos = [p for p in partes if p["veredito"] != "nao_sei"]
+    base = lidos[0] if lidos else partes[0]
+    ev = "; ".join("%s lido %s (exigido %s %s)" % (("[recorte %d] " % k if len(partes) > 1 else ""), fmt_valor(p.get("lido"), p.get("comparacao")),
+                                                   COMPARA.get(p.get("comparacao"), ""), fmt_valor(p.get("exigido"), p.get("comparacao")))
+                   for k, p in enumerate(partes, 1) if p["veredito"] != "nao_sei") or "a IA não leu a cota do elemento"
+    return {"veredito": agregar(partes), "comparacao": base.get("comparacao"), "exigido": base.get("exigido"),
+            "lido": base.get("lido"), "evidencia": "Conta do programa: %s. %s" % (ev, " | ".join(p["evidencia"] for p in partes)[:600]),
+            "segundos": round(time.time() - t0, 1), "margem": MARGEM_LEITURA}
+
+
+def conclusao(tipo, rodadas, ctrl, leitura=None):
+    """Rótulo honesto do palpite: {classe, titulo, explicacao, veredito, motivo}. O título já diz o porquê; o motivo
+    (código curto) vai junto da conferência do analista para medir, depois, qual tipo de palpite erra.
+    veredito só vem quando há palpite a mostrar."""
     vs = [r["veredito"] for r in rodadas]
-    def rot(classe, titulo, expl, v=""):
-        return {"classe": classe, "titulo": titulo, "explicacao": expl, "veredito": v}
+    def rot(classe, titulo, expl, v="", motivo=""):
+        return {"classe": classe, "titulo": titulo, "explicacao": expl, "veredito": v, "motivo": motivo}
     if len(set(vs)) > 1:
-        return rot("ambar", "Inconclusivo", "O palpite mudou quando o recorte mudou de tamanho (%s). Olhe a planta." % ", ".join(NOME[v] for v in vs))
+        return rot("ambar", "Inconclusivo: a resposta muda com o tamanho do recorte",
+                   "A IA respondeu %s conforme o recorte. Olhe a planta." % ", ".join(NOME[v] for v in vs), motivo="muda_recorte")
     v = vs[0]
     if v == "nao_sei":
-        return rot("ambar", "Inconclusivo", "A IA respondeu \"não sei\" nos três tamanhos de recorte. Olhe a planta.")
+        return rot("ambar", "Inconclusivo: a IA não achou o elemento no recorte",
+                   "Respondeu \"não sei\" nos três tamanhos de recorte (elemento fora do recorte, ilegível ou ambíguo). Olhe a planta.",
+                   motivo="ia_nao_sabe")
     if ctrl and ctrl["veredito"] == "cumpriu":
-        return rot("ambar", "Inconclusivo", "A IA também disse \"cumpriu\" na planta anterior, que recebeu a exigência. Ela não "
-                   "distingue o antes do depois aqui: o palpite \"%s\" não vale." % NOME[v])
+        return rot("ambar", "Inconclusivo: a IA também diz \"cumpriu\" na planta anterior",
+                   "A planta anterior recebeu a exigência, então lá o certo era \"não cumpriu\". A IA não distingue o antes do "
+                   "depois aqui: o palpite \"%s\" não vale." % NOME[v], motivo="contraprova_falhou")
+    if leitura:
+        lv, c = leitura["veredito"], leitura.get("comparacao")
+        conta = "cota lida %s, exigido %s %s" % (fmt_valor(leitura.get("lido"), c), COMPARA.get(c, ""), fmt_valor(leitura.get("exigido"), c))
+        if lv == "nao_sei":
+            return rot("ambar", "Inconclusivo: a IA diz %s, mas não leu a cota para a conta" % NOME[v],
+                       "O veredito da IA não foi conferido pela conta do programa: ela não leu (ou não teve certeza de) a cota do "
+                       "próprio elemento. Olhe a cota.", motivo="conta_sem_leitura")
+        if lv != v:
+            return rot("ambar", "Inconclusivo: a IA diz %s, mas a conta diz %s (%s)" % (NOME[v], NOME[lv], conta),
+                       "O veredito e a conta com a cota que a própria IA leu discordam: ou ela leu a cota de outro elemento, ou "
+                       "errou o veredito. Confira a cota do elemento.", motivo="conta_discorda")
+        expl = "O veredito da IA e a conta do programa com a cota que ela leu concordam (%s)%s. Na bateria, esse acordo " \
+               "teve 0 erro em 21 itens guardados." % (conta, "; e na planta anterior ela disse \"não cumpriu\"" if ctrl and ctrl["veredito"] == "nao_cumpriu" else "")
+        return rot("verde" if v == "cumpriu" else "vermelho",
+                   ("Parece cumprida: " if v == "cumpriu" else "Parece não cumprida: ") + conta, expl, v, motivo="conta_confirma")
     if not ctrl:
-        return rot("ambar", "Palpite fraco: " + NOME[v], "Igual nos três tamanhos de recorte, mas sem a planta anterior para a contraprova.", v)
+        return rot("ambar", "Palpite fraco (%s): sem a planta anterior para comparar" % NOME[v],
+                   "Igual nos três tamanhos de recorte, mas sem a planta anterior para a contraprova.", v, motivo="sem_contraprova")
     if v == "cumpriu" and ctrl["veredito"] == "nao_sei":
-        return rot("ambar", "Palpite fraco: Cumpriu", "Na planta anterior a IA respondeu \"não sei\": o contraste com o antes não foi confirmado.", v)
+        return rot("ambar", "Palpite fraco (Cumpriu): na planta anterior a IA não soube",
+                   "Na planta anterior a IA respondeu \"não sei\": o contraste com o antes não foi confirmado.", v, motivo="contraprova_nao_sei")
     if tipo != "texto":
-        return rot("ambar", "Palpite fraco: " + NOME[v], "Igual nos três tamanhos de recorte, mas é um tipo de exigência em que a IA errou muito nos testes.", v)
-    return rot("verde" if v == "cumpriu" else "vermelho", "Palpite: " + NOME[v],
-               "Igual nos três tamanhos de recorte" + (" e a IA disse \"não cumpriu\" na planta anterior." if ctrl["veredito"] == "nao_cumpriu" else "."), v)
+        return rot("ambar", "Palpite fraco (%s): tipo de exigência em que a IA erra muito" % NOME[v],
+                   "Igual nos três tamanhos de recorte, mas %s é um tipo em que a IA errou muito nos testes." % TIPOS.get(tipo, tipo).lower(),
+                   v, motivo="tipo_fraco")
+    if v == "cumpriu":
+        return rot("verde", "Parece cumprida: o valor pedido aparece na planta nova e não na anterior",
+                   "Igual nos três tamanhos de recorte e a IA disse \"não cumpriu\" na planta anterior.", v, motivo="contraprova_confirma")
+    return rot("vermelho", "Parece não cumprida: a planta nova continua sem o valor pedido",
+               "Igual nos três tamanhos de recorte" + (" e a IA também disse \"não cumpriu\" na planta anterior." if ctrl["veredito"] == "nao_cumpriu" else "."),
+               v, motivo="continua_igual")
 
 
 def rodar(pasta, de_novo=False, aviso=print):
@@ -1011,19 +1131,24 @@ def rodar(pasta, de_novo=False, aviso=print):
                     if antes:
                         os.utime(marca)
                         res["controle"] = _rodada(pasta, it, antes, MARGENS[0], perg)
-                    res["rotulo"] = conclusao(it["tipo"], res["rodadas"], res["controle"])
+                    if com_numero(it) and len({r["veredito"] for r in res["rodadas"]}) == 1 and res["rodadas"][0]["veredito"] != "nao_sei":
+                        os.utime(marca)
+                        res["leitura"] = _leitura(pasta, it, novos)
+                    res["rotulo"] = conclusao(it["tipo"], res["rodadas"], res["controle"], res.get("leitura"))
                     # 2.13.9: classificação feita pela IA local (medida em 18/11/2026: tipo igual ao do Claude em 8 de
                     # 16) segura o palpite em "fraco": verde e vermelho só com a classificação conferida
                     rot = res["rotulo"]
                     if str(d.get("classificado_por") or "").startswith("IA local") and rot.get("classe") in ("verde", "vermelho"):
-                        res["rotulo"] = dict(rot, classe="ambar", titulo=rot["titulo"].replace("Palpite:", "Palpite fraco:"),
-                                             explicacao=rot["explicacao"] + " Fraco porque quem escolheu onde olhar foi a IA local, ainda em teste.")
+                        res["rotulo"] = dict(rot, classe="ambar", motivo=rot.get("motivo", "") + "+ia_escolheu_onde",
+                                             titulo="Palpite fraco (%s): quem escolheu onde olhar foi a IA local" % NOME[rot["veredito"]],
+                                             explicacao=rot["titulo"] + ". " + rot["explicacao"] + " Fraco porque quem escolheu onde olhar "
+                                             "foi a IA local, ainda em teste.")
             except Exception as e:  # noqa: BLE001 — um item com problema não derruba os outros; nunca vira "não sei"
                 res = {"estado": "falhou", "erro": "%s: %s" % (type(e).__name__, str(e)[:300]), "feito_em": res["feito_em"]}
             def gravar(x, n=n, ass=ass, res=res):
                 alvo = _item(x, n)
                 if alvo and alvo.get("assinatura") == ass:  # a conversa pode ter preparado de novo no meio da rodada
-                    for k in ("rodadas", "controle", "rotulo", "erro") + (("recortes",) if alvo.get("cotas") else ()):
+                    for k in ("rodadas", "controle", "leitura", "rotulo", "erro") + (("recortes",) if alvo.get("cotas") else ()):
                         alvo.pop(k, None)
                     alvo.update(res)
             _atualizar(pasta, gravar)
@@ -1050,9 +1175,14 @@ def responder(pasta, respostas):
         for n, r in (respostas or {}).items():
             it = _item(d, int(n))
             if it is not None and (r or {}).get("resposta") in ("cumpriu", "nao_cumpriu", "parcial", "nao_da"):
+                rot, lt = it.get("rotulo") or {}, it.get("leitura") or {}
+                # 18/11/2026: o que a IA disse e por quê vai junto da resposta — é o gabarito para medir, por motivo,
+                # onde ela erra (~/ia-local/conferencias.py junta tudo para o treino)
                 it["conferencia"] = {"resposta": r["resposta"], "nota": (r.get("nota") or "").strip()[:1000],
                                      "em": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                                     "palpite": (it.get("rotulo") or {}).get("titulo") or "sem palpite"}
+                                     "palpite": rot.get("titulo") or "sem palpite", "motivo": rot.get("motivo") or "",
+                                     "veredito_ia": rot.get("veredito") or "", "tipo": it.get("tipo"), "modelo": MODELO,
+                                     "leitura": {k: lt.get(k) for k in ("veredito", "comparacao", "exigido", "lido")} if lt else None}
     _atualizar(pasta, gravar)
 
 
@@ -1120,6 +1250,8 @@ def texto_ver(d):
             sit = "sem palpite: " + it.get("motivo", "")
         L.append("%d. [%s] %s" % (it["n"], TIPOS.get(it["tipo"], "não preparada"), sit))
         L += ["     fato: " + f for f in it.get("fatos") or []]
+        if it.get("leitura"):
+            L.append("     conta: " + it["leitura"].get("evidencia", "")[:300])
         if it.get("conferencia"):
             c = it["conferencia"]
             L.append("     analista: %s%s" % (c["resposta"], " — " + c["nota"] if c.get("nota") else ""))
