@@ -3037,7 +3037,7 @@ $("#b-relatos").onclick = async ev => {
 
 
 // ================= janela do processo (2.1) =================
-const PR = { codigo: null, dados: null, reg: null, alterado: 0, sujos: {}, subs: {}, ativ: null };
+const PR = { codigo: null, dados: null, reg: null, alterado: 0, sujos: {}, sujosBase: {}, edicaoAntiga: {}, subs: {}, ativ: null };
 const ESFORCO = { low: 14, medium: 18, high: 22, xhigh: 25, max: 28 };
 
 // O mascote de pixel do Claude Code (o "caranguejo"), na cor do modelo; tamanho = esforço.
@@ -3690,10 +3690,10 @@ function pintarChecklist() {
   if (!r.pendencias.length) pend.append(el("p", { class: "sub" }, "As perguntas e o que falta ver aparecem aqui."));
   else if (!abertas) pend.append(el("p", { class: "sub" }, "Nenhuma pendência aberta."));
   for (const p of r.pendencias.filter(p => !p.feita)) {
-    if (PR.sujos["p" + p.id] != null) p.resposta = PR.sujos["p" + p.id];
-    const resp = el("input", { type: "text", value: PR.sujos["p" + p.id] != null ? PR.sujos["p" + p.id] : (p.resposta || ""), placeholder: "sua resposta (Enter manda ao Claude)", "data-id": p.id });
+    if (PR.sujos[PR.codigo + ":p" + p.id] != null) p.resposta = PR.sujos[PR.codigo + ":p" + p.id];
+    const resp = el("input", { type: "text", value: PR.sujos[PR.codigo + ":p" + p.id] != null ? PR.sujos[PR.codigo + ":p" + p.id] : (p.resposta || ""), placeholder: "sua resposta (Enter manda ao Claude)", "data-id": p.id });
     // 2.7.2: a resposta conta na hora para o botão "Mandar" (antes ele só aparecia depois de recarregar) e Enter manda
-    resp.addEventListener("input", () => { PR.sujos["p" + p.id] = resp.value; p.resposta = resp.value; p.enviada = false; contarRespostas(); });
+    resp.addEventListener("input", () => { PR.sujos[PR.codigo + ":p" + p.id] = resp.value; p.resposta = resp.value; p.enviada = false; contarRespostas(); });
     resp.addEventListener("change", () => salvarResposta(p));
     resp.addEventListener("keydown", ev => { if (ev.key === "Enter" && resp.value.trim()) { ev.preventDefault(); enviarRespostas(); } });
     pend.append(el("div", { class: "pend" + (p.feita ? " feita" : "") },
@@ -3842,7 +3842,7 @@ function contarRespostas() {
   b.replaceChildren(selo("claude"), "Mandar " + n + " resposta(s) ao Claude");
 }
 function salvarResposta(p) {
-  return api("processo_atualizar", [PR.codigo, "pendencias", p.id, { resposta: p.resposta || "", enviada: false }]).then(() => delete PR.sujos["p" + p.id]);
+  return api("processo_atualizar", [PR.codigo, "pendencias", p.id, { resposta: p.resposta || "", enviada: false }]).then(() => delete PR.sujos[PR.codigo + ":p" + p.id]);
 }
 async function enviarRespostas() {
   const r = PR.reg, lst = r.pendencias.filter(p => (p.resposta || "").trim() && !p.enviada && !p.feita);
@@ -3987,7 +3987,17 @@ function pintarCIA() {
   r.exigencias.forEach((e, i) => {
     const temFinal = !!(e.final || "").trim(), deRascunho = !temFinal && !!(e.rascunho || "").trim();
     const ta = el("textarea", { "data-id": e.id, placeholder: "achado em poucas palavras (para o Claude redigir) ou o texto final da exigência" });
-    ta.value = PR.sujos["e" + e.id] != null ? PR.sujos["e" + e.id] : (temFinal ? e.final : deRascunho ? e.rascunho : (e.achado || ""));
+    // Edição não salva (2.14.2): a chave leva o código do processo (antes "e1" de um processo aparecia no e1 do outro) e
+    // guarda o texto que estava salvo quando você começou a digitar. Se o Claude (ou o Salvar em outra janela) trocar o texto
+    // depois disso, vale o novo, e a sua edição fica num "sua edição não salva" para voltar com um clique — antes a edição
+    // antiga ficava por cima do rascunho novo sem aviso (bug do Átila, 19/11/2026).
+    const kS = PR.codigo + ":e" + e.id, doSrv = temFinal ? e.final : deRascunho ? e.rascunho : (e.achado || "");
+    if (PR.sujos[kS] != null && normCIA(PR.sujosBase[kS]) !== normCIA(doSrv)) {
+      if (normCIA(PR.sujos[kS]) !== normCIA(doSrv)) PR.edicaoAntiga[kS] = PR.sujos[kS];
+      delete PR.sujos[kS]; delete PR.sujosBase[kS];
+    }
+    if (PR.sujos[kS] != null && normCIA(PR.sujos[kS]) === normCIA(doSrv)) { delete PR.sujos[kS]; delete PR.sujosBase[kS]; }
+    ta.value = PR.sujos[kS] != null ? PR.sujos[kS] : doSrv;
     const sel = el("select", { style: "font-size:12px;padding:3px;border:1px solid var(--linha);border-radius:5px;background:var(--campo);color:var(--texto);max-width:100%" },
       el("option", { value: "" }, "— medida —"), ...[...new Set([...medidas, ...envolvidosSOL(), ...ITENS_SOL_FIXOS,...(PR.dados && PR.dados.elementos || []), e.medida].filter(Boolean))].map(m => el("option", { value: m, selected: m === e.medida }, m)));
     sel.addEventListener("change", () => api("processo_atualizar", [PR.codigo, "exigencias", e.id, { medida: sel.value }]).then(recarregarRegistro));
@@ -4001,17 +4011,21 @@ function pintarCIA() {
     const refazCit = () => { clearTimeout(citT); citT = setTimeout(() => { const n = itensCitados([ta.value, fund.value]); cit.replaceWith(n); cit = n; }, 400); };
     ta.addEventListener("input", refazCit); fund.addEventListener("input", refazCit);
     const conta = el("span", { class: "conta" });
-    const st = el("span", {}, deRascunho ? "rascunho do Claude — edite e salve" : "");
+    const st = el("span", {}, PR.sujos[kS] != null ? "não salvo" : deRascunho ? "rascunho do Claude — edite e salve" : "");
+    const antiga = PR.edicaoAntiga[kS] != null ? el("details", { class: "discreto", open: true },
+      el("summary", {}, "⚠ o texto mudou depois que você começou a editar — sua edição não salva ficou aqui"), el("div", { class: "rasc" }, PR.edicaoAntiga[kS]),
+      el("button", { class: "bt link", on: { click: () => { const t = PR.edicaoAntiga[kS]; delete PR.edicaoAntiga[kS]; ta.value = t; ta.dispatchEvent(new Event("input")); ta.focus(); antiga.remove(); } } }, "voltar a minha edição"),
+      el("button", { class: "bt link", on: { click: () => { delete PR.edicaoAntiga[kS]; antiga.remove(); } } }, "descartar")) : null;
     const contar = () => { const n = ta.value.length; conta.textContent = n + " / 2000"; conta.classList.toggle("alto", n > 1950); };
     if (CIA_ALTURA.get(e.id)) ta.dataset.manual = CIA_ALTURA.get(e.id);
-    ta.addEventListener("input", () => { PR.sujos["e" + e.id] = ta.value; st.textContent = "não salvo"; st.className = ""; contar(); autoAltura(ta); });
+    ta.addEventListener("input", () => { if (PR.sujos[kS] == null) PR.sujosBase[kS] = doSrv; PR.sujos[kS] = ta.value; st.textContent = "não salvo"; st.className = ""; contar(); autoAltura(ta); });
     contar();
-    const salvar = async () => { await api("processo_atualizar", [PR.codigo, "exigencias", e.id, { final: ta.value.trim() ? ta.value.replace(/\s+$/, "") : "", fundamento: fund.value.trim() }]); delete PR.sujos["e" + e.id]; recarregarRegistro(); };
+    const salvar = async () => { await api("processo_atualizar", [PR.codigo, "exigencias", e.id, { final: ta.value.trim() ? ta.value.replace(/\s+$/, "") : "", fundamento: fund.value.trim() }]); delete PR.sujos[kS]; delete PR.sujosBase[kS]; delete PR.edicaoAntiga[kS]; recarregarRegistro(); };
     const pedir = async () => {
       const achado = ta.value.trim();
       if (!achado) return SSEG.log(["✗ Escreva o achado na caixa antes de pedir ao Claude."]);
       await api("processo_atualizar", [PR.codigo, "exigencias", e.id, { achado, pedido: true }]);
-      delete PR.sujos["e" + e.id];
+      delete PR.sujos[kS]; delete PR.sujosBase[kS];
       chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "Redija a exigência do item " + e.id + " da coluna CIA" + (e.medida ? " (medida: " + e.medida + ")" : " (escolha a medida do SOL)") +
         " a partir do meu achado: «" + achado + "». Grave o rascunho NO MESMO item com o comando rascunho " + e.id + " (heredoc), com --medida e --fundamento.");
       recarregarRegistro();
@@ -4020,10 +4034,10 @@ function pintarCIA() {
     const copiarItem = async () => {
       if (!ta.value.trim()) return SSEG.log(["✗ Item " + (i + 1) + " vazio."]);
       await copiar(textoSOL([ta.value]));
-      SSEG.log(["Item " + (i + 1) + " copiado" + (PR.sujos["e" + e.id] != null ? " (com alteração NÃO salva)" : temFinal ? "" : " (ainda não salvo como texto final)") + "."]);
+      SSEG.log(["Item " + (i + 1) + " copiado" + (PR.sujos[kS] != null ? " (com alteração NÃO salva)" : temFinal ? "" : " (ainda não salvo como texto final)") + "."]);
     };
     const rascDiferente = temFinal && e.rascunho && e.rascunho.trim() !== e.final.trim();
-    if (CIA_VISTA.compacto && !CIA_ABERTOS.has(e.id) && PR.sujos["e" + e.id] == null) {
+    if (CIA_VISTA.compacto && !CIA_ABERTOS.has(e.id) && PR.sujos[kS] == null) {
       const resumo = (ta.value || "").replace(/^\s*-\s*/, "").replace(/\s+/g, " ").trim();
       itens.set(e.id, el("div", { class: "exig compacta", role: "button", tabindex: 0, title: "Abrir esta exigência",
         on: { click: () => { CIA_ABERTOS.add(e.id); pintarCIA(); }, keydown: ev => { if (ev.key === "Enter") ev.currentTarget.click(); } } },
@@ -4039,7 +4053,7 @@ function pintarCIA() {
         temFinal && !e.lancado ? el("span", { class: "salvo", title: "Texto final salvo" }, "✓ salvo") : null, conta),
       rascDiferente ? el("details", { class: "discreto" }, el("summary", {}, "rascunho do Claude (diferente do salvo)"), el("div", { class: "rasc" }, e.rascunho),
         el("button", { class: "bt link", on: { click: () => { ta.value = e.rascunho; ta.dispatchEvent(new Event("input")); ta.focus(); } } }, "pôr o rascunho na caixa")) : null,
-      pranchas, ta, el("div", { class: "linha-fund" }, fund, cit),
+      pranchas, antiga, ta, el("div", { class: "linha-fund" }, fund, cit),
       el("div", { class: "rod" },
         el("button", { class: "bt p", on: { click: salvar } }, "Salvar"),
         el("button", { class: "bt", title: "Manda o texto da caixa ao chat como achado; o rascunho volta para este item", on: { click: pedir } }, selo("claude"), "Pedir ao Claude"),

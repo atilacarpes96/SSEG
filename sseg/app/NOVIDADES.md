@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.14.2
+
+- **A caixa da CIA não esconde mais o rascunho novo do Claude.** Quando você mexia na caixa de um item sem salvar e depois pedia ao Claude para trocar o texto, a caixa continuava com o texto antigo, embora o chat mostrasse "✓ na CIA". Agora o texto novo aparece na caixa. A sua edição não salva fica logo acima, em "sua edição não salva", com os botões "voltar a minha edição" e "descartar".
+- **Edição não salva presa a um processo só.** Texto digitado e não salvo no item 1 (ou numa pendência) de um processo não aparece mais no item 1 de outro processo aberto depois.
+
 ## 2.14.1
 
 - **Azul no checklist para o que depende de um palpite da IA local.** Na reanálise, o item cuja conferência está num palpite do quadro azul fica com faixa e etiqueta azuis ("◆ palpite da IA nº 2"). Quando você responde o palpite, o Claude troca para verde ou vermelho.
