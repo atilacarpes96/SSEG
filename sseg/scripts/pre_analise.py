@@ -30,6 +30,7 @@ USO
 import argparse
 import glob
 import json
+import time
 import os
 import re
 import subprocess
@@ -334,6 +335,36 @@ def secao_reanalise(api, anterior, marcos, cia_txt=""):
     return "\n".join(L) + "\n\n"
 
 
+def secao_notas(pasta):
+    """Painel "Notas da análise técnica" do SOL (notas.json, baixado pelo sol_caixa.py; pedido do Átila, 19/11/2026):
+    recado da chefia ou de outro analista fica lá e não aparece na caixa. Nota de outra pessoa vira "!!"; a do
+    próprio analista do processo (distribuicao.json), linha comum. Sem o arquivo: nada."""
+    try:
+        with open(os.path.join(pasta, "notas.json"), encoding="utf-8") as fh:
+            notas = json.load(fh)
+    except (OSError, ValueError):
+        return ""
+    if not isinstance(notas, list) or not notas:
+        return "NOTAS DA ANÁLISE TÉCNICA (SOL): nenhuma.\n\n"
+    try:
+        with open(os.path.join(pasta, "distribuicao.json"), encoding="utf-8") as fh:
+            dist = json.load(fh)
+    except (OSError, ValueError):
+        dist = {}
+    proprio = (dist.get("analista_planilha") or "").split()
+    proprio = proprio[-1].lower() if proprio else ""
+    L = ["NOTAS DA ANÁLISE TÉCNICA (SOL), painel de notas do processo:"]
+    for n in sorted(notas, key=lambda n: n.get("dthAlteracao") or 0):
+        quem = (n.get("nomeUsuarioSoe") or "?").strip()
+        quando = time.strftime("%d/%m/%Y", time.localtime((n.get("dthAlteracao") or 0) / 1000)) if n.get("dthAlteracao") else "?"
+        texto = " ".join(str(n.get("texto") or "").split())
+        de_outro = not proprio or proprio not in quem.lower()
+        L.append("%s %s (%s, %s): %s" % ("!! NOTA de" if de_outro else "   nota sua,", quem, n.get("tela") or "", quando, texto))
+    if any(l.startswith("!!") for l in L):
+        L.append("   Nota de outra pessoa (chefia ou outro analista): ler antes de analisar.")
+    return "\n".join(L) + "\n\n"
+
+
 def pre_analisar(codigo, forcar=False):
     """(situação, texto curto). Grava pre-analise.json e pre-analise.txt na pasta do processo."""
     pasta = os.path.join(PROCESSOS, codigo)
@@ -350,7 +381,8 @@ def pre_analisar(codigo, forcar=False):
     cia_arq = os.path.join(pasta, "cia-ultima.txt")  # o sol_caixa.py baixa: refaz quando chega CIA nova
     anteriores = glob.glob(os.path.join(pasta, "anterior-api-*.json"))  # JSON da análise anterior (2.3.23)
     docs_dir = os.path.join(pasta, "documentos")  # documentos dos envolvidos (documentos.py): refaz quando chegam
-    base = max([os.path.getmtime(a) for a in [api_arq, resumo_arq, cia_arq, docs_dir] + anteriores if os.path.exists(a)])
+    notas_arq = os.path.join(pasta, "notas.json")  # notas da análise técnica do SOL: refaz quando chegam
+    base = max([os.path.getmtime(a) for a in [api_arq, resumo_arq, cia_arq, docs_dir, notas_arq] + anteriores if os.path.exists(a)])
     if not forcar and os.path.exists(saida_txt) and os.path.getmtime(saida_txt) >= base:
         return "em-dia", "já feita"
     with open(api_arq, encoding="utf-8") as fh:
@@ -381,6 +413,7 @@ def pre_analisar(codigo, forcar=False):
            % (codigo, os.path.basename(api_arq), linha_marcos,
               "Feita com o JSON da base do servidor, antes de o processo chegar à caixa: quando chegar, o sol_caixa.py "
               "baixa o licenciamento de novo e esta pré-análise é refeita.\n" if da_base else ""))
+    cab += secao_notas(pasta)
     if (marcos.get("analise") or 0) >= 2:  # reanálise: o que mudou e as plantas trocadas vêm antes de tudo
         try:
             with open(cia_arq, encoding="utf-8") as fh:

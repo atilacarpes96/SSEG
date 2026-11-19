@@ -1200,7 +1200,18 @@ def main():
              any(n == 4 for n, _t in normas_pdf.buscar(normas_pdf.achar_pdf("rt14"), "risco medio")))
     # 20. pré-análise da reanálise (2.3.23): plantas trocadas e o que mudou desde o JSON anterior
     import pre_analise as pa_m
-    api_a = {"caracteristica": {"populacaoTotal": 60, "ocupacoes": [{"ocupacao": "PREDOMINANTE", "cnae": {"divisao": "J"}}]},
+    with tempfile.TemporaryDirectory() as _tn:
+        json.dump({"analista_planilha": "FULANO DE TAL CARPES"}, open(os.path.join(_tn, "distribuicao.json"), "w"))
+        json.dump([{"tela": "Análise técnica", "texto": "Minha nota.", "nomeUsuarioSoe": "Fulano de Tal Carpes", "dthAlteracao": 1786470602385},
+                   {"tela": "Análise técnica", "texto": "Conferir a escada.", "nomeUsuarioSoe": "Cap Chefe", "dthAlteracao": 1795000000000}],
+                  open(os.path.join(_tn, "notas.json"), "w"))
+        _sn = pa_m.secao_notas(_tn)
+        json.dump([], open(os.path.join(_tn, "notas.json"), "w"))
+        _sv = pa_m.secao_notas(_tn)
+    caso("pré-análise: notas da análise técnica do SOL — nota de outra pessoa vira !!, a do analista não (19/11/2026)",
+         "!! NOTA de Cap Chefe" in _sn and "Conferir a escada." in _sn and "nota sua, Fulano" in _sn
+         and not any(l.startswith("!!") and "Fulano" in l for l in _sn.splitlines()) and "nenhuma" in _sv, _sn)
+    api_a ={"caracteristica": {"populacaoTotal": 60, "ocupacoes": [{"ocupacao": "PREDOMINANTE", "cnae": {"divisao": "J"}}]},
              "especSeguranca": {"medidas": [{"tipo": {"nome": "Extintores"}, "norma": {"nome": "RT 14/2016"}},
                                             {"tipo": {"nome": "Plano de Emergência"}, "norma": {"nome": "RT 15"}}]}}
     api_b = {"caracteristica": {"populacaoTotal": 81, "ocupacoes": [{"ocupacao": "PREDOMINANTE", "cnae": {"divisao": "J-3"}}]},

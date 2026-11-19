@@ -61,6 +61,7 @@ LICENCIAMENTO = "/solcbm/api/v1/adm/licenciamentos"
 HISTORICO = "/solcbm/api/v1/adm/licenciamento-historico"
 FACTS = "/solcbm/api/v1/adm/facts/facts-licenciamento"
 ARQUIVO = "/solcbm/api/v1/adm/arquivo"
+NOTAS = "/solcbm/api/v1/adm/notas"   # painel "Notas da análise técnica" do SOL: /notas/<licenciamento>/historico
 PAUSA = 0.15      # segundos entre consultas: o SOL é sistema de produção
 TENTATIVAS = 3    # erro passageiro (rede, 429, 5xx): tenta de novo com espera de 1 s, 2 s
 LOGIN = os.path.expanduser("~/sseg-acesso/sol-login.json")  # gravado pelo Átila com sol_senha.py
@@ -330,7 +331,8 @@ def marcos_proc(aba, ident, codigo, linha, raiz=None, gatilho=True):
     pasta = os.path.join(raiz or PROCESSOS, str(codigo))
     for nome, caminho, opcional in ((marcos.ARQUIVO, "%s/%s/marcos" % (LICENCIAMENTO, ident), False),
                                     (marcos.HISTORICO, "%s/%s" % (HISTORICO, ident), True),  # resultado dos recursos
-                                    (marcos.FACTS, "%s/%s" % (FACTS, ident), True)):         # consultas técnicas (CT)
+                                    (marcos.FACTS, "%s/%s" % (FACTS, ident), True),          # consultas técnicas (CT)
+                                    ("notas.json", "%s/%s/historico" % (NOTAS, ident), True)):  # notas da análise (19/11/2026)
         try:
             dados = buscar(aba, caminho)
         except RuntimeError as e:

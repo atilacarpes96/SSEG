@@ -185,13 +185,48 @@ def gravar(raiz, regs, dias=30, hoje=None):
     return cont
 
 
+PLANILHAS = os.path.expanduser("~/sseg-planilhas")   # uma cópia fixa de cada planilha, substituída a cada download
+
+
+def _fixo(titulo):
+    return os.path.join(PLANILHAS, re.sub(r"[^A-Za-z0-9]+", "-", _norm(titulo)).strip("-").lower() + ".xlsx")
+
+
+def guardar_downloads():
+    """Os downloads do Drive (tool-results do Claude Code) viram UMA cópia por planilha em ~/sseg-planilhas, sempre
+    substituída (pedido do Átila, 19/11/2026: sem uma cópia nova por dia). A cópia mais nova de cada planilha fica,
+    com a data do download; as outras e os arquivos de download reconhecidos são apagados."""
+    os.makedirs(PLANILHAS, exist_ok=True)
+    achados = []
+    for pad in ("*download_file_content*.txt", "mcp-claude_ai_Google_Drive-blob-*.xlsx"):
+        for f in glob.glob(os.path.expanduser("~/.claude/projects/*/*/tool-results/" + pad)):
+            try:
+                t, x = ler_download(f)
+            except (OSError, ValueError):
+                continue
+            if t and x is not None:
+                achados.append((os.path.getmtime(f), f, t, x))
+    for mt, f, t, x in sorted(achados):   # do mais velho ao mais novo: o último de cada planilha é o que fica
+        alvo = _fixo(t)
+        if not os.path.exists(alvo) or os.path.getmtime(alvo) <= mt:
+            with open(alvo + ".tmp", "wb") as fh:
+                fh.write(x)
+            os.utime(alvo + ".tmp", (mt, mt))
+            os.replace(alvo + ".tmp", alvo)
+        os.remove(f)
+
+
 def achar_arquivos():
-    """Downloads do Drive dos últimos 90 min. Até 12/11/2026 o Claude Code salvava o download_file_content como JSON
-    (*download_file_content*.txt, com o título); desde 13/11 salva o .xlsx cru (mcp-claude_ai_Google_Drive-blob-*.xlsx),
-    sem título — ler_download reconhece a planilha pelas abas. Sem isso, recursos, CT, distribuição e escala pararam."""
+    """Planilhas baixadas do Drive nos últimos 90 min. Até 12/11/2026 o Claude Code salvava o download_file_content
+    como JSON (*download_file_content*.txt, com o título); desde 13/11 salva o .xlsx cru (mcp-claude_ai_Google_Drive-
+    blob-*.xlsx), sem título — ler_download reconhece a planilha pelas abas. Os downloads vão antes para a cópia fixa
+    de ~/sseg-planilhas (guardar_downloads)."""
+    try:
+        guardar_downloads()
+    except OSError:
+        pass
     lim = time.time() - 90 * 60
-    fs = [f for pad in ("*download_file_content*.txt", "mcp-claude_ai_Google_Drive-blob-*.xlsx")
-          for f in glob.glob(os.path.expanduser("~/.claude/projects/*/*/tool-results/" + pad)) if os.path.getmtime(f) >= lim]
+    fs = [f for f in glob.glob(os.path.join(PLANILHAS, "*.xlsx")) if os.path.getmtime(f) >= lim]
     return sorted(fs, key=os.path.getmtime, reverse=True)
 
 
