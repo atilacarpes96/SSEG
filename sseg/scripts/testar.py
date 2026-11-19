@@ -1290,6 +1290,16 @@ def main():
          _ok["classe"] == "verde" and "1,4 m" in _ok["titulo"] and "1,2 m" in _ok["titulo"] and _ok["motivo"] == "conta_confirma"
          and _dis["classe"] == "ambar" and not _dis["veredito"] and _dis["motivo"] == "conta_discorda" and "0,9 m" in _dis["titulo"]
          and _sem["classe"] == "ambar" and _sem["motivo"] == "conta_sem_leitura", str((_ok, _dis, _sem)))
+    _cor = pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"), _lt("cumpriu", 1.4),
+                          "Os corredores de circulação na área de copa e lavanderia deverão ter no mínimo 1,10 m de largura.")
+    _por = pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"), _lt("cumpriu", 1.4),
+                          "A porta da sala deverá ter vão livre mínimo de 1,20 m.")
+    _vrm = pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"), _lt("nao_cumpriu", 0.9),
+                          "O corredor de circulação deverá ter largura mínima de 1,20 m.")
+    caso("palpite: largura de corredor/circulação nunca fica verde (vale o trecho mais estreito; caso da copa, 19/11/2026); "
+         "porta continua verde e o vermelho do corredor não muda",
+         _cor["classe"] == "ambar" and _cor["motivo"] == "trecho_estreito" and not _cor["veredito"] and "1,4 m" in _cor["explicacao"]
+         and _por["classe"] == "verde" and _vrm["classe"] == "vermelho", str((_cor, _por, _vrm)))
     caso("palpite: a conta compara o número lido (cm vira m; taxa por área arredonda para baixo; sem leitura = não sei)",
          pl_m.numerico({"comparacao": "minimo", "exigido": 1.2, "valor_no_elemento": 110, "area_m2": None})["veredito"] == "nao_cumpriu"
          and pl_m.numerico({"comparacao": "minimo", "exigido": 120, "valor_no_elemento": 1.2, "area_m2": None})["veredito"] == "cumpriu"

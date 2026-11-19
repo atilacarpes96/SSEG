@@ -1037,7 +1037,31 @@ def _leitura(pasta, it, recs):
             "segundos": round(time.time() - t0, 1), "margem": MARGEM_LEITURA}
 
 
-def conclusao(tipo, rodadas, ctrl, leitura=None):
+# Largura de trecho (corredor, circulação, passagem, rota): vale o ponto mais estreito, e o RT pode cotar só onde passa do
+# mínimo (caso da copa, julgado pelo Átila em 19/11/2026). Uma cota lida não prova o trecho inteiro: o verde vira âmbar.
+# Só rebaixa — nunca cria exigência nem decide o que é rota de fuga (isso vem do texto que o analista escreveu).
+# Porta, vão e escada sozinhos têm uma cota só e seguem a regra normal.
+TRECHO = re.compile(r"corredor|circula[cç]|passage(m|ns)|\brotas?\b|trecho|faixa livre|acesso(s)? (de|à|a) sa[ií]da", re.I)
+
+
+def largura_de_trecho(exig, leitura=None):
+    if not exig or not TRECHO.search(exig) or not re.search(r"largura|\d+[,.]\d+\s*m\b|\d+\s*cm", exig, re.I):
+        return False
+    return not leitura or leitura.get("comparacao") in (None, "minimo", "maior_que")
+
+
+def conclusao(tipo, rodadas, ctrl, leitura=None, exig=""):
+    r = _conclusao(tipo, rodadas, ctrl, leitura)
+    if r["classe"] == "verde" and largura_de_trecho(exig, leitura):
+        r = {"classe": "ambar", "titulo": "Medir na planta: largura de trecho vale no ponto mais estreito",
+             "explicacao": "A IA achou cota que atende (%s), mas em corredor ou circulação a largura vale no ponto mais estreito, "
+                           "e o RT pode ter cotado só onde passa do mínimo. Confira com a régua o trecho mais estreito."
+                           % r["titulo"].split(": ", 1)[-1],
+             "veredito": "", "motivo": "trecho_estreito"}
+    return r
+
+
+def _conclusao(tipo, rodadas, ctrl, leitura=None):
     """Rótulo honesto do palpite: {classe, titulo, explicacao, veredito, motivo}. O título já diz o porquê; o motivo
     (código curto) vai junto da conferência do analista para medir, depois, qual tipo de palpite erra.
     veredito só vem quando há palpite a mostrar."""
@@ -1134,7 +1158,7 @@ def rodar(pasta, de_novo=False, aviso=print):
                     if com_numero(it) and len({r["veredito"] for r in res["rodadas"]}) == 1 and res["rodadas"][0]["veredito"] != "nao_sei":
                         os.utime(marca)
                         res["leitura"] = _leitura(pasta, it, novos)
-                    res["rotulo"] = conclusao(it["tipo"], res["rodadas"], res["controle"], res.get("leitura"))
+                    res["rotulo"] = conclusao(it["tipo"], res["rodadas"], res["controle"], res.get("leitura"), it.get("exigencia") or "")
                     # 2.13.9: classificação feita pela IA local (medida em 18/11/2026: tipo igual ao do Claude em 8 de
                     # 16) segura o palpite em "fraco": verde e vermelho só com a classificação conferida
                     rot = res["rotulo"]
