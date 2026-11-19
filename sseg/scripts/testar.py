@@ -565,6 +565,16 @@ def main():
     caso("CIA do SSEG.exe: seletor oferece 'RT: <nome>' e RU/Proprietário com procurador, e cada um casa no SOL (10/11/2026)",
          sel == ["RT: FULANO DE TAL", "RT: Ana Souza", "RU: Beltrano", "Proprietário: Empresa X"]
          and [(_sl.achar(env_a, n) or {}).get("id") for n in sel] == [3, 4, 6, 8], str(sel))
+    pre_t = ("== Normas citadas no campo '4. Medidas de seguranca' ==\nData de protocolo: 2026-11-10\n"
+             "OK Iluminação de Emergência — cita Resolução Técnica CBMRS nº 13 / 2025 (bate com o indice).\n"
+             "OK Saída de Emergência — cita Resolução Técnica nº 11/2016 (bate com o indice).\n"
+             "!! Extintores de Incêndio — cita RT 14/2009 (nao bate com o indice).\n\n== Travas ==\nOK Brigada de Incêndio — cita X (bate com o indice).\n")
+    meds_t = [{"nome": n, "inviabilidade": i} for n, i in (("Iluminação de Emergência", "NAO_POSSUI"), ("Saída de Emergência", "POSSUI_PARCIAL"),
+                                                           ("Extintores de Incêndio", "NAO_POSSUI"), ("Brigada de Incêndio", "NAO_POSSUI"))]
+    mp = _proc.memorial_pela_pre(pre_t, meds_t, "Memorial descritivo")
+    caso("Checklist: 'Memorial descritivo' verde pelo script só com norma OK, sem laudo e com data de protocolo (2.14.3)",
+         list(mp) == ["Iluminação de Emergência|Memorial descritivo"] and mp[list(mp)[0]]["script"]
+         and _proc.memorial_pela_pre(pre_t.replace("2026-11-10", ""), meds_t, "Memorial descritivo") == {}, str(mp))
     med_a ={"licenciamento": {"envolvidos": {}, "caracteristica": {"id": 5, "ocupacoes": []}, "elemGraficos": [], "especsRiscos": [],
              "especSeguranca": {"id": 9, "medidas": [{"id": 1, "tipo": {"nome": "Sinalização de Emergência"}, "resultado": None}]}}}
     caso("Lançar no SOL: 'Geral' vai à Característica geral; medida fora do campo 4 vai a 'Adicionar correções' (30/10/2026)",

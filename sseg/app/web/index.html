@@ -3676,13 +3676,15 @@ const VISTO_TXT = { ok: "✓ conforme", exigencia: "✗ exigência", ver: "? fal
 function vistoTag(vc, an) {
   if (!vc || (an && an === vc.estado)) return null;
   const diverge = an && an !== true && vc.estado !== "ver" && vc.estado !== "ia";
-  return el("span", { class: "visto " + vc.estado, title: (diverge ? "O Claude marcou diferente de você no chat. " : "Conferido no chat pelo Claude (o seu ✓/✗ manda). ") +
+  return el("span", { class: "visto " + vc.estado, title: (diverge ? (vc.script ? "O script marcou diferente de você. " : "O Claude marcou diferente de você no chat. ") : vc.script ? "Marcado pela pré-análise (script, sem Claude); o seu ✓/✗ manda. " : "Conferido no chat pelo Claude (o seu ✓/✗ manda). ") +
     (vc.palpite ? "Palpite nº " + vc.palpite + " do quadro azul, à espera da sua conferência. " : "") + (vc.nota || "") + (vc.exig ? " · exigência " + vc.exig + " na coluna CIA" : "") },
-    (diverge ? "≠ " : "") + VISTO_TXT[vc.estado] + (vc.palpite ? " nº " + vc.palpite : ""));
+    (diverge ? "≠ " : "") + VISTO_TXT[vc.estado] + (vc.palpite ? " nº " + vc.palpite : "") + (vc.script ? " · script" : ""));
 }
 function pintarChecklist() {
   const d = PR.dados, r = PR.reg, out = [];
-  const vistos = r.vistos || {};
+  // 2.14.3: o "Memorial descritivo" que a pré-análise já conferiu (norma do campo 4 bate com o índice) vem verde do script;
+  // a marca do Claude no chat vale por cima da do script, e o ✓/✗ do analista por cima de tudo
+  const vistos = Object.assign({}, d.auto_itens || {}, r.vistos || {});
   // pendências
   const pend = el("div", { class: "bloco" }, el("b", {}, "Pendências"));
   const abertas = r.pendencias.filter(p => !p.feita).length;
@@ -3795,7 +3797,7 @@ function pintarChecklist() {
   const med = el("div", { class: "bloco" }, el("b", {}, "Medidas, na ordem do SOL"));
   if (!d.medidas.length) med.append(el("p", { class: "sub" }, "Sem o JSON do SOL na pasta do processo, não há medidas para listar."));
   else if (Object.keys(vistos).length) med.append(el("p", { class: "sub", style: "margin:0 0 6px" },
-    "Faixa colorida = o que o Claude conferiu no chat: verde conforme, vermelho vira exigência, amarelo falta ver, azul depende de um palpite da IA local. Passe o mouse para ver o porquê; o seu ✓/✗ manda."));
+    "Faixa colorida = o que o Claude conferiu no chat (ou o script da pré-análise, etiqueta \"script\"): verde conforme, vermelho vira exigência, amarelo falta ver, azul depende de um palpite da IA local. Passe o mouse para ver o porquê; o seu ✓/✗ manda."));
   for (const m of d.medidas) {
     const chaves = m.itens.map(i => m.nome + "|" + i);
     const feitos = chaves.filter(k => r.itens[k]).length;

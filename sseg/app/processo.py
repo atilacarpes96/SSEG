@@ -100,6 +100,32 @@ def envolvidos(sol):
     return out
 
 
+def memorial_pela_pre(texto, medidas, rotulo):
+    """Item "Memorial descritivo" que a pré-análise já conferiu (2.14.3, pedido do Átila): a medida está no campo 4 e a
+    norma citada bate com o índice na data de protocolo ("OK <medida> — cita ... (bate com o indice)" do sseg.py check).
+    Vira marca verde do script; o ✓/✗ do analista manda por cima. Fica de fora a medida com laudo de inviabilidade
+    (o memorial dela inclui as compensatórias, que são do analista) e qualquer linha !!/??/XX."""
+    sec = re.search(r"== Normas citadas no campo[^\n]*\n(.*?)(?:\n\s*\n|\Z)", texto, re.S)
+    if not sec:
+        return {}
+    ok = {}
+    for l in sec.group(1).splitlines():
+        m = re.match(r"OK (.+?) — cita (.+?) \(bate com o indice\)", l)
+        if m:
+            ok[_norm(m.group(1))] = m.group(2)
+    data = re.search(r"Data de protocolo: (\d{4}-\d\d-\d\d)", sec.group(1))
+    if not data:   # sem a data, a versão da RT não está decidida (vigência por protocolo): não marca nada
+        return {}
+    out = {}
+    for md in medidas:
+        cit = ok.get(_norm(md["nome"]))
+        if cit and md["inviabilidade"] == "NAO_POSSUI":
+            out[md["nome"] + "|" + rotulo] = {
+                "estado": "ok", "script": True,
+                "nota": "Pré-análise (script): medida no campo 4, cita %s, que bate com o índice na data de protocolo %s." % (cit, data.group(1))}
+    return out
+
+
 def montar(clone, pasta):
     reg = _registro(clone)
     wf = os.path.join(clone, "sseg", "workflow")
@@ -126,7 +152,7 @@ def montar(clone, pasta):
     except (OSError, ValueError):
         sc = {}
     # Passos que um script já fez (2.3.8): marcados sozinhos, com a origem. O analista não refaz.
-    auto, pre = {}, None
+    auto, pre, auto_itens = {}, None, {}
     if arq:
         auto["3"] = "JSON do SOL na pasta (%s)" % os.path.basename(arq)
     pa = os.path.join(pasta, "pre-analise.txt")
@@ -138,12 +164,13 @@ def montar(clone, pasta):
                "marcas": [l for l in texto.splitlines() if l.startswith(("XX", "!!", "??"))]}
         if not velha:
             auto["4"] = "pré-análise documental (script, sem Claude): pre-analise.txt"
+            auto_itens = memorial_pela_pre(texto, medidas, anexo["memorial"])
         # 2.13.8 (pedido do Átila): resumo dos scripts e da IA local (documentos, camadas, palpites), feito antes de
         # abrir o processo; vai ao chat junto com a pré-análise no passo 2
         ri = os.path.join(pasta, "resumo-ia.md")
         if os.path.exists(ri):
             with open(ri, encoding="utf-8") as fh:
                 pre["resumo_ia"] = fh.read()
-    return {"auto": auto, "pre_analise": pre,"codigo": os.path.basename(os.path.normpath(pasta)), "pasta": pasta, "json_sol": arq and os.path.basename(arq),
+    return {"auto": auto, "auto_itens": auto_itens, "pre_analise": pre,"codigo": os.path.basename(os.path.normpath(pasta)), "pasta": pasta, "json_sol": arq and os.path.basename(arq),
             "passos": passos, "medidas": medidas, "elementos": elementos, "envolvidos": envolvidos(sol), "laudo": laudo, "compensatoria": anexo.get("compensatoria", ""),
             "cias": [a for a in arquivos if re.match(r"CIA \d+", a)], "analise": reg.ler(pasta), "sol": links_sol(sol, sc.get("id_analise"))}

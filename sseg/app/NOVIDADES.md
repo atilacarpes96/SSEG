@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.14.3
+
+- **"Memorial descritivo" já vem verde quando a pré-análise conferiu.** Se a medida está no campo 4 e a norma citada bate com o índice na data de protocolo, o item "Memorial descritivo" da medida fica verde sozinho, com a etiqueta "script" (passe o mouse para ver a norma). Vale para Iluminação, Sinalização, Brigada e as outras que na L.2 são "só memorial". O seu ✓/✗ continua mandando.
+- **Fica sem marca e continua com você:** medida com laudo de inviabilidade (o memorial inclui as compensatórias), norma que não bate (!!) e processo sem a data de protocolo na pré-análise.
+
 ## 2.14.2
 
 - **A caixa da CIA não esconde mais o rascunho novo do Claude.** Quando você mexia na caixa de um item sem salvar e depois pedia ao Claude para trocar o texto, a caixa continuava com o texto antigo, embora o chat mostrasse "✓ na CIA". Agora o texto novo aparece na caixa. A sua edição não salva fica logo acima, em "sua edição não salva", com os botões "voltar a minha edição" e "descartar".
