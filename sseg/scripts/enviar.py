@@ -25,7 +25,9 @@ import re
 import subprocess
 
 # .jsonl: conversa.jsonl da janela do processo (2.8.11)
-ENVIA = [r"\.json$", r"\.jsonl$", r"\.md$", r"\.txt$", r"^\d+\.pdf$", r"^CIA \d+.*\.pdf$", r"memorial.*\.pdf$"]
+# conferencia-n<N>-<k>: imagem que o analista junta à resposta de um palpite da IA local (19/11/2026), para o ajuste
+ENVIA = [r"\.json$", r"\.jsonl$", r"\.md$", r"\.txt$", r"^\d+\.pdf$", r"^CIA \d+.*\.pdf$", r"memorial.*\.pdf$",
+         r"^conferencia-n\d{1,3}-\d\.(png|jpg)$"]
 DESTINO = "SSEG/sseg/processos"
 
 

@@ -1302,20 +1302,64 @@ def rodando(pasta):
         return False
 
 
+IMG_CONF = re.compile(r"^conferencia-n(\d{1,3})-(\d)\.(png|jpg)$")  # sincronizar/enviar levam este nome ao servidor
+IMG_DATA = re.compile(r"^data:image/(png|jpeg);base64,([A-Za-z0-9+/=\s]+)$")
+MAX_IMG_CONF, MAX_IMG_BYTES = 4, 6 * 1024 * 1024
+
+
+def _gravar_imagens(pasta, n, urls):
+    """19/11/2026 (pedido do Átila): print/recorte marcado que o analista junta à conferência, para mostrar o que a IA
+    errou. Fica na pasta do processo como conferencia-n<N>-<k>.png|jpg (sobe ao servidor no Sincronizar, nunca ao Git);
+    as imagens antigas da mesma exigência saem. Devolve os nomes gravados."""
+    for nome in os.listdir(pasta):
+        m = IMG_CONF.match(nome)
+        if m and int(m.group(1)) == n:
+            os.remove(os.path.join(pasta, nome))
+    nomes = []
+    for url in (urls or [])[:MAX_IMG_CONF]:
+        m = IMG_DATA.match(url or "")
+        if not m:
+            continue
+        dados = base64.b64decode(m.group(2))
+        if not dados or len(dados) > MAX_IMG_BYTES:
+            continue
+        nome = "conferencia-n%d-%d.%s" % (n, len(nomes) + 1, "png" if m.group(1) == "png" else "jpg")
+        with open(os.path.join(pasta, nome), "wb") as fh:
+            fh.write(dados)
+        nomes.append(nome)
+    return nomes
+
+
+def imagem_conferencia(pasta, nome):
+    """Bytes de uma imagem da conferência (só nomes do padrão, sem caminho)."""
+    if not IMG_CONF.match(nome or ""):
+        raise RuntimeError("nome de imagem inválido")
+    with open(os.path.join(pasta, nome), "rb") as fh:
+        return fh.read()
+
+
 def responder(pasta, respostas):
-    """Conferência do analista: {n: {resposta, nota}}; resposta em cumpriu | nao_cumpriu | parcial | nao_da."""
+    """Conferência do analista: {n: {resposta, nota, imagens?}}; resposta em cumpriu | nao_cumpriu | parcial | nao_da.
+    imagens: lista de data: URLs (substitui as gravadas da exigência); sem a chave, as já gravadas ficam."""
+    novas = {}
+    for n, r in (respostas or {}).items():
+        if isinstance(r, dict) and "imagens" in r and (r.get("resposta") in ("cumpriu", "nao_cumpriu", "parcial", "nao_da")):
+            novas[int(n)] = _gravar_imagens(pasta, int(n), r.get("imagens") or [])
+
     def gravar(d):
         for n, r in (respostas or {}).items():
             it = _item(d, int(n))
             if it is not None and (r or {}).get("resposta") in ("cumpriu", "nao_cumpriu", "parcial", "nao_da"):
                 rot, lt = it.get("rotulo") or {}, it.get("leitura") or {}
+                imagens = novas[int(n)] if int(n) in novas else (it.get("conferencia") or {}).get("imagens") or []
                 # 18/11/2026: o que a IA disse e por quê vai junto da resposta — é o gabarito para medir, por motivo,
                 # onde ela erra (~/ia-local/conferencias.py junta tudo para o treino)
                 it["conferencia"] = {"resposta": r["resposta"], "nota": (r.get("nota") or "").strip()[:1000],
                                      "em": time.strftime("%Y-%m-%dT%H:%M:%S"),
                                      "palpite": rot.get("titulo") or "sem palpite", "motivo": rot.get("motivo") or "",
                                      "veredito_ia": rot.get("veredito") or "", "tipo": it.get("tipo"), "modelo": MODELO,
-                                     "leitura": {k: lt.get(k) for k in ("veredito", "comparacao", "exigido", "lido")} if lt else None}
+                                     "leitura": {k: lt.get(k) for k in ("veredito", "comparacao", "exigido", "lido")} if lt else None,
+                                     "imagens": imagens}
     _atualizar(pasta, gravar)
 
 

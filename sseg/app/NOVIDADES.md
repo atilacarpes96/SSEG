@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.14.5
+
+- **Resposta dos palpites com imagem.** Em cada exigência do quadro azul da IA local, junte um print ou recorte para mostrar o que ficou errado: botão "+ imagem", Ctrl+V no campo de texto ou arrastar a imagem para o cartão (até 4 por exigência; o × tira). Em "Mandar respostas" as imagens vão ao chat junto com a sua conferência e ficam gravadas na pasta do processo; no "Sincronizar processos" sobem ao servidor, onde servem para corrigir a IA local. Ao reabrir o processo, as imagens já mandadas aparecem de novo no cartão.
+
 ## 2.14.4
 
 - **Celular com dois PCs abertos:** o PC em que você ligou o espelho por último fica com o celular, e o outro solta o túnel sozinho ("Celular passou para o SSEG.exe de …"). Acabou o "a porta 8765 do servidor está presa a outro PC" repetindo a cada 20 s. Para trazer o celular de volta a um PC: desligue e ligue o espelho nele.

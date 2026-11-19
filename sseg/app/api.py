@@ -1313,9 +1313,18 @@ class Api:
         return dict(r, ok=not r["falhas"], msg="; ".join(r["falhas"]))
 
     def palpites_responder(self, codigo, respostas):
-        """Conferência do analista em cada exigência ({n: {resposta, nota}}): fica no palpites.json, ao lado do palpite."""
+        """Conferência do analista em cada exigência ({n: {resposta, nota, imagens}}): fica no palpites.json, ao lado
+        do palpite; as imagens (2.14.5) ficam na pasta do processo como conferencia-n<N>-<k>."""
         self._palpite().responder(self._pasta_proc(codigo), respostas)
         return True
+
+    def palpites_imagem(self, codigo, nome):
+        """Imagem já gravada da conferência (2.14.5), como data: URL, para o cartão mostrar ao reabrir."""
+        m = self._palpite()
+        if not hasattr(m, "imagem_conferencia"):
+            raise RuntimeError("O SSEG desta pasta está atrás do programa: clique em Sincronizar com o GitHub.")
+        dados = m.imagem_conferencia(self._pasta_proc(codigo), nome)
+        return "data:image/%s;base64,%s" % ("png" if nome.endswith(".png") else "jpeg", base64.b64encode(dados).decode())
 
     # ---- Elementos gráficos (2.12.0, pedido do Átila em 16/11/2026): baixar do SOL as pranchas ativas para a pasta do
     # processo, com o nome que o SOL mostra, e abrir no leitor de PDF do PC por tipo. Script, sem IA; serve a qualquer PC.

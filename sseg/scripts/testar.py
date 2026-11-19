@@ -1433,6 +1433,21 @@ def main():
             caso("palpite: sem Ollama neste PC nada roda e o item continua na fila (não vira 'não sei')",
                  feitos_ == 0 and "não está ligada" in motivo_ and pl_m.ler(pasta)["itens"][0]["estado"] == "fila", motivo_)
             pl_m.responder(pasta, {"1": {"resposta": "nao_cumpriu", "nota": "continua 15,48 m"}, "2": {"resposta": "talvez"}})
+            # 2.14.5: imagem junto da resposta — gravada na pasta, sobe no Sincronizar, fica se a resposta muda sem imagem
+            _png = "data:image/png;base64," + base64.b64encode(b"\x89PNG\r\n\x1a\nteste").decode()
+            pl_m.responder(pasta, {"1": {"resposta": "nao_cumpriu", "nota": "x", "imagens": [_png, "data:text/html;base64,PGI+"]}})
+            _c1 = pl_m.ler(pasta)["itens"][0]["conferencia"]
+            pl_m.responder(pasta, {"1": {"resposta": "nao_cumpriu", "nota": "continua 15,48 m"}})
+            caso("palpite: imagem da conferência gravada (só imagem), vai no Sincronizar e fica quando a resposta muda sem ela",
+                 _c1["imagens"] == ["conferencia-n1-1.png"] and pl_m.imagem_conferencia(pasta, "conferencia-n1-1.png").startswith(b"\x89PNG")
+                 and pl_m.ler(pasta)["itens"][0]["conferencia"]["imagens"] == ["conferencia-n1-1.png"]
+                 and _sinc.chave_valida("A00000001AA001/conferencia-n1-1.png") and not _sinc.chave_valida("A00000001AA001/x.png"),
+                 str(_c1.get("imagens")))
+            try:
+                pl_m.imagem_conferencia(pasta, "../palpites.json"); _fura = True
+            except RuntimeError:
+                _fura = False
+            caso("palpite: imagem da conferência não lê fora do padrão de nome", not _fura)
             d2 = pl_m.preparar(pasta, [])
             caso("palpite: a conferência do analista fica gravada no item e sobrevive a preparar de novo",
                  d2["itens"][0]["conferencia"]["resposta"] == "nao_cumpriu" and "conferencia" not in d2["itens"][1]
