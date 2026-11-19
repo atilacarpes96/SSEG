@@ -34,7 +34,7 @@ divergência, e divergência já aconteceu.
 | 16/10/2026 | "Onde procurar primeiro": contagem de PDFs 20 em 16/10/2026 (entrou `RT05P08.pdf`) e RT05P08 na lista de duas colunas. Texto entregue ao usuário para colar no campo |
 | 29/10/2026 | "Onde procurar primeiro": contagem de PDFs 21 em 29/10/2026 (entrou `RT22.pdf`) e RT22 na lista de duas colunas. Texto entregue ao usuário para colar no campo |
 | 03/11/2026 | "Onde procurar primeiro": contagem de PDFs 23 em 03/11/2026 (entraram `IT25P4.pdf`, IT 25 Parte 4 do CBPMESP, e `RT15.pdf`) e IT25P4 na lista de duas colunas. "Hierarquia das fontes": entra a IT 25 pelo item 4.5.1 da RT 01/2024 entre as IT do CBPMESP que são norma da medida. Texto inteiro entregue ao usuário para colar no campo |
-| 19/11/2026 | "Onde procurar primeiro": contagem de PDFs 24 em 19/11/2026 (entrou `IT25P2.pdf`, IT 25 Parte 2 do CBPMESP) e IT25P2 na lista de duas colunas. Texto inteiro entregue ao usuário para colar no campo |
+| 19/11/2026 | "Onde procurar primeiro": contagem de PDFs 24 em 19/11/2026 (entrou `IT25P2.pdf`, IT 25 Parte 2 do CBPMESP) e IT25P2 na lista de duas colunas. Texto inteiro entregue e colado no campo pelo Átila em 19/11/2026 |
 
 <!-- ===== INÍCIO DO TEXTO DO CAMPO "INSTRUÇÕES" ===== -->
 
