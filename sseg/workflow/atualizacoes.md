@@ -12,6 +12,17 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/11/2026 — IT 25 Parte 2 (tanques estacionários) na base
+
+- **O que mudou:** entrou a **IT 25/2025 do CBPMESP, Parte 2** (armazenamento em tanques estacionários: tanques fixos acima de 250 L, tanques enterrados, tanques dentro de edificação, isolamento entre tanques). PDF em `sseg/normas/pdf/IT25P2.pdf`, conversão verificada em `normas/base/` e `normas/md/`, íntegra comentada em `normas/it-25-2025-parte2-tanques-estacionarios.md`. Vale no RS pela RT 01/2024, 4.5.1. Partes 1, 3 e 5 ainda sem PDF.
+- **Campo Instruções:** "Onde procurar primeiro" passa a 24 PDFs (19/11/2026) e a IT25P2 entra na lista de duas colunas. O texto inteiro está em `sseg/workflow/instrucoes-projeto-espelho.md`.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 19/11/2026 (IT 25 Parte 2). Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell). Depois me entregue o texto entre os marcadores INÍCIO e FIM de sseg/workflow/instrucoes-projeto-espelho.md para eu colar no campo Instruções do projeto, substituindo tudo. Não há skill a atualizar. Me diga em uma linha se ficou em dia.
+```
+
 ## 18/11/2026 — Checklist com cor: conforme, exigência, falta ver e palpite da IA (SSEG.exe 2.14.1)
 
 - **O que mudou:** na janela do processo, o Claude marca o resultado de cada passo e de cada item das medidas logo que conclui no chat (`sseg.py analise itens` lista os códigos P6, M3.2; `sseg.py analise visto ok|exigencia|ver|ia <códigos> --nota "..."`; azul (`ia --palpite N`) = depende do palpite nº N do quadro azul; `exigencia ... --item M3.2` deixa o item vermelho e ligado à exigência). Fica em `analise.json` ("vistos"), na pasta do processo, nunca no Git. A marca ✓/✗ do analista manda por cima. Ideia do Sd Carpes.
