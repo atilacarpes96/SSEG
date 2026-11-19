@@ -97,6 +97,19 @@ PERMITIDOS = ["Read", "Grep", "Glob", "Task", "Agent", "TodoWrite",
               "Bash(cat *)", "Bash(grep *)", "Bash(head *)", "Bash(tail *)", "Bash(ls *)", "Bash(wc *)", "Bash(tr *)",
               "Bash(pdfinfo *)", "PowerShell(pdfinfo *)"]
 
+def _permitidos_absolutos(clone):
+    """Os mesmos scripts do clone chamados pelo caminho completo (2.14.4, 19/11/2026: `python C:/Users/.../SSEG/sseg/
+    scripts/sseg.py resumo` foi bloqueado porque a regra só casava com `python sseg/scripts/*`). Barra / e \\."""
+    if not clone:
+        return []
+    out = []
+    for c in {clone.replace("\\", "/").rstrip("/"), clone.replace("/", "\\").rstrip("\\")}:
+        sep = "/" if "/" in c else "\\"
+        for py in ("python", "python3", "py"):
+            out += ["Bash(%s %s%ssseg%sscripts%s*)" % (py, c, sep, sep, sep), "PowerShell(%s %s%ssseg%sscripts%s*)" % (py, c, sep, sep, sep)]
+    return out
+
+
 INSTRUCOES = """Você está na janela do processo {codigo} do programa SSEG.exe (não no terminal). Pasta do processo: {pasta}
 
 Regras desta janela:
@@ -239,10 +252,11 @@ class Conversa:
                "--permission-mode", "acceptEdits"] + (["--add-dir", self.pasta] if self.pasta else []) + [
                # imagens de página e texto das normas do `sseg.py norma` (2.3.22): ler sem pedir aprovação
                "--add-dir", _pasta_paginas()] + [
-               "--allowedTools", *PERMITIDOS,
+               "--allowedTools", *PERMITIDOS, *_permitidos_absolutos(self.clone),
                # o plugin Claude in Chrome fica bloqueado de vez (também para os subagentes): ele cria grupo de abas
                # e pede "Permitir" a cada ação; a memória antiga do PC ainda mandava usá-lo (2.3.12)
-               "--no-chrome", "--disallowedTools", "mcp__claude-in-chrome",
+               # 2.14.4: o conector de Docs do claude.ai não serve à análise e o Claude tentava abri-lo (bloqueado)
+               "--no-chrome", "--disallowedTools", "mcp__claude-in-chrome", "mcp__claude_ai_Claude_Docs",
                "--append-system-prompt", INSTRUCOES.format(codigo=self.codigo, pasta=self.pasta) + self._sol_txt() + GUIA_VISUAL if self.pasta
                else instrucoes_fluxo(self.fluxo)]
         sessao = self.registro.ler(self.pasta)["chat"].get("sessao") if self.pasta else self.sessao

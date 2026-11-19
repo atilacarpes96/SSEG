@@ -14,6 +14,8 @@ cabeçalho X-SSEG, que um site de fora não consegue mandar sem pré-verificaç�
 import json
 import os
 import queue
+import socket
+import re
 import subprocess
 import threading
 import time
@@ -99,6 +101,30 @@ class Tunel:
         self.estado = "desligado"
         self.erro = ""
 
+    DONO = "~/.sseg-espelho-dono"   # no servidor: qual PC ligou o celular por último (2.14.4)
+
+    def _eu(self):
+        return re.sub(r"[^A-Za-z0-9_-]", "", socket.gethostname()) or "pc"
+
+    def _ssh(self, script, timeout=20):
+        try:
+            r = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", self.host, script],
+                               stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                               timeout=timeout, creationflags=self.sem_janela)
+            return r.stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            return None
+
+    def tomar(self):
+        """O PC que liga o celular por último fica com ele: grava-se como dono no servidor e derruba o túnel do outro
+        SSEG.exe (que, ao ver outro dono, para de tentar). Antes, os dois brigavam pela porta a cada 20 s."""
+        self._ssh("echo %s > %s; for p in $(sudo -n fuser -n tcp %d 2>/dev/null); do kill $p; done; true"
+                  % (self._eu(), self.DONO, self.porta_servidor))
+
+    def dono(self):
+        out = self._ssh("cat %s 2>/dev/null" % self.DONO)
+        return (out or "").split()[0] if out else None
+
     def comando(self):
         return ["ssh", "-N", "-o", "BatchMode=yes", "-o", "ExitOnForwardFailure=yes", "-o", "ServerAliveInterval=20",
                 "-o", "ServerAliveCountMax=3", "-R", "127.0.0.1:%d:127.0.0.1:%d" % (self.porta_servidor, self.porta_local),
@@ -109,9 +135,11 @@ class Tunel:
             return
         self._parar.clear()
         self.estado = "conectando"
-        threading.Thread(target=self._manter, daemon=True).start()
+        threading.Thread(target=self._manter, args=(True,), daemon=True).start()
 
-    def _manter(self):
+    def _manter(self, tomar=False):
+        if tomar:
+            self.tomar()
         while not self._parar.is_set():
             self.estado = "conectando"
             try:
@@ -134,6 +162,16 @@ class Tunel:
             err = (self._proc.stderr.read() if self._proc.stderr else "").strip()
             self.erro = err.splitlines()[-1][:200] if err else "conexão caiu"
             if "remote port forwarding failed" in err:
+                dono = self.dono()
+                if dono and dono != self._eu():
+                    # outro PC ligou o celular depois deste: solta sem barulho (desligar e ligar o espelho traz de volta)
+                    self.estado, self.erro = "outro_pc", dono
+                    self.aolog("Celular passou para o SSEG.exe de %s (ligado depois). Para trazer para cá: desligue e "
+                               "ligue o espelho." % dono)
+                    return
+                self.tomar()   # a porta presa é uma conexão velha deste mesmo PC: derruba e tenta já
+                if not self._parar.wait(2):
+                    continue
                 self.erro = "a porta %d do servidor está presa a outro PC (outro SSEG.exe com o celular ligado)" % self.porta_servidor
             self.estado = "caiu"
             self.aolog("✗ Túnel do celular: %s. Tento de novo em 20 s." % self.erro)

@@ -36,7 +36,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from distribuicao import M, R, _norm, achar_arquivos, linhas_da_aba  # noqa: E402 — o mesmo leitor de xlsx
+from distribuicao import M, R, _norm, achar_arquivos, linhas_da_aba, ler_download  # noqa: E402 — o mesmo leitor de xlsx
 
 TITULO = "Escala Análise"
 SAIDA = "~/sseg-escala/escala.json"
@@ -158,12 +158,8 @@ def meta_da_semana(horas_dia, segunda, ppci_por_periodo=2):
 
 
 def xlsx_do_download(arquivo):
-    import base64
-    with open(arquivo, encoding="utf-8") as fh:
-        d = json.load(fh)
-    if "spreadsheetml" not in (d.get("mimeType") or "") or _norm(d.get("title")) != _norm(TITULO):
-        return None
-    return base64.b64decode(d["content"])
+    t, x = ler_download(arquivo)
+    return x if x is not None and _norm(t) == _norm(TITULO) else None
 
 
 def ler_fora(caminho=FORA):
@@ -184,7 +180,7 @@ def main(argv=None):
     a = ap.parse_args(argv)
     fora = ler_fora(a.fora)
     for f in a.arquivos or achar_arquivos():
-        x = open(f, "rb").read() if f.endswith(".xlsx") else xlsx_do_download(f)
+        x = open(f, "rb").read() if f in (a.arquivos or []) and f.endswith(".xlsx") else xlsx_do_download(f)
         if x is None:
             continue
         horas = {n: h for n, h in ler(x, dias=a.dias).items() if _norm(n) not in fora}

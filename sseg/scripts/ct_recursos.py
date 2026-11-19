@@ -34,7 +34,7 @@ import time
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
-from distribuicao import CODIGO, _norm, achar_arquivos, data_iso, linhas_da_aba, nome_conhecido, nomes_conhecidos  # noqa: E402
+from distribuicao import CODIGO, _norm, achar_arquivos, data_iso, ler_download, linhas_da_aba, nome_conhecido, nomes_conhecidos  # noqa: E402
 from escala import abas  # noqa: E402
 
 PLANILHA_CT = "CONSULTAS TECNICAS"
@@ -148,14 +148,9 @@ def gravar(raiz, tipo, abertos):
 
 
 def _xlsx(arquivo):
-    """(título normalizado, bytes) do JSON do download_file_content, ou de um .xlsx."""
-    if arquivo.endswith(".xlsx"):
-        return _norm(os.path.basename(arquivo)), open(arquivo, "rb").read()
-    with open(arquivo, encoding="utf-8") as fh:
-        d = json.load(fh)
-    if "spreadsheetml" not in (d.get("mimeType") or ""):
-        return "", None
-    return _norm(d.get("title")), base64.b64decode(d["content"])
+    """(título normalizado, bytes) do download do Drive (JSON ou .xlsx cru, reconhecido pelas abas)."""
+    t, x = ler_download(arquivo)
+    return _norm(t), x
 
 
 def main(argv=None):

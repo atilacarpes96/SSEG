@@ -4675,7 +4675,7 @@ SSEG.tour = async passo => {
 
 // ---- espelho no celular (Configuração)
 const TUNEL = { ativo: "túnel até o servidor ativo", conectando: "conectando ao servidor…", caiu: "túnel caiu, tentando de novo",
-                erro: "túnel com erro", desligado: "sem túnel (servidor não configurado neste PC): só no navegador deste PC" };
+                erro: "túnel com erro", outro_pc: "o celular está com outro PC (desligue e ligue para trazer para cá)", desligado: "sem túnel (servidor não configurado neste PC): só no navegador deste PC" };
 function pintarEspelho(e) {
   $("#esp-estado").textContent = e.ligado ? "Ligado · " + (TUNEL[e.tunel] || e.tunel) + (e.tunel_erro ? " (" + e.tunel_erro + ")" : "")
     + (e.telas ? " · " + e.telas + " tela(s) abertas agora" : "") + "." : "Desligado.";

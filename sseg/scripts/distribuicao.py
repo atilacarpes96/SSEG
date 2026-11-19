@@ -186,19 +186,51 @@ def gravar(raiz, regs, dias=30, hoje=None):
 
 
 def achar_arquivos():
+    """Downloads do Drive dos últimos 90 min. Até 12/11/2026 o Claude Code salvava o download_file_content como JSON
+    (*download_file_content*.txt, com o título); desde 13/11 salva o .xlsx cru (mcp-claude_ai_Google_Drive-blob-*.xlsx),
+    sem título — ler_download reconhece a planilha pelas abas. Sem isso, recursos, CT, distribuição e escala pararam."""
     lim = time.time() - 90 * 60
-    fs = [f for f in glob.glob(os.path.expanduser("~/.claude/projects/*/*/tool-results/*download_file_content*.txt"))
-          if os.path.getmtime(f) >= lim]
+    fs = [f for pad in ("*download_file_content*.txt", "mcp-claude_ai_Google_Drive-blob-*.xlsx")
+          for f in glob.glob(os.path.expanduser("~/.claude/projects/*/*/tool-results/" + pad)) if os.path.getmtime(f) >= lim]
     return sorted(fs, key=os.path.getmtime, reverse=True)
 
 
-def xlsx_do_download(arquivo):
-    """O JSON {content, mimeType, title} do download_file_content → bytes do xlsx, se for a planilha."""
+def _abas(x):
+    import zipfile
+    import xml.etree.ElementTree as ET
+    z = zipfile.ZipFile(io.BytesIO(x))
+    return [sh.get("name") or "" for sh in ET.fromstring(z.read("xl/workbook.xml")).find(M + "sheets")]
+
+
+# planilha da SSeg pelas abas (o .xlsx cru do download não traz o título)
+PELAS_ABAS = [(lambda a: any(_norm(n).startswith("REC") and "ANALISE" in _norm(n) for n in a) or "OFICIOS" in a,
+               "OFÍCIOS, INVIABILIDADES, RECURSOS E FACTs 6°BBM"),
+              (lambda a: any(_norm(n).startswith("CONSULTA TECNICA") for n in a), "CONSULTAS TÉCNICAS 6°BBM"),
+              (lambda a: "ANALISE" in a and any(n.startswith("CARGA TRABALHO") for n in a), "Distribuição Análise"),
+              (lambda a: sum(bool(re.fullmatch(r"[A-ZÇ]+\d{2}", n)) for n in a) >= 3, "Escala Análise")]
+
+
+def ler_download(arquivo):
+    """(título, bytes do xlsx) de um download do Drive: JSON {content, mimeType, title} ou .xlsx cru. (título, None)
+    quando não é xlsx; título "" quando as abas não dizem qual planilha é."""
+    if arquivo.endswith(".xlsx"):
+        x = open(arquivo, "rb").read()
+        try:
+            a = [_norm(n) for n in _abas(x)]
+        except Exception:  # noqa: BLE001
+            return "", None
+        return next((t for teste, t in PELAS_ABAS if teste(a)), ""), x
     with open(arquivo, encoding="utf-8") as fh:
         d = json.load(fh)
-    if "spreadsheetml" not in (d.get("mimeType") or "") or _norm(d.get("title")) != _norm(TITULO):
-        return None
-    return base64.b64decode(d["content"])
+    if "spreadsheetml" not in (d.get("mimeType") or ""):
+        return d.get("title") or "", None
+    return d.get("title") or "", base64.b64decode(d["content"])
+
+
+def xlsx_do_download(arquivo, titulo=None):
+    """Bytes do xlsx se o download é a planilha `titulo` (padrão: a de distribuição)."""
+    t, x = ler_download(arquivo)
+    return x if x is not None and _norm(t) == _norm(titulo or TITULO) else None
 
 
 def nomes_conhecidos(acesso="~/sseg-acesso/analistas.json", escala="~/sseg-escala/escala.json"):

@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.14.4
+
+- **Celular com dois PCs abertos:** o PC em que você ligou o espelho por último fica com o celular, e o outro solta o túnel sozinho ("Celular passou para o SSEG.exe de …"). Acabou o "a porta 8765 do servidor está presa a outro PC" repetindo a cada 20 s. Para trazer o celular de volta a um PC: desligue e ligue o espelho nele.
+- **Menos comandos bloqueados no chat:** os scripts do SSEG chamados pelo caminho completo do clone (`python C:/.../SSEG/sseg/scripts/sseg.py resumo`) passam sem pedir; o conector de documentos do claude.ai, que não serve à análise, deixa de ser oferecido ao Claude desta janela.
+
 ## 2.14.3
 
 - **"Memorial descritivo" já vem verde quando a pré-análise conferiu.** Se a medida está no campo 4 e a norma citada bate com o índice na data de protocolo, o item "Memorial descritivo" da medida fica verde sozinho, com a etiqueta "script" (passe o mouse para ver a norma). Vale para Iluminação, Sinalização, Brigada e as outras que na L.2 são "só memorial". O seu ✓/✗ continua mandando.
