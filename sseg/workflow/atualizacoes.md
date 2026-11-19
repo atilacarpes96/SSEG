@@ -12,6 +12,20 @@ próprio Claude, dentro do projeto SSEG (Cowork ou Claude Code), e o Claude faz 
 Formato, que o `scripts/painel.py` lê: título `## DD/MM/AAAA — assunto`, o texto do que mudou
 e o subtítulo `### Prompt para atualizar` seguido de um bloco de código com o prompt.
 
+## 19/11/2026 — Palpites com imagem, pré-análise com as notas do SOL e ajustes da IA local (SSEG.exe 2.14.2 a 2.14.5)
+
+- **Palpites com imagem (2.14.5):** cada cartão do quadro azul aceita até 4 imagens na resposta do analista (botão "+ imagem", colar com Ctrl+V na nota ou arrastar para o cartão). Elas vão para o Claude junto com a resposta e ficam na pasta do processo como `conferencia-n<N>-<k>.png`, que a sincronização leva ao servidor (nunca ao Git) para o ajuste da IA local.
+- **Pré-análise lê as notas da análise técnica do SOL**, e as planilhas do Drive passam a ser lidas de uma cópia fixa (voltaram a funcionar na 2.14.4).
+- **Palpites da IA local mais seguros:** largura de corredor/circulação nunca fica verde (vale o trecho mais estreito); número de ordem filtrado pela camada do PDF (placa nº 39 não cai no extintor nº 39).
+- **Menores:** "Memorial descritivo" verde pelo script quando a pré-análise confere a norma do campo 4 (2.14.3); a caixa da CIA mostra o rascunho novo do Claude mesmo com edição antiga não salva (2.14.2); o celular fica com o PC ligado por último e o chat tem menos bloqueios (2.14.4).
+- **Onde:** `sseg/app/` (chega com o SSEG.exe), `sseg/scripts/palpite_local.py`, `enviar.py` e a pré-análise (pelo `git pull`). Sem skill nem campo Instruções.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 19/11/2026 (palpites com imagem). Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell) e se o SSEG.exe está na 2.14.5 ou mais novo. Não há skill nem campo Instruções a atualizar. Me diga em uma linha se ficou em dia.
+```
+
 ## 19/11/2026 — IT 25 Parte 2 (tanques estacionários) na base
 
 - **O que mudou:** entrou a **IT 25/2025 do CBPMESP, Parte 2** (armazenamento em tanques estacionários: tanques fixos acima de 250 L, tanques enterrados, tanques dentro de edificação, isolamento entre tanques). PDF em `sseg/normas/pdf/IT25P2.pdf`, conversão verificada em `normas/base/` e `normas/md/`, íntegra comentada em `normas/it-25-2025-parte2-tanques-estacionarios.md`. Vale no RS pela RT 01/2024, 4.5.1. Partes 1, 3 e 5 ainda sem PDF.
@@ -46,6 +60,22 @@ Atualize o meu lado do SSEG para a versão de 18/11/2026 (checklist com cor). Co
 Atualize o meu lado do SSEG para a versão de 18/11/2026. Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell). Não há skill nem campo Instruções a atualizar nesta leva: a mudança é no palpite_local.py, que só roda em PC com a IA local ligada. Me diga em uma linha se ficou em dia.
 ```
 
+## 17/11/2026 — Pré-análise em passos, assinatura digital, laudo no início e palpite em prancha desenhada (SSEG.exe 2.13.0 a 2.13.8)
+
+- **Pré-análise em passos numerados (2.13.3):** 1 Camadas → 2 Revisar e mandar para o chat. O passo 2 traz o resumo dos scripts e da IA local, e a IA local já classifica as exigências da reanálise (2.13.8).
+- **Assinatura digital dos documentos:** a pré-análise da reanálise confere o certificado de cada documento de envolvido (`documentos.py`; `pdfsig` no servidor, pyHanko no PC, 2.13.7).
+- **Laudo de inviabilidade no começo:** as medidas marcadas no campo 4 e o texto do laudo entram na mensagem que inicia a análise (2.13.4).
+- **Botão "Última CIA"** junto dos elementos gráficos: baixa do SOL para a pasta do processo e abre (2.13.5).
+- **IA local:** palpite também em prancha com texto convertido em desenho (2.13.0); CIA sem hífen ou com opção pronta do SOL também vira lista de exigências; retrato do processo (plantas da época, documentos, CIA) guardado no servidor para a bateria de treino.
+- **Menores:** camadas com número de ordem colado ao agente (E01-PQS) e lista do pavimento tipo; PPCI de outro analista na minha caixa mantém o prazo da planilha (2.13.6).
+- **Onde:** `sseg/app/` (chega com o SSEG.exe) e `sseg/scripts/` (pelo `git pull`). Sem skill nem campo Instruções.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 17/11/2026 (pré-análise em passos). Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell) e se o SSEG.exe está na 2.13.8 ou mais novo. Não há skill nem campo Instruções a atualizar. Me diga em uma linha se ficou em dia.
+```
+
 ## 17/11/2026 — Corretor da revisão final no Opus 5.5 (SSEG.exe 2.13.2)
 
 - **O que mudou:** o subagente `corretor-cia` (`.claude/agents/corretor-cia.md`) passou do Fable 5.2 para o Opus 5.5 (decisão do Sd Carpes): a cota semanal do Fable acabava antes e a correção travava com erro 429. A 2.13.1 trocava de modelo só na falta de cota; a 2.13.2 tira essa regra.
@@ -55,6 +85,18 @@ Atualize o meu lado do SSEG para a versão de 18/11/2026. Confira se o clone est
 
 ```text
 Atualize o meu lado do SSEG para a versão de 17/11/2026. Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell) e se o SSEG.exe está na 2.13.2 ou mais novo. Confira também que .claude/agents/corretor-cia.md diz model: claude-opus-5-5. A skill ppci-revisao-cia mudou numa linha (o corretor agora é Opus 5.5): rode a skill sseg-sincronizar-skills para ela. O campo Instruções não muda. Me diga em uma linha se ficou tudo em dia.
+```
+
+## 16/11/2026 — Camadas das pranchas e elementos gráficos (SSEG.exe 2.10.0 a 2.12.0)
+
+- **Conferidor de camadas (`sseg.py camadas`, sem IA):** lê as pranchas e confere se cada medida aparece nas camadas certas e o número de ordem de extintores, hidrantes e acionadores (RT 05 P08, Anexo A). Legenda repetida em 3 pranchas não conta como segunda camada. Botão "Camadas das pranchas" na pré-análise (2.10.0).
+- **Botão "Baixar elementos gráficos"** e botões por tipo que abrem no leitor de PDF (2.12.0).
+- **Onde:** `sseg/scripts/` (pelo `git pull`) e `sseg/app/` (SSEG.exe). Sem skill nem campo Instruções.
+
+### Prompt para atualizar
+
+```text
+Atualize o meu lado do SSEG para a versão de 16/11/2026 (camadas das pranchas). Confira se o clone está em dia com o GitHub (no Claude Code, rode git pull; no Cowork, me peça para rodar no PowerShell) e se o SSEG.exe está na 2.12.0 ou mais novo. O conferidor de camadas usa o PyMuPDF; se faltar, o SSEG.exe instala sozinho. Me diga em uma linha se ficou em dia.
 ```
 
 ## 14/11/2026 — Palpites da IA local na reanálise, em quadro azul (SSEG.exe 2.9.0)
