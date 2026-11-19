@@ -1300,6 +1300,18 @@ def main():
          "porta continua verde e o vermelho do corredor não muda",
          _cor["classe"] == "ambar" and _cor["motivo"] == "trecho_estreito" and not _cor["veredito"] and "1,4 m" in _cor["explicacao"]
          and _por["classe"] == "verde" and _vrm["classe"] == "vermelho", str((_cor, _por, _vrm)))
+    pl_m._spans["/x/teste.pdf"] = {1: [(100, 100, "Nº 39", "extintores"), (500, 500, "Nº39", "saida"), (900, 100, "39", "base")]}
+    _fic, _sai = pl_m.filtro_camada("/x/teste.pdf", 1, [(102, 98), (898, 101)], "39", "sinalizacao")
+    _ext, _ = pl_m.filtro_camada("/x/teste.pdf", 1, [(102, 98)], "39", "extintores")
+    pl_m._spans.pop("/x/teste.pdf")
+    caso("palpite: número de ordem filtrado pela camada (placa nº 39 ≠ extintor nº 39; 19/11/2026)",
+         pl_m.tipo_do_numero("A sinalização nº 39 esta indicando o lado contrario", "39") == ("39", "sinalizacao")
+         and pl_m.tipo_do_numero("corrimãos na rampa próximo da placa S14 n°16.", "16") == ("16", "sinalizacao")
+         and pl_m.tipo_do_numero("placa na porta próxima ao extintor de incêndio nº 03;", "03") == ("3", "extintores")
+         and pl_m.tipo_do_numero("área de 48.16 m2", "16") == ("16", None)
+         and pl_m.rotulo_de_numero("P- nº39", "39") and not pl_m.rotulo_de_numero("ATÉ A SAÍDA=39,95m", "39")
+         and _fic == [(500, 500)] and sorted(_sai) == ["base", "extintores"] and _ext == [(102, 98)],
+         str((_fic, _sai, _ext)))
     caso("palpite: a conta compara o número lido (cm vira m; taxa por área arredonda para baixo; sem leitura = não sei)",
          pl_m.numerico({"comparacao": "minimo", "exigido": 1.2, "valor_no_elemento": 110, "area_m2": None})["veredito"] == "nao_cumpriu"
          and pl_m.numerico({"comparacao": "minimo", "exigido": 120, "valor_no_elemento": 1.2, "area_m2": None})["veredito"] == "cumpriu"

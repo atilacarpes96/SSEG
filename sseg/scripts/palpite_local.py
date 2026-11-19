@@ -605,6 +605,103 @@ def _assinatura(it):
     return hashlib.sha1(json.dumps(base, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:16]
 
 
+# ------------------------------------------------------------------ número de ordem filtrado pela camada (19/11/2026)
+# Cada medida numera a sua: a placa nº 39, o extintor nº 39 e o hidrante nº 39 convivem na mesma prancha. Ideia do Átila:
+# a camada do PDF diz de qual medida é o número. Na bateria (30 itens) o recorte pelo número sozinho caiu no extintor e no
+# hidrante; pela camada, caiu na placa. Só filtra quando o PDF tem camada com nome de medida; sem PyMuPDF, sem camada
+# ou sem tipo claro, fica como estava.
+TIPO_CTX = [(r"(placa|sos|s\.o\.s\.?|sinaliza\w*)$", "sinalizacao"), (r"(porta|portao|portoes|saida|saidas)$", "saida"),
+            (r"(extintor|extintores)$", "extintores"), (r"(hidrante|hidrantes|mangotinho)$", "hidrantes"),
+            (r"(acionador|acionadores|alarme)$", "alarme"), (r"(bloco|luminaria|iluminacao)$", "iluminacao")]
+ACEITA = {"sinalizacao": {"sinalizacao", "saida"}, "saida": {"saida", "sinalizacao"}, "iluminacao": {"iluminacao", "saida"},
+          "extintores": {"extintores"}, "hidrantes": {"hidrantes"}, "alarme": {"alarme"}}
+NEUTRAS = {"outra", "distancia", "-"}   # camada sem nome de medida: não prova nada, o ponto fica
+_spans = {}
+
+
+def _camadas_mod():
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import camadas
+    return camadas
+
+
+def tipo_do_numero(exig, termo):
+    """(número, medida) do número de ordem do termo: a palavra de medida mais próxima antes do número, no termo ou na
+    exigência ("placa S14 n°16" → sinalizacao; "porta próxima ao extintor nº 03" → extintores). Sem número: (None, None)."""
+    m = re.search(r"(\d{1,3})\s*$", sem_acento(termo or "").strip(" .;:)"))
+    if not m:
+        return None, None
+    num = m.group(1).lstrip("0") or "0"
+    for txt in (sem_acento(termo), sem_acento(exig)):
+        for mm in re.finditer(r"(?<![\d,.])0*%s(?![\d]|[,.]\d)" % num, txt):
+            ctx = txt[max(0, mm.start() - 30):mm.start()]
+            achou = [(k2.end(), k) for p, k in TIPO_CTX for k2 in re.finditer(p.replace("$", r"\b"), ctx)]
+            if achou:
+                return num, max(achou)[1]
+    return num, None
+
+
+def _rotulos_camada(pdf):
+    """{página: [(cx, cy, texto, medida)]} dos textos curtos com camada, no sistema da página girada (o mesmo do
+    pdftotext/pdftoppm). None se o PDF não tem camada ou falta o PyMuPDF."""
+    if pdf in _spans:
+        return _spans[pdf]
+    out = None
+    try:
+        cm = _camadas_mod()
+        fitz = cm.tem_pymupdf()
+        d = fitz.open(pdf)
+        if d.get_ocgs():
+            out = {}
+            for n, pg in enumerate(d, 1):
+                rot, lst = pg.rotation_matrix, []
+                for t in pg.get_texttrace():
+                    ch = [c for c in t.get("chars") or () if c[0] >= 32]
+                    s = "".join(chr(c[0]) for c in ch).strip()
+                    lay = t.get("layer") or ""
+                    if not s or len(s) > 20:
+                        continue
+                    r = fitz.Rect(min(c[3][0] for c in ch), min(c[3][1] for c in ch),
+                                  max(c[3][2] for c in ch), max(c[3][3] for c in ch)) * rot
+                    lst.append(((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2, s, cm.medida_da_camada(lay)[0] if lay else "-"))
+                out[n] = lst
+        d.close()
+    except Exception:  # noqa: BLE001 — sem PyMuPDF ou PDF estranho: segue sem o filtro
+        out = None
+    if len(_spans) > 20:
+        _spans.clear()
+    _spans[pdf] = out
+    return out
+
+
+def rotulo_de_numero(s, num):
+    """"Nº 39", "N.º 44", "S 60", "P- nº06", "06": o texto é o rótulo do número, não cota nem área."""
+    return bool(re.fullmatch(r"(?:[A-Z]{0,3}\d{0,2}\s*)?(?:N\.?\s*[\u00ba\u00b0O]\.?|NR\.?|SOS|S|P|H|E)?\s*-?\s*"
+                             r"(?:N\.?\s*[\u00ba\u00b0O]\.?)?\s*0*" + num, s.strip().upper()))
+
+
+def filtro_camada(pdf, pag, pontos, num, tipo, raio=30):
+    """Separa os pontos do termo: (ficam, saíram com a medida da camada). Sai o ponto cujo rótulo do número mais
+    próximo está na camada de OUTRA medida ou de base (esquadria, texto, legenda). Entra o rótulo do número na camada
+    do próprio elemento que a busca pela palavra não achou ("Nº39" grudado, que o pdftotext dá como uma palavra só)."""
+    rot = _rotulos_camada(pdf)
+    if not rot or not tipo or tipo not in ACEITA:
+        return pontos, []
+    ficam, sairam = [], []
+    for x, y in pontos:
+        perto = [(abs(cx - x) + abs(cy - y), med) for cx, cy, s, med in rot.get(pag, []) if rotulo_de_numero(s, num)
+                 and abs(cx - x) <= raio and abs(cy - y) <= raio]
+        med = min(perto)[1] if perto else None
+        if med is None or med in NEUTRAS or med in ACEITA[tipo]:
+            ficam.append((x, y))
+        else:
+            sairam.append(med)
+    for cx, cy, s, med in rot.get(pag, []):
+        if med in ACEITA[tipo] and rotulo_de_numero(s, num) and not any(abs(cx - x) <= raio and abs(cy - y) <= raio for x, y in ficam):
+            ficam.append((cx, cy))
+    return ficam, sairam
+
+
 def _recortes(pasta, cfg, todas):
     """Recortes de uma exigência: [(recorte)], fatos, motivo de não haver. Procura o termo nas pranchas novas e o
     termo_antes nas que a última CIA analisou (o ponto é levado para a planta nova pelo deslocamento do desenho)."""
@@ -615,6 +712,7 @@ def _recortes(pasta, cfg, todas):
         return [], [], "Nenhuma prancha ativa casa com \"%s\"." % (cfg.get("prancha") or "")
     faltam = [p for p in novas if not p["tem"]]
     fatos, pontos = [], []  # pontos: (prancha nova, página, cx, cy)
+    fora_camada = []        # medidas das camadas de onde saiu o número (era de outro elemento)
     for p in novas:
         if not p["tem"]:
             continue
@@ -623,7 +721,12 @@ def _recortes(pasta, cfg, todas):
         a = par_anterior(todas, p)
         for pag in sorted(ws):
             if cfg.get("termo"):
-                pontos += [(p, pag, x, y) for x, y in ocorrencias(ws[pag], cfg["termo"])]
+                achados = ocorrencias(ws[pag], cfg["termo"])
+                num, tipo = tipo_do_numero(cfg.get("exigencia"), cfg["termo"])
+                if achados and num:
+                    achados, sairam = filtro_camada(pdf, pag, achados, num, tipo)
+                    fora_camada += sairam
+                pontos += [(p, pag, x, y) for x, y in achados]
             if cfg.get("termo_antes") and a and a["tem"] and not p["nao_reenviada"]:
                 wa, _t = palavras(os.path.join(pasta, SUB, a["arquivo"]))
                 ox, oy = deslocamento(wa.get(pag, []), ws[pag])
@@ -636,6 +739,12 @@ def _recortes(pasta, cfg, todas):
             grupos.append([p, pag, x, y, 1])
         else:
             g[2], g[3], g[4] = (g[2] * g[4] + x) / (g[4] + 1), (g[3] * g[4] + y) / (g[4] + 1), g[4] + 1
+    if fora_camada:
+        fatos.append("O nº do termo também aparece na camada de %s: esse lugar ficou fora do recorte (é outro elemento "
+                     "com o mesmo número)." % ", ".join(sorted(set(fora_camada))))
+    if not grupos and fora_camada:
+        return [], fatos, "O número só aparece na camada de %s, não na do elemento citado: sem recorte, para a IA não " \
+            "julgar o elemento errado." % ", ".join(sorted(set(fora_camada)))
     if not grupos:
         if faltam:
             return [], fatos, "Falta baixar a planta: %s." % "; ".join(_rotulo_planta(p) for p in faltam)
