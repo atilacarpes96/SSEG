@@ -51,7 +51,20 @@ def gravar(pasta, d):
     fd, tmp = tempfile.mkstemp(prefix=".analise-", suffix=".json", dir=pasta)
     with os.fdopen(fd, "w", encoding="utf-8") as fh:
         json.dump(d, fh, ensure_ascii=False, indent=1)
-    os.replace(tmp, caminho(pasta))
+    # Windows: a janela do SSEG.exe lendo o analise.json na hora da troca dá "Acesso negado" (WinError 5, 51398,
+    # 20/11/2026: o comando do Claude caiu e o .analise-*.json ficou largado na pasta). Tenta de novo por até 3 s.
+    for i in range(16):
+        try:
+            os.replace(tmp, caminho(pasta))
+            break
+        except PermissionError:
+            if i == 15:
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
+                raise
+            time.sleep(0.2)
     return d
 
 

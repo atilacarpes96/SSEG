@@ -351,8 +351,8 @@ def numeros_de_ordem(no_campo4, pranchas, repetidas, fato):
                         longe.setdefault(k, {})[(rot, camada)] = len(ns)
                         nums.setdefault(k, []).extend((n, rot, camada) for n in ns)
                 else:
-                    sem.setdefault(k, []).append((rot, any((por.get(n) or {}).get("texto") for n in por
-                                                           if medida_da_camada(n)[0] == k)))
+                    txt = [(por.get(n) or {}).get("texto") for n in por if medida_da_camada(n)[0] == k]
+                    sem.setdefault(k, []).append((rot, next((t for t in txt if t), "")))
     for k in ORDEM:
         if k not in no_campo4:
             continue
@@ -360,13 +360,21 @@ def numeros_de_ordem(no_campo4, pranchas, repetidas, fato):
         if longe.get(k):
             fato("RT 05 P08 Anexo A", "ordem_fora_da_camada", "%s: o número de ordem não está na camada da medida; "
                  "achei em %s." % (nome, "; ".join("%s · \"%s\" (%d)" % (r, c, q) for (r, c), q in longe[k].items())))
-        for com_texto, item, frase in ((True, "ordem_sem_numero", "a camada tem texto, mas nenhum número de ordem"),
-                                       (False, "ordem_sem_texto", "a camada não tem texto nenhum (o número pode ter "
-                                                                  "virado desenho)")):
-            rots = [r for r, t in sem.get(k, ()) if bool(t) == com_texto]
-            if rots:
-                fato("RT 05 P08 Anexo A", item, "%s: %s em %s; conferir na planta." % (
-                    nome, frase, ", ".join(rots) if len(rots) <= 4 else "%d plantas baixas" % len(rots)))
+        # 51398 (20/11/2026): "RECALQUE" e "Distância máxima... até o hidrante" eram o único texto da camada; o
+        # "HIDRANTE N°01" estava desenhado em traço (fonte do CAD), e o analista viu o número na planta. A frase mostra
+        # o texto que a camada tem e lembra o desenho, para não soar como número faltando
+        for com_texto, item in ((True, "ordem_sem_numero"), (False, "ordem_sem_texto")):
+            lst = [(r, t) for r, t in sem.get(k, ()) if bool(t) == com_texto]
+            if not lst:
+                continue
+            onde = ", ".join(r for r, _t in lst) if len(lst) <= 4 else "%d plantas baixas" % len(lst)
+            if com_texto:
+                amostra = "; ".join(sorted({'"%s"' % t.split(" · ")[0][:40] for _r, t in lst})[:3])
+                frase = ("o texto da camada não é número de ordem (só %s) em %s; o número pode estar em desenho "
+                         "(texto do CAD virado traço)" % (amostra, onde))
+            else:
+                frase = "a camada não tem texto nenhum em %s (o número pode ter virado desenho)" % onde
+            fato("RT 05 P08 Anexo A", item, "%s: %s; conferir na planta." % (nome, frase))
         if not nums.get(k):
             continue
         onde_n, por_camada_n = {}, Counter()
@@ -385,9 +393,12 @@ def numeros_de_ordem(no_campo4, pranchas, repetidas, fato):
         maior = max(onde_n)
         falta = [i for i in range(1, maior + 1) if i not in onde_n]
         if falta and maior <= 400 and len(falta) <= maior / 2:
-            fato("RT 05 P08 Anexo A", "ordem_buraco", "%s: a numeração vai até %02d e não aparece %s. O equipamento "
-                 "pode estar sem número, ou o número pode estar em desenho; conferir na planta." % (
-                     nome, maior, _faixas(falta)))
+            sem_n = [r for r, _t in sem.get(k, ())]
+            fato("RT 05 P08 Anexo A", "ordem_buraco", "%s: a numeração lida vai até %02d e não aparece %s. %s" % (
+                nome, maior, _faixas(falta),
+                ("Os que faltam devem ser os de %s, onde não há número em texto: provavelmente desenhado; conferir lá."
+                 % ", ".join(sem_n)) if sem_n and len(sem_n) <= 4 else
+                "O equipamento pode estar sem número, ou o número pode estar em desenho; conferir na planta."))
 
 
 # ------------------------------------------------------------------ conferência (sem PDF: recebe os inventários)
