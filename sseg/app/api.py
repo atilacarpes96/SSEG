@@ -1391,10 +1391,12 @@ class Api:
             raise RuntimeError("Não achei o PDF na pasta do processo: baixe os elementos gráficos de novo.")
         return n
 
-    def camadas(self, codigo):
+    def camadas(self, codigo, ia=False):
         """Camadas das pranchas × campo 4 (2.10.0, sseg/scripts/camadas.py), sem IA. Baixa do SOL as pranchas ativas que
         faltam (a mesma subpasta plantas/ do quadro azul) e roda o conferidor no Python do PC: o PyMuPDF que ele usa é
-        instalado no Python do PC pelo instalador, não está dentro do .exe. Devolve {ok, msg, acao, fatos, camadas, texto}."""
+        instalado no Python do PC pelo instalador, não está dentro do .exe. Devolve {ok, msg, acao, fatos, camadas, texto}.
+        ia (2.15.0): com o texto das plantas baixas em desenho, a IA local transcreve a camada da saída na imagem
+        (camadas.py --ia; perto de 1 minuto por pedaço, cache ao lado da prancha). ia_pronta diz se este PC tem a IA."""
         pasta = self._pasta_proc(codigo)
         m = self._palpite()
         if any(p["lado"] == "depois" and not p["tem"] for p in m.plantas(pasta)):
@@ -1405,13 +1407,14 @@ class Api:
         script = os.path.join(self._clone(), "sseg", "scripts", "sseg.py")
         if not py or not os.path.exists(script):
             return {"ok": False, "msg": "Sem o Python do PC ou sem o sseg.py no clone."}
-        p = subprocess.run([py, script, "camadas", "--pasta", pasta, "--json"], capture_output=True, timeout=600,
+        cmd = [py, script, "camadas", "--pasta", pasta, "--json"] + (["--ia"] if ia else [])
+        p = subprocess.run(cmd, capture_output=True, timeout=3600 if ia else 600,
                            stdin=subprocess.DEVNULL, creationflags=base.SEM_JANELA, env={**os.environ, "PYTHONUTF8": "1"})
         if p.returncode:
             erro = p.stderr.decode("utf-8", "replace").strip()
             if "PyMuPDF" in erro:
                 instalar.pacotes_pip(py, lambda *_: None)  # tenta instalar uma vez e roda de novo
-                p = subprocess.run([py, script, "camadas", "--pasta", pasta, "--json"], capture_output=True, timeout=600,
+                p = subprocess.run(cmd, capture_output=True, timeout=3600 if ia else 600,
                                    stdin=subprocess.DEVNULL, creationflags=base.SEM_JANELA, env={**os.environ, "PYTHONUTF8": "1"})
             if p.returncode:
                 erro = p.stderr.decode("utf-8", "replace").strip()
@@ -1421,9 +1424,16 @@ class Api:
         (cm,) = self._scripts_do_clone("camadas")
         for f in r["fatos"]:
             f["obs"] = cm.observacao(f)
-        self._log("Camadas das pranchas de %s: %d achado(s), %d observação(ões)." % (
-            codigo, sum(not f["obs"] for f in r["fatos"]), sum(f["obs"] for f in r["fatos"])))
-        return dict(r, ok=True, texto=cm.relatorio(r))
+        self._log("Camadas das pranchas de %s: %d achado(s), %d observação(ões)%s." % (
+            codigo, sum(not f["obs"] for f in r["fatos"]), sum(f["obs"] for f in r["fatos"]),
+            ", %d palpite(s) da IA local" % sum(bool(f.get("ia")) for f in r["fatos"]) if ia else ""))
+        pronta = False
+        if r.get("ia_cabe"):
+            try:
+                pronta = m.ia_local()[0]
+            except Exception:  # noqa: BLE001 — sem IA é o caso normal no PC do quartel
+                pass
+        return dict(r, ok=True, texto=cm.relatorio(r), ia_pronta=pronta)
 
     # ---------------------------------------------------------------- chat
     def _cota_ler(self):

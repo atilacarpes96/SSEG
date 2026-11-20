@@ -4,6 +4,13 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.15.0
+
+- **A IA local lê a planta quando o texto virou desenho.** Há projetista que manda o PDF com as letras convertidas em traço: aí o "Camadas das pranchas" não consegue ler área, população, ocupação, largura nem distância, e só dizia "conferir na planta". Agora, no PC com a IA local ligada, o quadro mostra o botão **◆ IA local · Ler com a IA local**.
+- **Como funciona:** o programa acende só a camada da saída de emergência de cada planta baixa, recorta onde ela desenha e manda a imagem à IA, que só **transcreve** o que lê (não julga nada). O script confere o texto transcrito com as mesmas regras de sempre: o que a Nota 02 pede (largura, ocupação, área e população) e a distância da Nota 01. O resultado aparece num quadro azul, à parte, como palpite: confira na planta.
+- **Tempo:** perto de 1 minuto por pedaço de imagem; uma planta pequena é um pedaço, uma grande até uns 6. Fica guardado: abrir de novo é na hora.
+- **No PC sem a IA**, o quadro só avisa que o texto virou desenho e que o PC com a IA pode ler.
+
 ## 2.14.5
 
 - **Resposta dos palpites com imagem.** Em cada exigência do quadro azul da IA local, junte um print ou recorte para mostrar o que ficou errado: botão "+ imagem", Ctrl+V no campo de texto ou arrastar a imagem para o cartão (até 4 por exigência; o × tira). Em "Mandar respostas" as imagens vão ao chat junto com a sua conferência e ficam gravadas na pasta do processo; no "Sincronizar processos" sobem ao servidor, onde servem para corrigir a IA local. Ao reabrir o processo, as imagens já mandadas aparecem de novo no cartão.

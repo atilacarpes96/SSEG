@@ -1615,6 +1615,32 @@ def main():
     _r3 = cm_m.conferir(_med[:1], [("P%d" % n, _pav(n), "PLANTA_BAIXA") for n in range(3)])
     caso("camadas: camada idêntica em 3 pranchas é legenda (51398): não conta como segunda camada nem pela cor",
          not [f for f in _r3["fatos"] if f["item"] in ("varias_camadas", "cor")], str(_r3["fatos"]))
+    # 2.15.0: texto em desenho; a IA local transcreve a camada da saída e o script confere (sem Ollama no teste)
+    _fi = cm_m.conferir_ia([("Térreo", ["N.º 01", "S12", "1,20", "0,80", "DIST. MAX. A PERCORRER 27,5 m"]),
+                            ("Pav. 2", ["SALA 01", "F-8", "A= 32,80 m²", "26 PESSOAS", "1,10"])])
+    caso("camadas + IA local: o texto transcrito passa pelas mesmas regras (Nota 02 o que falta; Nota 01 sem distância)",
+         [f["item"] for f in _fi] == ["ia_nota02", "ia_nota02", "ia_sem_distancia"] and all(f["ia"] for f in _fi)
+         and _fi[0]["texto"].endswith("Não achou: ocupação, área, população.") and "1,20" in _fi[0]["texto"]
+         and _fi[1]["texto"].endswith("Achou largura, ocupação, área e população.")
+         and not cm_m.observacao(_fi[0]) and "LIDO PELA IA LOCAL" in cm_m.relatorio({"fatos": _fi, "camadas": {}}), str(_fi))
+    try:
+        _fz = cm_m.tem_pymupdf()
+    except RuntimeError:
+        _fz = None
+    if _fz:
+        _tmpd = tempfile.mkdtemp()
+        _doc = _fz.open()
+        _pg = _doc.new_page(width=2000, height=1400)
+        _oc_s, _oc_a = _doc.add_ocg("SAIDA DE EMERGENCIA"), _doc.add_ocg("ARQUITETURA")
+        _pg.insert_text((100, 100), "1,20", oc=_oc_s)
+        _pg.draw_line((100, 120), (300, 120), oc=_oc_s)
+        _pg.insert_text((1800, 1300), "SALA", oc=_oc_a)
+        _pdfc = os.path.join(_tmpd, "pb.pdf")
+        _doc.save(_pdfc)
+        _ims = cm_m.imagens_da_camada(_pdfc, "saida")
+        caso("camadas + IA local: só a camada da saída, recortada onde ela desenha, vai em imagem; sem a camada, nada",
+             len(_ims) == 1 and _ims[0][:4] == b"\x89PNG" and cm_m.imagens_da_camada(_pdfc, "alarme") == [], str(len(_ims)))
+        shutil.rmtree(_tmpd, ignore_errors=True)
     caso("camadas: número de ordem lido do texto (RT 05 P08 Anexo A) sem pegar capacidade, ocupação nem norma",
          cm_m.numeros("02 · A-03 · ALM- 1 · EXT- 85 · 09 - 2° PAV. · H 10 - TIPO 3 · HIDRANTE 04 · SHSC T3 Nº 05 · "
                       "N° 75, 76 · 2A/20BC · 4-A:40-B:C · 20.000 L · 6 KG · RTCBMRS n° 22/2023 · EXTINTOR Nº 01= 18,50 M")

@@ -600,6 +600,7 @@ mark { background: color-mix(in srgb, var(--amarelo, #FCD733) 55%, transparent);
 .pal.verde { border-color: var(--ok); } .pal.verde b { color: var(--ok); }
 .pal.vermelho { border-color: var(--verm); } .pal.vermelho b { color: var(--verm); }
 .pal.ambar { border-color: var(--c-meta); } .pal.ambar b { color: var(--c-meta); }
+.pal.azul { border-color: var(--azul); }
 .pal small { display: block; color: var(--suave); font-size: 11.5px; }
 .pal-par { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px; margin: 5px 0; }
 .pal-par figure { margin: 0; }
@@ -3595,14 +3596,24 @@ const CAMADAS_PEDIDO = "Camadas das pranchas (conferidor do SSEG, lido do PDF, s
 // ---- Camadas das pranchas (2.10.0, pedido do Átila em 16/11/2026): o conferidor sseg/scripts/camadas.py lê do PDF o
 // nome, a cor e o texto de cada camada e cruza com o campo 4. Sem IA: são fatos do PDF, não exigência. Achado é o que
 // separou CIAs que cobraram camada das que não cobraram na medição de 16/11/2026; observação é o que saiu igual nos dois.
-async function camadasAbrir(codigo, fluxo, botao) {
-  avisar("Lendo as camadas das pranchas (a 1ª vez baixa as pranchas do SOL e pode levar um minuto)…");
-  const r = await api("camadas", [codigo], botao);
+async function camadasAbrir(codigo, fluxo, botao, ia) {
+  avisar(ia ? "A IA local está lendo a camada da saída nas imagens (perto de 1 minuto por pedaço; a janela continua livre)…"
+    : "Lendo as camadas das pranchas (a 1ª vez baixa as pranchas do SOL e pode levar um minuto)…");
+  const r = await api("camadas", [codigo, !!ia], botao);
   if (!r) return;
   if (!r.ok) return avisar(r.msg || "Não consegui ler as camadas.");
-  const linha = f => el("div", { class: "pal" + (f.obs ? "" : " ambar"), style: "margin:4px 0" },
+  const linha = f => el("div", { class: "pal" + (f.ia ? " azul" : f.obs ? "" : " ambar"), style: "margin:4px 0" },
     el("small", {}, f.grupo), f.texto);
-  const achados = r.fatos.filter(f => !f.obs), obs = r.fatos.filter(f => f.obs);
+  const doIA = r.fatos.filter(f => f.ia), achados = r.fatos.filter(f => !f.obs && !f.ia), obs = r.fatos.filter(f => f.obs && !f.ia);
+  // 2.15.0: texto das plantas baixas em desenho; a IA local transcreve a camada da saída e o script confere (Notas 01 e 02)
+  const blocoIA = doIA.length ? el("div", { class: "perguntas azul", style: "margin-top:8px" }, selo("ia"),
+      el("b", {}, "Lido pela IA local na imagem da camada da saída "),
+      el("span", { class: "discreto" }, "(ela só transcreve e pode ler número errado; o script confere; confira na planta)"), ...doIA.map(linha))
+    : r.ia_cabe ? el("div", { class: "perguntas azul", style: "margin-top:8px" }, selo("ia"),
+      el("b", {}, "O texto das plantas baixas virou desenho. "),
+      r.ia_pronta ? el("span", {}, "A IA local deste PC pode ler a camada da saída na imagem e o script confere largura, ocupação, área, população e distância. ",
+          el("button", { class: "bt chamativo", on: { click: ev => { fechar(); camadasAbrir(codigo, fluxo, botao, true); } } }, selo("ia"), "Ler com a IA local"))
+        : el("span", { class: "discreto" }, "No PC com a IA local ligada, este quadro oferece ler a camada da saída na imagem.")) : null;
   const inv = Object.entries(r.camadas || {}).map(([rot, cams]) => {
     const med = cams.filter(c => !["base", "outra"].includes(c[1])).map(c => c[0]);
     return el("div", { style: "font-size:12.5px;margin:2px 0" }, el("b", {}, rot + ": "),
@@ -3613,6 +3624,7 @@ async function camadasAbrir(codigo, fluxo, botao) {
     ...(r.erros || []).map(e => el("p", { class: "sub", style: "color:var(--verm)" }, e)),
     el("b", {}, achados.length ? "Achados (" + achados.length + ")" : "Nenhum achado"),
     ...achados.map(linha),
+    blocoIA,
     obs.length ? el("details", { style: "margin-top:8px" }, el("summary", {}, "Observações (" + obs.length + ") — fracas: saíram quase igual com e sem notificação nas CIAs medidas"),
       ...obs.map(linha)) : null,
     el("details", { style: "margin-top:8px" }, el("summary", {}, "Camadas de cada prancha"), ...inv));
@@ -3621,7 +3633,8 @@ async function camadasAbrir(codigo, fluxo, botao) {
   PR.camadas = { codigo, texto: r.texto, achados: achados.length };
   if (botao && !botao.querySelector(".feito-tag")) botao.append(el("span", { class: "feito-tag" }, "✓ " + achados.length + " achado(s)"));
   const passo2 = codigo === PR.codigo && PR.preAbrir && !PR.preEnviada;
-  modal([selo("script"), "Camadas das pranchas"], "Lido do PDF, sem IA. Fatos para você conferir, não exigência pronta.", meio,
+  modal([selo("script"), doIA.length ? selo("ia") : null, "Camadas das pranchas"], doIA.length ? "Lido do PDF pelo script e, no quadro azul, da imagem pela IA local. Fatos para você conferir, não exigência pronta."
+    : "Lido do PDF, sem IA. Fatos para você conferir, não exigência pronta.", meio,
     passo2 ? [["Continuar: 2. Revisar e mandar pro chat", () => { fechar(); PR.preAbrir(); }, true], ["Mandar só as camadas", mandar], ["Fechar", fechar]]
       : [["Mandar ao Claude", mandar, true], ["Fechar", fechar]]);
 }

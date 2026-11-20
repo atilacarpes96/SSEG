@@ -127,10 +127,16 @@ def medida_da_camada(nome):
 
 SINAIS = {
     "dmp": r"(?<![A-Z])DMP(?![A-Z])|DIST(ANCIA)?\.?\s*MAX|MAX(IMA)?\.?\s*DIST|A\s+PERCORRER",
+    # metro com vírgula ("1,20 m"). Porta em centímetro ("90x210") não conta: a Nota 02 pede a largura dos acessos,
+    # escadas, rampas e descargas, e a CIA da 42491 cobrou essa cota de prancha que só tinha as portas
     "largura": r"(?<![\d,.])[0-9],\d{2}(?![\d,])\s*(M(?![A-Z²2])|$|\s)",
-    "pessoas": r"PESSOA|(?<![A-Z])POP(?![A-Z])|POPULA",
-    "area": r"M2(?![0-9])|M²|M\^2",
-    "ocupacao": r"(?<![A-Z0-9])[A-M]-\d{1,2}(?![0-9])|\([A-M]-?\d{1,2}\)",
+    "pessoas": r"PESSOA|(?<![A-Z])PESS(?![A-Z])|(?<![A-Z])POP(?![A-Z])|POPULA",  # "03 PESS." (35938)
+    # número seguido de m² (o NFKD faz do ² um 2) ou "ÁREA:" / "A.:" com número; "OCUPAÇÃO M2" (45128) é ocupação
+    # (o rótulo inteiro numa alternativa só: "A=278,30M2" conta uma vez, não duas; 50876)
+    "area": r"(?<![A-Z0-9-])A(REA)?\.?\s*[:=]\s*\d[\d.,]*\s*(M\s?\^?2(?![0-9]))?|\d\s*M\s?\^?2(?![0-9])",
+    # "F-8", "(D1)", "OCUPAÇÃO D1" (45128), "J3 — Depósito" (49907)
+    "ocupacao": r"(?<![A-Z0-9])[A-M]-\d{1,2}(?![0-9])|\([A-M]-?\d{1,2}\)|OCUPA\w*\s*:?\s*[A-M]-?\d{1,2}(?![0-9])"
+                r"|(?<![A-Z0-9])[A-M]\d{1,2}\s*[—–-]\s*[A-Z]",
     "extintor": r"(?<![A-Z])PQS|(?<![A-Z])CO2(?![0-9])|(?<![A-Z])AP(?![A-Z])\s*\d|\d+-?A\s*:\s*\d+-?B|EXTINT",
     "alarme": r"(?<![A-Z])ALM(?![A-Z])|ALARM|ACIONAD",
     "hidrante": r"HIDRANT|MANGUEIR|(?<![A-Z])RTI(?![A-Z])|RECALQUE|MANGOT",
@@ -569,6 +575,155 @@ def conferir(medidas, pranchas):
     return {"fatos": fatos, "camadas": mapa}
 
 
+# ------------------------------------------------------------------ texto em desenho: a IA local transcreve, o script confere
+
+# 2.15.0 (pedido do Átila, 16/11/2026): quando o texto das plantas baixas virou desenho, as Notas 01 e 02 não se
+# conferem pelo texto. A IA local (Ollama, palpite_local.MODELO) recebe a imagem SÓ da camada da saída, recortada onde
+# ela desenha, e apenas transcreve o que lê; as mesmas regras de sinais() decidem o que há. A IA não julga nada.
+# Prova de 20/11/2026 (784, planta baixa): leu 0,80 / 1,10 / 1,20 / 1,30, distâncias e placas; trocou 1,40 por 0,41.
+IA_PROMPT = """Esta imagem é um recorte de uma planta de prevenção de incêndio, mostrando só uma camada do desenho.
+Transcreva todos os textos e números que você consegue ler na imagem, um por item, exatamente como estão escritos.
+Não interprete, não complete e não invente: se não der para ler um texto, deixe-o de fora."""
+IA_ESQUEMA = {"type": "object", "properties": {"textos": {"type": "array", "items": {"type": "string"}}},
+              "required": ["textos"]}
+IA_LADO_MAX = 2000    # pixels do lado maior de cada pedaço mandado à IA (a prova de 20/11 leu bem 1085x1734)
+IA_DPI = 200
+IA_VERSAO = 2         # 2: recorte na folha girada (/Rotate); muda quando a imagem mandada à IA muda
+IA_PEDACOS_MAX = 10   # cada pedaço leva perto de 1 minuto na RTX 4070
+
+
+def _ia():
+    import palpite_local as pl  # mesma pasta; só carrega quando a IA é pedida
+    return pl
+
+
+def _grade(largura, altura, passo):
+    """Quantos pedaços em x e em y para cobrir a área com pedaços de `passo` pontos. Cabe inteiro: um só (partir
+    corta texto na emenda; na prova de 20/11 a IA perdeu duas cotas assim)."""
+    return max(1, int(-(-largura // passo))), max(1, int(-(-altura // passo)))
+
+
+def imagens_da_camada(pdf, chave="saida", dpi=IA_DPI, lado=IA_LADO_MAX, maximo=IA_PEDACOS_MAX):
+    """PNGs só com as camadas da medida, recortadas onde ela desenha e partidas em pedaços de até `lado` pixels
+    (com sobreposição, para o texto da emenda sair inteiro em um deles). [] quando o PDF não tem essa camada."""
+    fitz = tem_pymupdf()
+    doc = fitz.open(pdf)
+    cfg = doc.layer_ui_configs() or []
+    if not any(medida_da_camada(c["text"])[0] == chave for c in cfg):
+        return []
+    for c in cfg:  # 0 liga, 2 desliga (o set_layer não muda o que o get_pixmap mostra)
+        doc.set_layer_ui_config(c["number"], action=0 if medida_da_camada(c["text"])[0] == chave else 2)
+    out = []
+    for pag in doc:
+        try:
+            desenhos = pag.get_cdrawings()
+        except AttributeError:
+            desenhos = pag.get_drawings()
+        rs = [x["rect"] for x in desenhos if medida_da_camada(x.get("layer") or "")[0] == chave]
+        rs += [t["bbox"] for t in pag.get_texttrace() if medida_da_camada(t.get("layer") or "")[0] == chave]
+        if not rs:
+            continue
+        # desenho e texto vêm na folha sem giro; o recorte é na folha como ela aparece (35938 e 30905: /Rotate 270,
+        # sem isto o recorte caía no vazio)
+        rs = [tuple(fitz.Rect(q) * pag.rotation_matrix) for q in rs]
+        x0, y0 = max(min(q[0] for q in rs) - 20, 0), max(min(q[1] for q in rs) - 20, 0)
+        x1, y1 = min(max(q[2] for q in rs) + 20, pag.rect.width), min(max(q[3] for q in rs) + 20, pag.rect.height)
+        rects = [fitz.Rect(q) for q in rs]
+        d = dpi
+        while True:
+            passo = lado * 72.0 / d                  # pedaço em pontos do PDF
+            nx, ny = _grade(x1 - x0, y1 - y0, passo)
+            w, h = (x1 - x0) / nx, (y1 - y0) / ny
+            clips = [fitz.Rect(x0 + (i - 0.08) * w, y0 + (j - 0.08) * h, x0 + (i + 1.08) * w, y0 + (j + 1.08) * h) & pag.rect
+                     for i in range(nx) for j in range(ny)]
+            # pedaço sem nada da camada (ela desenha espalhado pela folha; 30905): não vai à IA
+            clips = [c for c in clips if any(q.intersects(c) for q in rects)]
+            if len(out) + len(clips) <= maximo or d <= 130:  # abaixo disso a letra pequena da Nota 02 some
+                break
+            d *= 0.85
+        out += [pag.get_pixmap(dpi=d, clip=c).tobytes("png") for c in clips]
+    return out[:maximo]
+
+
+def transcrever(png, ia=None):
+    import base64
+    ia = ia or _ia()
+    r = ia._ollama("/api/chat", {
+        "model": ia.MODELO, "messages": [{"role": "user", "content": IA_PROMPT, "images": [base64.b64encode(png).decode()]}],
+        "format": IA_ESQUEMA, "stream": False, "think": False, "keep_alive": "30m",
+        "options": {"temperature": 0, "seed": 0, "num_ctx": 8192, "num_predict": 1200}})
+    try:
+        textos = json.loads((r.get("message") or {}).get("content") or "")["textos"]
+    except (ValueError, KeyError, TypeError):
+        raise RuntimeError("a IA local respondeu fora do formato")
+    return [str(t).strip() for t in textos if str(t).strip()]
+
+
+def ler_com_ia(pdf, chave="saida", aviso=lambda *_: None):
+    """Textos que a IA local leu na camada da medida (cache em <pdf>.ia-<chave>.json, refeito se o PDF, o modelo ou o
+    pedido mudar). None: o PDF não tem essa camada."""
+    ia = _ia()
+    cache = "%s.ia-%s.json" % (pdf, chave)
+    try:
+        if os.path.getmtime(cache) >= os.path.getmtime(pdf):
+            with open(cache, encoding="utf-8") as fh:
+                d = json.load(fh)
+            if d.get("modelo") == ia.MODELO and d.get("prompt") == IA_PROMPT and d.get("lado") == IA_LADO_MAX and d.get("v") == IA_VERSAO:
+                return d["textos"]
+    except (OSError, ValueError, KeyError):
+        pass
+    pngs = imagens_da_camada(pdf, chave)
+    if not pngs:
+        return None
+    textos = []
+    for i, png in enumerate(pngs, 1):
+        aviso("IA local: %s, pedaço %d de %d…" % (os.path.basename(pdf), i, len(pngs)))
+        textos += transcrever(png, ia)
+    try:
+        with open(cache, "w", encoding="utf-8") as fh:
+            json.dump({"modelo": ia.MODELO, "prompt": IA_PROMPT, "lado": IA_LADO_MAX, "v": IA_VERSAO, "pedacos": len(pngs), "textos": textos}, fh,
+                      ensure_ascii=False)
+    except OSError:
+        pass
+    return textos
+
+
+def conferir_ia(lidas):
+    """lidas: [(rótulo, textos lidos pela IA na camada da saída)]. Fatos de palpite (ia=True) das Notas 02 e 01."""
+    fatos = []
+    for rot, textos in lidas:
+        t = " · ".join(textos)
+        s = sinais(t)
+        larg = sorted({m.group(0).strip() for m in re.finditer(SINAIS["largura"], sem_acento(t))})
+        tem = [n for n, c in (("largura cotada", "largura"), ("ocupação", "ocupacao"), ("área", "area"),
+                              ("população", "pessoas")) if s[c]]
+        falta = [n for n in ("largura cotada", "ocupação", "área", "população") if n not in tem]
+        fatos.append({"grupo": "6.3.6.1.2.4 Nota 02", "item": "ia_nota02", "ia": True, "texto":
+                      "%s · a IA local leu %d texto(s) na camada da saída%s. %s" % (
+                          rot, len(textos), (" (números com vírgula: %s)" % ", ".join(larg[:10])) if larg else "",
+                          ("Não achou: %s." % ", ".join(falta)) if falta else "Achou largura, ocupação, área e população.")})
+        if not s["dmp"]:
+            fatos.append({"grupo": "6.3.6.1.2.4 Nota 01", "item": "ia_sem_distancia", "ia": True, "texto":
+                          "%s · a IA local não leu texto de distância a percorrer na camada da saída." % rot})
+    return fatos
+
+
+def ler_saida_com_ia(pasta, aviso=lambda *_: None):
+    """Plantas baixas ativas com a camada da saída: ([(rótulo, textos)], [erros])."""
+    lidas, erros = [], []
+    for rot, cam, tipo in pranchas_ativas(pasta, _api(pasta)):
+        if not cam or tipo not in ("PLANTA_BAIXA", ""):
+            continue
+        try:
+            t = ler_com_ia(cam, "saida", aviso)
+        except Exception as e:  # noqa: BLE001 — uma prancha que falha não derruba as outras
+            erros.append("%s: IA local: %s" % (rot, str(e)[:160]))
+            continue
+        if t is not None:
+            lidas.append((rot, t))
+    return lidas, erros
+
+
 # ------------------------------------------------------------------ processo inteiro
 
 def tem_pymupdf():
@@ -582,7 +737,8 @@ def tem_pymupdf():
     return fitz
 
 
-def processo(pasta):
+def processo(pasta, ia=False, aviso=lambda *_: None):
+    """ia=True: com o texto das plantas baixas em desenho, a IA local transcreve a camada da saída (ler_com_ia)."""
     api = _api(pasta)
     medidas = medidas_campo4(api)
     pranchas, faltam, erros = [], [], []
@@ -598,6 +754,16 @@ def processo(pasta):
             erros.append("%s: %s" % (rot, str(e)[:160]))
     r = conferir(medidas, pranchas)
     r.update(medidas=[m["nome"] for m in medidas], faltam=faltam, erros=erros)
+    r["ia_cabe"] = any(f["item"] == "ilegivel" for f in r["fatos"]) and any(
+        "saida" in {k for _n, k, _d in cams} for cams in r["camadas"].values())
+    if ia and r["ia_cabe"]:
+        ok, motivo = _ia().ia_local()
+        if not ok:
+            r["erros"].append(motivo)
+        else:
+            lidas, errs = ler_saida_com_ia(pasta, aviso)
+            r["fatos"] += conferir_ia(lidas)
+            r["erros"] += errs
     return r
 
 
@@ -608,6 +774,8 @@ SECUNDARIAS = ("Acesso de viaturas", "Isolamento", "Iluminação", "Hidrante urb
 
 
 def observacao(f):
+    if f.get("ia"):
+        return False  # palpite da IA local: seção própria
     if f["item"] in FRACOS:
         return True
     if f["item"] == "sem_camada":
@@ -628,23 +796,31 @@ def relatorio(r):
         med = ["%s → %s%s" % (n, MEDIDAS[k][0], " + distância" if d else "") for n, k, d in cams if k in MEDIDAS]
         med += ["%s → distância" % n for n, k, d in cams if k == "distancia"]
         linhas.append("- %s: %d camadas; de medida: %s" % (rot, len(cams), "; ".join(med) or "nenhuma"))
-    achados = [f for f in r["fatos"] if not observacao(f)]
+    ia = [f for f in r["fatos"] if f.get("ia")]
+    achados = [f for f in r["fatos"] if not observacao(f) and not f.get("ia")]
     obs = [f for f in r["fatos"] if observacao(f)]
     linhas.append("ACHADOS:" if achados else "Nenhum achado.")
     linhas += ["[%s] %s" % (f["grupo"], f["texto"]) for f in achados]
     if obs:
         linhas.append("OBSERVAÇÕES (fracas na medição de 16/11/2026: saem quase igual com e sem notificação na CIA):")
         linhas += ["[%s] %s" % (f["grupo"], f["texto"]) for f in obs]
+    if ia:
+        linhas.append("LIDO PELA IA LOCAL NA IMAGEM DA CAMADA DA SAÍDA (palpite: ela só transcreve e pode ler número "
+                      "errado; conferir na planta):")
+        linhas += ["[%s] %s" % (f["grupo"], f["texto"]) for f in ia]
+    elif r.get("ia_cabe"):
+        linhas.append("O texto das plantas baixas virou desenho: a IA local pode ler a camada da saída na imagem (--ia).")
     return "\n".join(linhas)
 
 
 def args_parser(p):
     p.add_argument("--pasta", required=True, help="pasta do processo")
     p.add_argument("--json", action="store_true", help="saída em JSON")
+    p.add_argument("--ia", action="store_true", help="texto em desenho: a IA local (Ollama) transcreve a camada da saída")
 
 
 def principal(args):
-    r = processo(args.pasta)
+    r = processo(args.pasta, getattr(args, "ia", False), lambda m: print(m, file=sys.stderr, flush=True))
     if args.json:
         print(json.dumps(r, ensure_ascii=False, indent=1))
     else:
