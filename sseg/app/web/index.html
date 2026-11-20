@@ -3275,8 +3275,8 @@ const BLOCOS = {
         sugDiv.replaceWith(edita); requestAnimationFrame(() => { autoAltura(edita); edita.focus(); });
         b.disabled = true;
       };
-      const pedido = processo ? el("textarea", { class: "rev-pedido", rows: 2, "aria-label": "Explicar ou pedir alteração em " + x.id,
-        placeholder: "Explique ou peça uma alteração no texto proposto (ex.: manter a Nota 02; tirar a parte da planta; o RT já justificou isso no memorial)…" }) : null;
+      const pedido = processo ? anexavel(el("textarea", { class: "rev-pedido", rows: 2, "aria-label": "Explicar ou pedir alteração em " + x.id,
+        placeholder: "Explique ou peça uma alteração no texto proposto (ex.: manter a Nota 02; tirar a parte da planta; o RT já justificou isso no memorial)…" })) : null;
       const pedir = () => {
         const t = pedido.value.trim();
         if (!t) return avisar("Escreva o que quer mudar ou explicar.", true);
@@ -3430,7 +3430,7 @@ function palpitesBloco(d, ctx) {
         r.antes ? fig("antes", qual + "planta anterior (recebeu a CIA)") : null,
         fig("depois", qual + (r.nao_reenviada ? "planta ativa, não reenviada (é a que a CIA analisou)" : "planta nova"))));
     });
-    const nota = campoCresce("o que a IA ou a comparação errou, ou o que você viu (opcional)", "", () => mandar());
+    const nota = campoCresce("o que a IA ou a comparação errou, ou o que você viu (opcional)", "", () => mandar(), true);  // tem as imagens próprias (2.14.5)
     nota.value = st.nota[it.n] || ""; nota.style.display = nota.value ? "" : "none";
     nota.addEventListener("input", () => { st.nota[it.n] = nota.value.trim(); });
     const mais = el("button", { class: "bt link", type: "button", on: { click: () => { nota.style.display = ""; mais.remove(); nota.focus(); } } }, "+ escrever");
@@ -3758,7 +3758,7 @@ function pintarChecklist() {
   else if (!abertas) pend.append(el("p", { class: "sub" }, "Nenhuma pendência aberta."));
   for (const p of r.pendencias.filter(p => !p.feita)) {
     if (PR.sujos[PR.codigo + ":p" + p.id] != null) p.resposta = PR.sujos[PR.codigo + ":p" + p.id];
-    const resp = el("input", { type: "text", value: PR.sujos[PR.codigo + ":p" + p.id] != null ? PR.sujos[PR.codigo + ":p" + p.id] : (p.resposta || ""), placeholder: "sua resposta (Enter manda ao Claude)", "data-id": p.id });
+    const resp = anexavel(el("input", { type: "text", value: PR.sujos[PR.codigo + ":p" + p.id] != null ? PR.sujos[PR.codigo + ":p" + p.id] : (p.resposta || ""), placeholder: "sua resposta (Enter manda ao Claude)", "data-id": p.id }));
     // 2.7.2: a resposta conta na hora para o botão "Mandar" (antes ele só aparecia depois de recarregar) e Enter manda
     resp.addEventListener("input", () => { PR.sujos[PR.codigo + ":p" + p.id] = resp.value; p.resposta = resp.value; p.enviada = false; contarRespostas(); });
     resp.addEventListener("change", () => salvarResposta(p));
@@ -3933,13 +3933,43 @@ function autoAltura(ta, teto = Infinity) {
 }
 // Campo de resposta dos quadros amarelos (2.8.19, pedido do Átila): começa com uma linha e cresce com o texto, para
 // ler tudo o que foi escrito. Enter manda; Shift+Enter quebra a linha.
-function campoCresce(placeholder, style, aoEnter) {
+function campoCresce(placeholder, style, aoEnter, semImagem) {
   const ta = el("textarea", { rows: 1, placeholder, style: "width:100%;" + (style || "") });
   const ajustar = () => autoAltura(ta, 320);
   ta.addEventListener("input", ajustar);
   ta.addEventListener("focus", ajustar);
   if (aoEnter) ta.addEventListener("keydown", ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); aoEnter(); } });
-  return ta;
+  return semImagem ? ta : anexavel(ta);
+}
+// Imagem em qualquer campo de resposta ao Claude (2.14.6, pedido do Átila: "tem que dar pra colocar imagens em todos
+// campos pro chatbot conseguir adequar o que eu peço com a ajuda das imagens"). Ctrl+V ou arrastar a imagem para o campo:
+// ela é gravada na pasta do processo (anexo-<data>-<k>.png|jpg, fica no PC: o enviar.py não leva) e o texto ganha
+// "[imagem: <caminho>]", que o Claude abre com Read (a pasta do processo já está liberada para ele). Vale para os campos
+// que vão ao Claude por qualquer caminho, porque a referência viaja dentro do próprio texto.
+const ANEXO_RE = /\s*\[imagem: [^\]\n]*\]/g;
+function anexavel(campo) {
+  const faixa = el("div", { class: "anx-faixa", style: "display:flex;gap:6px;flex-wrap:wrap;margin:4px 0" });
+  const juntar = async arqs => {
+    for (const f of [...arqs].filter(f => f && f.type && f.type.startsWith("image/"))) {
+      try {
+        const p = await prepararPrint(f);
+        const r = await api("anexo_salvar", [PR.codigo || "", p.url]);
+        const marca = (campo.value && !/\s$/.test(campo.value.slice(0, campo.selectionStart)) ? " " : "") + "[imagem: " + r.caminho + "] ";
+        campo.setRangeText(marca, campo.selectionStart, campo.selectionEnd, "end");
+        campo.dispatchEvent(new Event("input", { bubbles: true }));
+        campo.dispatchEvent(new Event("change", { bubbles: true }));
+        if (!faixa.isConnected) campo.after(faixa);
+        faixa.append(el("img", { src: p.mini, title: r.nome + " (o Claude abre pelo caminho escrito no texto)",
+          style: "height:48px;border:1px solid var(--linha);border-radius:4px" }));
+      } catch (e) { avisar("Não consegui juntar a imagem: " + (e.message || e), true); }
+    }
+  };
+  const imagensDe = lista => [...(lista || [])].filter(i => i.kind === "file").map(i => i.getAsFile()).filter(f => f && f.type.startsWith("image/"));
+  campo.addEventListener("paste", ev => { const a = imagensDe((ev.clipboardData || {}).items); if (a.length) { ev.preventDefault(); juntar(a); } });
+  campo.addEventListener("dragover", ev => { if ([...ev.dataTransfer.types].includes("Files")) ev.preventDefault(); });
+  campo.addEventListener("drop", ev => { if (!ev.dataTransfer.files.length) return; ev.preventDefault(); ev.stopPropagation(); juntar(ev.dataTransfer.files); });
+  campo.title = (campo.title ? campo.title + " · " : "") + "Ctrl+V ou arrastar uma imagem junta o print para o Claude";
+  return campo;
 }
 // sentido 1: puxar para baixo aumenta (CIA); -1: puxar para cima aumenta (chat, que cresce para cima)
 function alca(ta, sentido, teto, guardar) {
@@ -3957,7 +3987,7 @@ function alca(ta, sentido, teto, guardar) {
   return a;
 }
 // Texto no formato da caixa "Especificar" do SOL: abre com quebra de linha, um parágrafo por exigência.
-const textoSOL = lista => "\n" + lista.map(t => t.trim()).filter(Boolean).join("\n\n");
+const textoSOL = lista => "\n" + lista.map(t => t.replace(ANEXO_RE, "").trim()).filter(Boolean).join("\n\n");  // [imagem: …] não vai ao SOL
 
 // ---- CIA: uma caixa por item. Com rascunho do Claude e sem texto final, a caixa já vem com o rascunho
 // ("edite e salve"); salvar vira o texto final e o rascunho original fica guardado à parte.
@@ -4053,7 +4083,7 @@ function pintarCIA() {
   if (!r.exigencias.length) out.push(el("p", { class: "sub" }, "Escreva o achado em poucas palavras (\"porta da escada 80 cm\") e clique em \"Pedir ao Claude\": o rascunho volta para o mesmo item. Vale o texto que você salvar."));
   r.exigencias.forEach((e, i) => {
     const temFinal = !!(e.final || "").trim(), deRascunho = !temFinal && !!(e.rascunho || "").trim();
-    const ta = el("textarea", { "data-id": e.id, placeholder: "achado em poucas palavras (para o Claude redigir) ou o texto final da exigência" });
+    const ta = anexavel(el("textarea", { "data-id": e.id, placeholder: "achado em poucas palavras (para o Claude redigir) ou o texto final da exigência" }));
     // Edição não salva (2.14.2): a chave leva o código do processo (antes "e1" de um processo aparecia no e1 do outro) e
     // guarda o texto que estava salvo quando você começou a digitar. Se o Claude (ou o Salvar em outra janela) trocar o texto
     // depois disso, vale o novo, e a sua edição fica num "sua edição não salva" para voltar com um clique — antes a edição
@@ -4293,7 +4323,7 @@ $("#pr-lancar").onclick = async ev => {
 };
 $("#pr-copiar-cia").onclick = async () => {
   const fin = PR.reg.exigencias.filter(e => (e.final || "").trim());
-  await copiar(fin.map(e => e.final.trim()).join("\n\n"));
+  await copiar(fin.map(e => e.final.replace(ANEXO_RE, "").trim()).join("\n\n"));
   SSEG.log(["CIA copiada: " + fin.length + " exigência(s), só o texto salvo."]);
 };
 

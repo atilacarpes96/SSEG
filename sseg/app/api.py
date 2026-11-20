@@ -1318,6 +1318,28 @@ class Api:
         self._palpite().responder(self._pasta_proc(codigo), respostas)
         return True
 
+    def anexo_salvar(self, codigo, url):
+        """Imagem colada num campo de resposta ao Claude (2.14.6): grava na pasta do processo como
+        anexo-<AAAAMMDD-HHMMSS>-<k>.png|jpg (fica no PC; o enviar.py não leva) e devolve o caminho que vai no texto.
+        Sem processo (campo fora da janela de um), vai para <processos>/_anexos."""
+        m = re.match(r"data:image/(png|jpeg);base64,(.+)$", url or "", re.S)
+        if not m:
+            raise RuntimeError("Só imagem PNG ou JPG.")
+        dados = base64.b64decode(m.group(2))
+        if len(dados) > 8 * 1024 * 1024:
+            raise RuntimeError("Imagem grande demais (até 8 MB).")
+        pasta = self._pasta_proc(codigo) if codigo else os.path.join(self._cfg()["processos"], "_anexos")
+        os.makedirs(pasta, exist_ok=True)
+        base_nome = "anexo-" + time.strftime("%Y%m%d-%H%M%S")
+        k = 1
+        while any(os.path.exists(os.path.join(pasta, "%s-%d.%s" % (base_nome, k, x))) for x in ("png", "jpg")):
+            k += 1
+        nome = "%s-%d.%s" % (base_nome, k, "png" if m.group(1) == "png" else "jpg")
+        caminho = os.path.join(pasta, nome)
+        with open(caminho, "wb") as fh:
+            fh.write(dados)
+        return {"nome": nome, "caminho": caminho}
+
     def palpites_imagem(self, codigo, nome):
         """Imagem já gravada da conferência (2.14.5), como data: URL, para o cartão mostrar ao reabrir."""
         m = self._palpite()

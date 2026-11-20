@@ -4,6 +4,10 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.15.1
+
+- **Imagem em todos os campos que vão ao Claude.** Nos quadros amarelos (perguntas, "conferir na planta", observações), nas respostas das pendências, no pedido de alteração da revisão final e na caixa de cada exigência da CIA: Ctrl+V com um print ou arrastar a imagem para o campo. A miniatura aparece embaixo, o texto ganha a marca `[imagem: …]` e o Claude abre a imagem para entender o que você pediu. A imagem fica na pasta do processo (não sobe ao servidor nem ao GitHub), e a marca nunca vai para o texto copiado ou lançado no SOL.
+
 ## 2.15.0
 
 - **A IA local lê a planta quando o texto virou desenho.** Há projetista que manda o PDF com as letras convertidas em traço: aí o "Camadas das pranchas" não consegue ler área, população, ocupação, largura nem distância, e só dizia "conferir na planta". Agora, no PC com a IA local ligada, o quadro mostra o botão **◆ IA local · Ler com a IA local**.
