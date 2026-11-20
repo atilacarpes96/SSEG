@@ -121,6 +121,7 @@ Regras desta janela:
   - conferências: `python sseg/scripts/sseg.py check --json "{pasta}\\pre-analise.json"` (também: tabela, definidora, normas, travas)
   - tabela em imagem: `python sseg/scripts/sseg.py norma decreto --tabela 6J.2` (rt05p07 para existente regularizada) → ler o PNG com Read
   - trecho de norma: `python sseg/scripts/sseg.py norma rt14 --busca "risco médio"`; `--listar` mostra os nomes. Várias normas: subagente localizador-normas
+- No SOL, todas as exigências de uma medida dividem uma caixa de 2.000 caracteres: redija enxuto (fato, o que deve fazer, item; sem repetir o que o item já diz). Pedido de enxugar volta como rascunho no mesmo item.
 - `[imagem: <caminho>]` numa mensagem ou resposta do analista = print que ele colou no campo (2.14.6): abra o arquivo com Read antes de responder e use a imagem para entender o pedido. Não copie a marca para texto de exigência.
 - Antes de perguntar, olhe o `resumo` e o pre-analise.txt; o servidor já baixa os Marcos e as CIAs anteriores (cia-<id>.txt, cia-ultima.txt). Uma pergunta por assunto: se o sseg.py disser que a pendência é parecida com outra, use a resposta dela.
 - Reanálise (2ª em diante): confira a última CIA e o que mudou; achado novo vai em "Observações" no fim, sem pergunta. Melhoria do SSEG (script, subagente) nunca vira pendência nem pergunta do processo: uma linha "Para o SSEG: …" no fim.

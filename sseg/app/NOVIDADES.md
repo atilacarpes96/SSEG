@@ -4,6 +4,11 @@ Cada versão tem uma seção `## <versão>`. O GitHub copia a seção da versão
 página da release (passo "Notas da release" do `.github/workflows/sseg-app.yml`). Escrever para o
 analista: o que muda na tela e no dia a dia, sem nome de função.
 
+## 2.15.2
+
+- **Medida com mais de 2.000 caracteres.** No "Lançar no SOL", quando as exigências de uma medida passam do limite da caixa, as que têm prancha marcada ("erro na prancha") vão para a caixa da prancha, a maior primeiro, até a medida caber. A medida ganha a linha "Demais inconformidades desta medida lançadas em <prancha>", e a prancha mostra no lançamento quais itens recebeu. Caixa que continua acima de 2.000 vem desmarcada e com o botão "Pedir ao Claude para enxugar".
+- **Enxugar com o Claude.** Na coluna CIA, a medida acima de 2.000 mostra o que vai para cada prancha no lançamento e o link "enxugar com o Claude": ele reescreve as exigências mais curtas, sem tirar fundamento nem o fato, e o texto volta como rascunho no mesmo item para você conferir e salvar.
+
 ## 2.15.1
 
 - **Imagem em todos os campos que vão ao Claude.** Nos quadros amarelos (perguntas, "conferir na planta", observações), nas respostas das pendências, no pedido de alteração da revisão final e na caixa de cada exigência da CIA: Ctrl+V com um print ou arrastar a imagem para o campo. A miniatura aparece embaixo, o texto ganha a marca `[imagem: …]` e o Claude abre a imagem para entender o que você pediu. A imagem fica na pasta do processo (não sobe ao servidor nem ao GitHub), e a marca nunca vai para o texto copiado ou lançado no SOL.

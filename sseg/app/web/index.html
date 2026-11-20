@@ -3988,6 +3988,45 @@ function alca(ta, sentido, teto, guardar) {
 }
 // Texto no formato da caixa "Especificar" do SOL: abre com quebra de linha, um parágrafo por exigência.
 const textoSOL = lista => "\n" + lista.map(t => t.replace(ANEXO_RE, "").trim()).filter(Boolean).join("\n\n");  // [imagem: …] não vai ao SOL
+// Caixas do SOL no lançamento (2.15.2, pedido do Átila, 20/11/2026): cada medida tem uma caixa Especificar de 2.000
+// caracteres. Passou disso, a exigência que tem prancha marcada vai para a caixa da prancha ("o sseg lança aquela
+// notificação marcada no campo da planta baixa"), a maior primeiro, enquanto a medida não couber, e só se couber na
+// prancha. A medida ganha uma linha dizendo onde está o resto. Sem prancha marcada, fica e o lançamento avisa.
+const LIM_SOL = 2000;
+function caixasSOL(fin) {
+  const cx = new Map(), caixa = m => { if (!cx.has(m)) cx.set(m, { exs: [], citada: false, remete: new Set(), recebeu: false }); return cx.get(m); };
+  for (const e of fin) caixa(e.medida || "").exs.push(e);
+  for (const e of fin) for (const p of e.pranchas || []) if (p !== e.medida) caixa(p).citada = true;
+  const texto = c => textoSOL([...c.exs.map(e => e.final), ...[...c.remete].map(p => "- Demais inconformidades desta medida lançadas em " + p + "."),
+    c.citada ? "- Inconformidades já citadas acima." : ""]);
+  const movidas = [];
+  for (const [m, c] of [...cx.entries()]) {
+    if (!m) continue;
+    const moveis = c.exs.filter(e => (e.pranchas || []).some(p => p !== m && p !== e.medida)).sort((a, b) => b.final.length - a.final.length);
+    for (const e of moveis) {
+      if (texto(c).length <= LIM_SOL) break;
+      let melhor = null;
+      for (const p of e.pranchas.filter(p => p !== m)) {
+        const d = caixa(p), n = texto({ ...d, exs: [...d.exs, e] }).length;
+        if (n <= LIM_SOL && (!melhor || n < melhor.n)) melhor = { p, d, n };
+      }
+      if (!melhor) continue;
+      c.exs.splice(c.exs.indexOf(e), 1); melhor.d.exs.push(e); melhor.d.recebeu = true; c.remete.add(melhor.p);
+      movidas.push({ id: e.id, de: m, para: melhor.p });
+    }
+  }
+  return { movidas, caixas: [...cx.entries()].filter(([, c]) => c.exs.length || c.citada).map(([m, c]) => ({ medida: m, exs: c.exs, texto: texto(c),
+    ja: !c.citada && !c.remete.size && !c.recebeu && c.exs.every(e => e.lancado && e.lancado_final === e.final) })) };
+}
+// Enxugar com o Claude: o texto novo volta como rascunho nos mesmos itens, para o analista conferir e salvar
+function pedirEnxugar(medida, exs, n) {
+  chatEnviar(ctxDe(PR.codigo, PR.fluxo, ""), "As exigências da medida \"" + (medida || "sem medida") + "\" (itens " + exs.map(e => e.id).join(", ") +
+    " da coluna CIA) somam " + n + " caracteres na caixa Especificar do SOL, que aceita " + LIM_SOL + ". Enxugue o texto de cada uma para caber, " +
+    "sem tirar o fundamento (item e norma), o fato do caso nem o \"Deverá\"/REITERO: corte repetição, explicação que o item já diz e lista que pode " +
+    "virar \"conforme item X\". Grave cada uma como rascunho NO MESMO item (comando rascunho <id>, heredoc, mantendo --medida e --fundamento) e " +
+    "diga quantos caracteres a medida ficou. Não junte nem apague exigência.");
+  avisar("Pedido mandado ao chat: os textos enxutos voltam como rascunho para você conferir e salvar.");
+}
 
 // ---- CIA: uma caixa por item. Com rascunho do Claude e sem texto final, a caixa já vem com o rascunho
 // ("edite e salve"); salvar vira o texto final e o rascunho original fica guardado à parte.
@@ -4181,7 +4220,14 @@ function pintarCIA() {
       out.push(el("div", { class: "cia-grupo" }, el("div", { class: "cab-grupo" }, el("b", {}, m || "Sem medida escolhida"),
         el("span", { class: "discreto" }, l.length + " exigência(s)" + (salvas ? " · " + salvas + " salva(s)" : "")),
         salvas ? el("span", { class: tam > 2000 ? "alto" : "discreto" }, tam + " / 2000") : null,
-        el("button", { class: "bt link", title: "Copia as exigências salvas desta medida, prontas para a caixa Especificar do SOL", on: { click: copiarMedida } }, "copiar a medida")),
+        el("button", { class: "bt link", title: "Copia as exigências salvas desta medida, prontas para a caixa Especificar do SOL", on: { click: copiarMedida } }, "copiar a medida"),
+        tam > LIM_SOL ? el("button", { class: "bt link", title: "Pede ao Claude para enxugar o texto destas exigências; volta como rascunho para você conferir", on: { click: () => pedirEnxugar(m, fin, tam) } }, "enxugar com o Claude") : null),
+        tam > LIM_SOL ? (() => {
+          const d = caixasSOL(r.exigencias.filter(e => (e.final || "").trim())), mv = d.movidas.filter(x => x.de === m), fica = (d.caixas.find(c => c.medida === m) || {}).texto || "";
+          return el("div", { class: "sub", style: "margin:2px 0 6px" }, mv.length
+            ? "No lançamento: " + mv.map(x => "item " + (r.exigencias.findIndex(e => e.id === x.id) + 1) + " → " + x.para).join(", ") + " (prancha marcada); a medida fica com " + fica.length + " / 2000" + (fica.length > LIM_SOL ? " — ainda passa: enxugue ou marque a prancha de outra." : ".")
+            : "Passa de 2.000: marque a prancha onde está o erro (a exigência vai para a caixa dela no lançamento) ou enxugue o texto.");
+        })() : null,
         ...l.map(e => itens.get(e.id))));
     });
   } else out.push(...r.exigencias.map(e => itens.get(e.id)));
@@ -4246,15 +4292,12 @@ $("#pr-lancar").onclick = async ev => {
   // prancha marcada na exigência (2.6.12): reprovada junto, apontando ao RT onde está o erro. Vem depois das medidas no
   // SOL, daí o "acima"; se a prancha já tem exigência própria, a linha vai no fim da caixa dela
   // só a frase padrão, sem listar as medidas (Átila, 27/10/2026: lista incompleta daria margem ao RT)
-  const citadas = new Set();
-  for (const e of PR.reg.exigencias.filter(e => (e.final || "").trim()))
-    for (const p of e.pranchas || []) if (p !== e.medida) citadas.add(p);
-  for (const p of citadas) if (!grupos.has(p)) grupos.set(p, []);
-  const linhaPrancha = p => citadas.has(p) ? "- Inconformidades já citadas acima." : "";
+  // passou de 2.000 numa medida: as marcadas com prancha vão para a caixa da prancha (caixasSOL, 2.15.2)
   const ordem = m => { const k = medidas.indexOf(m); return m ? (k < 0 ? 900 : k) : 999; };
-  const lista = [...grupos.entries()].sort((a, b) => ordem(a[0]) - ordem(b[0]))
-    .map(([m, l]) => ({ medida: m, ids: l.map(e => e.id), texto: textoSOL([...l.map(e => e.final), linhaPrancha(m)]),
-      ja: !citadas.has(m) && l.every(e => e.lancado && e.lancado_final === e.final) }));
+  const dist = caixasSOL(PR.reg.exigencias.filter(e => (e.final || "").trim()));
+  const lista = dist.caixas.sort((a, b) => ordem(a.medida) - ordem(b.medida))
+    .map(c => ({ medida: c.medida, ids: c.exs.map(e => e.id), exs: c.exs, texto: c.texto, ja: c.ja }));
+  const numDe = id => PR.reg.exigencias.findIndex(e => e.id === id) + 1;
   avisar("Lendo os itens no SOL… (se o Chrome perguntar, clique em Permitir)");
   let planos;
   try { planos = await api("sol_lancar_plano", [PR.codigo, lista.map(g => ({ medida: g.medida, texto: g.texto }))], ev.currentTarget); } catch (e) { return; }
@@ -4262,7 +4305,7 @@ $("#pr-lancar").onclick = async ev => {
     const p = planos[i];
     const sel = el("select", { style: "max-width:100%" }, el("option", { value: "" }, "— item do SOL —"),
       ...(p.opcoes || []).map(o => el("option", { value: o, selected: o === p.item }, o)));
-    const marca = el("input", { type: "checkbox", checked: !!p.ok && !g.ja });
+    const marca = el("input", { type: "checkbox", checked: !!p.ok && !g.ja && g.texto.length <= LIM_SOL });
     const info = el("div", { class: "sub" });
     const pintar = q => {
       const av = [];
@@ -4286,6 +4329,11 @@ $("#pr-lancar").onclick = async ev => {
       el("div", { style: "display:flex;gap:8px;align-items:center;margin:4px 0" }, el("span", { class: "sub" }, "vai para:"), sel,
         el("span", { class: n > 2000 ? "alto" : "discreto" }, n + " / 2000")),
       info,
+      dist.movidas.some(x => x.para === g.medida) ? el("div", { class: "sub" }, "↪ veio para cá por passar de 2.000 na medida: " +
+        dist.movidas.filter(x => x.para === g.medida).map(x => "item " + numDe(x.id) + " (" + x.de + ")").join(", ")) : null,
+      n > LIM_SOL ? el("div", { class: "sub", style: "color:var(--verm)" }, "✗ passa de 2.000 e o SOL corta: " +
+        (g.exs.some(e => !(e.pranchas || []).some(p => p !== g.medida)) ? "marque a prancha das exigências (ela leva a exigência para a caixa da prancha) ou " : "") + "enxugue o texto. ",
+        el("button", { class: "bt", on: { click: () => { fechar(); pedirEnxugar(g.medida, g.exs, n); } } }, selo("claude"), "Pedir ao Claude para enxugar")) : null,
       el("details", {}, el("summary", { class: "sub" }, "ver o texto que vai"), el("div", { class: "lista", style: "white-space:pre-wrap;max-height:160px" }, g.texto))) };
   });
   // o resto vira Aprovado (pedido do Átila, 20/10/2026): o que não tem exigência na coluna CIA e não está Reprovado
