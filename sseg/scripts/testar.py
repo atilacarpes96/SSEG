@@ -1329,6 +1329,33 @@ def main():
          and pl_m.numerico({"comparacao": "taxa_pessoas_por_m2", "exigido": 1, "valor_no_elemento": 34, "area_m2": 34.72})["veredito"] == "cumpriu"
          and pl_m.numerico({"comparacao": "minimo", "exigido": 1.2, "valor_no_elemento": None, "area_m2": None})["veredito"] == "nao_sei"
          and pl_m.com_numero({"tipo": "texto", "exigencia": "largura mínima de 1,20 m"}) and not pl_m.com_numero({"tipo": "desenho", "exigencia": "1,20 m"}))
+    with tempfile.TemporaryDirectory() as _d2:
+        os.makedirs(os.path.join(_d2, pl_m.SUB))
+        def _pdf(nome, ws):
+            arq = os.path.join(_d2, pl_m.SUB, nome)
+            open(arq, "w").close()
+            with open(arq + ".bbox.json", "w", encoding="utf-8") as fh:
+                json.dump({"ws": {"1": [[w, x, y, x + 20, y + 8, w] for w, x, y in ws]}, "tam": {"1": [2000, 1400]}}, fh)
+        _fixo = [("parede%d" % i, 100 + 40 * i, 100 + 30 * i) for i in range(30)]
+        _pdf("antes.pdf", _fixo + [("0,80", 1500, 300), ("data", 1800, 1300), ("rev0", 1820, 1300)])
+        _pdf("nova.pdf", _fixo + [("1,20", 1500, 300), ("p2", 1510, 320), ("lx", 1490, 310), ("data2", 1800, 1300), ("rev1", 1820, 1300), ("folha2", 1840, 1310)])
+        _r = {"pdf": "nova.pdf", "pagina": 1, "caixa": [100, 100, 460, 460], "prancha": "Térreo",
+              "antes": {"pdf": "antes.pdf", "pagina": 1, "caixa": [100, 100, 460, 460]}}
+        _mud = pl_m.recortes_mudanca(_d2, [_r])
+        _orig = pl_m.perguntar
+        pl_m.perguntar = lambda texto, onde, png: {"veredito": "cumpriu", "evidencia": "porta 1,20", "segundos": 1}
+        _orig_rec = pl_m.recorte
+        pl_m.recorte = lambda *a, **k: b"png"
+        try:
+            _sc = pl_m._segunda_chance(_d2, {"exigencia": "x"}, [_r], "pergunta")
+            _sem = pl_m._segunda_chance(_d2, {"exigencia": "x"}, [dict(_r, antes=None)], "pergunta")
+        finally:
+            pl_m.perguntar, pl_m.recorte = _orig, _orig_rec
+    caso("palpite: segunda chance recorta onde a planta mudou (fora o carimbo) e sai sempre fraca",
+         len(_mud) == 1 and _mud[0]["caixa"][0] <= 1500 <= _mud[0]["caixa"][2] and _mud[0]["caixa"][1] <= 300 <= _mud[0]["caixa"][3]
+         and _sc["rotulo"]["classe"] == "ambar" and _sc["rotulo"]["veredito"] == "cumpriu"
+         and _sc["rotulo"]["motivo"] == "segunda_chance_mudanca" and _sc["segunda"]["recortes"] == _mud and _sem == {},
+         str((_mud, _sc.get("rotulo"))))
     caso("palpite: dica de cotas só lista o escrito no recorte e o limite (placa S1 300x150 não é porta; porta só em exigência de porta; 'mais de 2,20 m' é condição)",
          pl_m.limite_exigencia("A porta deverá ter luz mínima de 1,00 m, vão livre (2 UP).") == ("largura", 1.0)
          and pl_m.limite_exigencia("caminhamento máximo de 30 m até a saída") == ("distancia", 30.0)

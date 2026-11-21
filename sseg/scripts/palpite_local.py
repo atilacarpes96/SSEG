@@ -1045,7 +1045,7 @@ def preparar(pasta, curadoria):
                 if velho.get("conferencia"):
                     it["conferencia"] = velho["conferencia"]
                 if it["estado"] == "fila" and velho.get("assinatura") == it["assinatura"] and velho.get("estado") == "pronto":
-                    guarda = ("estado", "rodadas", "controle", "leitura", "rotulo", "feito_em") + (("recortes",) if it.get("cotas") else ())
+                    guarda = ("estado", "rodadas", "controle", "leitura", "rotulo", "feito_em", "segunda") + (("recortes",) if it.get("cotas") else ())
                     it.update({k: velho[k] for k in guarda if k in velho})
             itens.append(it)
         d.clear()
@@ -1119,10 +1119,10 @@ def agregar(partes):
     return "nao_cumpriu" if "nao_cumpriu" in vs else "cumpriu" if "cumpriu" in vs else "nao_sei"
 
 
-def _rodada(pasta, it, recs, margem, perg):
+def _rodada(pasta, it, recs, margem, perg, lugar="recorte da prancha em volta do elemento citado"):
     partes = []
     for k, r in enumerate(recs, 1):
-        onde = ("recorte %d de %d: " % (k, len(recs)) if len(recs) > 1 else "") + "recorte da prancha em volta do elemento citado"
+        onde = ("recorte %d de %d: " % (k, len(recs)) if len(recs) > 1 else "") + lugar
         p = perguntar(perg, onde, recorte(os.path.join(pasta, SUB, r["pdf"]), r["pagina"], r["caixa"], margem))
         p["onde"] = onde
         partes.append(p)
@@ -1295,6 +1295,68 @@ def _conclusao(tipo, rodadas, ctrl, leitura=None):
                v, motivo="continua_igual")
 
 
+# ------------------------------------------------------------------ segunda chance: recorte onde a planta mudou (21/11/2026)
+# Bateria da IA local (b2-mud no ~/ia-local/bateria/PLACAR.md, 431 itens): em 77% dos itens menos de 1/4 da mudança da
+# prancha cai no recorte em volta do termo. Quando a IA diz "não sei" nos três tamanhos, pergunta de novo com até 3
+# recortes onde a prancha mudou (palavras que entraram ou saíram, fora carimbo e legenda). Na bateria: 29 "não sei"
+# viraram resposta, 22 certas (76%), nenhum "cumpriu" falso; os 7 erros foram "não cumpriu". Aceito pelo Átila em
+# 21/11/2026. O palpite dessa segunda chance é sempre fraco (âmbar).
+LEGENDA = ("legenda", "simbolo", "simbologia", "convencoes", "convencao")
+
+
+def recortes_mudanca(pasta, recs, maximo=MAX_RECORTES):
+    """Até `maximo` recortes onde a prancha nova mudou em relação à anterior (só nos recortes com "antes")."""
+    cands = []  # (nota, recorte)
+    for r in recs:
+        if not r.get("antes"):
+            continue
+        pag = r["pagina"]
+        ws, tam = palavras(os.path.join(pasta, SUB, r["pdf"]))
+        wa, _t = palavras(os.path.join(pasta, SUB, r["antes"]["pdf"]))
+        W, H = tam.get(pag, (0, 0))
+        if not W:
+            continue
+        ent, sai, _d = mudancas(wa.get(pag, []), ws.get(pag, []))
+        legs = [(w[1] - 50, w[2] - 50, w[1] + 600, w[2] + 900) for w in ws.get(pag, []) if w[0].startswith(LEGENDA)]
+        pts = [((w[1] + w[3]) / 2, (w[2] + w[4]) / 2) for w in ent + sai]
+        pts = [(x, y) for x, y in pts if not (x > 0.72 * W and y > 0.65 * H)                      # carimbo
+               and not any(a0 <= x <= a1 and b0 <= y <= b1 for a0, b0, a1, b1 in legs)]
+        oc = ((r["caixa"][0] + r["caixa"][2]) / 2, (r["caixa"][1] + r["caixa"][3]) / 2)
+        resto = pts
+        while resto and len(cands) < 12:
+            centro = max(set(resto), key=lambda p: sum(1 for q in resto if abs(q[0] - p[0]) <= LADO and abs(q[1] - p[1]) <= LADO))
+            viz = [q for q in resto if abs(q[0] - centro[0]) <= LADO and abs(q[1] - centro[1]) <= LADO]
+            if len(viz) < 3:
+                break
+            cx, cy = sum(q[0] for q in viz) / len(viz), sum(q[1] for q in viz) / len(viz)
+            perto = abs(cx - oc[0]) <= 4 * LADO and abs(cy - oc[1]) <= 4 * LADO
+            caixa = _caixa(cx, cy, (W, H))
+            if not any(c["pdf"] == r["pdf"] and c["pagina"] == pag and abs(c["caixa"][0] - caixa[0]) < 60 and abs(c["caixa"][1] - caixa[1]) < 60 for _n, c in cands):
+                cands.append((len(viz) * (2 if perto else 1), {"pdf": r["pdf"], "pagina": pag, "caixa": caixa, "prancha": r.get("prancha", "")}))
+            resto = [q for q in resto if q not in viz]
+    cands.sort(key=lambda t: -t[0])
+    return [c for _n, c in cands[:maximo]]
+
+
+def _segunda_chance(pasta, it, recs, perg):
+    """{} quando não há onde a planta mudou; senão {"segunda": rodada, "rotulo": fraco com o veredito dela}."""
+    mud = recortes_mudanca(pasta, recs)
+    if not mud:
+        return {}
+    r = dict(_rodada(pasta, it, mud, MARGEM_LEITURA, perg, "recorte de um trecho da prancha que mudou em relação à planta anterior"),
+             recortes=mud)
+    v = r["veredito"]
+    if v == "nao_sei":
+        return {"segunda": r}
+    pranchas = ", ".join(sorted({c["prancha"] for c in mud if c.get("prancha")})) or "a prancha"
+    return {"segunda": r, "rotulo": {
+        "classe": "ambar", "veredito": v, "motivo": "segunda_chance_mudanca",
+        "titulo": "Palpite fraco (%s): olhando onde a planta mudou" % NOME[v],
+        "explicacao": "No recorte em volta do termo a IA não soube. Olhando os %d trecho(s) de %s que mudaram desde a planta "
+                      "anterior, respondeu \"%s\": %s. Na bateria esse palpite acertou 3 em 4 e não deu \"cumpriu\" falso; "
+                      "confira o trecho na planta." % (len(mud), pranchas, NOME[v], r["evidencia"][:300])}}
+
+
 def rodar(pasta, de_novo=False, aviso=print):
     """Roda a IA local nos itens da fila (e nos que falharam, com de_novo). Grava depois de cada item. Devolve
     (feitos, motivo de não ter rodado)."""
@@ -1341,6 +1403,9 @@ def rodar(pasta, de_novo=False, aviso=print):
                         os.utime(marca)
                         res["leitura"] = _leitura(pasta, it, novos)
                     res["rotulo"] = conclusao(it["tipo"], res["rodadas"], res["controle"], res.get("leitura"), it.get("exigencia") or "")
+                    if res["rotulo"].get("motivo") == "ia_nao_sabe":
+                        os.utime(marca)
+                        res.update(_segunda_chance(pasta, it, novos, perg))
                     # 2.13.9: classificação feita pela IA local (medida em 18/11/2026: tipo igual ao do Claude em 8 de
                     # 16) segura o palpite em "fraco": verde e vermelho só com a classificação conferida
                     rot = res["rotulo"]
@@ -1354,7 +1419,7 @@ def rodar(pasta, de_novo=False, aviso=print):
             def gravar(x, n=n, ass=ass, res=res):
                 alvo = _item(x, n)
                 if alvo and alvo.get("assinatura") == ass:  # a conversa pode ter preparado de novo no meio da rodada
-                    for k in ("rodadas", "controle", "leitura", "rotulo", "erro") + (("recortes",) if alvo.get("cotas") else ()):
+                    for k in ("rodadas", "controle", "leitura", "rotulo", "erro", "segunda") + (("recortes",) if alvo.get("cotas") else ()):
                         alvo.pop(k, None)
                     alvo.update(res)
             _atualizar(pasta, gravar)
