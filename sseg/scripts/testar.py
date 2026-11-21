@@ -1356,6 +1356,32 @@ def main():
          and _sc["rotulo"]["classe"] == "ambar" and _sc["rotulo"]["veredito"] == "cumpriu"
          and _sc["rotulo"]["motivo"] == "segunda_chance_mudanca" and _sc["segunda"]["recortes"] == _mud and _sem == {},
          str((_mud, _sc.get("rotulo"))))
+    with tempfile.TemporaryDirectory() as _d3:
+        os.makedirs(os.path.join(_d3, pl_m.SUB))
+        def _pdf3(nome, paginas):
+            arq = os.path.join(_d3, pl_m.SUB, nome)
+            open(arq, "w").close()
+            with open(arq + ".bbox.json", "w", encoding="utf-8") as fh:
+                json.dump({"ws": {str(k): [[w, x, y, x + 20, y + 8, w] for w, x, y in ws] for k, ws in enumerate(paginas, 1)},
+                           "tam": {str(k): [2000, 1400] for k in range(1, len(paginas) + 1)}}, fh)
+        _sala = [("sala%d" % i, 100 + 40 * i, 100 + 30 * i) for i in range(30)]
+        _carta = [("prefeito%d" % i, 100 + 40 * i, 100) for i in range(30)]
+        _pdf3("nova.pdf", [_sala])
+        _pdf3("oficio.pdf", [_carta])                                             # tipo "planta" errado no SOL
+        _pdf3("plantas2.pdf", [_carta, [(w, x + 50, y + 20) for w, x, y in _sala]])  # a certa: página 2, deslocada
+        _pdf3("refeita.pdf", [[(w, 1900 - x, 1300 - y) for w, x, y in _sala]])   # mesmo texto, desenho refeito
+        _pl = lambda arq, i, tipo: {"arquivo": arq, "id": i, "lado": "antes", "tipo": tipo, "descricao": "planta", "tem": True, "nome": arq}
+        _nova = {"arquivo": "nova.pdf", "id": 9, "lado": "depois", "tipo": "PLANTA", "descricao": "planta", "tem": True, "nome": "nova"}
+        _wn, _t = pl_m.palavras(os.path.join(_d3, pl_m.SUB, "nova.pdf"))
+        _esc = pl_m.anterior_da_pagina(_d3, [_nova, _pl("oficio.pdf", 3, "PLANTA"), _pl("plantas2.pdf", 2, "OUTRO")], _nova, 1, _wn[1])
+        _nada = pl_m.anterior_da_pagina(_d3, [_nova, _pl("oficio.pdf", 3, "PLANTA")], _nova, 1, _wn[1])
+        _wa, _t = pl_m.palavras(os.path.join(_d3, pl_m.SUB, "plantas2.pdf"))
+        _wr, _t = pl_m.palavras(os.path.join(_d3, pl_m.SUB, "refeita.pdf"))
+        _ok = pl_m.alinhou(pl_m.mudancas(_wa[2], _wn[1])[0], _wn[1])
+        _torto = pl_m.alinhou(pl_m.mudancas(_wr[1], _wn[1])[0], _wn[1])
+    caso("palpite: a planta anterior é a página de texto parecido (não o ofício do mesmo tipo) e, sem alinhar, não há contraprova",
+         _esc[0] and _esc[0]["arquivo"] == "plantas2.pdf" and _esc[1] == 2 and _nada == (None, None) and _ok and not _torto,
+         str((_esc[0] and _esc[0]["arquivo"], _esc[1], _nada, _ok, _torto)))
     caso("palpite: dica de cotas só lista o escrito no recorte e o limite (placa S1 300x150 não é porta; porta só em exigência de porta; 'mais de 2,20 m' é condição)",
          pl_m.limite_exigencia("A porta deverá ter luz mínima de 1,00 m, vão livre (2 UP).") == ("largura", 1.0)
          and pl_m.limite_exigencia("caminhamento máximo de 30 m até a saída") == ("distancia", 30.0)

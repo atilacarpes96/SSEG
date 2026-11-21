@@ -279,6 +279,45 @@ def par_anterior(todas, p):
     return max(perto, key=lambda a: a["id"]) if perto else None
 
 
+# Conferência do piloto pelo Átila (21/11/2026): o recorte "antes" saía em outra prancha (o tipo no SOL errado: um
+# ofício como "planta"), em outra página ou desalinhado (deslocamento sem maioria = (0, 0), recortado no mesmo
+# lugar sem aviso). Agora a anterior é a página, entre todas as que a última CIA analisou, cujo texto mais se parece
+# com o desta; e se, depois de alinhar, quase nada casar, não há contraprova em vez de uma errada.
+PARECIDO_ANTERIOR = 0.2   # Jaccard mínimo das palavras (> 2 letras) entre a página nova e a anterior
+POUCO_TEXTO = 20          # abaixo disso não dá para comparar texto: fica o par por tipo, mesma página
+CASOU_MINIMO = 0.3        # fração das palavras da página nova achadas na anterior, depois de alinhar
+
+
+def _vocab(ws):
+    return {w[0] for w in ws if len(w[0]) > 2}
+
+
+def anterior_da_pagina(pasta, todas, p, pag, ws_pag):
+    """(prancha anterior, página dela) que corresponde a esta página da prancha nova, ou (None, None)."""
+    base = par_anterior(todas, p)
+    cn = _vocab(ws_pag)
+    if len(cn) < POUCO_TEXTO:
+        return (base, pag) if base and base["tem"] else (None, None)
+    melhor = (0.0, None, None)
+    for a in todas:
+        if a["lado"] != "antes" or not a["tem"]:
+            continue
+        wa, _t = palavras(os.path.join(pasta, SUB, a["arquivo"]))
+        for pg, w in wa.items():
+            ca = _vocab(w)
+            if not ca:
+                continue
+            nota = len(cn & ca) / len(cn | ca) + (0.05 if a is base else 0) + (0.02 if pg == pag else 0)
+            if nota > melhor[0]:
+                melhor = (nota, a, pg)
+    return (melhor[1], melhor[2]) if melhor[0] >= PARECIDO_ANTERIOR else (None, None)
+
+
+def alinhou(ent, ws_pag):
+    """Depois de mudancas(): a anterior está de fato em cima da nova (casou ao menos CASOU_MINIMO das palavras)."""
+    return len(ws_pag) < POUCO_TEXTO or len(ent) <= (1 - CASOU_MINIMO) * len(ws_pag)
+
+
 # ------------------------------------------------------------------ texto da prancha, com posição
 
 def palavras(pdf):
@@ -728,9 +767,12 @@ def _recortes(pasta, cfg, todas):
                     fora_camada += sairam
                 pontos += [(p, pag, x, y) for x, y in achados]
             if cfg.get("termo_antes") and a and a["tem"] and not p["nao_reenviada"]:
-                wa, _t = palavras(os.path.join(pasta, SUB, a["arquivo"]))
-                ox, oy = deslocamento(wa.get(pag, []), ws[pag])
-                pontos += [(p, pag, x + ox, y + oy) for x, y in ocorrencias(wa.get(pag, []), cfg["termo_antes"])]
+                a2, pag_a = anterior_da_pagina(pasta, todas, p, pag, ws[pag])
+                if a2:
+                    wa, _t = palavras(os.path.join(pasta, SUB, a2["arquivo"]))
+                    ent, _s, (ox, oy) = mudancas(wa.get(pag_a, []), ws[pag])
+                    if alinhou(ent, ws[pag]):
+                        pontos += [(p, pag, x + ox, y + oy) for x, y in ocorrencias(wa.get(pag_a, []), cfg["termo_antes"])]
     # pontos vizinhos na mesma prancha viram um recorte só, centrado no meio deles (cabem juntos no quadrado de 2*LADO)
     grupos = []  # [prancha, página, x médio, y médio, quantos]
     for p, pag, x, y in pontos:
@@ -769,16 +811,26 @@ def _recortes(pasta, cfg, todas):
         elif not a["tem"]:
             fatos.append("%s: falta baixar a versão que a última CIA analisou (%s) para comparar." % (onde, a["nome"]))
         else:
-            wa, _t = palavras(os.path.join(pasta, SUB, a["arquivo"]))
-            ent, sai, (ox, oy) = mudancas(wa.get(pag, []), ws[pag])
-            r["antes"] = {"pdf": a["arquivo"], "pagina": pag, "caixa": [round(caixa[0] - ox), round(caixa[1] - oy), round(caixa[2] - ox), round(caixa[3] - oy)]}
-            e_, s_ = frases(_dentro(ent, caixa, 60)), frases(_dentro(sai, caixa, 60))
-            if e_ or s_:
-                fatos.append("%s, neste trecho: entrou no texto: %s; saiu do texto: %s." % (
-                    onde, " · ".join(e_)[:300] or "nada", " · ".join(s_)[:300] or "nada"))
+            a2, pag_a = anterior_da_pagina(pasta, todas, p, pag, ws[pag])
+            ent = sai = None
+            if a2:
+                wa, _t = palavras(os.path.join(pasta, SUB, a2["arquivo"]))
+                ent, sai, (ox, oy) = mudancas(wa.get(pag_a, []), ws[pag])
+            if not a2:
+                fatos.append("%s: nenhuma página das plantas que a última CIA analisou tem o texto parecido com esta: "
+                             "sem contraprova neste trecho." % onde)
+            elif not alinhou(ent, ws[pag]):
+                fatos.append("%s: a planta anterior (%s) não alinhou com a nova (desenho refeito ou outra prancha): "
+                             "sem contraprova neste trecho." % (onde, _rotulo_planta(a2)))
             else:
-                fatos.append("%s, neste trecho: o texto é idêntico ao da planta que a última CIA analisou "
-                             "(a mudança, se houve, é só de desenho)." % onde)
+                r["antes"] = {"pdf": a2["arquivo"], "pagina": pag_a, "caixa": [round(caixa[0] - ox), round(caixa[1] - oy), round(caixa[2] - ox), round(caixa[3] - oy)]}
+                e_, s_ = frases(_dentro(ent, caixa, 60)), frases(_dentro(sai, caixa, 60))
+                if e_ or s_:
+                    fatos.append("%s, neste trecho: entrou no texto: %s; saiu do texto: %s." % (
+                        onde, " · ".join(e_)[:300] or "nada", " · ".join(s_)[:300] or "nada"))
+                else:
+                    fatos.append("%s, neste trecho: o texto é idêntico ao da planta que a última CIA analisou "
+                                 "(a mudança, se houve, é só de desenho)." % onde)
         dica = dica_cotas(cfg, frases(_dentro(ws[pag], caixa, 30)), onde)
         if dica:
             fatos.append(dica)
@@ -1316,7 +1368,7 @@ def recortes_mudanca(pasta, recs, maximo=MAX_RECORTES):
         W, H = tam.get(pag, (0, 0))
         if not W:
             continue
-        ent, sai, _d = mudancas(wa.get(pag, []), ws.get(pag, []))
+        ent, sai, _d = mudancas(wa.get(r["antes"].get("pagina", pag), []), ws.get(pag, []))
         legs = [(w[1] - 50, w[2] - 50, w[1] + 600, w[2] + 900) for w in ws.get(pag, []) if w[0].startswith(LEGENDA)]
         pts = [((w[1] + w[3]) / 2, (w[2] + w[4]) / 2) for w in ent + sai]
         pts = [(x, y) for x, y in pts if not (x > 0.72 * W and y > 0.65 * H)                      # carimbo
