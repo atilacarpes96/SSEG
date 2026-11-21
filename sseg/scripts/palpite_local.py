@@ -803,24 +803,20 @@ def _f(x):
 
 
 def limite_exigencia(exigencia, esperado=""):
-    """("largura", mínimo) | ("distancia", máximo) | None, lido no texto da exigência."""
+    """("largura", mínimo) | ("distancia", máximo) | None, lido no texto da exigência. Distância só com a palavra do
+    limite logo antes do número ("máxima ... de 15 m", "superior a 10 m"); "projeção de 4,88 m" e "10 m²" ficam fora."""
     t = sem_acento(" ".join([esperado or "", exigencia or ""]))
-    ns = []
-    for m in re.finditer(_NUM + r"\s*(?:m|metros)\b", t):
-        if re.search(r"mais de\s*$|superior a\s*$|acima de\s*$", t[max(0, m.start() - 14):m.start()]):
-            continue  # "rampa com mais de 2,20 m deve ter corrimão intermediário" é condição, não limite
+    achados = []  # (número, 60 caracteres antes)
+    for m in re.finditer(_NUM + r"\s*(?:m|metros)(?![2\u00b2\w])", t):
         n = _f(m.group(1))
         if 0.5 <= n <= 80:
-            ns.append(n)
-    if not ns:
-        return None
+            achados.append((n, t[max(0, m.start() - 60):m.start()]))
     if re.search(r"largura|unidades? de passagem|vao livre", t):
-        cand = [n for n in ns if n <= 3]
+        # "rampa com mais de 2,20 m deve ter corrimão intermediário" é condição, não largura mínima
+        cand = [n for n, antes in achados if n <= 3 and not re.search(r"(?:mais de|superior a|acima de)\s*$", antes)]
         return ("largura", max(cand)) if cand else None
-    if re.search(r"maxim|menos de|nao mais|ate \d|no maximo|distante a nao|percorrer", t):
-        cand = [n for n in ns if n >= 3]
-        return ("distancia", min(cand)) if cand else None
-    return None
+    cand = [n for n, antes in achados if n >= 3 and re.search(r"maxim|ate |ultrapass|superior a|mais de|percorr|distancia|caminhamento", antes)]
+    return ("distancia", cand[0]) if cand else None
 
 
 def cotas_escritas(tipo, linhas):
