@@ -1329,6 +1329,14 @@ def main():
          and pl_m.numerico({"comparacao": "taxa_pessoas_por_m2", "exigido": 1, "valor_no_elemento": 34, "area_m2": 34.72})["veredito"] == "cumpriu"
          and pl_m.numerico({"comparacao": "minimo", "exigido": 1.2, "valor_no_elemento": None, "area_m2": None})["veredito"] == "nao_sei"
          and pl_m.com_numero({"tipo": "texto", "exigencia": "largura mínima de 1,20 m"}) and not pl_m.com_numero({"tipo": "desenho", "exigencia": "1,20 m"}))
+    caso("palpite: dica de cotas só lista o escrito no recorte e o limite (placa S1 300x150 não é porta; 'mais de 2,20 m' é condição)",
+         pl_m.limite_exigencia("A porta deverá ter largura mínima de 1,10 m.") == ("largura", 1.1)
+         and pl_m.limite_exigencia("caminhamento máximo de 30 m até a saída") == ("distancia", 30.0)
+         and pl_m.limite_exigencia("Rampa com mais de 2,20 m de largura deve ter corrimão intermediário.") is None
+         and pl_m.limite_exigencia("Cotar a largura da rampa.") is None
+         and pl_m.cotas_escritas("largura", ["P1 80x210", "S1 300x150", "PORTA 0,90 x 2,10"]) == [0.8, 0.9]
+         and "0,80; 0,90" in pl_m.dica_cotas({"exigencia": "largura mínima de 1,10 m"}, ["P1 80x210", "P2 0,90x2,10"], "Prancha X")
+         and pl_m.dica_cotas({"exigencia": "largura mínima de 1,10 m"}, ["sem cota"], "Prancha X") == "")
     caso("palpite: recorte que muda a resposta, 'não sei' e 'cumpriu' na planta anterior saem como inconclusivo, sem veredito",
          all(x["titulo"].startswith("Inconclusivo:") and not x["veredito"] and x["motivo"] for x in (
              pl_m.conclusao("texto", r_("cumpriu", "nao_cumpriu", "cumpriu"), c_("nao_cumpriu")),

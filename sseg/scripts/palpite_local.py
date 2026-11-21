@@ -779,12 +779,86 @@ def _recortes(pasta, cfg, todas):
             else:
                 fatos.append("%s, neste trecho: o texto é idêntico ao da planta que a última CIA analisou "
                              "(a mudança, se houve, é só de desenho)." % onde)
+        dica = dica_cotas(cfg, frases(_dentro(ws[pag], caixa, 30)), onde)
+        if dica:
+            fatos.append(dica)
         recs.append(r)
     if all(r.get("nao_reenviada") for r in recs):
         return recs, fatos, "A prancha não foi reenviada: não há planta nova para a IA olhar."
     if not any(r.get("antes") for r in recs):
         fatos.append("Sem a planta anterior para a contraprova: o palpite sai, no máximo, como fraco.")
     return recs, fatos, ""
+
+
+# ------------------------------------------------------------------ dica de cotas (sem IA, 21/11/2026)
+# Caminho (2) da bateria da IA local: decidir "cumpriu" pela cota escrita no recorte foi reprovado (b2-medir no
+# PLACAR: o número lido certo era de outra porta ou de outro percurso). Serve como dica ao analista, ao lado dos
+# outros fatos: o que está escrito no recorte e o limite que a exigência pede. Nunca vira palpite nem vai ao modelo.
+
+_NUM = r"(\d{1,3}(?:[.,]\d{1,2})?)"
+
+
+def _f(x):
+    return float(x.replace(",", "."))
+
+
+def limite_exigencia(exigencia, esperado=""):
+    """("largura", mínimo) | ("distancia", máximo) | None, lido no texto da exigência."""
+    t = sem_acento(" ".join([esperado or "", exigencia or ""]))
+    ns = []
+    for m in re.finditer(_NUM + r"\s*(?:m|metros)\b", t):
+        if re.search(r"mais de\s*$|superior a\s*$|acima de\s*$", t[max(0, m.start() - 14):m.start()]):
+            continue  # "rampa com mais de 2,20 m deve ter corrimão intermediário" é condição, não limite
+        n = _f(m.group(1))
+        if 0.5 <= n <= 80:
+            ns.append(n)
+    if not ns:
+        return None
+    if re.search(r"largura|unidades? de passagem|vao livre", t):
+        cand = [n for n in ns if n <= 3]
+        return ("largura", max(cand)) if cand else None
+    if re.search(r"maxim|menos de|nao mais|ate \d|no maximo|distante a nao|percorrer", t):
+        cand = [n for n in ns if n >= 3]
+        return ("distancia", min(cand)) if cand else None
+    return None
+
+
+def cotas_escritas(tipo, linhas):
+    """Números do recorte do mesmo tipo do limite: porta "LxA" (altura de porta 2,00 a 2,40 m; placa "S1 300x150"
+    fica fora) ou "L = 1,20" para largura; anotação de distância/percurso para distância."""
+    vs = []
+    for s in (sem_acento(x) for x in linhas):
+        if tipo == "distancia":
+            for m in re.finditer(r"(?:distancia|percorr|total|caminhamento)[^0-9]{0,80}?" + _NUM + r"\s*m\b", s):
+                vs.append(_f(m.group(1)))
+            continue
+        for m in re.finditer(r"(?<![s]\d)(?<![s]\d\d)(?<![s]\d )(?<![s]\d\d )\(?\b(\d{2,3}|[0-3][.,]\d{2})\s*x\s*(\d{3}|[1-3][.,]\d{2})\b", s):
+            w, h = _f(m.group(1)), _f(m.group(2))
+            w, h = (w / 100 if w > 10 else w), (h / 100 if h > 10 else h)
+            if 0.5 <= w <= 2.5 and 2.0 <= h <= 2.4:
+                vs.append(w)
+        for m in re.finditer(r"\b(?:l|larg(?:ura)?)\s*[=:]\s*" + _NUM + r"\s*m?\b", s):
+            w = _f(m.group(1))
+            w = w / 100 if w > 10 else w
+            if 0.5 <= w <= 6:
+                vs.append(w)
+    return vs
+
+
+def dica_cotas(it, linhas, onde):
+    """Fato com as cotas lidas no recorte e o limite da exigência, ou "" quando não há limite ou número."""
+    lim = limite_exigencia(it.get("exigencia"), it.get("esperado"))
+    if not lim:
+        return ""
+    tipo, L = lim
+    vs = cotas_escritas(tipo, linhas)
+    if not vs:
+        return ""
+    br = lambda v: ("%.2f" % v).replace(".", ",")
+    return "%s: cotas escritas no recorte (%s): %s · a exigência pede %s %s m. Dica do texto do PDF, sem saber de " \
+        "qual porta ou percurso é cada cota: confira na planta." % (
+            onde, "portas/larguras" if tipo == "largura" else "distâncias", "; ".join(br(v) for v in vs[:8]),
+            "largura mínima de" if tipo == "largura" else "no máximo", br(L))
 
 
 # ------------------------------------------------------------------ prancha com o texto convertido em desenho
