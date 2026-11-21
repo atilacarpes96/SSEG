@@ -811,7 +811,7 @@ def limite_exigencia(exigencia, esperado=""):
         n = _f(m.group(1))
         if 0.5 <= n <= 80:
             achados.append((n, t[max(0, m.start() - 60):m.start()]))
-    if re.search(r"largura|unidades? de passagem|vao livre", t):
+    if re.search(r"largura|unidades? de passagem|vao livre|\bluz\b", t):
         # "rampa com mais de 2,20 m deve ter corrimão intermediário" é condição, não largura mínima
         cand = [n for n, antes in achados if n <= 3 and not re.search(r"(?:mais de|superior a|acima de)\s*$", antes)]
         return ("largura", max(cand)) if cand else None
@@ -819,16 +819,18 @@ def limite_exigencia(exigencia, esperado=""):
     return ("distancia", cand[0]) if cand else None
 
 
-def cotas_escritas(tipo, linhas):
-    """Números do recorte do mesmo tipo do limite: porta "LxA" (altura de porta 2,00 a 2,40 m; placa "S1 300x150"
-    fica fora) ou "L = 1,20" para largura; anotação de distância/percurso para distância."""
+def cotas_escritas(tipo, linhas, porta=False):
+    """Números do recorte do mesmo tipo do limite: anotação de distância/percurso para distância; para largura,
+    "L = 1,20" e, só quando a exigência é de porta, a porta "LxA" (altura 2,00 a 2,40 m; placa "S1 300x150" fica
+    fora). Exigência de escada, corredor ou acesso (1,10 m, RT 11 item 5.4) não lista porta: é outro elemento; a
+    porta tem o mínimo próprio do 5.5.4.3 (80 cm até 1 UP, 1,00 m com 2 UP, 1,60 m com 3 UP)."""
     vs = []
     for s in (sem_acento(x) for x in linhas):
         if tipo == "distancia":
             for m in re.finditer(r"(?:distancia|percorr|total|caminhamento)[^0-9]{0,80}?" + _NUM + r"\s*m\b", s):
                 vs.append(_f(m.group(1)))
             continue
-        for m in re.finditer(r"(?<![s]\d)(?<![s]\d\d)(?<![s]\d )(?<![s]\d\d )\(?\b(\d{2,3}|[0-3][.,]\d{2})\s*x\s*(\d{3}|[1-3][.,]\d{2})\b", s):
+        for m in ([] if not porta else re.finditer(r"(?<![s]\d)(?<![s]\d\d)(?<![s]\d )(?<![s]\d\d )\(?\b(\d{2,3}|[0-3][.,]\d{2})\s*x\s*(\d{3}|[1-3][.,]\d{2})\b", s)):
             w, h = _f(m.group(1)), _f(m.group(2))
             w, h = (w / 100 if w > 10 else w), (h / 100 if h > 10 else h)
             if 0.5 <= w <= 2.5 and 2.0 <= h <= 2.4:
@@ -847,13 +849,14 @@ def dica_cotas(it, linhas, onde):
     if not lim:
         return ""
     tipo, L = lim
-    vs = cotas_escritas(tipo, linhas)
+    porta = bool(re.search(r"\bportas?\b", sem_acento(it.get("exigencia") or "")))
+    vs = cotas_escritas(tipo, linhas, porta)
     if not vs:
         return ""
     br = lambda v: ("%.2f" % v).replace(".", ",")
     return "%s: cotas escritas no recorte (%s): %s · a exigência pede %s %s m. Dica do texto do PDF, sem saber de " \
         "qual porta ou percurso é cada cota: confira na planta." % (
-            onde, "portas/larguras" if tipo == "largura" else "distâncias", "; ".join(br(v) for v in vs[:8]),
+            onde, "distâncias" if tipo == "distancia" else "portas" if porta else "larguras", "; ".join(br(v) for v in vs[:8]),
             "largura mínima de" if tipo == "largura" else "no máximo", br(L))
 
 
