@@ -1156,9 +1156,13 @@ def perguntar(texto, onde, png):
     try:
         j = json.loads(bruto)
         v, ev = j.get("veredito"), str(j.get("evidencia", ""))
-        if v not in VEREDITOS:
-            raise ValueError(v)
     except Exception:  # noqa: BLE001
+        # evidência longa cortada pelo teto da resposta (23 de 459 no replay de 21/11/2026): o veredito vem primeiro
+        m = re.match(r'\s*\{\s*"veredito"\s*:\s*"(\w+)"\s*,\s*"evidencia"\s*:\s*"(.*)', bruto, re.S)
+        if not m:
+            raise RuntimeError("resposta fora do formato: " + bruto[:200])
+        v, ev = m.group(1), m.group(2).replace('\\"', '"') + " [cortado]"
+    if v not in VEREDITOS:
         raise RuntimeError("resposta fora do formato: " + bruto[:200])
     return {"veredito": v, "evidencia": ev, "segundos": round(time.time() - t0, 1)}
 
@@ -1295,6 +1299,11 @@ def conclusao(tipo, rodadas, ctrl, leitura=None, exig=""):
     return r
 
 
+# Replay da regra de produção na bateria limpa (21/11/2026, ~/ia-local/PROJETO.md): o vermelho errou 8 de 8 e o
+# "não cumpriu" cru da IA acerta 13% (141 casos). "Não cumprida" nunca é palpite firme: sai âmbar, com o veredito.
+SEM_VERMELHO = "Fraco porque, nos testes, o \"não cumpriu\" da IA local quase sempre estava errado: confira na planta."
+
+
 def _conclusao(tipo, rodadas, ctrl, leitura=None):
     """Rótulo honesto do palpite: {classe, titulo, explicacao, veredito, motivo}. O título já diz o porquê; o motivo
     (código curto) vai junto da conferência do analista para medir, depois, qual tipo de palpite erra.
@@ -1327,8 +1336,9 @@ def _conclusao(tipo, rodadas, ctrl, leitura=None):
                        "errou o veredito. Confira a cota do elemento.", motivo="conta_discorda")
         expl = "O veredito da IA e a conta do programa com a cota que ela leu concordam (%s)%s. Na bateria, esse acordo " \
                "teve 0 erro em 21 itens guardados." % (conta, "; e na planta anterior ela disse \"não cumpriu\"" if ctrl and ctrl["veredito"] == "nao_cumpriu" else "")
-        return rot("verde" if v == "cumpriu" else "vermelho",
-                   ("Parece cumprida: " if v == "cumpriu" else "Parece não cumprida: ") + conta, expl, v, motivo="conta_confirma")
+        if v != "cumpriu":
+            return rot("ambar", "Palpite fraco (Não cumprida): " + conta, expl + " " + SEM_VERMELHO, v, motivo="conta_confirma")
+        return rot("verde", "Parece cumprida: " + conta, expl, v, motivo="conta_confirma")
     if not ctrl:
         return rot("ambar", "Palpite fraco (%s): sem a planta anterior para comparar" % NOME[v],
                    "Igual nos três tamanhos de recorte, mas sem a planta anterior para a contraprova.", v, motivo="sem_contraprova")
@@ -1342,9 +1352,9 @@ def _conclusao(tipo, rodadas, ctrl, leitura=None):
     if v == "cumpriu":
         return rot("verde", "Parece cumprida: o valor pedido aparece na planta nova e não na anterior",
                    "Igual nos três tamanhos de recorte e a IA disse \"não cumpriu\" na planta anterior.", v, motivo="contraprova_confirma")
-    return rot("vermelho", "Parece não cumprida: a planta nova continua sem o valor pedido",
-               "Igual nos três tamanhos de recorte" + (" e a IA também disse \"não cumpriu\" na planta anterior." if ctrl["veredito"] == "nao_cumpriu" else "."),
-               v, motivo="continua_igual")
+    return rot("ambar", "Palpite fraco (Não cumprida): a planta nova parece continuar sem o valor pedido",
+               "Igual nos três tamanhos de recorte" + (" e a IA também disse \"não cumpriu\" na planta anterior." if ctrl["veredito"] == "nao_cumpriu" else ".")
+               + " " + SEM_VERMELHO, v, motivo="continua_igual")
 
 
 # ------------------------------------------------------------------ segunda chance: recorte onde a planta mudou (21/11/2026)

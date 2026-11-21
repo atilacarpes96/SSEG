@@ -1289,7 +1289,8 @@ def main():
     c_ = lambda v: {"veredito": v, "evidencia": ""}
     caso("palpite: rótulo firme só em texto, igual nos três recortes e com 'não cumpriu' na planta anterior; o título diz o porquê",
          pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"))["motivo"] == "continua_igual"
-         and pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"))["classe"] == "vermelho"
+         and pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"))["classe"] == "ambar"
+         and pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"))["veredito"] == "nao_cumpriu"
          and pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"))["classe"] == "verde"
          and pl_m.conclusao("desenho", r_("cumpriu", "cumpriu", "cumpriu"), c_("nao_cumpriu"))["motivo"] == "tipo_fraco"
          and pl_m.conclusao("texto", r_("cumpriu", "cumpriu", "cumpriu"), None)["titulo"].startswith("Palpite fraco (Cumpriu): sem a planta anterior"))
@@ -1308,9 +1309,18 @@ def main():
     _vrm = pl_m.conclusao("texto", r_("nao_cumpriu", "nao_cumpriu", "nao_cumpriu"), c_("nao_cumpriu"), _lt("nao_cumpriu", 0.9),
                           "O corredor de circulação deverá ter largura mínima de 1,20 m.")
     caso("palpite: largura de corredor/circulação nunca fica verde (vale o trecho mais estreito; caso da copa, 19/11/2026); "
-         "porta continua verde e o vermelho do corredor não muda",
+         "porta continua verde e 'não cumprida' nunca é vermelho (replay 21/11/2026: 8 de 8 errados)",
          _cor["classe"] == "ambar" and _cor["motivo"] == "trecho_estreito" and not _cor["veredito"] and "1,4 m" in _cor["explicacao"]
-         and _por["classe"] == "verde" and _vrm["classe"] == "vermelho", str((_cor, _por, _vrm)))
+         and _por["classe"] == "verde" and _vrm["classe"] == "ambar" and _vrm["veredito"] == "nao_cumpriu", str((_cor, _por, _vrm)))
+    _bruto = '{"veredito": "nao_cumpriu", "evidencia": "Na imagem, a rampa est\\u00e1 cotada com \'i=5%\' e 3,74 que corresponde'
+    _orig = pl_m._ollama
+    pl_m._ollama = lambda *a, **k: {"message": {"content": _bruto}}
+    try:
+        _cort = pl_m.perguntar("p", "o", b"x")
+    finally:
+        pl_m._ollama = _orig
+    caso("palpite: resposta cortada pelo teto aproveita o veredito em vez de falhar o item",
+         _cort["veredito"] == "nao_cumpriu" and _cort["evidencia"].endswith("[cortado]"), str(_cort))
     pl_m._spans["/x/teste.pdf"] = {1: [(100, 100, "Nº 39", "extintores"), (500, 500, "Nº39", "saida"), (900, 100, "39", "base")]}
     _fic, _sai = pl_m.filtro_camada("/x/teste.pdf", 1, [(102, 98), (898, 101)], "39", "sinalizacao")
     _ext, _ = pl_m.filtro_camada("/x/teste.pdf", 1, [(102, 98)], "39", "extintores")
