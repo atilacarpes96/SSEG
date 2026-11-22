@@ -741,6 +741,25 @@ def filtro_camada(pdf, pag, pontos, num, tipo, raio=30):
     return ficam, sairam
 
 
+# Nota escrita do RT na planta (21/11/2026, pedido do Átila depois do "mapa de mudanças"). Medido no gabarito limpo
+# (285 itens com planta anterior): texto novo perto do termo citando a norma apareceu em 16, e só 4 foram cobrados de
+# novo. Em geral o RT registra a correção ("Janela conf. item 5.7.8.1"); às vezes só defende o projeto ("não se faz
+# necessário…"). Por isso é fato neutro, mostrado inteiro para o analista ler, e não mexe no palpite.
+NOTA_RT = re.compile(r"\bitem \d+(\.\d+)+|\brt ?cbmrs|\brtcbmrs|\brt ?n?\W{0,2} ?\d{2}\b|\bnbr\b|resolucao tecnica|"
+                     r"nao se faz necessari|nao e necessari|nao sera necessari|dispensad|de acordo com|"
+                     r"conforme (o |a )?(item|rt|nbr|norma|resolucao)|atende(ndo)? (ao|a|o) ")
+NOTA_PALAVRAS = 12   # abaixo disso é rótulo ("CONFORME RT Nº 11: 3 PESSOAS"), não nota
+
+
+def nota_do_rt(linhas):
+    """Texto que entrou perto do termo, se for uma nota escrita citando a norma; senão ''."""
+    txt = " ".join(linhas)
+    if len(txt.split()) < NOTA_PALAVRAS or not NOTA_RT.search(sem_acento(txt)):
+        return ""
+    return ("entrou uma nota escrita citando a norma: “%s”. Nota assim pode registrar a correção ou só defender "
+            "o projeto (no histórico, 4 de 16 foram cobradas de novo): leia se o desenho mudou." % txt[:600])
+
+
 def _recortes(pasta, cfg, todas):
     """Recortes de uma exigência: [(recorte)], fatos, motivo de não haver. Procura o termo nas pranchas novas e o
     termo_antes nas que a última CIA analisou (o ponto é levado para a planta nova pelo deslocamento do desenho)."""
@@ -825,6 +844,9 @@ def _recortes(pasta, cfg, todas):
             else:
                 r["antes"] = {"pdf": a2["arquivo"], "pagina": pag_a, "caixa": [round(caixa[0] - ox), round(caixa[1] - oy), round(caixa[2] - ox), round(caixa[3] - oy)]}
                 e_, s_ = frases(_dentro(ent, caixa, 60)), frases(_dentro(sai, caixa, 60))
+                nota = nota_do_rt(e_)
+                if nota:
+                    fatos.append("%s: %s" % (onde, nota))
                 if e_ or s_:
                     fatos.append("%s, neste trecho: entrou no texto: %s; saiu do texto: %s." % (
                         onde, " · ".join(e_)[:300] or "nada", " · ".join(s_)[:300] or "nada"))

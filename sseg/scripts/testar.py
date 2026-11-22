@@ -1321,6 +1321,11 @@ def main():
         pl_m._ollama = _orig
     caso("palpite: resposta cortada pelo teto aproveita o veredito em vez de falhar o item",
          _cort["veredito"] == "nao_cumpriu" and _cort["evidencia"].endswith("[cortado]"), str(_cort))
+    _nota = pl_m.nota_do_rt(["Corredor de acordo com o item 5.4.1.2 da RTCBMRS", "11 Parte 1/2016. - Tendo em vista a população de 75"])
+    caso("palpite: nota escrita do RT citando a norma vira fato neutro, inteiro; rótulo curto e cota não",
+         "Corredor de acordo com o item 5.4.1.2" in _nota and "leia se o desenho mudou" in _nota
+         and not pl_m.nota_do_rt(["POPULAÇÃO CONFORME RT Nº 11, PARTE 01/2016: 2 PESSOAS"])
+         and not pl_m.nota_do_rt(["1,10", "15,48 m"]), _nota)
     pl_m._spans["/x/teste.pdf"] = {1: [(100, 100, "Nº 39", "extintores"), (500, 500, "Nº39", "saida"), (900, 100, "39", "base")]}
     _fic, _sai = pl_m.filtro_camada("/x/teste.pdf", 1, [(102, 98), (898, 101)], "39", "sinalizacao")
     _ext, _ = pl_m.filtro_camada("/x/teste.pdf", 1, [(102, 98)], "39", "extintores")
