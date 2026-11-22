@@ -1055,6 +1055,64 @@ def _rodar_cotas(pasta, it, marca):
     return {"rodadas": [dict(nova, margem="cotas")], "controle": ctrl, "rotulo": rot, "recortes": recs}
 
 
+# ------------------------------------------------------------------ recurso e inviabilidade antes da reanálise
+# Átila, 22/11/2026: "na hora de ver uma reanálise tem que saber se, antes do projeto voltar pro analista, o RT entrou
+# com recurso ou laudo de inviabilidade". Nesses casos a exigência pode ter sido contestada ou resolvida pelo laudo,
+# não pela planta (foi por isso que esses itens saíram do gabarito da IA local: ouro/fora_recurso.json, 21/11/2026).
+# Fonte: marcos-resumo.json (marcos.py) e as medidas do api-*.json do SOL. Fato, nunca muda o palpite.
+INVIAB_NOME = {"POSSUI_TOTAL": "total", "POSSUI_PARCIAL": "parcial"}
+
+
+def _chave_medida(t):
+    return {w.rstrip("s") for w in re.findall(r"[a-z]{4,}", sem_acento(t)) if w not in ("emergencia", "sistema", "protecao", "contra")}
+
+
+def _br(d):
+    p = (d or "").split("-")
+    return "/".join(reversed(p)) if len(p) == 3 else (d or "?")
+
+
+def entre_analises(pasta):
+    """(avisos do processo, {chave da medida: (nome, total|parcial)}): recurso e conclusão de inviabilidade depois da
+    última CIA, e as medidas que o SOL marca com laudo de inviabilidade."""
+    r = _ler_json(os.path.join(pasta, "marcos-resumo.json"), {}) or {}
+    desde = ((r.get("ultima_cia") or {}).get("data") or "")
+    avisos = []
+    if desde:
+        for x in r.get("recursos") or []:
+            if (x.get("data") or "") >= desde:
+                res = x.get("resultado") or x.get("descricao") or ""
+                avisos.append("O RT entrou com recurso em %s, depois da última CIA (%s)%s: confira se esta exigência foi "
+                              "contestada no recurso em vez de corrigida na planta." % (
+                                  _br(x.get("data")), _br(desde), (", " + res) if res else ""))
+        for x in r.get("inviabilidade") or []:
+            if (x.get("data") or "") > desde:  # no mesmo dia, a de inviabilidade costuma vir antes da CIA
+                avisos.append("Houve análise de inviabilidade técnica em %s, depois da última CIA (%s): %s. A exigência da "
+                              "medida com laudo pode ter sido resolvida pelo laudo, não pela planta." % (
+                                  _br(x.get("data")), _br(desde), x.get("resultado") or "sem resultado"))
+    medidas = {}
+    api = _api(pasta)
+    if not api:  # pasta montada pelo servidor: o licenciamento da base (sol_base.py)
+        arqs = sorted(glob.glob(os.path.join(pasta, "base-api-*.json")), key=os.path.getmtime)
+        api = _ler_json(arqs[-1], {}) if arqs else {}
+    for m in ((api.get("especSeguranca") or {}).get("medidas") or []):
+        tipo = INVIAB_NOME.get(m.get("inviabilidade"))
+        nome = ((m.get("tipo") or {}).get("nome") or "").strip()
+        if tipo and nome:
+            medidas[frozenset(_chave_medida(nome))] = (nome, tipo)
+    return avisos, medidas
+
+
+def fato_inviabilidade(secao, sub, medidas):
+    """Fato da exigência cuja seção casa com uma medida marcada com laudo de inviabilidade no SOL; senão ''."""
+    alvo = _chave_medida((secao or "") + " " + (sub or ""))
+    for chave, (nome, tipo) in medidas.items():
+        if chave and chave <= alvo | _chave_medida(secao or ""):
+            return ("A medida \"%s\" tem laudo de inviabilidade técnica %s no SOL: esta exigência pode ter sido "
+                    "resolvida pelo laudo (edificação existente), não pela planta." % (nome, tipo))
+    return ""
+
+
 def preparar(pasta, curadoria):
     """curadoria: [{n, tipo, esperado, termo, termo_antes, prancha, motivo}] (uma por exigência da última CIA; as que
     faltarem ficam "não preparada"). Monta recortes e fatos, mantém o palpite e a conferência do que não mudou e
@@ -1076,6 +1134,7 @@ def preparar(pasta, curadoria):
         cur[n] = c
     todas = plantas(pasta)
     ids = _ids_cia(pasta)
+    avisos, medidas_inviab = entre_analises(pasta)
 
     def montar(d):
         antigos = {i["n"]: i for i in d.get("itens") or []}
@@ -1113,6 +1172,8 @@ def preparar(pasta, curadoria):
             elif not it["motivo"]:
                 it["motivo"] = ("Remete às exigências acima." if it["tipo"] == "remissiva" else
                                 "Confere-se no memorial ou no cadastro do SOL, não na planta.")
+            inv = fato_inviabilidade(secao, sub, medidas_inviab)
+            it["fatos"] = avisos + ([inv] if inv else []) + it["fatos"]  # primeiro: muda como ler o resto
             it["assinatura"] = _assinatura(it)
             velho = antigos.get(n)
             if velho and velho.get("exigencia") == texto:
@@ -1125,7 +1186,7 @@ def preparar(pasta, curadoria):
         d.clear()
         d.update({"versao": 1, "processo": os.path.basename(os.path.normpath(pasta)), "cia": ids[-1] if ids else 0,
                   "plantas": [{k: p[k] for k in ("lado", "id", "arquivo", "nome", "tipo", "descricao", "nao_reenviada")} for p in todas],
-                  "modelo": MODELO, "preparado_em": time.strftime("%Y-%m-%dT%H:%M:%S"), "itens": itens})
+                  "modelo": MODELO, "preparado_em": time.strftime("%Y-%m-%dT%H:%M:%S"), "avisos": avisos, "itens": itens})
         return dict(d)
     return _atualizar(pasta, montar)
 

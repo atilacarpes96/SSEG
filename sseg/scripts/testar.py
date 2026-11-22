@@ -1326,6 +1326,21 @@ def main():
          "Corredor de acordo com o item 5.4.1.2" in _nota and "leia se o desenho mudou" in _nota
          and not pl_m.nota_do_rt(["POPULAÇÃO CONFORME RT Nº 11, PARTE 01/2016: 2 PESSOAS"])
          and not pl_m.nota_do_rt(["1,10", "15,48 m"]), _nota)
+    with tempfile.TemporaryDirectory() as _tmp:
+        json.dump({"ultima_cia": {"data": "2026-11-06", "arquivo": 9}, "recursos": [
+            {"data": "2026-10-01", "resultado": "indeferido"}, {"data": "2026-11-10", "resultado": "deferido"}],
+            "inviabilidade": [{"data": "2026-11-06", "resultado": "Deferimento"}, {"data": "2026-11-13", "resultado": "Deferimento"}]},
+            open(os.path.join(_tmp, "marcos-resumo.json"), "w", encoding="utf-8"))
+        json.dump({"especSeguranca": {"medidas": [{"tipo": {"nome": "Saída de Emergência"}, "inviabilidade": "POSSUI_PARCIAL"},
+                                                  {"tipo": {"nome": "Extintores de Incêndio"}, "inviabilidade": "NAO_POSSUI"}]}},
+                  open(os.path.join(_tmp, "base-api-1.json"), "w", encoding="utf-8"))
+        _av, _med = pl_m.entre_analises(_tmp)
+        caso("palpite: recurso e inviabilidade depois da última CIA viram aviso; os de antes (e a do mesmo dia) não",
+             len(_av) == 2 and "recurso em 10/11/2026" in _av[0] and "deferido" in _av[0] and "13/11/2026" in _av[1], str(_av))
+        caso("palpite: medida com laudo de inviabilidade casa com a seção da exigência (Saídas ≈ Saída), não com outra",
+             "parcial" in pl_m.fato_inviabilidade("Saídas de Emergência", "", _med)
+             and not pl_m.fato_inviabilidade("Sinalização de Emergência", "", _med)
+             and not pl_m.fato_inviabilidade("Extintores de Incêndio", "", _med), str(_med))
     pl_m._spans["/x/teste.pdf"] = {1: [(100, 100, "Nº 39", "extintores"), (500, 500, "Nº39", "saida"), (900, 100, "39", "base")]}
     _fic, _sai = pl_m.filtro_camada("/x/teste.pdf", 1, [(102, 98), (898, 101)], "39", "sinalizacao")
     _ext, _ = pl_m.filtro_camada("/x/teste.pdf", 1, [(102, 98)], "39", "extintores")
