@@ -385,6 +385,24 @@ TELA_LOGIN = r"""(() => {
   return JSON.stringify({ sol: location.host.includes("solcbm.rs.gov.br"), logado, form: vis(document.querySelector("#senha")), erros });
 })()"""
 
+# 27/11/2026: com o prazo de operação da conta perto de vencer, o SOE mostra "Seu prazo de operação vence em N
+# dia(s)" com o botão "Clique aqui para continuar" depois da senha (ou no lugar do formulário). Sem clicar, o
+# login parava ali e a trava ligava ("o login não terminou em 30 s").
+CONTINUAR = r"""(() => {
+  const b = document.querySelector("#btnLogonPrazoExpirado");
+  if (!b || b.offsetParent === null) return JSON.stringify({ clicou: false });
+  b.click();
+  return JSON.stringify({ clicou: true });
+})()"""
+
+
+def _continuar_aviso(aba):
+    """Clica no "continuar" do aviso de prazo do SOE, se estiver na tela. True se clicou."""
+    try:
+        return bool(aba.avaliar(CONTINUAR).get("clicou"))
+    except (RuntimeError, OSError, ValueError, AttributeError):
+        return False
+
 PREENCHER = r"""(() => {
   const set = (sel, v) => {
     const e = document.querySelector(sel);
@@ -445,6 +463,9 @@ def entrar(aba):
             return True, "sessão renovada sem senha (o login do SOE ainda valia)"
         if t["form"]:
             break
+        if _continuar_aviso(aba):
+            print("  aviso do SOE: prazo de operação da conta perto de vencer (continuar clicado)")
+            continue
         if time.time() > fim:
             return False, "o formulário do SOE não apareceu em 30 s (nada preenchido)"
     antes = set(t["erros"])
@@ -460,6 +481,9 @@ def entrar(aba):
             with open(sol_senha.ULTIMO, "w", encoding="utf-8") as fh:
                 fh.write(time.strftime("%d/%m/%Y %H:%M"))
             return True, "sessão refeita por login automático"
+        if _continuar_aviso(aba):
+            print("  aviso do SOE: prazo de operação da conta perto de vencer (continuar clicado)")
+            continue
         novos = [e for e in t["erros"] if e not in antes]
         if novos and not t["sol"]:
             return _falhou("o SOE recusou: " + novos[0])
